@@ -10,7 +10,7 @@
         <version>1.0.0</version>
     </parent>
 
-    <artifactId>app-api</artifactId>
+    <artifactId>api</artifactId>
     <name>AppTemplate API</name>
     <description>Presentation layer - REST Controllers, Security Config</description>
 
@@ -18,7 +18,7 @@
         <!-- Infrastructure layer -->
         <dependency>
             <groupId>com.apptemplate</groupId>
-            <artifactId>app-infrastructure</artifactId>
+            <artifactId>infrastructure</artifactId>
         </dependency>
 
         <!-- Spring Web -->

@@ -10,7 +10,7 @@
         <version>1.0.0</version>
     </parent>
 
-    <artifactId>app-infrastructure</artifactId>
+    <artifactId>infrastructure</artifactId>
     <name>AppTemplate Infrastructure</name>
     <description>Infrastructure layer - JPA, Services, WebSocket implementations</description>
 
@@ -18,7 +18,7 @@
         <!-- Application layer -->
         <dependency>
             <groupId>com.apptemplate</groupId>
-            <artifactId>app-application</artifactId>
+            <artifactId>application</artifactId>
         </dependency>
 
         <!-- Spring Data JPA -->

@@ -7,19 +7,19 @@ WORKDIR /app
 COPY mvnw .
 COPY .mvn .mvn
 COPY pom.xml .
-COPY app-domain/pom.xml app-domain/
-COPY app-application/pom.xml app-application/
-COPY app-infrastructure/pom.xml app-infrastructure/
-COPY app-api/pom.xml app-api/
+COPY domain/pom.xml domain/
+COPY application/pom.xml application/
+COPY infrastructure/pom.xml infrastructure/
+COPY api/pom.xml api/
 
 # Download dependencies
 RUN chmod +x mvnw && ./mvnw dependency:go-offline -B
 
 # Copy source code
-COPY app-domain/src app-domain/src
-COPY app-application/src app-application/src
-COPY app-infrastructure/src app-infrastructure/src
-COPY app-api/src app-api/src
+COPY domain/src domain/src
+COPY application/src application/src
+COPY infrastructure/src infrastructure/src
+COPY api/src api/src
 
 # Build application
 RUN ./mvnw clean package -DskipTests -B
@@ -34,7 +34,7 @@ RUN addgroup -g 1000 spring && \
     adduser -u 1000 -G spring -s /bin/sh -D spring
 
 # Copy built artifact
-COPY --from=build /app/app-api/target/*.jar app.jar
+COPY --from=build /app/api/target/*.jar app.jar
 
 # Change ownership
 RUN chown -R spring:spring /app

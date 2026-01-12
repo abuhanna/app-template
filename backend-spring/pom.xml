@@ -33,10 +33,10 @@
     </properties>
 
     <modules>
-        <module>app-domain</module>
-        <module>app-application</module>
-        <module>app-infrastructure</module>
-        <module>app-api</module>
+        <module>domain</module>
+        <module>application</module>
+        <module>infrastructure</module>
+        <module>api</module>
     </modules>
 
     <dependencyManagement>
@@ -44,17 +44,17 @@
             <!-- Internal modules -->
             <dependency>
                 <groupId>com.apptemplate</groupId>
-                <artifactId>app-domain</artifactId>
+                <artifactId>domain</artifactId>
                 <version>${project.version}</version>
             </dependency>
             <dependency>
                 <groupId>com.apptemplate</groupId>
-                <artifactId>app-application</artifactId>
+                <artifactId>application</artifactId>
                 <version>${project.version}</version>
             </dependency>
             <dependency>
                 <groupId>com.apptemplate</groupId>
-                <artifactId>app-infrastructure</artifactId>
+                <artifactId>infrastructure</artifactId>
                 <version>${project.version}</version>
             </dependency>
 

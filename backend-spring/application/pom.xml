@@ -10,7 +10,7 @@
         <version>1.0.0</version>
     </parent>
 
-    <artifactId>app-application</artifactId>
+    <artifactId>application</artifactId>
     <name>AppTemplate Application</name>
     <description>Application layer - Use Cases, DTOs, Port Interfaces</description>
 
@@ -18,7 +18,7 @@
         <!-- Domain layer -->
         <dependency>
             <groupId>com.apptemplate</groupId>
-            <artifactId>app-domain</artifactId>
+            <artifactId>domain</artifactId>
         </dependency>
 
         <!-- Spring Context for @Service annotation -->

@@ -10,7 +10,7 @@
         <version>1.0.0</version>
     </parent>
 
-    <artifactId>app-domain</artifactId>
+    <artifactId>domain</artifactId>
     <name>AppTemplate Domain</name>
     <description>Domain layer - Entities, Enums, and Business Logic (no Spring dependencies)</description>
 
