@@ -73,15 +73,9 @@ export async function copyRootFiles(repo: string, destPath: string, config: Proj
     // Docker folder might not exist for all project types, ignore error
   }
 
-  // Download scripts folder
-  const scriptsFolder = 'scripts';
-  const scriptsDest = path.join(destPath, scriptsFolder);
-
-  try {
-    await downloadTemplate(repo, scriptsFolder, scriptsDest);
-  } catch {
-    // Scripts folder might not exist, ignore error
-  }
+  // Note: We intentionally DO NOT download the scripts folder
+  // The create-project and rename-project scripts are for manual repo cloning
+  // Projects created via npm CLI don't need these scripts
 
   // Download individual root files
   // Note: degit doesn't support individual file downloads, so we download the whole repo

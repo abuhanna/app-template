@@ -55,29 +55,8 @@ async function main(): Promise<void> {
     console.log();
     outro(pc.green('✓ Done! Your project is ready.'));
 
-    console.log();
-    console.log(pc.cyan('Next steps:'));
-    console.log(`  ${pc.gray('$')} cd ${config.projectPath}`);
-    console.log(`  ${pc.gray('$')} cp .env.example .env`);
-    if (!config.installDeps) {
-      if (config.projectType !== 'frontend') {
-        console.log(`  ${pc.gray('$')} cd backend-${config.backend} && dotnet restore`);
-      }
-      if (config.projectType !== 'backend') {
-        console.log(`  ${pc.gray('$')} cd frontend-${config.ui} && npm install`);
-      }
-    }
-    console.log(`  ${pc.gray('$')} docker compose up -d --build`);
-    console.log();
-    console.log(pc.gray('Access points:'));
-    console.log(`  Frontend: ${pc.cyan('http://localhost')}`);
-    console.log(`  Backend:  ${pc.cyan('http://localhost:5100')}`);
-    console.log(`  Swagger:  ${pc.cyan('http://localhost:5100/swagger')}`);
-    console.log();
-    console.log(pc.gray('Default login:'));
-    console.log(`  Username: ${pc.cyan('admin')}`);
-    console.log(`  Password: ${pc.cyan('Admin@123')}`);
-    console.log();
+    // Show dynamic next steps based on project type
+    showNextSteps(config);
   } catch (error) {
     if (error instanceof Error) {
       console.error(pc.red(`Error: ${error.message}`));
@@ -115,6 +94,88 @@ ${pc.bold('Examples:')}
   ${pc.gray('# Create frontend-only project with PrimeVue')}
   npm create apptemplate@latest my-spa -t frontend -u primevue
 `);
+}
+
+function showNextSteps(config: ProjectConfig): void {
+  const backendFolder = `backend-${config.backend}`;
+  const frontendFolder = `frontend-${config.ui}`;
+
+  console.log();
+  console.log(pc.cyan('Next steps:'));
+  console.log(`  ${pc.gray('$')} cd ${config.projectPath}`);
+
+  // Show install commands if deps weren't installed
+  if (!config.installDeps) {
+    if (config.projectType !== 'frontend') {
+      if (config.backend === 'dotnet') {
+        console.log(`  ${pc.gray('$')} cd ${backendFolder} && dotnet restore`);
+      } else if (config.backend === 'nestjs') {
+        console.log(`  ${pc.gray('$')} cd ${backendFolder} && npm install`);
+      } else if (config.backend === 'spring') {
+        console.log(`  ${pc.gray('$')} cd ${backendFolder} && ./mvnw install -DskipTests`);
+      }
+    }
+    if (config.projectType !== 'backend') {
+      console.log(`  ${pc.gray('$')} cd ${frontendFolder} && npm install`);
+    }
+  }
+
+  // Docker compose option (for fullstack)
+  if (config.projectType === 'fullstack') {
+    console.log();
+    console.log(pc.gray('Run with Docker:'));
+    console.log(`  ${pc.gray('$')} cp .env.example .env`);
+    console.log(`  ${pc.gray('$')} docker compose up -d --build`);
+  }
+
+  // Manual run instructions
+  console.log();
+  console.log(pc.gray('Run manually:'));
+
+  if (config.projectType !== 'frontend') {
+    if (config.backend === 'dotnet') {
+      console.log(`  ${pc.gray('# Backend (.NET)')}`);
+      console.log(`  ${pc.gray('$')} cd ${backendFolder}/src/Presentation/*.WebAPI && dotnet run`);
+    } else if (config.backend === 'nestjs') {
+      console.log(`  ${pc.gray('# Backend (NestJS)')}`);
+      console.log(`  ${pc.gray('$')} cd ${backendFolder} && npm run start:dev`);
+    } else if (config.backend === 'spring') {
+      console.log(`  ${pc.gray('# Backend (Spring Boot)')}`);
+      console.log(`  ${pc.gray('$')} cd ${backendFolder} && ./mvnw spring-boot:run`);
+    }
+  }
+
+  if (config.projectType !== 'backend') {
+    console.log(`  ${pc.gray('# Frontend')}`);
+    console.log(`  ${pc.gray('$')} cd ${frontendFolder} && npm run dev`);
+  }
+
+  // Access points
+  console.log();
+  console.log(pc.gray('Access points:'));
+
+  if (config.projectType !== 'backend') {
+    if (config.projectType === 'fullstack') {
+      console.log(`  Frontend: ${pc.cyan('http://localhost:3000')} ${pc.gray('(dev)')}`);
+    } else {
+      console.log(`  Frontend: ${pc.cyan('http://localhost:3000')}`);
+    }
+  }
+
+  if (config.projectType !== 'frontend') {
+    console.log(`  Backend:  ${pc.cyan('http://localhost:5100')}`);
+    console.log(`  Swagger:  ${pc.cyan('http://localhost:5100/swagger')}`);
+  }
+
+  // Default login (only for projects with backend)
+  if (config.projectType !== 'frontend') {
+    console.log();
+    console.log(pc.gray('Default login:'));
+    console.log(`  Username: ${pc.cyan('admin')}`);
+    console.log(`  Password: ${pc.cyan('Admin@123')}`);
+  }
+
+  console.log();
 }
 
 main();
