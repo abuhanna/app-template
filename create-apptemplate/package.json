@@ -1,13 +1,16 @@
 {
-  "name": "create-apptemplate",
+  "name": "@abuhanna/create-apptemplate",
   "version": "1.0.0",
   "description": "Create fullstack apps with .NET/Spring/NestJS + Vue (Vuetify/PrimeVue)",
-  "author": "",
+  "author": "abuhanna",
   "license": "MIT",
   "type": "module",
   "main": "./dist/index.js",
   "bin": {
     "create-apptemplate": "./dist/index.js"
+  },
+  "publishConfig": {
+    "access": "public"
   },
   "files": [
     "dist"

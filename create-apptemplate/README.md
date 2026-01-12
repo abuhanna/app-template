@@ -1,4 +1,4 @@
-# create-apptemplate
+# @abuhanna/create-apptemplate
 
 Create fullstack applications with .NET/Spring/NestJS backends and Vue (Vuetify/PrimeVue) frontends.
 
@@ -6,19 +6,19 @@ Create fullstack applications with .NET/Spring/NestJS backends and Vue (Vuetify/
 
 ```bash
 # Using npm
-npm create apptemplate@latest
+npm create @abuhanna/apptemplate@latest
 
 # Using npx
-npx create-apptemplate my-app
+npx @abuhanna/create-apptemplate my-app
 
 # Using pnpm
-pnpm create apptemplate
+pnpm create @abuhanna/apptemplate
 
 # Using yarn
-yarn create apptemplate
+yarn create @abuhanna/apptemplate
 
 # Using bun
-bun create apptemplate
+bun create @abuhanna/apptemplate
 ```
 
 ## Features
@@ -51,7 +51,7 @@ bun create apptemplate
 Simply run the command without arguments:
 
 ```bash
-npm create apptemplate@latest
+npm create @abuhanna/apptemplate@latest
 ```
 
 The wizard will guide you through:
@@ -69,13 +69,13 @@ Specify all options via command line:
 
 ```bash
 # Fullstack project with .NET backend and Vuetify frontend
-npx create-apptemplate my-app -b dotnet -u vuetify -n "MyCompany.MyApp" -i
+npx @abuhanna/create-apptemplate my-app -b dotnet -u vuetify -n "MyCompany.MyApp" -i
 
 # Backend-only project with Spring Boot
-npx create-apptemplate my-api -t backend -b spring -n "MyCompany.MyApi"
+npx @abuhanna/create-apptemplate my-api -t backend -b spring -n "MyCompany.MyApi"
 
 # Frontend-only project with PrimeVue
-npx create-apptemplate my-spa -t frontend -u primevue
+npx @abuhanna/create-apptemplate my-spa -t frontend -u primevue
 ```
 
 ## Options
