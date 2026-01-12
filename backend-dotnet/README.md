@@ -82,7 +82,7 @@ backend/
    ```json
    {
      "ConnectionStrings": {
-       "BpmDb": "Host=localhost;Port=5432;Database=apptemplate_dev;Username=postgres;Password=your_password"
+       "DefaultConnection": "Host=localhost;Port=5432;Database=apptemplate_dev;Username=postgres;Password=your_password"
      },
      "Jwt": {
        "Secret": "your-secret-key-minimum-32-characters-long",

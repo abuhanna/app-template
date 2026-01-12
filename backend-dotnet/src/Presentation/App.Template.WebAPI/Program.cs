@@ -54,8 +54,8 @@ builder.Services.AddInMemoryRateLimiting();
 
 // Add DbContext (EF Core)
 // The connection string can be configured via appsettings.json or environment variables
-var connectionString = builder.Configuration.GetConnectionString("BpmDb")
-    ?? throw new InvalidOperationException("Connection string 'BpmDb' not found.");
+var connectionString = builder.Configuration.GetConnectionString("DefaultConnection")
+    ?? throw new InvalidOperationException("Connection string 'DefaultConnection' not found.");
 
 builder.Services.AddDbContext<BpmDbContext>(options =>
     options.UseNpgsql(connectionString));
