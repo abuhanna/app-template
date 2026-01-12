@@ -7,8 +7,8 @@ CREATE TABLE IF NOT EXISTS departments (
     is_active BOOLEAN NOT NULL DEFAULT TRUE,
     created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
     updated_at TIMESTAMP,
-    created_by VARCHAR(100),
-    updated_by VARCHAR(100)
+    created_by BIGINT,
+    updated_by BIGINT
 );
 
 -- Create users table
@@ -28,8 +28,8 @@ CREATE TABLE IF NOT EXISTS users (
     password_reset_token_expires_at TIMESTAMP,
     created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
     updated_at TIMESTAMP,
-    created_by VARCHAR(100),
-    updated_by VARCHAR(100)
+    created_by BIGINT,
+    updated_by BIGINT
 );
 
 -- Create notifications table
@@ -42,6 +42,8 @@ CREATE TABLE IF NOT EXISTS notifications (
     is_read BOOLEAN NOT NULL DEFAULT FALSE,
     read_at TIMESTAMP,
     link VARCHAR(500),
+    reference_id VARCHAR(100),
+    reference_type VARCHAR(50),
     created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP
 );
 

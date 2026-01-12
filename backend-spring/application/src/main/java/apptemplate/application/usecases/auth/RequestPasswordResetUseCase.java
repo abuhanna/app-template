@@ -44,7 +44,7 @@ public class RequestPasswordResetUseCase {
 
         // Send email
         try {
-            emailService.sendPasswordResetEmail(user.getEmail(), user.getFullName(), resetToken);
+            emailService.sendPasswordResetEmail(user.getEmail(), user.getName(), resetToken);
             log.info("Password reset email sent to: {}", user.getEmail());
         } catch (Exception e) {
             log.error("Failed to send password reset email to: {}", user.getEmail(), e);

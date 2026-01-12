@@ -2,10 +2,7 @@ package apptemplate.infrastructure.persistence.entities;
 
 import jakarta.persistence.*;
 import lombok.*;
-import org.hibernate.annotations.UuidGenerator;
-
 import java.time.LocalDateTime;
-import java.util.UUID;
 
 @Entity
 @Table(name = "refresh_tokens")
@@ -17,15 +14,15 @@ import java.util.UUID;
 public class RefreshTokenJpaEntity {
 
     @Id
-    @UuidGenerator
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
     @Column(name = "id", updatable = false, nullable = false)
-    private UUID id;
+    private Long id;
 
     @Column(name = "token", nullable = false, unique = true)
     private String token;
 
     @Column(name = "user_id", nullable = false)
-    private UUID userId;
+    private Long userId;
 
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "user_id", insertable = false, updatable = false)
@@ -51,9 +48,6 @@ public class RefreshTokenJpaEntity {
 
     @PrePersist
     protected void onCreate() {
-        if (id == null) {
-            id = UUID.randomUUID();
-        }
         createdAt = LocalDateTime.now();
     }
 }

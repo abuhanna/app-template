@@ -18,7 +18,7 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 
-import java.util.UUID;
+
 
 @RestController
 @RequestMapping("/api/users")
@@ -36,7 +36,7 @@ public class UsersController {
     @Operation(summary = "Get all users", description = "Get paginated list of users with optional filters")
     public ResponseEntity<ApiResponse<PagedResponse<UserDto>>> getUsers(
             @RequestParam(required = false) String search,
-            @RequestParam(required = false) UUID departmentId,
+            @RequestParam(required = false) Long departmentId,
             @RequestParam(required = false) Boolean isActive,
             @PageableDefault(size = 10) Pageable pageable
     ) {
@@ -46,7 +46,7 @@ public class UsersController {
 
     @GetMapping("/{id}")
     @Operation(summary = "Get user by ID", description = "Get a specific user by their ID")
-    public ResponseEntity<ApiResponse<UserDto>> getUserById(@PathVariable UUID id) {
+    public ResponseEntity<ApiResponse<UserDto>> getUserById(@PathVariable Long id) {
         UserDto user = getUserByIdUseCase.execute(id);
         return ResponseEntity.ok(ApiResponse.success(user));
     }
@@ -64,7 +64,7 @@ public class UsersController {
     @PreAuthorize("hasRole('ADMIN')")
     @Operation(summary = "Update user", description = "Update an existing user (Admin only)")
     public ResponseEntity<ApiResponse<UserDto>> updateUser(
-            @PathVariable UUID id,
+            @PathVariable Long id,
             @Valid @RequestBody UpdateUserRequest request
     ) {
         UserDto user = updateUserUseCase.execute(id, request);
@@ -74,7 +74,7 @@ public class UsersController {
     @DeleteMapping("/{id}")
     @PreAuthorize("hasRole('ADMIN')")
     @Operation(summary = "Delete user", description = "Delete a user (Admin only)")
-    public ResponseEntity<ApiResponse<Void>> deleteUser(@PathVariable UUID id) {
+    public ResponseEntity<ApiResponse<Void>> deleteUser(@PathVariable Long id) {
         deleteUserUseCase.execute(id);
         return ResponseEntity.ok(ApiResponse.success(null, "User deleted successfully"));
     }

@@ -27,6 +27,24 @@
             <artifactId>spring-context</artifactId>
         </dependency>
 
+        <!-- Spring Transaction -->
+        <dependency>
+            <groupId>org.springframework</groupId>
+            <artifactId>spring-tx</artifactId>
+        </dependency>
+
+        <!-- Spring Data Commons (Page, Pageable) -->
+        <dependency>
+            <groupId>org.springframework.data</groupId>
+            <artifactId>spring-data-commons</artifactId>
+        </dependency>
+
+        <!-- SLF4J -->
+        <dependency>
+            <groupId>org.slf4j</groupId>
+            <artifactId>slf4j-api</artifactId>
+        </dependency>
+
         <!-- Jakarta Validation -->
         <dependency>
             <groupId>jakarta.validation</groupId>

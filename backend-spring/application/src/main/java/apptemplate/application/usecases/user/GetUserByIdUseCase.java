@@ -9,7 +9,7 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-import java.util.UUID;
+
 
 @Service
 @RequiredArgsConstructor
@@ -19,7 +19,7 @@ public class GetUserByIdUseCase {
     private final UserMapper userMapper;
 
     @Transactional(readOnly = true)
-    public UserDto execute(UUID id) {
+    public UserDto execute(Long id) {
         User user = userRepository.findById(id)
                 .orElseThrow(() -> new NotFoundException("User", id));
 

@@ -9,16 +9,16 @@ import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
 
 import java.util.Optional;
-import java.util.UUID;
+
 
 @Repository
-public interface DepartmentJpaRepository extends JpaRepository<DepartmentJpaEntity, UUID> {
+public interface DepartmentJpaRepository extends JpaRepository<DepartmentJpaEntity, Long> {
 
     Optional<DepartmentJpaEntity> findByCode(String code);
 
     boolean existsByCode(String code);
 
-    boolean existsByCodeAndIdNot(String code, UUID id);
+    boolean existsByCodeAndIdNot(String code, Long id);
 
     @Query("SELECT d FROM DepartmentJpaEntity d WHERE " +
            "(:search IS NULL OR LOWER(d.code) LIKE LOWER(CONCAT('%', :search, '%')) " +

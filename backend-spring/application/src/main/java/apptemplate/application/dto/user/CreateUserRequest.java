@@ -11,7 +11,7 @@ import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
-import java.util.UUID;
+
 
 @Data
 @Builder
@@ -44,7 +44,7 @@ public class CreateUserRequest {
     @NotNull(message = "Role is required")
     private UserRole role;
 
-    private UUID departmentId;
+    private Long departmentId;
 
     private Boolean isActive;
 }

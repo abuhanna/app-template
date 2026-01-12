@@ -18,7 +18,7 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 
-import java.util.UUID;
+
 
 @RestController
 @RequestMapping("/api/departments")
@@ -46,7 +46,7 @@ public class DepartmentsController {
 
     @GetMapping("/{id}")
     @Operation(summary = "Get department by ID", description = "Get a specific department by its ID")
-    public ResponseEntity<ApiResponse<DepartmentDto>> getDepartmentById(@PathVariable UUID id) {
+    public ResponseEntity<ApiResponse<DepartmentDto>> getDepartmentById(@PathVariable Long id) {
         DepartmentDto department = getDepartmentByIdUseCase.execute(id);
         return ResponseEntity.ok(ApiResponse.success(department));
     }
@@ -62,7 +62,7 @@ public class DepartmentsController {
     @PutMapping("/{id}")
     @Operation(summary = "Update department", description = "Update an existing department")
     public ResponseEntity<ApiResponse<DepartmentDto>> updateDepartment(
-            @PathVariable UUID id,
+            @PathVariable Long id,
             @Valid @RequestBody UpdateDepartmentRequest request
     ) {
         DepartmentDto department = updateDepartmentUseCase.execute(id, request);
@@ -71,7 +71,7 @@ public class DepartmentsController {
 
     @DeleteMapping("/{id}")
     @Operation(summary = "Delete department", description = "Delete a department")
-    public ResponseEntity<ApiResponse<Void>> deleteDepartment(@PathVariable UUID id) {
+    public ResponseEntity<ApiResponse<Void>> deleteDepartment(@PathVariable Long id) {
         deleteDepartmentUseCase.execute(id);
         return ResponseEntity.ok(ApiResponse.success(null, "Department deleted successfully"));
     }

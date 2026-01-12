@@ -27,17 +27,19 @@ public class ResetPasswordUseCase {
     public void execute(ResetPasswordRequest request) {
         // Find user by reset token
         User user = userRepository.findByPasswordResetToken(request.getToken())
-                .orElseThrow(() -> new AuthenticationException("Invalid or expired reset token"));
+                .orElseThrow(() -> new ValidationException("token", "Invalid or expired password reset token"));
 
-        // Check if token is expired (24 hours)
-        if (user.getPasswordResetTokenExpiresAt() == null ||
-            user.getPasswordResetTokenExpiresAt().isBefore(LocalDateTime.now())) {
-            throw new AuthenticationException("Reset token has expired");
+        // Check if token matches and is not expired
+        if (user.getPasswordResetToken() == null ||
+            !user.getPasswordResetToken().equals(request.getToken()) ||
+            user.getPasswordResetTokenExpiry() == null ||
+            user.getPasswordResetTokenExpiry().isBefore(java.time.LocalDateTime.now())) {
+            throw new ValidationException("token", "Invalid or expired password reset token");
         }
 
         // Validate password confirmation
         if (!request.getNewPassword().equals(request.getConfirmPassword())) {
-            throw new ValidationException("Passwords do not match", "confirmPassword", "Passwords must match");
+            throw new ValidationException("confirmPassword", "Passwords must match");
         }
 
         // Update password

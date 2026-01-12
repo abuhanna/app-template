@@ -14,7 +14,7 @@ import java.nio.charset.StandardCharsets;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.Map;
-import java.util.UUID;
+
 
 @Service
 public class JwtTokenServiceImpl implements JwtTokenService {
@@ -74,9 +74,9 @@ public class JwtTokenServiceImpl implements JwtTokenService {
     }
 
     @Override
-    public UUID getUserIdFromToken(String token) {
+    public Long getUserIdFromToken(String token) {
         Claims claims = getClaims(token);
-        return UUID.fromString(claims.getSubject());
+        return Long.parseLong(claims.getSubject());
     }
 
     @Override

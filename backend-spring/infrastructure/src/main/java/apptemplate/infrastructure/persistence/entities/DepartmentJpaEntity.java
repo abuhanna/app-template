@@ -2,10 +2,7 @@ package apptemplate.infrastructure.persistence.entities;
 
 import jakarta.persistence.*;
 import lombok.*;
-import org.hibernate.annotations.UuidGenerator;
-
 import java.time.LocalDateTime;
-import java.util.UUID;
 
 @Entity
 @Table(name = "departments")
@@ -17,9 +14,9 @@ import java.util.UUID;
 public class DepartmentJpaEntity {
 
     @Id
-    @UuidGenerator
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
     @Column(name = "id", updatable = false, nullable = false)
-    private UUID id;
+    private Long id;
 
     @Column(name = "code", nullable = false, unique = true, length = 20)
     private String code;
@@ -40,16 +37,13 @@ public class DepartmentJpaEntity {
     private LocalDateTime updatedAt;
 
     @Column(name = "created_by")
-    private String createdBy;
+    private Long createdBy;
 
     @Column(name = "updated_by")
-    private String updatedBy;
+    private Long updatedBy;
 
     @PrePersist
     protected void onCreate() {
-        if (id == null) {
-            id = UUID.randomUUID();
-        }
         createdAt = LocalDateTime.now();
         updatedAt = LocalDateTime.now();
     }

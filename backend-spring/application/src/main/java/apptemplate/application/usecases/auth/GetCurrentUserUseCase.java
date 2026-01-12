@@ -10,7 +10,7 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-import java.util.UUID;
+
 
 @Service
 @RequiredArgsConstructor
@@ -22,7 +22,7 @@ public class GetCurrentUserUseCase {
 
     @Transactional(readOnly = true)
     public UserInfoResponse execute() {
-        UUID userId = currentUserService.getCurrentUserId()
+        Long userId = currentUserService.getCurrentUserId()
                 .orElseThrow(() -> new AuthenticationException("User not authenticated"));
 
         User user = userRepository.findById(userId)

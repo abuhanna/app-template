@@ -1,5 +1,7 @@
 package apptemplate.application.ports.services;
 
+import java.util.Optional;
+
 /**
  * Port interface for accessing current user information.
  */
@@ -8,12 +10,12 @@ public interface CurrentUserService {
     /**
      * Gets the current user's ID from the security context.
      */
-    Long getCurrentUserId();
+    Optional<Long> getCurrentUserId();
 
     /**
      * Gets the current user's username from the security context.
      */
-    String getCurrentUsername();
+    Optional<String> getCurrentUsername();
 
     /**
      * Gets the current user's role from the security context.

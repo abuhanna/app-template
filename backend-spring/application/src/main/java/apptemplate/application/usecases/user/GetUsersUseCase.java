@@ -10,7 +10,7 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-import java.util.UUID;
+
 
 @Service
 @RequiredArgsConstructor
@@ -20,7 +20,7 @@ public class GetUsersUseCase {
     private final UserMapper userMapper;
 
     @Transactional(readOnly = true)
-    public Page<UserDto> execute(String search, UUID departmentId, Boolean isActive, Pageable pageable) {
+    public Page<UserDto> execute(String search, Long departmentId, Boolean isActive, Pageable pageable) {
         Page<User> users = userRepository.findByFilters(search, departmentId, isActive, pageable);
         return users.map(userMapper::toDto);
     }

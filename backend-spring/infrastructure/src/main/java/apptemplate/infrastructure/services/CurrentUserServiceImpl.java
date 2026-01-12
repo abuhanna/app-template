@@ -9,26 +9,26 @@ import org.springframework.web.context.request.RequestContextHolder;
 import org.springframework.web.context.request.ServletRequestAttributes;
 
 import java.util.Optional;
-import java.util.UUID;
+
 
 @Service
 public class CurrentUserServiceImpl implements CurrentUserService {
 
     @Override
-    public Optional<UUID> getCurrentUserId() {
+    public Optional<Long> getCurrentUserId() {
         Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
         if (authentication == null || !authentication.isAuthenticated()) {
             return Optional.empty();
         }
 
         Object principal = authentication.getPrincipal();
-        if (principal instanceof UUID) {
-            return Optional.of((UUID) principal);
+        if (principal instanceof Long) {
+            return Optional.of((Long) principal);
         }
         if (principal instanceof String && !"anonymousUser".equals(principal)) {
             try {
-                return Optional.of(UUID.fromString((String) principal));
-            } catch (IllegalArgumentException e) {
+                return Optional.of(Long.parseLong((String) principal));
+            } catch (NumberFormatException e) {
                 return Optional.empty();
             }
         }
@@ -49,6 +49,24 @@ public class CurrentUserServiceImpl implements CurrentUserService {
         }
 
         return Optional.of(name);
+    }
+
+    @Override
+    public boolean isAuthenticated() {
+        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+        return authentication != null && authentication.isAuthenticated() && !"anonymousUser".equals(authentication.getName());
+    }
+
+    @Override
+    public String getCurrentUserRole() {
+        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+        if (authentication == null || !authentication.isAuthenticated()) {
+            return null;
+        }
+        return authentication.getAuthorities().stream()
+                .findFirst()
+                .map(grantedAuthority -> grantedAuthority.getAuthority())
+                .orElse(null);
     }
 
     @Override

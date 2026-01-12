@@ -12,7 +12,7 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-import java.util.UUID;
+
 
 @Service
 @RequiredArgsConstructor
@@ -23,7 +23,7 @@ public class UpdateUserUseCase {
     private final UserMapper userMapper;
 
     @Transactional
-    public UserDto execute(UUID id, UpdateUserRequest request) {
+    public UserDto execute(Long id, UpdateUserRequest request) {
         User user = userRepository.findById(id)
                 .orElseThrow(() -> new NotFoundException("User", id));
 
@@ -50,11 +50,11 @@ public class UpdateUserUseCase {
         }
 
         // Update user
+        String fullName = (request.getFirstName() + " " + request.getLastName()).trim();
         user.update(
                 request.getUsername(),
+                fullName,
                 request.getEmail(),
-                request.getFirstName(),
-                request.getLastName(),
                 request.getRole(),
                 request.getDepartmentId(),
                 request.getIsActive()

@@ -1,6 +1,8 @@
 package apptemplate.domain.entities;
 
 import apptemplate.domain.enums.UserRole;
+import lombok.AllArgsConstructor;
+import lombok.Builder;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
@@ -13,7 +15,9 @@ import java.util.UUID;
  */
 @Getter
 @Setter
+@Builder
 @NoArgsConstructor
+@AllArgsConstructor
 public class User extends AuditableEntity {
 
     private String username;
@@ -45,11 +49,13 @@ public class User extends AuditableEntity {
     /**
      * Updates user information.
      */
-    public void update(String name, String email, UserRole role, Long departmentId) {
+    public void update(String username, String name, String email, UserRole role, Long departmentId, boolean active) {
+        this.username = username;
         this.name = name;
         this.email = email;
         this.role = role;
         this.departmentId = departmentId;
+        this.active = active;
     }
 
     /**
@@ -71,6 +77,10 @@ public class User extends AuditableEntity {
      * Records user login.
      */
     public void recordLogin() {
+        this.lastLoginAt = LocalDateTime.now();
+    }
+
+    public void recordLogin(String ipAddress) {
         this.lastLoginAt = LocalDateTime.now();
     }
 

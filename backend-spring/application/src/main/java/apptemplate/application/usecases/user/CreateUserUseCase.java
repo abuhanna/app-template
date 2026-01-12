@@ -46,15 +46,15 @@ public class CreateUserUseCase {
         String passwordHash = passwordService.hashPassword(request.getPassword());
 
         // Create user
+        String fullName = (request.getFirstName() + " " + request.getLastName()).trim();
         User user = User.builder()
                 .username(request.getUsername())
                 .email(request.getEmail())
                 .passwordHash(passwordHash)
-                .firstName(request.getFirstName())
-                .lastName(request.getLastName())
+                .name(fullName)
                 .role(request.getRole())
                 .departmentId(request.getDepartmentId())
-                .isActive(request.getIsActive() != null ? request.getIsActive() : true)
+                .active(request.getIsActive() != null ? request.getIsActive() : true)
                 .build();
 
         userRepository.save(user);

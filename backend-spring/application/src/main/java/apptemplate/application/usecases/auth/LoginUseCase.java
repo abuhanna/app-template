@@ -62,7 +62,7 @@ public class LoginUseCase {
         refreshTokenRepository.save(refreshToken);
 
         return LoginResponse.builder()
-                .accessToken(accessToken)
+                .token(accessToken)
                 .refreshToken(refreshToken.getToken())
                 .expiresIn(jwtTokenService.getExpirationSeconds())
                 .user(userMapper.toUserInfoResponse(user))

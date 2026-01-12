@@ -17,8 +17,8 @@ public class JpaAuditingConfig {
     private final CurrentUserService currentUserService;
 
     @Bean
-    public AuditorAware<String> auditorProvider() {
-        return () -> currentUserService.getCurrentUsername()
-                .or(() -> Optional.of("system"));
+    public AuditorAware<Long> auditorProvider() {
+        return () -> currentUserService.getCurrentUserId()
+                .or(() -> Optional.of(0L)); // System user ID
     }
 }

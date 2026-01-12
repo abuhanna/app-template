@@ -9,7 +9,7 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-import java.util.UUID;
+
 
 @Service
 @RequiredArgsConstructor
@@ -19,7 +19,7 @@ public class GetDepartmentByIdUseCase {
     private final DepartmentMapper departmentMapper;
 
     @Transactional(readOnly = true)
-    public DepartmentDto execute(UUID id) {
+    public DepartmentDto execute(Long id) {
         Department department = departmentRepository.findById(id)
                 .orElseThrow(() -> new NotFoundException("Department", id));
 

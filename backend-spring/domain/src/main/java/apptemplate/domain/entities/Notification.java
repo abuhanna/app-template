@@ -1,6 +1,8 @@
 package apptemplate.domain.entities;
 
 import apptemplate.domain.enums.NotificationType;
+import lombok.AllArgsConstructor;
+import lombok.Builder;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
@@ -12,7 +14,9 @@ import java.time.LocalDateTime;
  */
 @Getter
 @Setter
+@Builder
 @NoArgsConstructor
+@AllArgsConstructor
 public class Notification {
 
     private Long id;
@@ -20,6 +24,7 @@ public class Notification {
     private String title;
     private String message;
     private NotificationType type;
+    private String link;
     private String referenceId;
     private String referenceType;
     private boolean read;

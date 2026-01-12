@@ -5,12 +5,14 @@ import apptemplate.application.ports.repositories.UserRepository;
 import apptemplate.domain.entities.Department;
 import apptemplate.domain.entities.User;
 import apptemplate.domain.enums.UserRole;
+import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.boot.CommandLineRunner;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Component;
 import org.springframework.transaction.annotation.Transactional;
 
 @Component
+@ConditionalOnProperty(name = "app.seeding.enabled", havingValue = "true", matchIfMissing = true)
 public class DataSeeder implements CommandLineRunner {
 
     private final UserRepository userRepository;

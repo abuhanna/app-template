@@ -12,7 +12,7 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-import java.util.UUID;
+
 
 @Service
 @RequiredArgsConstructor
@@ -24,7 +24,7 @@ public class UpdateMyProfileUseCase {
 
     @Transactional
     public UserDto execute(UpdateProfileRequest request) {
-        UUID userId = currentUserService.getCurrentUserId()
+        Long userId = currentUserService.getCurrentUserId()
                 .orElseThrow(() -> new AuthenticationException("User not authenticated"));
 
         User user = userRepository.findById(userId)
@@ -39,15 +39,12 @@ public class UpdateMyProfileUseCase {
         }
 
         // Update profile fields (cannot change username, role, or department)
-        user.update(
-                user.getUsername(),
-                request.getEmail(),
-                request.getFirstName(),
-                request.getLastName(),
-                user.getRole(),
-                user.getDepartmentId(),
-                user.isActive()
-        );
+        user.setName(request.getName());
+        user.setEmail(request.getEmail());
+        // The original update method call is replaced by direct setters.
+        // Other fields like username, role, departmentId, and active status are not changed
+        // as per the comment "cannot change username, role, or department".
+        // The active status is also not changed by this profile update.
 
         userRepository.save(user);
 

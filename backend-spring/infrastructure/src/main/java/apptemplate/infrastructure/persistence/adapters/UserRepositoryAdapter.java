@@ -12,7 +12,7 @@ import org.springframework.stereotype.Repository;
 
 import java.util.List;
 import java.util.Optional;
-import java.util.UUID;
+
 import java.util.stream.Collectors;
 
 @Repository
@@ -23,7 +23,7 @@ public class UserRepositoryAdapter implements UserRepository {
     private final UserEntityMapper mapper;
 
     @Override
-    public Optional<User> findById(UUID id) {
+    public Optional<User> findById(Long id) {
         return jpaRepository.findById(id).map(mapper::toDomain);
     }
 
@@ -50,7 +50,7 @@ public class UserRepositoryAdapter implements UserRepository {
     }
 
     @Override
-    public Page<User> findByFilters(String search, UUID departmentId, Boolean isActive, Pageable pageable) {
+    public Page<User> findByFilters(String search, Long departmentId, Boolean isActive, Pageable pageable) {
         return jpaRepository.findByFilters(search, departmentId, isActive, pageable)
                 .map(mapper::toDomain);
     }
@@ -63,7 +63,7 @@ public class UserRepositoryAdapter implements UserRepository {
     }
 
     @Override
-    public long countByDepartmentId(UUID departmentId) {
+    public long countByDepartmentId(Long departmentId) {
         return jpaRepository.countByDepartmentId(departmentId);
     }
 
@@ -78,12 +78,12 @@ public class UserRepositoryAdapter implements UserRepository {
     }
 
     @Override
-    public boolean existsByUsernameAndIdNot(String username, UUID id) {
+    public boolean existsByUsernameAndIdNot(String username, Long id) {
         return jpaRepository.existsByUsernameAndIdNot(username, id);
     }
 
     @Override
-    public boolean existsByEmailAndIdNot(String email, UUID id) {
+    public boolean existsByEmailAndIdNot(String email, Long id) {
         return jpaRepository.existsByEmailAndIdNot(email, id);
     }
 
@@ -107,7 +107,7 @@ public class UserRepositoryAdapter implements UserRepository {
     }
 
     @Override
-    public void deleteById(UUID id) {
+    public void deleteById(Long id) {
         jpaRepository.deleteById(id);
     }
 }

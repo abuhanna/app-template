@@ -1,0 +1,21 @@
+spring:
+  datasource:
+    url: jdbc:h2:mem:testdb;MODE=PostgreSQL
+    driver-class-name: org.h2.Driver
+    username: sa
+    password: password
+  jpa:
+    database-platform: org.hibernate.dialect.H2Dialect
+    hibernate:
+      ddl-auto: create-drop
+    show-sql: true
+
+app:
+  seeding:
+    enabled: false
+
+jwt:
+  secret: your-256-bit-secret-key-minimum-32-characters-long-for-hs256
+  expiration-ms: 900000
+  issuer: AppTemplate
+  audience: AppTemplate

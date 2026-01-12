@@ -9,7 +9,7 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-import java.util.UUID;
+
 
 @Service
 @RequiredArgsConstructor
@@ -19,7 +19,7 @@ public class DeleteDepartmentUseCase {
     private final UserRepository userRepository;
 
     @Transactional
-    public void execute(UUID id) {
+    public void execute(Long id) {
         Department department = departmentRepository.findById(id)
                 .orElseThrow(() -> new NotFoundException("Department", id));
 

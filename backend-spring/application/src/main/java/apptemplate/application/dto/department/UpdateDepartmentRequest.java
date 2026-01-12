@@ -1,6 +1,7 @@
 package apptemplate.application.dto.department;
 
 import jakarta.validation.constraints.NotBlank;
+import jakarta.validation.constraints.Pattern;
 import jakarta.validation.constraints.Size;
 import lombok.AllArgsConstructor;
 import lombok.Data;
@@ -10,6 +11,11 @@ import lombok.NoArgsConstructor;
 @NoArgsConstructor
 @AllArgsConstructor
 public class UpdateDepartmentRequest {
+
+    @NotBlank(message = "Code is required")
+    @Size(min = 2, max = 20, message = "Code must be between 2 and 20 characters")
+    @Pattern(regexp = "^[A-Z0-9_-]+$", message = "Code must be uppercase alphanumeric with underscores or hyphens")
+    private String code;
 
     @NotBlank(message = "Name is required")
     @Size(max = 100, message = "Name must not exceed 100 characters")

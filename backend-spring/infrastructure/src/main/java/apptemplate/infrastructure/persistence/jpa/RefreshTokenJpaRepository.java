@@ -10,23 +10,23 @@ import org.springframework.stereotype.Repository;
 import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Optional;
-import java.util.UUID;
+
 
 @Repository
-public interface RefreshTokenJpaRepository extends JpaRepository<RefreshTokenJpaEntity, UUID> {
+public interface RefreshTokenJpaRepository extends JpaRepository<RefreshTokenJpaEntity, Long> {
 
     Optional<RefreshTokenJpaEntity> findByToken(String token);
 
-    List<RefreshTokenJpaEntity> findByUserId(UUID userId);
+    List<RefreshTokenJpaEntity> findByUserId(Long userId);
 
     @Query("SELECT t FROM RefreshTokenJpaEntity t WHERE t.userId = :userId AND t.revokedAt IS NULL AND t.expiresAt > :now")
-    List<RefreshTokenJpaEntity> findActiveByUserId(@Param("userId") UUID userId, @Param("now") LocalDateTime now);
+    List<RefreshTokenJpaEntity> findActiveByUserId(@Param("userId") Long userId, @Param("now") LocalDateTime now);
 
     void deleteByToken(String token);
 
-    void deleteByUserId(UUID userId);
+    void deleteByUserId(Long userId);
 
     @Modifying
     @Query("UPDATE RefreshTokenJpaEntity t SET t.revokedAt = :revokedAt WHERE t.userId = :userId AND t.revokedAt IS NULL")
-    void revokeAllByUserId(@Param("userId") UUID userId, @Param("revokedAt") LocalDateTime revokedAt);
+    void revokeAllByUserId(@Param("userId") Long userId, @Param("revokedAt") LocalDateTime revokedAt);
 }

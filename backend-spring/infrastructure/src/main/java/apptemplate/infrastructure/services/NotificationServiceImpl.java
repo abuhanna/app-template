@@ -13,7 +13,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.util.Map;
-import java.util.UUID;
+
 
 @Service
 @RequiredArgsConstructor
@@ -26,15 +26,16 @@ public class NotificationServiceImpl implements NotificationService {
 
     @Override
     @Transactional
-    public void notifyUser(UUID userId, String title, String message, NotificationType type, String link) {
+    public void notifyUser(Long userId, String title, String message, NotificationType type, String referenceId, String referenceType) {
         // Create and save notification
         Notification notification = Notification.builder()
                 .userId(userId)
                 .title(title)
                 .message(message)
                 .type(type)
-                .link(link)
-                .isRead(false)
+                .referenceId(referenceId)
+                .referenceType(referenceType)
+                .read(false)
                 .build();
 
         Notification saved = notificationRepository.save(notification);
@@ -45,13 +46,25 @@ public class NotificationServiceImpl implements NotificationService {
 
     @Override
     @Transactional
-    public void notifyAdmins(String title, String message, NotificationType type, String link) {
+    public void notifyUser(Long userId, String title, String message, NotificationType type) {
+        notifyUser(userId, title, message, type, null, null);
+    }
+
+    @Override
+    @Transactional
+    public void notifyAdmins(String title, String message, NotificationType type, String referenceId, String referenceType) {
         userRepository.findByRole(UserRole.ADMIN.name()).forEach(admin -> {
-            notifyUser(admin.getId(), title, message, type, link);
+            notifyUser(admin.getId(), title, message, type, referenceId, referenceType);
         });
     }
 
-    private void sendWebSocketNotification(UUID userId, Notification notification) {
+    @Override
+    @Transactional
+    public void notifyAdmins(String title, String message, NotificationType type) {
+        notifyAdmins(title, message, type, null, null);
+    }
+
+    private void sendWebSocketNotification(Long userId, Notification notification) {
         try {
             Map<String, Object> payload = Map.of(
                     "id", notification.getId(),

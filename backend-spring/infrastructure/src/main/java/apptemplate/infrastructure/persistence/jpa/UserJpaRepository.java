@@ -10,10 +10,10 @@ import org.springframework.stereotype.Repository;
 
 import java.util.List;
 import java.util.Optional;
-import java.util.UUID;
+
 
 @Repository
-public interface UserJpaRepository extends JpaRepository<UserJpaEntity, UUID> {
+public interface UserJpaRepository extends JpaRepository<UserJpaEntity, Long> {
 
     Optional<UserJpaEntity> findByUsername(String username);
 
@@ -27,11 +27,11 @@ public interface UserJpaRepository extends JpaRepository<UserJpaEntity, UUID> {
 
     boolean existsByEmail(String email);
 
-    boolean existsByUsernameAndIdNot(String username, UUID id);
+    boolean existsByUsernameAndIdNot(String username, Long id);
 
-    boolean existsByEmailAndIdNot(String email, UUID id);
+    boolean existsByEmailAndIdNot(String email, Long id);
 
-    long countByDepartmentId(UUID departmentId);
+    long countByDepartmentId(Long departmentId);
 
     @Query("SELECT u FROM UserJpaEntity u WHERE " +
            "(:search IS NULL OR LOWER(u.username) LIKE LOWER(CONCAT('%', :search, '%')) " +
@@ -42,7 +42,7 @@ public interface UserJpaRepository extends JpaRepository<UserJpaEntity, UUID> {
            "AND (:isActive IS NULL OR u.isActive = :isActive)")
     Page<UserJpaEntity> findByFilters(
             @Param("search") String search,
-            @Param("departmentId") UUID departmentId,
+            @Param("departmentId") Long departmentId,
             @Param("isActive") Boolean isActive,
             Pageable pageable
     );

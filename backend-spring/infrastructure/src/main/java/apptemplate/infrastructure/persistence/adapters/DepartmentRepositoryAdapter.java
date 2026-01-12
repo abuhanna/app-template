@@ -12,7 +12,7 @@ import org.springframework.stereotype.Repository;
 
 import java.util.List;
 import java.util.Optional;
-import java.util.UUID;
+
 import java.util.stream.Collectors;
 
 @Repository
@@ -23,7 +23,7 @@ public class DepartmentRepositoryAdapter implements DepartmentRepository {
     private final DepartmentEntityMapper mapper;
 
     @Override
-    public Optional<Department> findById(UUID id) {
+    public Optional<Department> findById(Long id) {
         return jpaRepository.findById(id).map(mapper::toDomain);
     }
 
@@ -51,7 +51,7 @@ public class DepartmentRepositoryAdapter implements DepartmentRepository {
     }
 
     @Override
-    public boolean existsByCodeAndIdNot(String code, UUID id) {
+    public boolean existsByCodeAndIdNot(String code, Long id) {
         return jpaRepository.existsByCodeAndIdNot(code, id);
     }
 
@@ -75,7 +75,7 @@ public class DepartmentRepositoryAdapter implements DepartmentRepository {
     }
 
     @Override
-    public void deleteById(UUID id) {
+    public void deleteById(Long id) {
         jpaRepository.deleteById(id);
     }
 }

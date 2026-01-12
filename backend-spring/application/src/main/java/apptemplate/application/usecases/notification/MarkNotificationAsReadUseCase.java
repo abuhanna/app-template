@@ -9,7 +9,7 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-import java.util.UUID;
+
 
 @Service
 @RequiredArgsConstructor
@@ -19,8 +19,8 @@ public class MarkNotificationAsReadUseCase {
     private final CurrentUserService currentUserService;
 
     @Transactional
-    public void execute(UUID notificationId) {
-        UUID userId = currentUserService.getCurrentUserId()
+    public void execute(Long notificationId) {
+        Long userId = currentUserService.getCurrentUserId()
                 .orElseThrow(() -> new AuthenticationException("User not authenticated"));
 
         Notification notification = notificationRepository.findById(notificationId)

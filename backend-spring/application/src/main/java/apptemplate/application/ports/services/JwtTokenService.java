@@ -2,7 +2,7 @@ package apptemplate.application.ports.services;
 
 import apptemplate.domain.entities.User;
 
-import java.util.UUID;
+
 
 /**
  * Port interface for JWT token operations.
@@ -22,7 +22,7 @@ public interface JwtTokenService {
     /**
      * Gets the user ID from a token.
      */
-    UUID getUserIdFromToken(String token);
+    Long getUserIdFromToken(String token);
 
     /**
      * Gets the username from a token.

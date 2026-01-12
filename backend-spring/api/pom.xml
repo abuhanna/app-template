@@ -50,6 +50,13 @@
             <groupId>com.bucket4j</groupId>
             <artifactId>bucket4j-core</artifactId>
         </dependency>
+
+        <!-- Test Database -->
+        <dependency>
+            <groupId>com.h2database</groupId>
+            <artifactId>h2</artifactId>
+            <scope>test</scope>
+        </dependency>
     </dependencies>
 
     <build>

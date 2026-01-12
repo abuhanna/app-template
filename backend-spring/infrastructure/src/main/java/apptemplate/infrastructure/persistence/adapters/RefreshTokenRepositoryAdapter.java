@@ -12,7 +12,7 @@ import org.springframework.transaction.annotation.Transactional;
 import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Optional;
-import java.util.UUID;
+
 import java.util.stream.Collectors;
 
 @Repository
@@ -23,7 +23,7 @@ public class RefreshTokenRepositoryAdapter implements RefreshTokenRepository {
     private final RefreshTokenEntityMapper mapper;
 
     @Override
-    public Optional<RefreshToken> findById(UUID id) {
+    public Optional<RefreshToken> findById(Long id) {
         return jpaRepository.findById(id).map(mapper::toDomain);
     }
 
@@ -33,14 +33,14 @@ public class RefreshTokenRepositoryAdapter implements RefreshTokenRepository {
     }
 
     @Override
-    public List<RefreshToken> findByUserId(UUID userId) {
+    public List<RefreshToken> findByUserId(Long userId) {
         return jpaRepository.findByUserId(userId).stream()
                 .map(mapper::toDomain)
                 .collect(Collectors.toList());
     }
 
     @Override
-    public List<RefreshToken> findActiveByUserId(UUID userId) {
+    public List<RefreshToken> findActiveByUserId(Long userId) {
         return jpaRepository.findActiveByUserId(userId, LocalDateTime.now()).stream()
                 .map(mapper::toDomain)
                 .collect(Collectors.toList());
@@ -68,13 +68,13 @@ public class RefreshTokenRepositoryAdapter implements RefreshTokenRepository {
 
     @Override
     @Transactional
-    public void deleteByUserId(UUID userId) {
+    public void deleteByUserId(Long userId) {
         jpaRepository.deleteByUserId(userId);
     }
 
     @Override
     @Transactional
-    public void revokeAllByUserId(UUID userId) {
+    public void revokeAllByUserId(Long userId) {
         jpaRepository.revokeAllByUserId(userId, LocalDateTime.now());
     }
 }

@@ -12,7 +12,7 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-import java.util.UUID;
+
 
 @Service
 @RequiredArgsConstructor
@@ -24,7 +24,7 @@ public class GetUserNotificationsUseCase {
 
     @Transactional(readOnly = true)
     public Page<NotificationDto> execute(Boolean unreadOnly, Pageable pageable) {
-        UUID userId = currentUserService.getCurrentUserId()
+        Long userId = currentUserService.getCurrentUserId()
                 .orElseThrow(() -> new AuthenticationException("User not authenticated"));
 
         Page<Notification> notifications = notificationRepository.findByUserId(userId, unreadOnly, pageable);

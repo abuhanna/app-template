@@ -13,7 +13,7 @@ import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDateTime;
 import java.util.Optional;
-import java.util.UUID;
+
 
 @Repository
 @RequiredArgsConstructor
@@ -23,18 +23,18 @@ public class NotificationRepositoryAdapter implements NotificationRepository {
     private final NotificationEntityMapper mapper;
 
     @Override
-    public Optional<Notification> findById(UUID id) {
+    public Optional<Notification> findById(Long id) {
         return jpaRepository.findById(id).map(mapper::toDomain);
     }
 
     @Override
-    public Page<Notification> findByUserId(UUID userId, Boolean unreadOnly, Pageable pageable) {
+    public Page<Notification> findByUserId(Long userId, Boolean unreadOnly, Pageable pageable) {
         return jpaRepository.findByUserId(userId, unreadOnly, pageable)
                 .map(mapper::toDomain);
     }
 
     @Override
-    public long countUnreadByUserId(UUID userId) {
+    public long countUnreadByUserId(Long userId) {
         return jpaRepository.countByUserIdAndIsReadFalse(userId);
     }
 
@@ -54,18 +54,18 @@ public class NotificationRepositoryAdapter implements NotificationRepository {
 
     @Override
     @Transactional
-    public void markAsRead(UUID id) {
+    public void markAsRead(Long id) {
         jpaRepository.markAsRead(id, LocalDateTime.now());
     }
 
     @Override
     @Transactional
-    public void markAllAsRead(UUID userId) {
+    public void markAllAsRead(Long userId) {
         jpaRepository.markAllAsRead(userId, LocalDateTime.now());
     }
 
     @Override
-    public void deleteById(UUID id) {
+    public void deleteById(Long id) {
         jpaRepository.deleteById(id);
     }
 }

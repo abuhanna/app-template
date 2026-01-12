@@ -5,24 +5,24 @@ import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 
 import java.util.Optional;
-import java.util.UUID;
+
 
 /**
  * Port interface for Notification repository operations.
  */
 public interface NotificationRepository {
 
-    Optional<Notification> findById(UUID id);
+    Optional<Notification> findById(Long id);
 
-    Page<Notification> findByUserId(UUID userId, Boolean unreadOnly, Pageable pageable);
+    Page<Notification> findByUserId(Long userId, Boolean unreadOnly, Pageable pageable);
 
-    long countUnreadByUserId(UUID userId);
+    long countUnreadByUserId(Long userId);
 
     Notification save(Notification notification);
 
-    void markAsRead(UUID id);
+    void markAsRead(Long id);
 
-    void markAllAsRead(UUID userId);
+    void markAllAsRead(Long userId);
 
-    void deleteById(UUID id);
+    void deleteById(Long id);
 }

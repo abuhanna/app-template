@@ -11,7 +11,7 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-import java.util.UUID;
+
 
 @Service
 @RequiredArgsConstructor
@@ -21,7 +21,7 @@ public class UpdateDepartmentUseCase {
     private final DepartmentMapper departmentMapper;
 
     @Transactional
-    public DepartmentDto execute(UUID id, UpdateDepartmentRequest request) {
+    public DepartmentDto execute(Long id, UpdateDepartmentRequest request) {
         Department department = departmentRepository.findById(id)
                 .orElseThrow(() -> new NotFoundException("Department", id));
 
@@ -34,12 +34,12 @@ public class UpdateDepartmentUseCase {
         }
 
         // Update department
+        department.updateCode(request.getCode().toUpperCase());
         department.update(
-                request.getCode().toUpperCase(),
                 request.getName(),
                 request.getDescription()
         );
-        department.setActiveStatus(request.getIsActive());
+        department.setActiveStatus(request.getActive());
 
         departmentRepository.save(department);
 

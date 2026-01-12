@@ -20,4 +20,7 @@ public class ChangePasswordRequest {
     @Pattern(regexp = "^(?=.*[a-z])(?=.*[A-Z])(?=.*\\d).+$",
              message = "Password must contain at least one uppercase letter, one lowercase letter, and one digit")
     private String newPassword;
+
+    @NotBlank(message = "Confirm password is required")
+    private String confirmPassword;
 }

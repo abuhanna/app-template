@@ -4,26 +4,26 @@ import apptemplate.domain.entities.RefreshToken;
 
 import java.util.List;
 import java.util.Optional;
-import java.util.UUID;
+
 
 /**
  * Port interface for RefreshToken repository operations.
  */
 public interface RefreshTokenRepository {
 
-    Optional<RefreshToken> findById(UUID id);
+    Optional<RefreshToken> findById(Long id);
 
     Optional<RefreshToken> findByToken(String token);
 
-    List<RefreshToken> findByUserId(UUID userId);
+    List<RefreshToken> findByUserId(Long userId);
 
-    List<RefreshToken> findActiveByUserId(UUID userId);
+    List<RefreshToken> findActiveByUserId(Long userId);
 
     RefreshToken save(RefreshToken refreshToken);
 
     void deleteByToken(String token);
 
-    void deleteByUserId(UUID userId);
+    void deleteByUserId(Long userId);
 
-    void revokeAllByUserId(UUID userId);
+    void revokeAllByUserId(Long userId);
 }

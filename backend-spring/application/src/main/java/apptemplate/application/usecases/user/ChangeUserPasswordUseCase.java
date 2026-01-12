@@ -12,7 +12,7 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-import java.util.UUID;
+
 
 @Service
 @RequiredArgsConstructor
@@ -25,7 +25,7 @@ public class ChangeUserPasswordUseCase {
 
     @Transactional
     public void execute(ChangePasswordRequest request) {
-        UUID userId = currentUserService.getCurrentUserId()
+        Long userId = currentUserService.getCurrentUserId()
                 .orElseThrow(() -> new AuthenticationException("User not authenticated"));
 
         User user = userRepository.findById(userId)
@@ -33,12 +33,12 @@ public class ChangeUserPasswordUseCase {
 
         // Verify current password
         if (!passwordService.verifyPassword(request.getCurrentPassword(), user.getPasswordHash())) {
-            throw new ValidationException("Current password is incorrect", "currentPassword", "Current password is incorrect");
+            throw new ValidationException("currentPassword", "Current password is incorrect");
         }
 
         // Validate password confirmation
         if (!request.getNewPassword().equals(request.getConfirmPassword())) {
-            throw new ValidationException("Passwords do not match", "confirmPassword", "Passwords must match");
+            throw new ValidationException("confirmPassword", "Passwords must match");
         }
 
         // Update password
