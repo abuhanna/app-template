@@ -11,14 +11,14 @@ namespace AppTemplate.Application.Tests.Features.UserManagement.Commands;
 
 public class CreateUserCommandHandlerTests
 {
-    private readonly Mock<IBpmDbContext> _mockContext;
+    private readonly Mock<IApplicationDbContext> _mockContext;
     private readonly Mock<IPasswordHashService> _mockPasswordHashService;
     private readonly Mock<ILogger<CreateUserCommandHandler>> _mockLogger;
     private readonly CreateUserCommandHandler _handler;
 
     public CreateUserCommandHandlerTests()
     {
-        _mockContext = new Mock<IBpmDbContext>();
+        _mockContext = new Mock<IApplicationDbContext>();
         _mockPasswordHashService = new Mock<IPasswordHashService>();
         _mockLogger = new Mock<ILogger<CreateUserCommandHandler>>();
         _handler = new CreateUserCommandHandler(

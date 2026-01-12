@@ -7,12 +7,12 @@ namespace AppTemplate.Application.Features.UserManagement.Commands.ChangePasswor
 
 public class ChangePasswordCommandHandler : IRequestHandler<ChangePasswordCommand, bool>
 {
-    private readonly IBpmDbContext _context;
+    private readonly IApplicationDbContext _context;
     private readonly IPasswordHashService _passwordHashService;
     private readonly ILogger<ChangePasswordCommandHandler> _logger;
 
     public ChangePasswordCommandHandler(
-        IBpmDbContext context,
+        IApplicationDbContext context,
         IPasswordHashService passwordHashService,
         ILogger<ChangePasswordCommandHandler> logger)
     {

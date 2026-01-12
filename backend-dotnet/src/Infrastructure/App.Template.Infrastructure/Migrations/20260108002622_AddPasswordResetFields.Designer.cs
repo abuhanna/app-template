@@ -11,7 +11,7 @@ using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 
 namespace AppTemplate.Infrastructure.Migrations
 {
-    [DbContext(typeof(BpmDbContext))]
+    [DbContext(typeof(ApplicationDbContext))]
     [Migration("20260108002622_AddPasswordResetFields")]
     partial class AddPasswordResetFields
     {

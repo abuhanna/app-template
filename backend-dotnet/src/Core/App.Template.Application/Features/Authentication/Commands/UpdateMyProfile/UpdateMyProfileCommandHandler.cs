@@ -7,10 +7,10 @@ namespace AppTemplate.Application.Features.Authentication.Commands.UpdateMyProfi
 
 public class UpdateMyProfileCommandHandler : IRequestHandler<UpdateMyProfileCommand, UserDto>
 {
-    private readonly IBpmDbContext _context;
+    private readonly IApplicationDbContext _context;
     private readonly ICurrentUserService _currentUserService;
 
-    public UpdateMyProfileCommandHandler(IBpmDbContext context, ICurrentUserService currentUserService)
+    public UpdateMyProfileCommandHandler(IApplicationDbContext context, ICurrentUserService currentUserService)
     {
         _context = context;
         _currentUserService = currentUserService;

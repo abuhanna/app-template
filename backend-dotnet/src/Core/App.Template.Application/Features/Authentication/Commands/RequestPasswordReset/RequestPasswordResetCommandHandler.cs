@@ -9,13 +9,13 @@ namespace AppTemplate.Application.Features.Authentication.Commands.RequestPasswo
 
 public class RequestPasswordResetCommandHandler : IRequestHandler<RequestPasswordResetCommand, bool>
 {
-    private readonly IBpmDbContext _context;
+    private readonly IApplicationDbContext _context;
     private readonly IEmailService _emailService;
     private readonly IConfiguration _configuration;
     private readonly ILogger<RequestPasswordResetCommandHandler> _logger;
 
     public RequestPasswordResetCommandHandler(
-        IBpmDbContext context,
+        IApplicationDbContext context,
         IEmailService emailService,
         IConfiguration configuration,
         ILogger<RequestPasswordResetCommandHandler> logger)

@@ -10,8 +10,10 @@ export class CreateUsers1700000002 implements MigrationInterface {
         columns: [
           {
             name: 'id',
-            type: 'uuid',
+            type: 'bigint',
             isPrimary: true,
+            isGenerated: true,
+            generationStrategy: 'increment',
           },
           {
             name: 'email',
@@ -47,7 +49,7 @@ export class CreateUsers1700000002 implements MigrationInterface {
           },
           {
             name: 'department_id',
-            type: 'uuid',
+            type: 'bigint',
             isNullable: true,
           },
           {
@@ -82,12 +84,12 @@ export class CreateUsers1700000002 implements MigrationInterface {
           },
           {
             name: 'created_by',
-            type: 'uuid',
+            type: 'bigint',
             isNullable: true,
           },
           {
             name: 'updated_by',
-            type: 'uuid',
+            type: 'bigint',
             isNullable: true,
           },
         ],

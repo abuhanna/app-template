@@ -13,7 +13,7 @@ namespace AppTemplate.Application.Features.Authentication.Commands.Login;
 /// </summary>
 public class LoginCommandHandler : IRequestHandler<LoginCommand, LoginResponseDto>
 {
-    private readonly IBpmDbContext _context;
+    private readonly IApplicationDbContext _context;
     private readonly IPasswordHashService _passwordHashService;
     private readonly IJwtTokenService _jwtTokenService;
     private readonly ISsoAuthService? _ssoAuthService;
@@ -21,7 +21,7 @@ public class LoginCommandHandler : IRequestHandler<LoginCommand, LoginResponseDt
     private readonly ILogger<LoginCommandHandler> _logger;
 
     public LoginCommandHandler(
-        IBpmDbContext context,
+        IApplicationDbContext context,
         IPasswordHashService passwordHashService,
         IJwtTokenService jwtTokenService,
         IConfiguration configuration,

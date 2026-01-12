@@ -8,11 +8,11 @@ namespace AppTemplate.Application.Features.DepartmentManagement.Queries.GetDepar
 
 public class GetDepartmentByIdQueryHandler : IRequestHandler<GetDepartmentByIdQuery, DepartmentDto?>
 {
-    private readonly IBpmDbContext _context;
+    private readonly IApplicationDbContext _context;
     private readonly ILogger<GetDepartmentByIdQueryHandler> _logger;
 
     public GetDepartmentByIdQueryHandler(
-        IBpmDbContext context,
+        IApplicationDbContext context,
         ILogger<GetDepartmentByIdQueryHandler> logger)
     {
         _context = context;

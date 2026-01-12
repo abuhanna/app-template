@@ -7,11 +7,11 @@ namespace AppTemplate.Application.Features.DepartmentManagement.Commands.DeleteD
 
 public class DeleteDepartmentCommandHandler : IRequestHandler<DeleteDepartmentCommand, bool>
 {
-    private readonly IBpmDbContext _context;
+    private readonly IApplicationDbContext _context;
     private readonly ILogger<DeleteDepartmentCommandHandler> _logger;
 
     public DeleteDepartmentCommandHandler(
-        IBpmDbContext context,
+        IApplicationDbContext context,
         ILogger<DeleteDepartmentCommandHandler> logger)
     {
         _context = context;

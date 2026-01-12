@@ -10,12 +10,12 @@ namespace AppTemplate.Infrastructure.Services;
 
 public class NotificationService : INotificationService
 {
-    private readonly IBpmDbContext _context;
+    private readonly IApplicationDbContext _context;
     private readonly IHubContext<NotificationHub> _hubContext;
     private readonly ILogger<NotificationService> _logger;
 
     public NotificationService(
-        IBpmDbContext context,
+        IApplicationDbContext context,
         IHubContext<NotificationHub> hubContext,
         ILogger<NotificationService> logger)
     {

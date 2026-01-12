@@ -7,11 +7,11 @@ namespace AppTemplate.Application.Features.UserManagement.Commands.DeleteUser;
 
 public class DeleteUserCommandHandler : IRequestHandler<DeleteUserCommand, bool>
 {
-    private readonly IBpmDbContext _context;
+    private readonly IApplicationDbContext _context;
     private readonly ILogger<DeleteUserCommandHandler> _logger;
 
     public DeleteUserCommandHandler(
-        IBpmDbContext context,
+        IApplicationDbContext context,
         ILogger<DeleteUserCommandHandler> logger)
     {
         _context = context;

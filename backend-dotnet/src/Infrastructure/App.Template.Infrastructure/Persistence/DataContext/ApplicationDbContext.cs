@@ -12,13 +12,13 @@ using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 
 namespace AppTemplate.Infrastructure.Persistence.DataContext;
 
-public class BpmDbContext : DbContext, IBpmDbContext
+public class ApplicationDbContext : DbContext, IApplicationDbContext
 {
     private readonly ICurrentUserService? _currentUserService;
 
-    public BpmDbContext(DbContextOptions<BpmDbContext> options) : base(options) { }
+    public ApplicationDbContext(DbContextOptions<ApplicationDbContext> options) : base(options) { }
 
-    public BpmDbContext(DbContextOptions<BpmDbContext> options, ICurrentUserService currentUserService)
+    public ApplicationDbContext(DbContextOptions<ApplicationDbContext> options, ICurrentUserService currentUserService)
         : base(options)
     {
         _currentUserService = currentUserService;

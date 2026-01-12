@@ -10,8 +10,10 @@ export class CreateDepartments1700000001 implements MigrationInterface {
         columns: [
           {
             name: 'id',
-            type: 'uuid',
+            type: 'bigint',
             isPrimary: true,
+            isGenerated: true,
+            generationStrategy: 'increment',
           },
           {
             name: 'name',
@@ -46,12 +48,12 @@ export class CreateDepartments1700000001 implements MigrationInterface {
           },
           {
             name: 'created_by',
-            type: 'uuid',
+            type: 'bigint',
             isNullable: true,
           },
           {
             name: 'updated_by',
-            type: 'uuid',
+            type: 'bigint',
             isNullable: true,
           },
         ],

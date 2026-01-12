@@ -3,7 +3,7 @@ using AppTemplate.Domain.Entities;
 
 namespace AppTemplate.Application.Interfaces;
 
-public interface IBpmDbContext
+public interface IApplicationDbContext
 {
     DbSet<User> Users { get; }
     DbSet<Department> Departments { get; }

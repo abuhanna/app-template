@@ -9,12 +9,12 @@ namespace AppTemplate.Application.Features.UserManagement.Commands.CreateUser;
 
 public class CreateUserCommandHandler : IRequestHandler<CreateUserCommand, UserDto>
 {
-    private readonly IBpmDbContext _context;
+    private readonly IApplicationDbContext _context;
     private readonly IPasswordHashService _passwordHashService;
     private readonly ILogger<CreateUserCommandHandler> _logger;
 
     public CreateUserCommandHandler(
-        IBpmDbContext context,
+        IApplicationDbContext context,
         IPasswordHashService passwordHashService,
         ILogger<CreateUserCommandHandler> logger)
     {

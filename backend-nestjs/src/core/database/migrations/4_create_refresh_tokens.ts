@@ -10,12 +10,14 @@ export class CreateRefreshTokens1700000004 implements MigrationInterface {
         columns: [
           {
             name: 'id',
-            type: 'uuid',
+            type: 'bigint',
             isPrimary: true,
+            isGenerated: true,
+            generationStrategy: 'increment',
           },
           {
             name: 'user_id',
-            type: 'uuid',
+            type: 'bigint',
           },
           {
             name: 'token',

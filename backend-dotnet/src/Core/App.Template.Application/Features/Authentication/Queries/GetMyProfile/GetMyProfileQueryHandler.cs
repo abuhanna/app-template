@@ -7,10 +7,10 @@ namespace AppTemplate.Application.Features.Authentication.Queries.GetMyProfile;
 
 public class GetMyProfileQueryHandler : IRequestHandler<GetMyProfileQuery, UserDto>
 {
-    private readonly IBpmDbContext _context;
+    private readonly IApplicationDbContext _context;
     private readonly ICurrentUserService _currentUserService;
 
-    public GetMyProfileQueryHandler(IBpmDbContext context, ICurrentUserService currentUserService)
+    public GetMyProfileQueryHandler(IApplicationDbContext context, ICurrentUserService currentUserService)
     {
         _context = context;
         _currentUserService = currentUserService;

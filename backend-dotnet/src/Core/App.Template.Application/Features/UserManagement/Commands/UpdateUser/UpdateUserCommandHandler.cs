@@ -8,11 +8,11 @@ namespace AppTemplate.Application.Features.UserManagement.Commands.UpdateUser;
 
 public class UpdateUserCommandHandler : IRequestHandler<UpdateUserCommand, UserDto>
 {
-    private readonly IBpmDbContext _context;
+    private readonly IApplicationDbContext _context;
     private readonly ILogger<UpdateUserCommandHandler> _logger;
 
     public UpdateUserCommandHandler(
-        IBpmDbContext context,
+        IApplicationDbContext context,
         ILogger<UpdateUserCommandHandler> logger)
     {
         _context = context;

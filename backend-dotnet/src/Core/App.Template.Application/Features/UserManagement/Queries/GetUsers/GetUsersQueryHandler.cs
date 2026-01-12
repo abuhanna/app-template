@@ -11,11 +11,11 @@ namespace AppTemplate.Application.Features.UserManagement.Queries.GetUsers;
 /// </summary>
 public class GetUsersQueryHandler : IRequestHandler<GetUsersQuery, List<UserDto>>
 {
-    private readonly IBpmDbContext _context;
+    private readonly IApplicationDbContext _context;
     private readonly ILogger<GetUsersQueryHandler> _logger;
 
     public GetUsersQueryHandler(
-        IBpmDbContext context,
+        IApplicationDbContext context,
         ILogger<GetUsersQueryHandler> logger)
     {
         _context = context;

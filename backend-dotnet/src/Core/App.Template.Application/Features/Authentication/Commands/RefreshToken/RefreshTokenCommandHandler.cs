@@ -9,13 +9,13 @@ namespace AppTemplate.Application.Features.Authentication.Commands.RefreshToken;
 
 public class RefreshTokenCommandHandler : IRequestHandler<RefreshTokenCommand, LoginResponseDto>
 {
-    private readonly IBpmDbContext _context;
+    private readonly IApplicationDbContext _context;
     private readonly IJwtTokenService _jwtTokenService;
     private readonly IConfiguration _configuration;
     private readonly ILogger<RefreshTokenCommandHandler> _logger;
 
     public RefreshTokenCommandHandler(
-        IBpmDbContext context,
+        IApplicationDbContext context,
         IJwtTokenService jwtTokenService,
         IConfiguration configuration,
         ILogger<RefreshTokenCommandHandler> logger)

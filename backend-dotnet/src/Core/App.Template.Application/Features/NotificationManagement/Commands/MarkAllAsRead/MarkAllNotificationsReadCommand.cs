@@ -8,10 +8,10 @@ public record MarkAllNotificationsReadCommand : IRequest<bool>;
 
 public class MarkAllNotificationsReadCommandHandler : IRequestHandler<MarkAllNotificationsReadCommand, bool>
 {
-    private readonly IBpmDbContext _context;
+    private readonly IApplicationDbContext _context;
     private readonly ICurrentUserService _currentUserService;
 
-    public MarkAllNotificationsReadCommandHandler(IBpmDbContext context, ICurrentUserService currentUserService)
+    public MarkAllNotificationsReadCommandHandler(IApplicationDbContext context, ICurrentUserService currentUserService)
     {
         _context = context;
         _currentUserService = currentUserService;

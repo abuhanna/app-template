@@ -22,6 +22,11 @@ export class GetUsersHandler implements IQueryHandler<GetUsersQuery> {
     // Create department map for quick lookup
     const departmentMap = new Map(departments.map((d) => [d.id, d.name]));
 
-    return users.map((user) => UserMapper.toDto(user, departmentMap.get(user.departmentId ?? '')));
+    return users.map((user) =>
+      UserMapper.toDto(
+        user,
+        user.departmentId ? departmentMap.get(user.departmentId) ?? null : null,
+      ),
+    );
   }
 }

@@ -7,12 +7,12 @@ namespace AppTemplate.Application.Features.Authentication.Commands.ResetPassword
 
 public class ResetPasswordCommandHandler : IRequestHandler<ResetPasswordCommand, bool>
 {
-    private readonly IBpmDbContext _context;
+    private readonly IApplicationDbContext _context;
     private readonly IPasswordHashService _passwordHashService;
     private readonly ILogger<ResetPasswordCommandHandler> _logger;
 
     public ResetPasswordCommandHandler(
-        IBpmDbContext context,
+        IApplicationDbContext context,
         IPasswordHashService passwordHashService,
         ILogger<ResetPasswordCommandHandler> logger)
     {

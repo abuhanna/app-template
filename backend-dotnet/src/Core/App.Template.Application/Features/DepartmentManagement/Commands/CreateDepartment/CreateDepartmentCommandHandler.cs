@@ -9,11 +9,11 @@ namespace AppTemplate.Application.Features.DepartmentManagement.Commands.CreateD
 
 public class CreateDepartmentCommandHandler : IRequestHandler<CreateDepartmentCommand, DepartmentDto>
 {
-    private readonly IBpmDbContext _context;
+    private readonly IApplicationDbContext _context;
     private readonly ILogger<CreateDepartmentCommandHandler> _logger;
 
     public CreateDepartmentCommandHandler(
-        IBpmDbContext context,
+        IApplicationDbContext context,
         ILogger<CreateDepartmentCommandHandler> logger)
     {
         _context = context;

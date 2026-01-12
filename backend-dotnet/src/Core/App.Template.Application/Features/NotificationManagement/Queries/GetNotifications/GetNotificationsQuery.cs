@@ -14,10 +14,10 @@ public record GetNotificationsQuery : IRequest<List<NotificationDto>>
 
 public class GetNotificationsQueryHandler : IRequestHandler<GetNotificationsQuery, List<NotificationDto>>
 {
-    private readonly IBpmDbContext _context;
+    private readonly IApplicationDbContext _context;
     private readonly ICurrentUserService _currentUser;
 
-    public GetNotificationsQueryHandler(IBpmDbContext context, ICurrentUserService currentUser)
+    public GetNotificationsQueryHandler(IApplicationDbContext context, ICurrentUserService currentUser)
     {
         _context = context;
         _currentUser = currentUser;

@@ -10,12 +10,14 @@ export class CreateNotifications1700000003 implements MigrationInterface {
         columns: [
           {
             name: 'id',
-            type: 'uuid',
+            type: 'bigint',
             isPrimary: true,
+            isGenerated: true,
+            generationStrategy: 'increment',
           },
           {
             name: 'user_id',
-            type: 'uuid',
+            type: 'bigint',
           },
           {
             name: 'title',

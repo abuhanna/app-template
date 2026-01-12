@@ -8,11 +8,11 @@ namespace AppTemplate.Application.Features.DepartmentManagement.Commands.UpdateD
 
 public class UpdateDepartmentCommandHandler : IRequestHandler<UpdateDepartmentCommand, DepartmentDto>
 {
-    private readonly IBpmDbContext _context;
+    private readonly IApplicationDbContext _context;
     private readonly ILogger<UpdateDepartmentCommandHandler> _logger;
 
     public UpdateDepartmentCommandHandler(
-        IBpmDbContext context,
+        IApplicationDbContext context,
         ILogger<UpdateDepartmentCommandHandler> logger)
     {
         _context = context;

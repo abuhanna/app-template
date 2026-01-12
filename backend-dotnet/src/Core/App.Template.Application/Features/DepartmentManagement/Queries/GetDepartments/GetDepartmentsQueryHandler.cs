@@ -11,11 +11,11 @@ namespace AppTemplate.Application.Features.DepartmentManagement.Queries.GetDepar
 /// </summary>
 public class GetDepartmentsQueryHandler : IRequestHandler<GetDepartmentsQuery, List<DepartmentDto>>
 {
-    private readonly IBpmDbContext _context;
+    private readonly IApplicationDbContext _context;
     private readonly ILogger<GetDepartmentsQueryHandler> _logger;
 
     public GetDepartmentsQueryHandler(
-        IBpmDbContext context,
+        IApplicationDbContext context,
         ILogger<GetDepartmentsQueryHandler> logger)
     {
         _context = context;

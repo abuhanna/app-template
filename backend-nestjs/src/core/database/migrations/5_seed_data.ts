@@ -6,19 +6,21 @@ export class SeedData1700000005 implements MigrationInterface {
 
   public async up(queryRunner: QueryRunner): Promise<void> {
     // Create IT department
-    const departmentId = 'a0eebc99-9c0b-4ef8-bb6d-6bb9bd380a11';
+    const departmentId = 1;
     await queryRunner.query(`
       INSERT INTO "departments" ("id", "name", "code", "description", "is_active", "created_at", "updated_at")
-      VALUES ('${departmentId}', 'Information Technology', 'IT', 'IT Department', true, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP)
+      VALUES (${departmentId}, 'Information Technology', 'IT', 'IT Department', true, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP)
       ON CONFLICT ("code") DO NOTHING
     `);
 
     // Create admin user with password Admin@123
-    const adminId = 'b1eebc99-9c0b-4ef8-bb6d-6bb9bd380a11';
-    const passwordHash = await bcrypt.hash('Admin@123', 12);
+    const adminId = 1;
+    // Hash for Admin@123 (Cost 11) to match .NET/Spring
+    const passwordHash = '$2a$11$dpNSxRznUDsAV3grMSznjuOe4TphFyYJsCVLU.AaBwgx0DT9f6c8O';
+
     await queryRunner.query(`
       INSERT INTO "users" ("id", "email", "username", "password_hash", "first_name", "last_name", "role", "department_id", "is_active", "created_at", "updated_at")
-      VALUES ('${adminId}', 'admin@apptemplate.local', 'admin', '${passwordHash}', 'Admin', 'User', 'Admin', '${departmentId}', true, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP)
+      VALUES (${adminId}, 'admin@apptemplate.local', 'admin', '${passwordHash}', 'Admin', 'User', 'Admin', ${departmentId}, true, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP)
       ON CONFLICT ("email") DO NOTHING
     `);
   }

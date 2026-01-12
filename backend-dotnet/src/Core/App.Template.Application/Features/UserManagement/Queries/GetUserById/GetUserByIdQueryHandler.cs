@@ -8,11 +8,11 @@ namespace AppTemplate.Application.Features.UserManagement.Queries.GetUserById;
 
 public class GetUserByIdQueryHandler : IRequestHandler<GetUserByIdQuery, UserDto?>
 {
-    private readonly IBpmDbContext _context;
+    private readonly IApplicationDbContext _context;
     private readonly ILogger<GetUserByIdQueryHandler> _logger;
 
     public GetUserByIdQueryHandler(
-        IBpmDbContext context,
+        IApplicationDbContext context,
         ILogger<GetUserByIdQueryHandler> logger)
     {
         _context = context;

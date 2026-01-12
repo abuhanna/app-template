@@ -57,11 +57,11 @@ builder.Services.AddInMemoryRateLimiting();
 var connectionString = builder.Configuration.GetConnectionString("DefaultConnection")
     ?? throw new InvalidOperationException("Connection string 'DefaultConnection' not found.");
 
-builder.Services.AddDbContext<BpmDbContext>(options =>
+builder.Services.AddDbContext<ApplicationDbContext>(options =>
     options.UseNpgsql(connectionString));
 
 // Register the DbContext interface
-builder.Services.AddScoped<IBpmDbContext>(provider => provider.GetRequiredService<BpmDbContext>());
+builder.Services.AddScoped<IApplicationDbContext>(provider => provider.GetRequiredService<ApplicationDbContext>());
 
 // Configure JWT Authentication
 var jwtSecret = builder.Configuration["Jwt:Secret"]
@@ -166,9 +166,9 @@ builder.Services.AddAuthentication(options =>
 builder.Services.AddAuthorization();
 
 // Register MediatR (CQRS) and Validation Pipeline
-builder.Services.AddValidatorsFromAssembly(typeof(IBpmDbContext).Assembly);
+builder.Services.AddValidatorsFromAssembly(typeof(IApplicationDbContext).Assembly);
 builder.Services.AddMediatR(cfg => 
-    cfg.RegisterServicesFromAssembly(typeof(IBpmDbContext).Assembly));
+    cfg.RegisterServicesFromAssembly(typeof(IApplicationDbContext).Assembly));
 builder.Services.AddTransient(typeof(IPipelineBehavior<,>), typeof(ValidationBehavior<,>));
 
 
@@ -264,7 +264,7 @@ if (app.Environment.IsDevelopment())
 
 using (var scope = app.Services.CreateScope())
 {
-    var dbContext = scope.ServiceProvider.GetRequiredService<BpmDbContext>();
+    var dbContext = scope.ServiceProvider.GetRequiredService<ApplicationDbContext>();
     try
     {
         // Apply pending migrations automatically
