@@ -57,30 +57,40 @@ export async function installDependencies(projectPath: string, config: ProjectCo
 
   // Install frontend dependencies
   if (config.projectType !== 'backend') {
-    if (fs.existsSync(frontendDir)) {
+    const frontendPackageJson = path.join(frontendDir, 'package.json');
+    if (fs.existsSync(frontendPackageJson)) {
       await runInstallCommand(frontendDir, pm);
     }
   }
 
   // Install/restore backend dependencies
   if (config.projectType !== 'frontend') {
-    if (fs.existsSync(backendDir)) {
-      switch (config.backend) {
-        case 'dotnet':
+    switch (config.backend) {
+      case 'dotnet': {
+        const slnFiles = fs.readdirSync(backendDir).filter(f => f.endsWith('.sln'));
+        if (slnFiles.length > 0) {
           await runCommand('dotnet', ['restore'], backendDir);
-          break;
-        case 'spring':
-          // Maven wrapper should be included
+        }
+        break;
+      }
+      case 'spring': {
+        const pomPath = path.join(backendDir, 'pom.xml');
+        if (fs.existsSync(pomPath)) {
           const mvnwPath = path.join(backendDir, process.platform === 'win32' ? 'mvnw.cmd' : 'mvnw');
           if (fs.existsSync(mvnwPath)) {
             await runCommand(mvnwPath, ['install', '-DskipTests'], backendDir);
           } else {
             await runCommand('mvn', ['install', '-DskipTests'], backendDir);
           }
-          break;
-        case 'nestjs':
+        }
+        break;
+      }
+      case 'nestjs': {
+        const backendPackageJson = path.join(backendDir, 'package.json');
+        if (fs.existsSync(backendPackageJson)) {
           await runInstallCommand(backendDir, pm);
-          break;
+        }
+        break;
       }
     }
   }

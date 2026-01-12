@@ -89,15 +89,16 @@ export async function generateProject(config: ProjectConfig): Promise<void> {
 
   // Step 4: Install dependencies (if requested)
   if (config.installDeps) {
-    spinner.start('Installing dependencies...');
+    spinner.start('Installing dependencies (this may take a while)...');
 
     try {
       await installDependencies(absolutePath, config);
       spinner.stop('Dependencies installed');
     } catch (error) {
       spinner.stop('Installation failed');
-      // Don't throw - just warn
-      console.log(pc.yellow('  Warning: Some dependencies may not have been installed'));
+      const errorMessage = error instanceof Error ? error.message : String(error);
+      console.log(pc.yellow(`  Warning: Dependency installation failed: ${errorMessage}`));
+      console.log(pc.gray('  You can install manually by running npm install in the project directory'));
     }
   }
 
