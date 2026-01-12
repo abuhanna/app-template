@@ -151,40 +151,7 @@ public class ApplicationDbContext : DbContext, IApplicationDbContext
                   .OnDelete(DeleteBehavior.Cascade);
         });
 
-        // Seed data - Default department
-        modelBuilder.Entity<Department>().HasData(new
-        {
-            Id = 1L,
-            Code = "IT",
-            Name = "Information Technology",
-            Description = "IT Department",
-            IsActive = true,
-            CreatedAt = new DateTime(2024, 1, 1, 0, 0, 0, DateTimeKind.Utc),
-            UpdatedAt = (DateTime?)null,
-            CreatedBy = (string?)null,
-            UpdatedBy = (string?)null
-        });
 
-        // Seed data - Admin user
-        // Password: Admin@123 (BCrypt hash)
-        modelBuilder.Entity<User>().HasData(new
-        {
-            Id = 1L,
-            Username = "admin",
-            Email = "admin@apptemplate.local",
-            PasswordHash = "$2a$11$dpNSxRznUDsAV3grMSznjuOe4TphFyYJsCVLU.AaBwgx0DT9f6c8O", // Admin@123
-            Name = "System Administrator",
-            Role = "Admin",
-            DepartmentId = 1L,
-            IsActive = true,
-            CreatedAt = new DateTime(2024, 1, 1, 0, 0, 0, DateTimeKind.Utc),
-            UpdatedAt = (DateTime?)null,
-            CreatedBy = (string?)null,
-            UpdatedBy = (string?)null,
-            LastLoginAt = (DateTime?)null,
-            PasswordResetToken = (string?)null,
-            PasswordResetTokenExpiry = (DateTime?)null
-        });
 
         // Apply snake_case naming convention to all tables and columns
         // This MUST be called after all entity configurations

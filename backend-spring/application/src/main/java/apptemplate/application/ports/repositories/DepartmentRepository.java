@@ -6,14 +6,14 @@ import org.springframework.data.domain.Pageable;
 
 import java.util.List;
 import java.util.Optional;
-import java.util.UUID;
+
 
 /**
  * Port interface for Department repository operations.
  */
 public interface DepartmentRepository {
 
-    Optional<Department> findById(UUID id);
+    Optional<Department> findById(Long id);
 
     Optional<Department> findByCode(String code);
 
@@ -23,11 +23,11 @@ public interface DepartmentRepository {
 
     boolean existsByCode(String code);
 
-    boolean existsByCodeAndIdNot(String code, UUID id);
+    boolean existsByCodeAndIdNot(String code, Long id);
 
     Department save(Department department);
 
     void delete(Department department);
 
-    void deleteById(UUID id);
+    void deleteById(Long id);
 }

@@ -5,6 +5,7 @@ import { AuthModule } from './modules/auth/auth.module';
 import { UserManagementModule } from './modules/user-management/user-management.module';
 import { DepartmentManagementModule } from './modules/department-management/department-management.module';
 import { NotificationModule } from './modules/notification/notification.module';
+import { SeederModule } from './core/database/seed.module';
 
 @Module({
   imports: [
@@ -13,6 +14,7 @@ import { NotificationModule } from './modules/notification/notification.module';
       envFilePath: ['.env.local', '.env'],
     }),
     CoreModule,
+    SeederModule,
     AuthModule,
     UserManagementModule,
     DepartmentManagementModule,

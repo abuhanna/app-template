@@ -6,14 +6,14 @@ import org.springframework.data.domain.Pageable;
 
 import java.util.List;
 import java.util.Optional;
-import java.util.UUID;
+
 
 /**
  * Port interface for User repository operations.
  */
 public interface UserRepository {
 
-    Optional<User> findById(UUID id);
+    Optional<User> findById(Long id);
 
     Optional<User> findByUsername(String username);
 
@@ -23,23 +23,23 @@ public interface UserRepository {
 
     List<User> findAll();
 
-    Page<User> findByFilters(String search, UUID departmentId, Boolean isActive, Pageable pageable);
+    Page<User> findByFilters(String search, Long departmentId, Boolean isActive, Pageable pageable);
 
     List<User> findByRole(String role);
 
-    long countByDepartmentId(UUID departmentId);
+    long countByDepartmentId(Long departmentId);
 
     boolean existsByUsername(String username);
 
     boolean existsByEmail(String email);
 
-    boolean existsByUsernameAndIdNot(String username, UUID id);
+    boolean existsByUsernameAndIdNot(String username, Long id);
 
-    boolean existsByEmailAndIdNot(String email, UUID id);
+    boolean existsByEmailAndIdNot(String email, Long id);
 
     User save(User user);
 
     void delete(User user);
 
-    void deleteById(UUID id);
+    void deleteById(Long id);
 }

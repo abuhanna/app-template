@@ -179,6 +179,7 @@ builder.Services.AddScoped<INotificationService, NotificationService>();
 builder.Services.AddScoped<IPasswordHashService, PasswordHashService>();
 builder.Services.AddScoped<IJwtTokenService, JwtTokenService>();
 builder.Services.AddScoped<IEmailService, EmailService>();
+builder.Services.AddScoped<AppTemplate.Infrastructure.Persistence.Seeding.DbSeeder>();
 
 // Register Correlation ID accessor for request tracing
 builder.Services.AddScoped<ICorrelationIdAccessor, CorrelationIdAccessor>();
@@ -271,6 +272,10 @@ using (var scope = app.Services.CreateScope())
         dbContext.Database.Migrate();
         app.Logger.LogInformation("Database migrations applied successfully in {Environment} environment.",
             app.Environment.EnvironmentName);
+
+        // Seed data
+        var seeder = scope.ServiceProvider.GetRequiredService<AppTemplate.Infrastructure.Persistence.Seeding.DbSeeder>();
+        await seeder.SeedAsync();
     }
     catch (Exception ex)
     {
