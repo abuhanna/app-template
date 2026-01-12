@@ -158,27 +158,43 @@ async function updateFolderReferences(projectPath: string, config: ProjectConfig
   // Also update docker folder files
   const dockerFolder = path.join(projectPath, 'docker');
   if (fs.existsSync(dockerFolder)) {
-    const dockerFiles = fs.readdirSync(dockerFolder, { recursive: true, withFileTypes: true });
-    for (const entry of dockerFiles) {
-      if (entry.isFile()) {
-        const filePath = path.join(dockerFolder, entry.name);
-        let content = fs.readFileSync(filePath, 'utf-8');
+    updateDockerFolderFiles(dockerFolder, config, backendReplace, frontendReplace);
+  }
+}
 
-        if (config.projectType !== 'frontend') {
-          content = content
-            .replace(/backend-dotnet/g, backendReplace)
-            .replace(/backend-spring/g, backendReplace)
-            .replace(/backend-nestjs/g, backendReplace);
-        }
+/**
+ * Recursively update files in the docker folder
+ */
+function updateDockerFolderFiles(
+  dir: string,
+  config: ProjectConfig,
+  backendReplace: string,
+  frontendReplace: string
+): void {
+  const entries = fs.readdirSync(dir, { withFileTypes: true });
 
-        if (config.projectType !== 'backend') {
-          content = content
-            .replace(/frontend-vuetify/g, frontendReplace)
-            .replace(/frontend-primevue/g, frontendReplace);
-        }
+  for (const entry of entries) {
+    const fullPath = path.join(dir, entry.name);
 
-        fs.writeFileSync(filePath, content);
+    if (entry.isDirectory()) {
+      updateDockerFolderFiles(fullPath, config, backendReplace, frontendReplace);
+    } else if (entry.isFile()) {
+      let content = fs.readFileSync(fullPath, 'utf-8');
+
+      if (config.projectType !== 'frontend') {
+        content = content
+          .replace(/backend-dotnet/g, backendReplace)
+          .replace(/backend-spring/g, backendReplace)
+          .replace(/backend-nestjs/g, backendReplace);
       }
+
+      if (config.projectType !== 'backend') {
+        content = content
+          .replace(/frontend-vuetify/g, frontendReplace)
+          .replace(/frontend-primevue/g, frontendReplace);
+      }
+
+      fs.writeFileSync(fullPath, content);
     }
   }
 }
