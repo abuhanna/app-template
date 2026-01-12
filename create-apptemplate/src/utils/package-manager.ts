@@ -35,9 +35,28 @@ export function detectPackageManager(): PackageManager {
 export async function installDependencies(projectPath: string, config: ProjectConfig): Promise<void> {
   const pm = detectPackageManager();
 
+  // Determine frontend directory
+  let frontendDir: string;
+  if (config.projectType === 'fullstack') {
+    frontendDir = path.join(projectPath, 'frontend');
+  } else if (config.placeInRoot) {
+    frontendDir = projectPath;
+  } else {
+    frontendDir = path.join(projectPath, 'frontend');
+  }
+
+  // Determine backend directory
+  let backendDir: string;
+  if (config.projectType === 'fullstack') {
+    backendDir = path.join(projectPath, 'backend');
+  } else if (config.placeInRoot) {
+    backendDir = projectPath;
+  } else {
+    backendDir = path.join(projectPath, 'backend');
+  }
+
   // Install frontend dependencies
   if (config.projectType !== 'backend') {
-    const frontendDir = path.join(projectPath, `frontend-${config.ui}`);
     if (fs.existsSync(frontendDir)) {
       await runInstallCommand(frontendDir, pm);
     }
@@ -45,8 +64,6 @@ export async function installDependencies(projectPath: string, config: ProjectCo
 
   // Install/restore backend dependencies
   if (config.projectType !== 'frontend') {
-    const backendDir = path.join(projectPath, `backend-${config.backend}`);
-
     if (fs.existsSync(backendDir)) {
       switch (config.backend) {
         case 'dotnet':

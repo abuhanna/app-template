@@ -101,22 +101,24 @@ export async function runInteractivePrompts(cliArgs: CLIArgs): Promise<ProjectCo
     ui = result;
   }
 
-  // Project name (for namespaces)
-  let projectName = cliArgs.projectName;
-  if (!projectName) {
+  // Project name (for namespaces) - only for dotnet/spring backends
+  let projectName: string | undefined = cliArgs.projectName;
+  const needsNamespace = projectType !== 'frontend' && (backend === 'dotnet' || backend === 'spring');
+
+  if (needsNamespace && !projectName) {
     // Generate default name from project path
     const dirName = path.basename(path.resolve(projectPath));
     const defaultName = `MyCompany.${toPascalCase(dirName)}`;
 
     const result = await p.text({
-      message: 'Project name (for namespaces)',
+      message: 'Project namespace (for .NET/Java packages)',
       placeholder: defaultName,
       defaultValue: defaultName,
       validate: (value) => {
-        if (!value) return 'Please enter a project name';
+        if (!value) return 'Please enter a project namespace';
         const pattern = /^[A-Za-z][A-Za-z0-9]*(\.[A-Za-z][A-Za-z0-9]*)+$/;
         if (!pattern.test(value)) {
-          return 'Name must be in "Company.Project" format (e.g., MyCompany.MyApp)';
+          return 'Namespace must be in "Company.Project" format (e.g., MyCompany.MyApp)';
         }
         return undefined;
       },
@@ -125,9 +127,20 @@ export async function runInteractivePrompts(cliArgs: CLIArgs): Promise<ProjectCo
     projectName = result;
   }
 
+  // Place in root option (for backend-only or frontend-only)
+  let placeInRoot = cliArgs.root ?? false;
+  if (projectType !== 'fullstack' && cliArgs.root === undefined) {
+    const result = await p.confirm({
+      message: 'Place files directly in project root? (No for subfolder)',
+      initialValue: false,
+    });
+    if (p.isCancel(result)) return result;
+    placeInRoot = result;
+  }
+
   // Install dependencies
   let installDeps = cliArgs.install ?? false;
-  if (!cliArgs.install) {
+  if (cliArgs.install === undefined) {
     const result = await p.confirm({
       message: 'Install dependencies after creation?',
       initialValue: true,
@@ -138,19 +151,26 @@ export async function runInteractivePrompts(cliArgs: CLIArgs): Promise<ProjectCo
 
   // Show summary
   console.log();
-  p.note(
-    [
-      `${pc.cyan('Project path:')}     ${projectPath}`,
-      `${pc.cyan('Project type:')}     ${projectType}`,
-      projectType !== 'frontend' ? `${pc.cyan('Backend:')}          ${getBackendLabel(backend)}` : null,
-      projectType !== 'backend' ? `${pc.cyan('UI Library:')}       ${getUILabel(ui)}` : null,
-      `${pc.cyan('Project name:')}     ${projectName}`,
-      `${pc.cyan('Install deps:')}     ${installDeps ? 'Yes' : 'No'}`,
-    ]
-      .filter(Boolean)
-      .join('\n'),
-    'Configuration'
-  );
+  const summaryLines = [
+    `${pc.cyan('Project path:')}     ${projectPath}`,
+    `${pc.cyan('Project type:')}     ${projectType}`,
+  ];
+
+  if (projectType !== 'frontend') {
+    summaryLines.push(`${pc.cyan('Backend:')}          ${getBackendLabel(backend)}`);
+  }
+  if (projectType !== 'backend') {
+    summaryLines.push(`${pc.cyan('UI Library:')}       ${getUILabel(ui)}`);
+  }
+  if (needsNamespace && projectName) {
+    summaryLines.push(`${pc.cyan('Namespace:')}        ${projectName}`);
+  }
+  if (projectType !== 'fullstack') {
+    summaryLines.push(`${pc.cyan('Place in root:')}    ${placeInRoot ? 'Yes' : 'No (subfolder)'}`);
+  }
+  summaryLines.push(`${pc.cyan('Install deps:')}     ${installDeps ? 'Yes' : 'No'}`);
+
+  p.note(summaryLines.join('\n'), 'Configuration');
 
   const shouldContinue = await p.confirm({
     message: 'Create project with these settings?',
@@ -167,6 +187,7 @@ export async function runInteractivePrompts(cliArgs: CLIArgs): Promise<ProjectCo
     ui,
     projectName,
     installDeps,
+    placeInRoot,
   };
 }
 

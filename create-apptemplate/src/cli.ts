@@ -31,6 +31,12 @@ export function parseArgs(): CLIArgs {
       continue;
     }
 
+    if (arg === '-r' || arg === '--root') {
+      result.root = true;
+      i++;
+      continue;
+    }
+
     // Handle options with values
     if (arg === '-t' || arg === '--type') {
       const value = args[++i];

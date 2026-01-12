@@ -7,8 +7,9 @@ export interface ProjectConfig {
   projectType: ProjectType;
   backend: BackendFramework;
   ui: UILibrary;
-  projectName: string;
+  projectName?: string; // Only required for dotnet/spring (namespace)
   installDeps: boolean;
+  placeInRoot: boolean; // For backend-only/frontend-only: place files in root instead of subfolder
 }
 
 export interface CLIArgs {
@@ -18,6 +19,7 @@ export interface CLIArgs {
   ui?: UILibrary;
   projectName?: string;
   install?: boolean;
+  root?: boolean; // Place files in root (for backend-only/frontend-only)
   help?: boolean;
   version?: boolean;
 }

@@ -28,15 +28,21 @@ async function main(): Promise<void> {
     // Get project configuration (interactive or from CLI args)
     let config: ProjectConfig;
 
-    if (cliArgs.projectPath && cliArgs.backend && cliArgs.projectName) {
+    // Non-interactive mode - check if we have enough options
+    const projectType = cliArgs.type || 'fullstack';
+    const backend = cliArgs.backend || 'dotnet';
+    const needsNamespace = projectType !== 'frontend' && (backend === 'dotnet' || backend === 'spring');
+
+    if (cliArgs.projectPath && cliArgs.backend && (!needsNamespace || cliArgs.projectName)) {
       // Non-interactive mode - all required options provided
       config = {
         projectPath: cliArgs.projectPath,
-        projectType: cliArgs.type || 'fullstack',
-        backend: cliArgs.backend,
+        projectType,
+        backend,
         ui: cliArgs.ui || 'vuetify',
         projectName: cliArgs.projectName,
         installDeps: cliArgs.install || false,
+        placeInRoot: cliArgs.root || false,
       };
     } else {
       // Interactive mode
@@ -76,7 +82,8 @@ ${pc.bold('Options:')}
   ${pc.yellow('-t, --type')}       Project type: fullstack, backend, frontend ${pc.gray('(default: fullstack)')}
   ${pc.yellow('-b, --backend')}    Backend framework: dotnet, spring, nestjs
   ${pc.yellow('-u, --ui')}         UI library: vuetify, primevue ${pc.gray('(default: vuetify)')}
-  ${pc.yellow('-n, --name')}       Project name (Company.Project format)
+  ${pc.yellow('-n, --name')}       Project namespace (Company.Project format, .NET/Spring only)
+  ${pc.yellow('-r, --root')}       Place files in project root ${pc.gray('(backend/frontend-only)')}
   ${pc.yellow('-i, --install')}    Install dependencies after creation
   ${pc.yellow('-h, --help')}       Show this help message
   ${pc.yellow('-v, --version')}    Show version number
@@ -93,12 +100,27 @@ ${pc.bold('Examples:')}
 
   ${pc.gray('# Create frontend-only project with PrimeVue')}
   npm create apptemplate@latest my-spa -t frontend -u primevue
+
+  ${pc.gray('# Create backend in project root (no subfolder)')}
+  npm create apptemplate@latest my-api -t backend -b nestjs --root
 `);
 }
 
 function showNextSteps(config: ProjectConfig): void {
-  const backendFolder = `backend-${config.backend}`;
-  const frontendFolder = `frontend-${config.ui}`;
+  // Determine folder names based on project type and placeInRoot option
+  let backendFolder: string;
+  let frontendFolder: string;
+
+  if (config.projectType === 'fullstack') {
+    backendFolder = 'backend';
+    frontendFolder = 'frontend';
+  } else if (config.placeInRoot) {
+    backendFolder = '.';
+    frontendFolder = '.';
+  } else {
+    backendFolder = 'backend';
+    frontendFolder = 'frontend';
+  }
 
   console.log();
   console.log(pc.cyan('Next steps:'));
@@ -107,16 +129,18 @@ function showNextSteps(config: ProjectConfig): void {
   // Show install commands if deps weren't installed
   if (!config.installDeps) {
     if (config.projectType !== 'frontend') {
+      const cdBackend = backendFolder === '.' ? '' : `cd ${backendFolder} && `;
       if (config.backend === 'dotnet') {
-        console.log(`  ${pc.gray('$')} cd ${backendFolder} && dotnet restore`);
+        console.log(`  ${pc.gray('$')} ${cdBackend}dotnet restore`);
       } else if (config.backend === 'nestjs') {
-        console.log(`  ${pc.gray('$')} cd ${backendFolder} && npm install`);
+        console.log(`  ${pc.gray('$')} ${cdBackend}npm install`);
       } else if (config.backend === 'spring') {
-        console.log(`  ${pc.gray('$')} cd ${backendFolder} && ./mvnw install -DskipTests`);
+        console.log(`  ${pc.gray('$')} ${cdBackend}./mvnw install -DskipTests`);
       }
     }
     if (config.projectType !== 'backend') {
-      console.log(`  ${pc.gray('$')} cd ${frontendFolder} && npm install`);
+      const cdFrontend = frontendFolder === '.' ? '' : `cd ${frontendFolder} && `;
+      console.log(`  ${pc.gray('$')} ${cdFrontend}npm install`);
     }
   }
 
@@ -133,21 +157,27 @@ function showNextSteps(config: ProjectConfig): void {
   console.log(pc.gray('Run manually:'));
 
   if (config.projectType !== 'frontend') {
+    const cdBackend = backendFolder === '.' ? '' : `cd ${backendFolder} && `;
     if (config.backend === 'dotnet') {
       console.log(`  ${pc.gray('# Backend (.NET)')}`);
-      console.log(`  ${pc.gray('$')} cd ${backendFolder}/src/Presentation/*.WebAPI && dotnet run`);
+      if (backendFolder === '.') {
+        console.log(`  ${pc.gray('$')} cd src/Presentation/*.WebAPI && dotnet run`);
+      } else {
+        console.log(`  ${pc.gray('$')} cd ${backendFolder}/src/Presentation/*.WebAPI && dotnet run`);
+      }
     } else if (config.backend === 'nestjs') {
       console.log(`  ${pc.gray('# Backend (NestJS)')}`);
-      console.log(`  ${pc.gray('$')} cd ${backendFolder} && npm run start:dev`);
+      console.log(`  ${pc.gray('$')} ${cdBackend}npm run start:dev`);
     } else if (config.backend === 'spring') {
       console.log(`  ${pc.gray('# Backend (Spring Boot)')}`);
-      console.log(`  ${pc.gray('$')} cd ${backendFolder} && ./mvnw spring-boot:run`);
+      console.log(`  ${pc.gray('$')} ${cdBackend}./mvnw spring-boot:run`);
     }
   }
 
   if (config.projectType !== 'backend') {
+    const cdFrontend = frontendFolder === '.' ? '' : `cd ${frontendFolder} && `;
     console.log(`  ${pc.gray('# Frontend')}`);
-    console.log(`  ${pc.gray('$')} cd ${frontendFolder} && npm run dev`);
+    console.log(`  ${pc.gray('$')} ${cdFrontend}npm run dev`);
   }
 
   // Access points

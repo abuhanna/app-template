@@ -4,8 +4,11 @@ import type { ProjectConfig } from '../types.js';
 
 /**
  * Rename project files and update namespaces
+ * Only called when config.projectName is set (for dotnet/spring backends)
  */
 export async function renameProject(projectPath: string, config: ProjectConfig): Promise<void> {
+  if (!config.projectName) return;
+
   const newDotName = config.projectName;
   const newNamespace = config.projectName.replace(/\./g, '');
 
@@ -19,11 +22,6 @@ export async function renameProject(projectPath: string, config: ProjectConfig):
     await renameSpringProject(projectPath, config, newDotName);
   }
 
-  // Rename backend project files (for NestJS)
-  if (config.projectType !== 'frontend' && config.backend === 'nestjs') {
-    await renameNestJSProject(projectPath, config, newDotName);
-  }
-
   // Update common files
   await updateCommonFiles(projectPath, config, newDotName, newNamespace);
 }
@@ -33,11 +31,19 @@ export async function renameProject(projectPath: string, config: ProjectConfig):
  */
 async function renameDotNetProject(
   projectPath: string,
-  _config: ProjectConfig,
+  config: ProjectConfig,
   newDotName: string,
   newNamespace: string
 ): Promise<void> {
-  const backendDir = path.join(projectPath, 'backend-dotnet');
+  // Determine backend directory based on project type and placeInRoot option
+  let backendDir: string;
+  if (config.projectType === 'fullstack') {
+    backendDir = path.join(projectPath, 'backend');
+  } else if (config.placeInRoot) {
+    backendDir = projectPath;
+  } else {
+    backendDir = path.join(projectPath, 'backend');
+  }
 
   if (!fs.existsSync(backendDir)) return;
 
@@ -87,10 +93,18 @@ async function renameDotNetProject(
  */
 async function renameSpringProject(
   projectPath: string,
-  _config: ProjectConfig,
+  config: ProjectConfig,
   newDotName: string
 ): Promise<void> {
-  const backendDir = path.join(projectPath, 'backend-spring');
+  // Determine backend directory based on project type and placeInRoot option
+  let backendDir: string;
+  if (config.projectType === 'fullstack') {
+    backendDir = path.join(projectPath, 'backend');
+  } else if (config.placeInRoot) {
+    backendDir = projectPath;
+  } else {
+    backendDir = path.join(projectPath, 'backend');
+  }
 
   if (!fs.existsSync(backendDir)) return;
 
@@ -113,31 +127,6 @@ async function renameSpringProject(
   await updateFileContents(backendDir, ['.java'], (content) => {
     return content.replace(/com\.apptemplate/g, packageName);
   });
-}
-
-/**
- * Rename NestJS project structure
- */
-async function renameNestJSProject(
-  projectPath: string,
-  _config: ProjectConfig,
-  newDotName: string
-): Promise<void> {
-  const backendDir = path.join(projectPath, 'backend-nestjs');
-
-  if (!fs.existsSync(backendDir)) return;
-
-  // Convert project name to package name format
-  const packageName = newDotName.toLowerCase().replace(/\./g, '-');
-
-  // Update package.json
-  const packageJsonPath = path.join(backendDir, 'package.json');
-  if (fs.existsSync(packageJsonPath)) {
-    let content = fs.readFileSync(packageJsonPath, 'utf-8');
-    const pkg = JSON.parse(content);
-    pkg.name = packageName;
-    fs.writeFileSync(packageJsonPath, JSON.stringify(pkg, null, 2));
-  }
 }
 
 /**
