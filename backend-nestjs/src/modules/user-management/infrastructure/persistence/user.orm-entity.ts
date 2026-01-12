@@ -1,6 +1,6 @@
 import {
   Entity,
-  PrimaryColumn,
+  PrimaryGeneratedColumn,
   Column,
   CreateDateColumn,
   UpdateDateColumn,
@@ -11,7 +11,7 @@ import { DepartmentOrmEntity } from '@/modules/department-management/infrastruct
 
 @Entity('users')
 export class UserOrmEntity {
-  @PrimaryColumn('uuid')
+  @PrimaryGeneratedColumn('increment', { type: 'bigint' })
   id: string;
 
   @Column({ unique: true })
@@ -32,7 +32,7 @@ export class UserOrmEntity {
   @Column()
   role: string;
 
-  @Column({ name: 'department_id', type: 'uuid', nullable: true })
+  @Column({ name: 'department_id', type: 'bigint', nullable: true })
   departmentId: string | null;
 
   @ManyToOne(() => DepartmentOrmEntity, { nullable: true })
@@ -57,9 +57,9 @@ export class UserOrmEntity {
   @UpdateDateColumn({ name: 'updated_at', type: 'timestamptz' })
   updatedAt: Date;
 
-  @Column({ name: 'created_by', type: 'uuid', nullable: true })
+  @Column({ name: 'created_by', type: 'bigint', nullable: true })
   createdBy: string | null;
 
-  @Column({ name: 'updated_by', type: 'uuid', nullable: true })
+  @Column({ name: 'updated_by', type: 'bigint', nullable: true })
   updatedBy: string | null;
 }

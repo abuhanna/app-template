@@ -3,10 +3,10 @@ import { NotificationType } from '../../domain/enums/notification-type.enum';
 
 export class NotificationDto {
   @ApiProperty({ description: 'Notification ID' })
-  id: string;
+  id: number;
 
   @ApiProperty({ description: 'User ID' })
-  userId: string;
+  userId: number;
 
   @ApiProperty({ description: 'Notification title' })
   title: string;

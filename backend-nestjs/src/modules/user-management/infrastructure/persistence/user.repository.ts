@@ -13,8 +13,8 @@ export class UserRepository implements IUserRepository {
     private readonly repository: Repository<UserOrmEntity>,
   ) {}
 
-  async findById(id: string): Promise<User | null> {
-    const entity = await this.repository.findOne({ where: { id } });
+  async findById(id: number): Promise<User | null> {
+    const entity = await this.repository.findOne({ where: { id: id.toString() } });
     return entity ? this.toDomain(entity) : null;
   }
 
@@ -40,8 +40,8 @@ export class UserRepository implements IUserRepository {
     return entities.map((entity) => this.toDomain(entity));
   }
 
-  async countByDepartmentId(departmentId: string): Promise<number> {
-    return this.repository.count({ where: { departmentId } });
+  async countByDepartmentId(departmentId: number): Promise<number> {
+    return this.repository.count({ where: { departmentId: departmentId.toString() } });
   }
 
   async save(user: User): Promise<User> {
@@ -50,49 +50,51 @@ export class UserRepository implements IUserRepository {
     return this.toDomain(savedEntity);
   }
 
-  async delete(id: string): Promise<void> {
-    await this.repository.delete(id);
+  async delete(id: number): Promise<void> {
+    await this.repository.delete(id.toString());
   }
 
   private toDomain(entity: UserOrmEntity): User {
     return User.reconstitute(
-      entity.id,
+      parseInt(entity.id, 10),
       entity.email,
       entity.username,
       entity.passwordHash,
       entity.firstName,
       entity.lastName,
       entity.role as UserRole,
-      entity.departmentId,
+      entity.departmentId ? parseInt(entity.departmentId, 10) : null,
       entity.isActive,
       entity.lastLoginAt,
       entity.passwordResetToken,
       entity.passwordResetTokenExpiresAt,
       entity.createdAt,
       entity.updatedAt,
-      entity.createdBy,
-      entity.updatedBy,
+      entity.createdBy ? parseInt(entity.createdBy, 10) : null,
+      entity.updatedBy ? parseInt(entity.updatedBy, 10) : null,
     );
   }
 
   private toEntity(user: User): UserOrmEntity {
     const entity = new UserOrmEntity();
-    entity.id = user.id;
+    if (user.id !== 0) {
+      entity.id = user.id.toString();
+    }
     entity.email = user.email;
     entity.username = user.username;
     entity.passwordHash = user.passwordHash;
     entity.firstName = user.firstName;
     entity.lastName = user.lastName;
     entity.role = user.role;
-    entity.departmentId = user.departmentId;
+    entity.departmentId = user.departmentId ? user.departmentId.toString() : null;
     entity.isActive = user.isActive;
     entity.lastLoginAt = user.lastLoginAt;
     entity.passwordResetToken = user.passwordResetToken;
     entity.passwordResetTokenExpiresAt = user.passwordResetTokenExpiresAt;
     entity.createdAt = user.createdAt;
     entity.updatedAt = user.updatedAt;
-    entity.createdBy = user.createdBy;
-    entity.updatedBy = user.updatedBy;
+    entity.createdBy = user.createdBy ? user.createdBy.toString() : null;
+    entity.updatedBy = user.updatedBy ? user.updatedBy.toString() : null;
     return entity;
   }
 }

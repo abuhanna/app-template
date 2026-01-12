@@ -1,4 +1,3 @@
-import { v4 as uuidv4 } from 'uuid';
 import { UserRole } from '../value-objects/user-role';
 
 export interface CreateUserProps {
@@ -8,7 +7,7 @@ export interface CreateUserProps {
   firstName: string;
   lastName: string;
   role: UserRole;
-  departmentId?: string | null;
+  departmentId?: number | null;
 }
 
 export interface UpdateUserProps {
@@ -17,34 +16,34 @@ export interface UpdateUserProps {
   firstName?: string;
   lastName?: string;
   role?: UserRole;
-  departmentId?: string | null;
+  departmentId?: number | null;
   isActive?: boolean;
 }
 
 export class User {
   private constructor(
-    public readonly id: string,
+    public readonly id: number,
     public email: string,
     public username: string,
     public passwordHash: string,
     public firstName: string,
     public lastName: string,
     public role: UserRole,
-    public departmentId: string | null,
+    public departmentId: number | null,
     public isActive: boolean,
     public lastLoginAt: Date | null,
     public passwordResetToken: string | null,
     public passwordResetTokenExpiresAt: Date | null,
     public createdAt: Date,
     public updatedAt: Date,
-    public createdBy: string | null,
-    public updatedBy: string | null,
+    public createdBy: number | null,
+    public updatedBy: number | null,
   ) {}
 
   static create(props: CreateUserProps): User {
     const now = new Date();
     return new User(
-      uuidv4(),
+      0,
       props.email,
       props.username,
       props.passwordHash,
@@ -64,22 +63,22 @@ export class User {
   }
 
   static reconstitute(
-    id: string,
+    id: number,
     email: string,
     username: string,
     passwordHash: string,
     firstName: string,
     lastName: string,
     role: UserRole,
-    departmentId: string | null,
+    departmentId: number | null,
     isActive: boolean,
     lastLoginAt: Date | null,
     passwordResetToken: string | null,
     passwordResetTokenExpiresAt: Date | null,
     createdAt: Date,
     updatedAt: Date,
-    createdBy: string | null,
-    updatedBy: string | null,
+    createdBy: number | null,
+    updatedBy: number | null,
   ): User {
     return new User(
       id,

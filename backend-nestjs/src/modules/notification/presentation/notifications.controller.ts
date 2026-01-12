@@ -3,7 +3,7 @@ import {
   Get,
   Post,
   Param,
-  ParseUUIDPipe,
+  ParseIntPipe,
   HttpCode,
   HttpStatus,
   UseGuards,
@@ -43,7 +43,7 @@ export class NotificationsController {
   @ApiResponse({ status: 404, description: 'Notification not found' })
   async markAsRead(
     @CurrentUser() user: CurrentUserPayload,
-    @Param('id', ParseUUIDPipe) id: string,
+    @Param('id', ParseIntPipe) id: number,
   ): Promise<{ message: string }> {
     await this.commandBus.execute(new MarkNotificationReadCommand(id, user.sub));
     return { message: 'Notification marked as read' };

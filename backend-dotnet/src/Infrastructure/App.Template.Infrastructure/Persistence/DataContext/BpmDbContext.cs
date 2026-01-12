@@ -172,7 +172,7 @@ public class BpmDbContext : DbContext, IBpmDbContext
             Id = 1L,
             Username = "admin",
             Email = "admin@apptemplate.local",
-            PasswordHash = "$2a$11$K7C5P1yZh9rV1sX4nBqH6OqP8rZYPwGXLO5mYJK.4VKQJq9qQZwKu", // Admin@123
+            PasswordHash = "$2a$11$dpNSxRznUDsAV3grMSznjuOe4TphFyYJsCVLU.AaBwgx0DT9f6c8O", // Admin@123
             Name = "System Administrator",
             Role = "Admin",
             DepartmentId = 1L,

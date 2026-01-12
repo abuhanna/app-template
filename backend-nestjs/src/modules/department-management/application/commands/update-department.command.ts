@@ -1,6 +1,6 @@
 export class UpdateDepartmentCommand {
   constructor(
-    public readonly id: string,
+    public readonly id: number,
     public readonly name?: string,
     public readonly code?: string,
     public readonly description?: string | null,

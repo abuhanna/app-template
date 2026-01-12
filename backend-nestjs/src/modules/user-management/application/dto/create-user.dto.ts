@@ -1,4 +1,4 @@
-import { IsEmail, IsEnum, IsNotEmpty, IsOptional, IsString, IsUUID, Matches, MinLength } from 'class-validator';
+import { IsEmail, IsEnum, IsNotEmpty, IsOptional, IsString, IsNumber, Matches, MinLength } from 'class-validator';
 import { ApiProperty } from '@nestjs/swagger';
 import { UserRole } from '../../domain/value-objects/user-role';
 
@@ -41,7 +41,7 @@ export class CreateUserDto {
   role: UserRole;
 
   @ApiProperty({ description: 'Department ID', required: false })
-  @IsUUID()
+  @IsNumber()
   @IsOptional()
-  departmentId?: string;
+  departmentId?: number;
 }

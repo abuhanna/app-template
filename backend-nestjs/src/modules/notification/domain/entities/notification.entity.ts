@@ -1,8 +1,8 @@
-import { v4 as uuidv4 } from 'uuid';
+
 import { NotificationType } from '../enums/notification-type.enum';
 
 export interface CreateNotificationProps {
-  userId: string;
+  userId: number;
   title: string;
   message: string;
   type: NotificationType;
@@ -11,8 +11,8 @@ export interface CreateNotificationProps {
 
 export class Notification {
   private constructor(
-    public readonly id: string,
-    public readonly userId: string,
+    public readonly id: number,
+    public readonly userId: number,
     public title: string,
     public message: string,
     public type: NotificationType,
@@ -24,7 +24,7 @@ export class Notification {
 
   static create(props: CreateNotificationProps): Notification {
     return new Notification(
-      uuidv4(),
+      0,
       props.userId,
       props.title,
       props.message,
@@ -37,8 +37,8 @@ export class Notification {
   }
 
   static reconstitute(
-    id: string,
-    userId: string,
+    id: number,
+    userId: number,
     title: string,
     message: string,
     type: NotificationType,

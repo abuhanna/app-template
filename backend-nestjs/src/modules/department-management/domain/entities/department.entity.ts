@@ -1,4 +1,4 @@
-import { v4 as uuidv4 } from 'uuid';
+
 
 export interface CreateDepartmentProps {
   name: string;
@@ -15,21 +15,21 @@ export interface UpdateDepartmentProps {
 
 export class Department {
   private constructor(
-    public readonly id: string,
+    public readonly id: number,
     public name: string,
     public code: string,
     public description: string | null,
     public isActive: boolean,
     public createdAt: Date,
     public updatedAt: Date,
-    public createdBy: string | null,
-    public updatedBy: string | null,
+    public createdBy: number | null,
+    public updatedBy: number | null,
   ) {}
 
   static create(props: CreateDepartmentProps): Department {
     const now = new Date();
     return new Department(
-      uuidv4(),
+      0,
       props.name,
       props.code.toUpperCase(),
       props.description ?? null,
@@ -42,15 +42,15 @@ export class Department {
   }
 
   static reconstitute(
-    id: string,
+    id: number,
     name: string,
     code: string,
     description: string | null,
     isActive: boolean,
     createdAt: Date,
     updatedAt: Date,
-    createdBy: string | null,
-    updatedBy: string | null,
+    createdBy: number | null,
+    updatedBy: number | null,
   ): Department {
     return new Department(
       id,

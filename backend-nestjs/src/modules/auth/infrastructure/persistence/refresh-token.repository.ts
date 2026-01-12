@@ -17,9 +17,9 @@ export class RefreshTokenRepository implements IRefreshTokenRepository {
     return entity ? this.toDomain(entity) : null;
   }
 
-  async findByUserId(userId: string): Promise<RefreshToken[]> {
+  async findByUserId(userId: number): Promise<RefreshToken[]> {
     const entities = await this.repository.find({
-      where: { userId },
+      where: { userId: userId.toString() },
       order: { createdAt: 'DESC' },
     });
     return entities.map((entity) => this.toDomain(entity));
@@ -35,9 +35,9 @@ export class RefreshTokenRepository implements IRefreshTokenRepository {
     await this.repository.update({ token }, { isRevoked: true, revokedAt: new Date() });
   }
 
-  async revokeAllByUserId(userId: string): Promise<void> {
+  async revokeAllByUserId(userId: number): Promise<void> {
     await this.repository.update(
-      { userId, isRevoked: false },
+      { userId: userId.toString(), isRevoked: false },
       { isRevoked: true, revokedAt: new Date() },
     );
   }
@@ -50,8 +50,8 @@ export class RefreshTokenRepository implements IRefreshTokenRepository {
 
   private toDomain(entity: RefreshTokenOrmEntity): RefreshToken {
     return RefreshToken.reconstitute(
-      entity.id,
-      entity.userId,
+      parseInt(entity.id, 10),
+      parseInt(entity.userId, 10),
       entity.token,
       entity.expiresAt,
       entity.deviceInfo,
@@ -65,8 +65,10 @@ export class RefreshTokenRepository implements IRefreshTokenRepository {
 
   private toEntity(refreshToken: RefreshToken): RefreshTokenOrmEntity {
     const entity = new RefreshTokenOrmEntity();
-    entity.id = refreshToken.id;
-    entity.userId = refreshToken.userId;
+    if (refreshToken.id !== 0) {
+      entity.id = refreshToken.id.toString();
+    }
+    entity.userId = refreshToken.userId.toString();
     entity.token = refreshToken.token;
     entity.expiresAt = refreshToken.expiresAt;
     entity.deviceInfo = refreshToken.deviceInfo;

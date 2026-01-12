@@ -1,13 +1,13 @@
 import { Notification } from '../entities/notification.entity';
 
 export interface INotificationRepository {
-  findById(id: string): Promise<Notification | null>;
-  findByUserId(userId: string): Promise<Notification[]>;
-  findUnreadByUserId(userId: string): Promise<Notification[]>;
-  countUnreadByUserId(userId: string): Promise<number>;
+  findById(id: number): Promise<Notification | null>;
+  findByUserId(userId: number): Promise<Notification[]>;
+  findUnreadByUserId(userId: number): Promise<Notification[]>;
+  countUnreadByUserId(userId: number): Promise<number>;
   save(notification: Notification): Promise<Notification>;
-  markAsRead(id: string): Promise<void>;
-  markAllAsReadByUserId(userId: string): Promise<void>;
+  markAsRead(id: number): Promise<void>;
+  markAllAsReadByUserId(userId: number): Promise<void>;
 }
 
 export const INotificationRepository = Symbol('INotificationRepository');

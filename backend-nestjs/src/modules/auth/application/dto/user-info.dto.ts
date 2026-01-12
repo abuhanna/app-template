@@ -2,7 +2,7 @@ import { ApiProperty } from '@nestjs/swagger';
 
 export class UserInfoDto {
   @ApiProperty({ description: 'User ID' })
-  id: string;
+  id: number;
 
   @ApiProperty({ description: 'Email address' })
   email: string;
@@ -23,7 +23,7 @@ export class UserInfoDto {
   role: string;
 
   @ApiProperty({ description: 'Department ID', nullable: true })
-  departmentId: string | null;
+  departmentId: number | null;
 
   @ApiProperty({ description: 'Department name', nullable: true })
   departmentName?: string | null;

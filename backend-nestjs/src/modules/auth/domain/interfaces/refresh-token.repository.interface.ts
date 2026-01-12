@@ -2,10 +2,10 @@ import { RefreshToken } from '../entities/refresh-token.entity';
 
 export interface IRefreshTokenRepository {
   findByToken(token: string): Promise<RefreshToken | null>;
-  findByUserId(userId: string): Promise<RefreshToken[]>;
+  findByUserId(userId: number): Promise<RefreshToken[]>;
   save(refreshToken: RefreshToken): Promise<RefreshToken>;
   revokeByToken(token: string): Promise<void>;
-  revokeAllByUserId(userId: string): Promise<void>;
+  revokeAllByUserId(userId: number): Promise<void>;
   deleteExpired(): Promise<void>;
 }
 

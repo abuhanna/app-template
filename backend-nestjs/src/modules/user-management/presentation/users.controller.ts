@@ -6,7 +6,7 @@ import {
   Delete,
   Body,
   Param,
-  ParseUUIDPipe,
+  ParseIntPipe,
   HttpCode,
   HttpStatus,
   UseGuards,
@@ -51,7 +51,7 @@ export class UsersController {
   @ApiOperation({ summary: 'Get user by ID (Admin only)' })
   @ApiResponse({ status: 200, type: UserDto })
   @ApiResponse({ status: 404, description: 'User not found' })
-  async findOne(@Param('id', ParseUUIDPipe) id: string): Promise<UserDto> {
+  async findOne(@Param('id', ParseIntPipe) id: number): Promise<UserDto> {
     return this.queryBus.execute(new GetUserByIdQuery(id));
   }
 
@@ -80,7 +80,7 @@ export class UsersController {
   @ApiResponse({ status: 200, type: UserDto })
   @ApiResponse({ status: 404, description: 'User not found' })
   async update(
-    @Param('id', ParseUUIDPipe) id: string,
+    @Param('id', ParseIntPipe) id: number,
     @Body() dto: UpdateUserDto,
   ): Promise<UserDto> {
     return this.commandBus.execute(
@@ -103,7 +103,7 @@ export class UsersController {
   @ApiOperation({ summary: 'Delete user (Admin only)' })
   @ApiResponse({ status: 204, description: 'User deleted' })
   @ApiResponse({ status: 404, description: 'User not found' })
-  async delete(@Param('id', ParseUUIDPipe) id: string): Promise<void> {
+  async delete(@Param('id', ParseIntPipe) id: number): Promise<void> {
     await this.commandBus.execute(new DeleteUserCommand(id));
   }
 

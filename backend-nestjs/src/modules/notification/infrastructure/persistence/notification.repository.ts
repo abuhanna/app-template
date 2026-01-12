@@ -13,29 +13,29 @@ export class NotificationRepository implements INotificationRepository {
     private readonly repository: Repository<NotificationOrmEntity>,
   ) {}
 
-  async findById(id: string): Promise<Notification | null> {
-    const entity = await this.repository.findOne({ where: { id } });
+  async findById(id: number): Promise<Notification | null> {
+    const entity = await this.repository.findOne({ where: { id: id.toString() } });
     return entity ? this.toDomain(entity) : null;
   }
 
-  async findByUserId(userId: string): Promise<Notification[]> {
+  async findByUserId(userId: number): Promise<Notification[]> {
     const entities = await this.repository.find({
-      where: { userId },
+      where: { userId: userId.toString() },
       order: { createdAt: 'DESC' },
     });
     return entities.map((entity) => this.toDomain(entity));
   }
 
-  async findUnreadByUserId(userId: string): Promise<Notification[]> {
+  async findUnreadByUserId(userId: number): Promise<Notification[]> {
     const entities = await this.repository.find({
-      where: { userId, isRead: false },
+      where: { userId: userId.toString(), isRead: false },
       order: { createdAt: 'DESC' },
     });
     return entities.map((entity) => this.toDomain(entity));
   }
 
-  async countUnreadByUserId(userId: string): Promise<number> {
-    return this.repository.count({ where: { userId, isRead: false } });
+  async countUnreadByUserId(userId: number): Promise<number> {
+    return this.repository.count({ where: { userId: userId.toString(), isRead: false } });
   }
 
   async save(notification: Notification): Promise<Notification> {
@@ -44,21 +44,21 @@ export class NotificationRepository implements INotificationRepository {
     return this.toDomain(savedEntity);
   }
 
-  async markAsRead(id: string): Promise<void> {
-    await this.repository.update(id, { isRead: true, readAt: new Date() });
+  async markAsRead(id: number): Promise<void> {
+    await this.repository.update(id.toString(), { isRead: true, readAt: new Date() });
   }
 
-  async markAllAsReadByUserId(userId: string): Promise<void> {
+  async markAllAsReadByUserId(userId: number): Promise<void> {
     await this.repository.update(
-      { userId, isRead: false },
+      { userId: userId.toString(), isRead: false },
       { isRead: true, readAt: new Date() },
     );
   }
 
   private toDomain(entity: NotificationOrmEntity): Notification {
     return Notification.reconstitute(
-      entity.id,
-      entity.userId,
+      parseInt(entity.id, 10),
+      parseInt(entity.userId, 10),
       entity.title,
       entity.message,
       entity.type as NotificationType,
@@ -71,8 +71,10 @@ export class NotificationRepository implements INotificationRepository {
 
   private toEntity(notification: Notification): NotificationOrmEntity {
     const entity = new NotificationOrmEntity();
-    entity.id = notification.id;
-    entity.userId = notification.userId;
+    if (notification.id !== 0) {
+      entity.id = notification.id.toString();
+    }
+    entity.userId = notification.userId.toString();
     entity.title = notification.title;
     entity.message = notification.message;
     entity.type = notification.type;

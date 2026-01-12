@@ -1,7 +1,7 @@
-import { v4 as uuidv4 } from 'uuid';
+
 
 export interface CreateRefreshTokenProps {
-  userId: string;
+  userId: number;
   token: string;
   expiresAt: Date;
   deviceInfo?: string | null;
@@ -10,8 +10,8 @@ export interface CreateRefreshTokenProps {
 
 export class RefreshToken {
   private constructor(
-    public readonly id: string,
-    public readonly userId: string,
+    public readonly id: number,
+    public readonly userId: number,
     public readonly token: string,
     public readonly expiresAt: Date,
     public deviceInfo: string | null,
@@ -24,7 +24,7 @@ export class RefreshToken {
 
   static create(props: CreateRefreshTokenProps): RefreshToken {
     return new RefreshToken(
-      uuidv4(),
+      0,
       props.userId,
       props.token,
       props.expiresAt,
@@ -38,8 +38,8 @@ export class RefreshToken {
   }
 
   static reconstitute(
-    id: string,
-    userId: string,
+    id: number,
+    userId: number,
     token: string,
     expiresAt: Date,
     deviceInfo: string | null,

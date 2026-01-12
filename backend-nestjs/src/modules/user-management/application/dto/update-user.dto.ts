@@ -1,4 +1,4 @@
-import { IsBoolean, IsEmail, IsEnum, IsOptional, IsString, IsUUID, MinLength } from 'class-validator';
+import { IsBoolean, IsEmail, IsEnum, IsOptional, IsString, IsNumber, MinLength } from 'class-validator';
 import { ApiProperty } from '@nestjs/swagger';
 import { UserRole } from '../../domain/value-objects/user-role';
 
@@ -32,9 +32,9 @@ export class UpdateUserDto {
   role?: UserRole;
 
   @ApiProperty({ description: 'Department ID', required: false })
-  @IsUUID()
+  @IsNumber()
   @IsOptional()
-  departmentId?: string | null;
+  departmentId?: number | null;
 
   @ApiProperty({ description: 'Is active', required: false })
   @IsBoolean()

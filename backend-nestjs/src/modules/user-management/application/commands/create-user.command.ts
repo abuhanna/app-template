@@ -8,6 +8,6 @@ export class CreateUserCommand {
     public readonly firstName: string,
     public readonly lastName: string,
     public readonly role: UserRole,
-    public readonly departmentId?: string,
+    public readonly departmentId?: number,
   ) {}
 }

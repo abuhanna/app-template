@@ -6,7 +6,7 @@ import {
   Delete,
   Body,
   Param,
-  ParseUUIDPipe,
+  ParseIntPipe,
   HttpCode,
   HttpStatus,
   UseGuards,
@@ -46,7 +46,7 @@ export class DepartmentsController {
   @ApiOperation({ summary: 'Get department by ID' })
   @ApiResponse({ status: 200, type: DepartmentDto })
   @ApiResponse({ status: 404, description: 'Department not found' })
-  async findOne(@Param('id', ParseUUIDPipe) id: string): Promise<DepartmentDto> {
+  async findOne(@Param('id', ParseIntPipe) id: number): Promise<DepartmentDto> {
     return this.queryBus.execute(new GetDepartmentByIdQuery(id));
   }
 
@@ -69,7 +69,7 @@ export class DepartmentsController {
   @ApiResponse({ status: 200, type: DepartmentDto })
   @ApiResponse({ status: 404, description: 'Department not found' })
   async update(
-    @Param('id', ParseUUIDPipe) id: string,
+    @Param('id', ParseIntPipe) id: number,
     @Body() dto: UpdateDepartmentDto,
   ): Promise<DepartmentDto> {
     return this.commandBus.execute(
@@ -85,7 +85,7 @@ export class DepartmentsController {
   @ApiResponse({ status: 204, description: 'Department deleted' })
   @ApiResponse({ status: 404, description: 'Department not found' })
   @ApiResponse({ status: 400, description: 'Department has assigned users' })
-  async delete(@Param('id', ParseUUIDPipe) id: string): Promise<void> {
+  async delete(@Param('id', ParseIntPipe) id: number): Promise<void> {
     await this.commandBus.execute(new DeleteDepartmentCommand(id));
   }
 }

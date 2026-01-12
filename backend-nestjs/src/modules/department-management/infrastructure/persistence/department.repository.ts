@@ -12,8 +12,8 @@ export class DepartmentRepository implements IDepartmentRepository {
     private readonly repository: Repository<DepartmentOrmEntity>,
   ) {}
 
-  async findById(id: string): Promise<Department | null> {
-    const entity = await this.repository.findOne({ where: { id } });
+  async findById(id: number): Promise<Department | null> {
+    const entity = await this.repository.findOne({ where: { id: id.toString() } });
     return entity ? this.toDomain(entity) : null;
   }
 
@@ -33,35 +33,37 @@ export class DepartmentRepository implements IDepartmentRepository {
     return this.toDomain(savedEntity);
   }
 
-  async delete(id: string): Promise<void> {
-    await this.repository.delete(id);
+  async delete(id: number): Promise<void> {
+    await this.repository.delete(id.toString());
   }
 
   private toDomain(entity: DepartmentOrmEntity): Department {
     return Department.reconstitute(
-      entity.id,
+      parseInt(entity.id, 10),
       entity.name,
       entity.code,
       entity.description,
       entity.isActive,
       entity.createdAt,
       entity.updatedAt,
-      entity.createdBy,
-      entity.updatedBy,
+      entity.createdBy ? parseInt(entity.createdBy, 10) : null,
+      entity.updatedBy ? parseInt(entity.updatedBy, 10) : null,
     );
   }
 
   private toEntity(department: Department): DepartmentOrmEntity {
     const entity = new DepartmentOrmEntity();
-    entity.id = department.id;
+    if (department.id !== 0) {
+      entity.id = department.id.toString();
+    }
     entity.name = department.name;
     entity.code = department.code;
     entity.description = department.description;
     entity.isActive = department.isActive;
     entity.createdAt = department.createdAt;
     entity.updatedAt = department.updatedAt;
-    entity.createdBy = department.createdBy;
-    entity.updatedBy = department.updatedBy;
+    entity.createdBy = department.createdBy ? department.createdBy.toString() : null;
+    entity.updatedBy = department.updatedBy ? department.updatedBy.toString() : null;
     return entity;
   }
 }
