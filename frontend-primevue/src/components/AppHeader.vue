@@ -1,0 +1,149 @@
+<template>
+  <header class="app-header">
+    <div class="header-left">
+      <Button
+        icon="pi pi-bars"
+        text
+        rounded
+        severity="secondary"
+        @click="$emit('toggle-sidebar')"
+        class="menu-button"
+      />
+      <span class="app-title">AppTemplate</span>
+    </div>
+
+    <div class="header-right">
+      <!-- Notifications -->
+      <NotificationMenu />
+
+      <!-- User Menu -->
+      <Button
+        type="button"
+        @click="toggleUserMenu"
+        class="user-button"
+        text
+        rounded
+      >
+        <Avatar
+          :label="userInitials"
+          shape="circle"
+          class="user-avatar"
+        />
+        <span class="user-name">{{ userName }}</span>
+        <i class="pi pi-chevron-down" style="font-size: 0.75rem"></i>
+      </Button>
+      <Menu ref="userMenu" :model="userMenuItems" :popup="true" />
+    </div>
+  </header>
+</template>
+
+<script setup>
+import { ref, computed } from 'vue'
+import { useRouter } from 'vue-router'
+import { useAuthStore } from '@/stores/auth'
+import Button from 'primevue/button'
+import Avatar from 'primevue/avatar'
+import Menu from 'primevue/menu'
+import NotificationMenu from '@/components/common/NotificationMenu.vue'
+
+defineEmits(['toggle-sidebar'])
+
+const router = useRouter()
+const authStore = useAuthStore()
+const userMenu = ref()
+
+const userName = computed(() => authStore.user?.name || authStore.user?.username || 'User')
+const userInitials = computed(() => {
+  const name = userName.value
+  return name
+    .split(' ')
+    .map((n) => n[0])
+    .join('')
+    .toUpperCase()
+    .substring(0, 2)
+})
+
+const userMenuItems = ref([
+  {
+    label: 'Profile',
+    icon: 'pi pi-user',
+    command: () => router.push('/profile'),
+  },
+  {
+    separator: true,
+  },
+  {
+    label: 'Logout',
+    icon: 'pi pi-sign-out',
+    command: () => handleLogout(),
+  },
+])
+
+const toggleUserMenu = (event) => {
+  userMenu.value.toggle(event)
+}
+
+const handleLogout = async () => {
+  await authStore.logout()
+  router.push('/login')
+}
+</script>
+
+<style scoped>
+.app-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0.75rem 1.5rem;
+  background-color: var(--p-surface-card);
+  border-bottom: 1px solid var(--p-surface-border);
+  position: sticky;
+  top: 0;
+  z-index: 100;
+}
+
+.header-left {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+}
+
+.app-title {
+  font-size: 1.25rem;
+  font-weight: 600;
+  color: var(--p-text-color);
+}
+
+.header-right {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.user-button {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.5rem;
+}
+
+.user-avatar {
+  background-color: var(--p-primary-color);
+  color: var(--p-primary-contrast-color);
+}
+
+.user-name {
+  font-weight: 500;
+  color: var(--p-text-color);
+}
+
+@media (max-width: 768px) {
+  .user-name {
+    display: none;
+  }
+
+  .app-title {
+    font-size: 1rem;
+  }
+}
+</style>

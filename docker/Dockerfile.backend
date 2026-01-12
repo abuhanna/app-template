@@ -1,0 +1,50 @@
+# ================================
+# Backend-Only Dockerfile
+# .NET 8 API without frontend
+# ================================
+
+# ================================
+# Stage 1: Build Backend (.NET 8)
+# ================================
+FROM mcr.microsoft.com/dotnet/sdk:8.0 AS build
+WORKDIR /src
+
+# Copy backend source
+COPY backend-dotnet/ ./
+
+# Restore dependencies using the main project
+RUN dotnet restore src/Presentation/App.Template.WebAPI/App.Template.WebAPI.csproj
+
+# Build and publish
+RUN dotnet publish src/Presentation/App.Template.WebAPI/App.Template.WebAPI.csproj \
+    -c Release \
+    -o /app \
+    --no-restore
+
+# ================================
+# Stage 2: Runtime
+# ================================
+FROM mcr.microsoft.com/dotnet/aspnet:8.0 AS runtime
+
+# Install curl for health checks
+RUN apt-get update && \
+    apt-get install -y curl && \
+    rm -rf /var/lib/apt/lists/*
+
+WORKDIR /app
+
+# Copy published app
+COPY --from=build /app ./
+
+# Expose port
+EXPOSE 8080
+
+# Health check
+HEALTHCHECK --interval=30s --timeout=10s --start-period=30s --retries=3 \
+    CMD curl -f http://localhost:8080/health || exit 1
+
+# Set environment
+ENV ASPNETCORE_URLS=http://+:8080
+
+# Start application
+ENTRYPOINT ["dotnet", "AppTemplate.WebAPI.dll"]

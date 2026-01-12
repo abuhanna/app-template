@@ -1,0 +1,60 @@
+version: '3.8'
+
+services:
+  # PostgreSQL Database
+  db:
+    image: postgres:15-alpine
+    container_name: apptemplate-db-production
+    restart: always
+    environment:
+      - POSTGRES_USER=${DB_USER}
+      - POSTGRES_PASSWORD=${DB_PASSWORD}
+      - POSTGRES_DB=${DB_NAME}
+    # No port exposure - database only accessible via Docker network (more secure)
+    volumes:
+      - pgdata_production:/var/lib/postgresql/data
+    networks:
+      - apptemplate-network
+    healthcheck:
+      test: [ "CMD-SHELL", "pg_isready -U ${DB_USER}" ]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  # Unified Application (Backend + Frontend + Nginx)
+  app:
+    image: ${APP_IMAGE:-ghcr.io/your-repo/apptemplate:production}
+    container_name: apptemplate-app-production
+    restart: always
+    ports:
+      - "${APP_PORT:-8080}:80"
+      - "${APP_PORT_SSL:-8443}:443"
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
+    environment:
+      - ASPNETCORE_ENVIRONMENT=Production
+      - ASPNETCORE_URLS=http://+:8080
+      - ConnectionStrings__BpmDb=Host=db;Port=5432;Database=${DB_NAME};Username=${DB_USER};Password=${DB_PASSWORD}
+      - Jwt__Secret=${JWT_SECRET}
+      - Jwt__Issuer=${JWT_ISSUER:-AppTemplate}
+      - Jwt__Audience=${JWT_AUDIENCE:-AppTemplate}
+      - Sso__BaseUrl=${SSO_API_BASE_URL:-}
+    depends_on:
+      db:
+        condition: service_healthy
+    networks:
+      - apptemplate-network
+    healthcheck:
+      test: [ "CMD", "curl", "-f", "http://localhost/health" ]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 40s
+
+volumes:
+  pgdata_production:
+    driver: local
+
+networks:
+  apptemplate-network:
+    driver: bridge

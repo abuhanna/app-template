@@ -1,0 +1,17 @@
+{
+  "recommendations": [
+    "Vue.volar",
+    "dbaeumer.vscode-eslint",
+    "esbenp.prettier-vscode",
+    "ms-dotnettools.csharp",
+    "ms-dotnettools.csdevkit",
+    "ms-azuretools.vscode-docker",
+    "ckolkman.vscode-postgres",
+    "eamodio.gitlens",
+    "EditorConfig.EditorConfig",
+    "christian-kohler.path-intellisense",
+    "usernamehw.errorlens",
+    "yzhang.markdown-all-in-one",
+    "humao.rest-client"
+  ]
+}

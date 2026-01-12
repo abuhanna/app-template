@@ -1,0 +1,62 @@
+# Backend-Only Docker Compose
+# .NET 8 API + PostgreSQL Database
+# Usage: docker compose -f docker-compose.backend.yml up -d
+
+services:
+  # PostgreSQL Database
+  db:
+    image: postgres:15-alpine
+    container_name: ${PROJECT_NAME:-apptemplate}-db
+    restart: always
+    environment:
+      - POSTGRES_USER=${DB_USER:-postgres}
+      - POSTGRES_PASSWORD=${DB_PASSWORD:-postgres}
+      - POSTGRES_DB=${DB_NAME:-apptemplate_dev}
+    ports:
+      - "${DB_PORT:-5432}:5432"
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+    networks:
+      - app-network
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${DB_USER:-postgres}"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  # Backend API (.NET 8)
+  api:
+    build:
+      context: .
+      dockerfile: docker/Dockerfile.backend
+    container_name: ${PROJECT_NAME:-apptemplate}-api
+    restart: always
+    ports:
+      - "${API_PORT:-5100}:8080"
+    environment:
+      - ASPNETCORE_ENVIRONMENT=${ASPNETCORE_ENVIRONMENT:-Development}
+      - ASPNETCORE_URLS=http://+:8080
+      - ConnectionStrings__BpmDb=Host=db;Port=5432;Database=${DB_NAME:-apptemplate_dev};Username=${DB_USER:-postgres};Password=${DB_PASSWORD:-postgres}
+      - Jwt__Secret=${JWT_SECRET:-your-dev-secret-key-minimum-32-characters-long}
+      - Jwt__Issuer=${JWT_ISSUER:-AppTemplate}
+      - Jwt__Audience=${JWT_AUDIENCE:-AppTemplate}
+      - Sso__BaseUrl=${SSO_API_BASE_URL:-}
+    depends_on:
+      db:
+        condition: service_healthy
+    networks:
+      - app-network
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8080/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 30s
+
+volumes:
+  pgdata:
+    driver: local
+
+networks:
+  app-network:
+    driver: bridge

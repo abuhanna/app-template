@@ -1,0 +1,39 @@
+# Git / version control
+.git
+.gitignore
+
+# Docker
+.dockerignore
+Dockerfile
+docker-compose.yml
+
+# IDE and environment files
+.idea
+.vs
+.vscode
+*.sln
+*.suo
+*.user
+*.userosscache
+*.code-workspace
+
+# Build artifacts
+**/[Bb]in
+**/[Oo]bj
+**/[Dd]ebug
+**/[Rr]elease
+**/[Nn]et[A-Za-z0-9]*/
+
+# Local environment files
+.env
+
+# Test results and coverage reports
+**/[Tt]est[Rr]esult*
+**/[Cc]overage*
+
+# Logs
+**/[Ll]ogs/
+*.log
+
+# Docker volume data (if mapped locally)
+pgdata/

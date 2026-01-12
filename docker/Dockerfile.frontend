@@ -1,0 +1,44 @@
+# ================================
+# Frontend-Only Dockerfile
+# Vue 3 SPA served by Nginx
+# ================================
+
+# ================================
+# Stage 1: Build Frontend (Vue 3)
+# ================================
+FROM node:20-alpine AS build
+WORKDIR /app
+
+# Copy package files
+COPY frontend/package*.json ./
+RUN npm ci
+
+# Copy source
+COPY frontend/ ./
+
+# Build for production
+# VITE_API_BASE_URL should point to your backend API URL
+ARG VITE_API_URL=http://localhost:5100/api
+ENV VITE_API_BASE_URL=${VITE_API_URL}
+RUN npm run build
+
+# ================================
+# Stage 2: Runtime (Nginx)
+# ================================
+FROM nginx:alpine AS runtime
+
+# Copy built assets
+COPY --from=build /app/dist /usr/share/nginx/html
+
+# Copy nginx configuration for SPA
+COPY docker/nginx/frontend-only.conf /etc/nginx/conf.d/default.conf
+
+# Expose port
+EXPOSE 80
+
+# Health check
+HEALTHCHECK --interval=30s --timeout=10s --start-period=10s --retries=3 \
+    CMD wget --no-verbose --tries=1 --spider http://localhost/health || exit 1
+
+# Start nginx
+CMD ["nginx", "-g", "daemon off;"]

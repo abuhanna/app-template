@@ -1,0 +1,45 @@
+{
+  "version": "2.0.0",
+  "tasks": [
+    {
+      "label": "build-backend",
+      "command": "dotnet",
+      "type": "process",
+      "args": ["build", "${workspaceFolder}/backend/Gspe.Bpm.sln"],
+      "problemMatcher": "$msCompile",
+      "group": "build"
+    },
+    {
+      "label": "build-frontend",
+      "type": "npm",
+      "script": "build",
+      "path": "frontend",
+      "group": "build"
+    },
+    {
+      "label": "test-backend",
+      "command": "dotnet",
+      "type": "process",
+      "args": ["test", "${workspaceFolder}/backend/Gspe.Bpm.sln"],
+      "problemMatcher": "$msCompile",
+      "group": "test"
+    },
+    {
+      "label": "test-frontend",
+      "type": "npm",
+      "script": "test",
+      "path": "frontend",
+      "group": "test"
+    },
+    {
+      "label": "docker-up",
+      "type": "shell",
+      "command": "docker compose up -d --build"
+    },
+    {
+      "label": "docker-down",
+      "type": "shell",
+      "command": "docker compose down"
+    }
+  ]
+}
