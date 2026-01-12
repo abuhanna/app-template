@@ -108,6 +108,43 @@ export async function generateProject(config: ProjectConfig): Promise<void> {
   if (fs.existsSync(envExamplePath) && !fs.existsSync(envPath)) {
     fs.copyFileSync(envExamplePath, envPath);
   }
+
+  // Step 6: Create appsettings.Development.json from example (for .NET projects)
+  if (config.projectType !== 'frontend' && config.backend === 'dotnet') {
+    await createAppSettingsFromExample(absolutePath, config);
+  }
+}
+
+/**
+ * Create appsettings.Development.json from appsettings.example.json for .NET projects
+ */
+async function createAppSettingsFromExample(projectPath: string, config: ProjectConfig): Promise<void> {
+  // Determine backend directory
+  let backendDir: string;
+  if (config.projectType === 'fullstack') {
+    backendDir = path.join(projectPath, 'backend');
+  } else if (config.placeInRoot) {
+    backendDir = projectPath;
+  } else {
+    backendDir = path.join(projectPath, 'backend');
+  }
+
+  // Find WebAPI project directory (it contains appsettings.example.json)
+  const presentationDir = path.join(backendDir, 'src', 'Presentation');
+  if (!fs.existsSync(presentationDir)) return;
+
+  const entries = fs.readdirSync(presentationDir, { withFileTypes: true });
+  for (const entry of entries) {
+    if (entry.isDirectory() && entry.name.endsWith('.WebAPI')) {
+      const webApiDir = path.join(presentationDir, entry.name);
+      const examplePath = path.join(webApiDir, 'appsettings.example.json');
+      const devPath = path.join(webApiDir, 'appsettings.Development.json');
+
+      if (fs.existsSync(examplePath) && !fs.existsSync(devPath)) {
+        fs.copyFileSync(examplePath, devPath);
+      }
+    }
+  }
 }
 
 /**
