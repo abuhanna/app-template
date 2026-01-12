@@ -493,6 +493,9 @@ $RECYCLE.BIN/
 !CONTRIBUTING.md
 !**/README.md
 
+!clean_architecture_guide.md
+!CLEAN_ARCHITECTURE_GUIDE.md
+
 # Documentation folder (work history and guides)
 docs/
 
@@ -515,6 +518,7 @@ pgdata/
 # Frontend specific ignores (Vuetify)
 frontend-vuetify/node_modules/
 frontend-vuetify/dist/
+frontend-vuetify/coverage/
 frontend-vuetify/.env
 frontend-vuetify/.env.local
 frontend-vuetify/.env.production
@@ -523,6 +527,7 @@ frontend-vuetify/.env.staging
 # Frontend specific ignores (PrimeVue)
 frontend-primevue/node_modules/
 frontend-primevue/dist/
+frontend-primevue/coverage/
 frontend-primevue/.env
 frontend-primevue/.env.local
 frontend-primevue/.env.production
@@ -531,14 +536,17 @@ frontend-primevue/.env.staging
 # Create-apptemplate CLI
 create-apptemplate/node_modules/
 create-apptemplate/dist/
+create-apptemplate/coverage/
 
 # Backend NestJS
 backend-nestjs/node_modules/
 backend-nestjs/dist/
+backend-nestjs/coverage/
 
 # Backend Spring
 backend-spring/target/
 backend-spring/.mvn/wrapper/maven-wrapper.jar
+backend-spring/HELP.md
 
 # Temporary and cache files
 *.log

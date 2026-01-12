@@ -1,4 +1,4 @@
-package apptemplate.api.controller;
+package apptemplate.api.controllers;
 
 import apptemplate.api.dto.ApiResponse;
 import apptemplate.api.dto.PagedResponse;

@@ -1,4 +1,4 @@
-package apptemplate.api.controller;
+package apptemplate.api.controllers;
 
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
