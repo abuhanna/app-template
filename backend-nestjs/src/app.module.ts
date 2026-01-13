@@ -1,4 +1,6 @@
 import { Module } from '@nestjs/common';
+import { LoggerModule } from 'nestjs-pino';
+import * as crypto from 'crypto';
 import { ConfigModule } from '@nestjs/config';
 import { CoreModule } from './core/core.module';
 import { AuthModule } from './modules/auth/auth.module';
@@ -12,6 +14,17 @@ import { SeederModule } from './core/database/seed.module';
     ConfigModule.forRoot({
       isGlobal: true,
       envFilePath: ['.env.local', '.env'],
+    }),
+    LoggerModule.forRoot({
+      pinoHttp: {
+        genReqId: (req, res) => {
+          const correlationId = req.headers['x-correlation-id'] || req.headers['x-request-id'] || crypto.randomUUID();
+          res.setHeader('X-Correlation-Id', correlationId);
+          return correlationId;
+        },
+        transport: process.env.NODE_ENV !== 'production' ? { target: 'pino-pretty' } : undefined,
+        autoLogging: true,
+      },
     }),
     CoreModule,
     SeederModule,

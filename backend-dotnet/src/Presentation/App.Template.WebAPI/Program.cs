@@ -33,10 +33,9 @@ builder.Host.UseSerilog((context, services, configuration) => configuration
     .Enrich.WithEnvironmentName()
     .Enrich.WithProperty("Application", "AppTemplate")
     .WriteTo.Console(outputTemplate: "[{Timestamp:HH:mm:ss} {Level:u3}] [{CorrelationId}] {Message:lj}{NewLine}{Exception}")
-    .WriteTo.File("logs/log-.txt",
+    .WriteTo.File(new Serilog.Formatting.Compact.RenderedCompactJsonFormatter(), "logs/log-.json",
         rollingInterval: RollingInterval.Day,
-        retainedFileCountLimit: 60,
-        outputTemplate: "{Timestamp:yyyy-MM-dd HH:mm:ss.fff zzz} [{Level:u3}] [{CorrelationId}] [{MachineName}] {Message:lj}{NewLine}{Exception}"));
+        retainedFileCountLimit: 60));
 
 builder.Services.AddControllers();
 // Add SignalR with custom UserIdProvider
