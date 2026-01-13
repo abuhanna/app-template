@@ -10,6 +10,7 @@ import org.mapstruct.MappingTarget;
 public interface UserEntityMapper {
 
     @Mapping(target = "department", ignore = true)
+    @Mapping(source = "active", target = "isActive")
     UserJpaEntity toJpaEntity(User domain);
 
     User toDomain(UserJpaEntity jpaEntity);

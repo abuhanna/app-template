@@ -46,7 +46,8 @@ public class UserJpaEntity {
     private DepartmentJpaEntity department;
 
     @Column(name = "is_active", nullable = false)
-    private boolean isActive;
+    @Builder.Default
+    private boolean isActive = true;
 
     @Column(name = "last_login_at")
     private LocalDateTime lastLoginAt;

@@ -58,6 +58,14 @@ public class DataSeeder implements CommandLineRunner {
             );
             
             userRepository.save(admin);
+        } else {
+            // Ensure admin is active if they already exist
+            userRepository.findByUsername("admin").ifPresent(admin -> {
+                if (!admin.isActive()) {
+                    admin.setActive(true);
+                    userRepository.save(admin);
+                }
+            });
         }
     }
 }
