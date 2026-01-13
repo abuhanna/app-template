@@ -28,6 +28,27 @@ export const usePersistentNotificationStore = defineStore('persistentNotificatio
     return 'denied'
   }
 
+  const handleNotification = (notification) => {
+    // Add to list immediately
+    notifications.value.unshift(notification)
+
+    // Show toast/snackbar
+    const notificationStore = useNotificationStore()
+    notificationStore.showInfo(`New Notification: ${notification.title}`)
+
+    // Show native notification
+    if ('Notification' in window && Notification.permission === 'granted') {
+      const n = new Notification(notification.title, {
+        body: notification.message,
+        icon: '/favicon.ico',
+      })
+      n.addEventListener('click', () => {
+        window.focus()
+        n.close()
+      })
+    }
+  }
+
   const initSignalR = async () => {
     checkPermission()
     const authStore = useAuthStore()
@@ -41,48 +62,58 @@ export const usePersistentNotificationStore = defineStore('persistentNotificatio
       return
     }
 
-    const hubUrl = `${import.meta.env.VITE_API_BASE_URL.replace('/api', '')}/hubs/notifications`
+    const backendType = import.meta.env.VITE_BACKEND_TYPE || 'dotnet'
 
-    connection.value = new HubConnectionBuilder()
-      .withUrl(hubUrl, {
-        accessTokenFactory: () => token,
+    if (backendType === 'nest') {
+      // Socket.io for NestJS
+      const socketUrl = import.meta.env.VITE_API_BASE_URL.replace('/api', '')
+      
+      const { io } = await import('socket.io-client')
+      connection.value = io(`${socketUrl}/notifications`, {
+        auth: {
+          token: token
+        },
+        transports: ['websocket']
       })
-      .configureLogging('none')
-      .withAutomaticReconnect()
-      .build()
 
-    connection.value.on('ReceiveNotification', notification => {
-      // Add to list immediately
-      notifications.value.unshift(notification)
+      connection.value.on('connect', () => {
+        if (import.meta.env.DEV) console.log('Socket.io connected successfully')
+        fetchNotifications()
+      })
 
-      // Show toast/snackbar
-      const notificationStore = useNotificationStore()
-      notificationStore.showInfo(`New Notification: ${notification.title}`)
+      connection.value.on('notification', (notification) => {
+        handleNotification(notification)
+      })
 
-      // Show native notification
-      if ('Notification' in window && Notification.permission === 'granted') {
-        const n = new Notification(notification.title, {
-          body: notification.message,
-          icon: '/favicon.ico',
+      connection.value.on('connect_error', (error) => {
+        console.error('Socket.io Connection Error:', error)
+      })
+
+    } else {
+      // SignalR for .NET (default)
+      const hubUrl = `${import.meta.env.VITE_API_BASE_URL.replace('/api', '')}/hubs/notifications`
+
+      connection.value = new HubConnectionBuilder()
+        .withUrl(hubUrl, {
+          accessTokenFactory: () => token,
         })
-        n.addEventListener('click', () => {
-          window.focus()
-          n.close()
-        })
+        .configureLogging('none')
+        .withAutomaticReconnect()
+        .build()
+
+      connection.value.on('ReceiveNotification', notification => {
+        handleNotification(notification)
+      })
+
+      try {
+        await connection.value.start()
+        if (import.meta.env.DEV) console.log('SignalR connected successfully')
+
+        // Fetch existing notifications after successful connection
+        await fetchNotifications()
+      } catch (error) {
+        console.error('SignalR Connection Error:', error)
       }
-    })
-
-    try {
-      // Try to request permission if not already decided, but don't block
-      // REMOVED: Automatic request blocked by Firefox/Safari. User must click "Enable" button in UI.
-
-      await connection.value.start()
-      if (import.meta.env.DEV) console.log('SignalR connected successfully')
-
-      // Fetch existing notifications after successful connection
-      await fetchNotifications()
-    } catch (error) {
-      console.error('SignalR Connection Error:', error)
     }
   }
 

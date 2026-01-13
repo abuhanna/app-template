@@ -52,7 +52,7 @@ export const useAuthStore = defineStore('auth', () => {
       const response = await authApi.login(credentials)
 
       // Store token and user data
-      token.value = response.token || response.accessToken
+      token.value = response.token
       user.value = response.user
       refreshToken.value = response.refreshToken
       refreshTokenExpiresAt.value = response.refreshTokenExpiresAt

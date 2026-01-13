@@ -13,6 +13,11 @@ import { registerPlugins } from '@/plugins'
 // Components
 import App from './App.vue'
 
+// PrimeIcons
+import 'primeicons/primeicons.css'
+// PrimeFlex
+import 'primeflex/primeflex.css'
+
 const app = createApp(App)
 
 registerPlugins(app)

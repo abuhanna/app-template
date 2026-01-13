@@ -1,16 +1,17 @@
 <template>
   <div class="notification-menu">
-    <Button
-      type="button"
-      @click="toggleMenu"
-      text
-      rounded
-      severity="secondary"
-      class="notification-button"
-      v-badge.danger="unreadCount > 0 ? unreadCount : null"
-    >
-      <i class="pi pi-bell" style="font-size: 1.25rem"></i>
-    </Button>
+    <OverlayBadge :value="unreadCount > 0 ? unreadCount : null" severity="danger">
+      <Button
+        type="button"
+        @click="toggleMenu"
+        text
+        rounded
+        severity="secondary"
+        class="notification-button"
+      >
+        <i class="pi pi-bell" style="font-size: 1.25rem"></i>
+      </Button>
+    </OverlayBadge>
 
     <Popover ref="notificationPopover" appendTo="body" class="notification-popover">
       <div class="notification-header">
@@ -62,9 +63,7 @@ import { ref, computed } from 'vue'
 import { usePersistentNotificationStore } from '@/stores/persistentNotification'
 import Button from 'primevue/button'
 import Popover from 'primevue/popover'
-import Badge from 'primevue/badgedirective'
-
-const vBadge = Badge
+import OverlayBadge from 'primevue/overlaybadge'
 
 const notificationStore = usePersistentNotificationStore()
 const notificationPopover = ref()

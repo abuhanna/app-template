@@ -1,20 +1,10 @@
 <template>
-  <Sidebar
-    v-model:visible="sidebarVisible"
-    :modal="isMobile"
-    :dismissable="isMobile"
-    :showCloseIcon="isMobile"
-    class="app-sidebar"
-    :pt="{
-      root: { class: 'sidebar-root' },
-      content: { class: 'sidebar-content' },
-    }"
-  >
+  <aside class="app-sidebar" :class="{ collapsed: !visible }">
     <!-- Logo Section -->
     <div class="sidebar-header">
       <div class="logo-container">
         <i class="pi pi-box logo-icon"></i>
-        <span class="logo-text">AppTemplate</span>
+        <span v-if="visible" class="logo-text">AppTemplate</span>
       </div>
     </div>
 
@@ -26,51 +16,44 @@
             :to="item.path"
             class="nav-item"
             :class="{ active: isActive(item.path) }"
-            @click="handleNavClick"
+            v-tooltip.right="{ value: item.label, disabled: visible }"
           >
             <i :class="item.icon"></i>
-            <span>{{ item.label }}</span>
+            <span v-if="visible">{{ item.label }}</span>
           </router-link>
         </li>
       </ul>
 
       <!-- Admin Section -->
       <div v-if="isAdmin" class="nav-section">
-        <span class="nav-section-title">Administration</span>
+        <span v-if="visible" class="nav-section-title">Administration</span>
         <ul class="nav-list">
           <li v-for="item in adminMenuItems" :key="item.path">
             <router-link
               :to="item.path"
               class="nav-item"
               :class="{ active: isActive(item.path) }"
-              @click="handleNavClick"
+              v-tooltip.right="{ value: item.label, disabled: visible }"
             >
               <i :class="item.icon"></i>
-              <span>{{ item.label }}</span>
+              <span v-if="visible">{{ item.label }}</span>
             </router-link>
           </li>
         </ul>
       </div>
     </nav>
-  </Sidebar>
+  </aside>
 </template>
 
 <script setup>
-import { ref, computed, onMounted, onUnmounted } from 'vue'
+import { computed } from 'vue'
 import { useRoute } from 'vue-router'
 import { useAuthStore } from '@/stores/auth'
-import Sidebar from 'primevue/sidebar'
 
 const visible = defineModel('visible', { default: true })
-const sidebarVisible = computed({
-  get: () => visible.value,
-  set: (val) => (visible.value = val),
-})
 
 const route = useRoute()
 const authStore = useAuthStore()
-
-const isMobile = ref(false)
 
 const isAdmin = computed(() => authStore.user?.role === 'Admin')
 
@@ -87,44 +70,36 @@ const adminMenuItems = [
 const isActive = (path) => {
   return route.path === path || route.path.startsWith(path + '/')
 }
-
-const handleNavClick = () => {
-  if (isMobile.value) {
-    sidebarVisible.value = false
-  }
-}
-
-const checkMobile = () => {
-  isMobile.value = window.innerWidth < 992
-}
-
-onMounted(() => {
-  checkMobile()
-  window.addEventListener('resize', checkMobile)
-})
-
-onUnmounted(() => {
-  window.removeEventListener('resize', checkMobile)
-})
 </script>
 
 <style scoped>
-.app-sidebar :deep(.sidebar-root) {
-  width: 280px;
-  border-right: 1px solid var(--p-surface-border);
+.app-sidebar {
+  width: 260px;
+  min-width: 260px;
+  height: 100vh;
   background-color: var(--p-surface-card);
-}
-
-.app-sidebar :deep(.sidebar-content) {
-  padding: 0;
+  border-right: 1px solid var(--p-surface-border);
   display: flex;
   flex-direction: column;
-  height: 100%;
+  position: fixed;
+  left: 0;
+  top: 0;
+  z-index: 1000;
+  transition: width 0.3s ease, min-width 0.3s ease;
+}
+
+.app-sidebar.collapsed {
+  width: 64px;
+  min-width: 64px;
 }
 
 .sidebar-header {
-  padding: 1.5rem;
+  padding: 1rem;
   border-bottom: 1px solid var(--p-surface-border);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 60px;
 }
 
 .logo-container {
@@ -139,14 +114,15 @@ onUnmounted(() => {
 }
 
 .logo-text {
-  font-size: 1.25rem;
+  font-size: 1.125rem;
   font-weight: 700;
   color: var(--p-text-color);
+  white-space: nowrap;
 }
 
 .sidebar-nav {
   flex: 1;
-  padding: 1rem 0;
+  padding: 0.5rem 0;
   overflow-y: auto;
 }
 
@@ -160,11 +136,16 @@ onUnmounted(() => {
   display: flex;
   align-items: center;
   gap: 0.75rem;
-  padding: 0.75rem 1.5rem;
+  padding: 0.75rem 1rem;
   color: var(--p-text-color);
   text-decoration: none;
   transition: all 0.2s ease;
   border-left: 3px solid transparent;
+}
+
+.collapsed .nav-item {
+  justify-content: center;
+  padding: 0.75rem;
 }
 
 .nav-item:hover {
@@ -180,23 +161,34 @@ onUnmounted(() => {
 
 .nav-item i {
   font-size: 1.125rem;
-  width: 1.5rem;
+  width: 1.25rem;
   text-align: center;
 }
 
 .nav-section {
-  margin-top: 1.5rem;
+  margin-top: 1rem;
   padding-top: 1rem;
   border-top: 1px solid var(--p-surface-border);
 }
 
 .nav-section-title {
   display: block;
-  padding: 0.5rem 1.5rem;
-  font-size: 0.75rem;
+  padding: 0.5rem 1rem;
+  font-size: 0.7rem;
   font-weight: 600;
   text-transform: uppercase;
   color: var(--p-text-muted-color);
   letter-spacing: 0.05em;
+}
+
+@media (max-width: 991px) {
+  .app-sidebar {
+    transform: translateX(-100%);
+  }
+
+  .app-sidebar:not(.collapsed) {
+    transform: translateX(0);
+    box-shadow: 2px 0 8px rgba(0, 0, 0, 0.15);
+  }
 }
 </style>

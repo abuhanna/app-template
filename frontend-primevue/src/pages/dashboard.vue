@@ -1,129 +1,74 @@
 <template>
-  <div class="dashboard">
-    <div class="dashboard-header">
-      <h1>Dashboard</h1>
-      <p class="welcome-text">Welcome back, {{ userName }}!</p>
-    </div>
+  <div class="flex flex-column gap-4 p-3">
 
     <!-- Stats Cards -->
-    <div class="stats-grid">
-      <Card class="stat-card">
-        <template #content>
-          <div class="stat-content">
-            <div class="stat-icon users">
-              <i class="pi pi-users"></i>
+    <!-- Stats Cards -->
+    <div class="grid">
+      <div class="col-12 md:col-6 lg:col-3">
+        <Card class="h-full">
+            <template #content>
+            <div class="flex align-items-center gap-3">
+                <div class="flex align-items-center justify-content-center w-4rem h-4rem border-round-xl stat-icon users">
+                <i class="pi pi-users text-2xl text-white"></i>
+                </div>
+                <div class="flex flex-column">
+                <span class="text-3xl font-bold text-900 line-height-1">{{ stats.totalUsers }}</span>
+                <span class="text-sm text-500 mt-1">Total Users</span>
+                </div>
             </div>
-            <div class="stat-info">
-              <span class="stat-value">{{ stats.totalUsers }}</span>
-              <span class="stat-label">Total Users</span>
-            </div>
-          </div>
-        </template>
-      </Card>
+            </template>
+        </Card>
+      </div>
 
-      <Card class="stat-card">
-        <template #content>
-          <div class="stat-content">
-            <div class="stat-icon departments">
-              <i class="pi pi-building"></i>
+      <div class="col-12 md:col-6 lg:col-3">
+        <Card class="h-full">
+            <template #content>
+            <div class="flex align-items-center gap-3">
+                <div class="flex align-items-center justify-content-center w-4rem h-4rem border-round-xl stat-icon departments">
+                <i class="pi pi-building text-2xl text-white"></i>
+                </div>
+                <div class="flex flex-column">
+                <span class="text-3xl font-bold text-900 line-height-1">{{ stats.totalDepartments }}</span>
+                <span class="text-sm text-500 mt-1">Departments</span>
+                </div>
             </div>
-            <div class="stat-info">
-              <span class="stat-value">{{ stats.totalDepartments }}</span>
-              <span class="stat-label">Departments</span>
-            </div>
-          </div>
-        </template>
-      </Card>
+            </template>
+        </Card>
+      </div>
 
-      <Card class="stat-card">
-        <template #content>
-          <div class="stat-content">
-            <div class="stat-icon active">
-              <i class="pi pi-check-circle"></i>
+      <div class="col-12 md:col-6 lg:col-3">
+        <Card class="h-full">
+            <template #content>
+            <div class="flex align-items-center gap-3">
+                <div class="flex align-items-center justify-content-center w-4rem h-4rem border-round-xl stat-icon active">
+                <i class="pi pi-check-circle text-2xl text-white"></i>
+                </div>
+                <div class="flex flex-column">
+                <span class="text-3xl font-bold text-900 line-height-1">{{ stats.activeUsers }}</span>
+                <span class="text-sm text-500 mt-1">Active Users</span>
+                </div>
             </div>
-            <div class="stat-info">
-              <span class="stat-value">{{ stats.activeUsers }}</span>
-              <span class="stat-label">Active Users</span>
-            </div>
-          </div>
-        </template>
-      </Card>
+            </template>
+        </Card>
+      </div>
 
-      <Card class="stat-card">
-        <template #content>
-          <div class="stat-content">
-            <div class="stat-icon notifications">
-              <i class="pi pi-bell"></i>
+      <div class="col-12 md:col-6 lg:col-3">
+        <Card class="h-full">
+            <template #content>
+            <div class="flex align-items-center gap-3">
+                <div class="flex align-items-center justify-content-center w-4rem h-4rem border-round-xl stat-icon notifications">
+                <i class="pi pi-bell text-2xl text-white"></i>
+                </div>
+                <div class="flex flex-column">
+                <span class="text-3xl font-bold text-900 line-height-1">{{ stats.unreadNotifications }}</span>
+                <span class="text-sm text-500 mt-1">Unread Notifications</span>
+                </div>
             </div>
-            <div class="stat-info">
-              <span class="stat-value">{{ stats.unreadNotifications }}</span>
-              <span class="stat-label">Unread Notifications</span>
-            </div>
-          </div>
-        </template>
-      </Card>
+            </template>
+        </Card>
+      </div>
     </div>
 
-    <!-- Quick Actions -->
-    <Card class="quick-actions-card">
-      <template #title>Quick Actions</template>
-      <template #content>
-        <div class="quick-actions">
-          <Button
-            v-if="isAdmin"
-            label="Add User"
-            icon="pi pi-user-plus"
-            @click="$router.push('/users')"
-          />
-          <Button
-            v-if="isAdmin"
-            label="Add Department"
-            icon="pi pi-building"
-            severity="secondary"
-            @click="$router.push('/departments')"
-          />
-          <Button
-            label="View Notifications"
-            icon="pi pi-bell"
-            severity="info"
-            @click="$router.push('/notifications')"
-          />
-          <Button
-            label="My Profile"
-            icon="pi pi-user"
-            severity="help"
-            @click="$router.push('/profile')"
-          />
-        </div>
-      </template>
-    </Card>
-
-    <!-- Recent Activity -->
-    <Card class="activity-card">
-      <template #title>Recent Activity</template>
-      <template #content>
-        <div v-if="recentNotifications.length === 0" class="no-activity">
-          <i class="pi pi-inbox"></i>
-          <span>No recent activity</span>
-        </div>
-        <div v-else class="activity-list">
-          <div
-            v-for="notification in recentNotifications"
-            :key="notification.id"
-            class="activity-item"
-          >
-            <div class="activity-icon">
-              <i class="pi pi-bell"></i>
-            </div>
-            <div class="activity-content">
-              <span class="activity-title">{{ notification.title }}</span>
-              <span class="activity-message">{{ notification.message }}</span>
-              <span class="activity-time">{{ formatTime(notification.createdAt) }}</span>
-            </div>
-          </div>
-        </div>
-      </template>
-    </Card>
   </div>
 </template>
 
@@ -134,14 +79,12 @@ import { usePersistentNotificationStore } from '@/stores/persistentNotification'
 import { useUserStore } from '@/stores/user'
 import { useDepartmentStore } from '@/stores/department'
 import Card from 'primevue/card'
-import Button from 'primevue/button'
 
 const authStore = useAuthStore()
 const notificationStore = usePersistentNotificationStore()
 const userStore = useUserStore()
 const departmentStore = useDepartmentStore()
 
-const userName = computed(() => authStore.user?.name || authStore.user?.username || 'User')
 const isAdmin = computed(() => authStore.user?.role === 'Admin')
 
 const stats = ref({
@@ -188,57 +131,6 @@ onMounted(async () => {
 </script>
 
 <style scoped>
-.dashboard {
-  display: flex;
-  flex-direction: column;
-  gap: 1.5rem;
-}
-
-.dashboard-header h1 {
-  margin: 0 0 0.25rem 0;
-  font-size: 1.75rem;
-  font-weight: 700;
-  color: var(--p-text-color);
-}
-
-.welcome-text {
-  margin: 0;
-  color: var(--p-text-muted-color);
-}
-
-.stats-grid {
-  display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
-  gap: 1rem;
-}
-
-.stat-card :deep(.p-card-body) {
-  padding: 1.25rem;
-}
-
-.stat-card :deep(.p-card-content) {
-  padding: 0;
-}
-
-.stat-content {
-  display: flex;
-  align-items: center;
-  gap: 1rem;
-}
-
-.stat-icon {
-  width: 3.5rem;
-  height: 3.5rem;
-  border-radius: 0.75rem;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-}
-
-.stat-icon i {
-  font-size: 1.5rem;
-  color: white;
-}
 
 .stat-icon.users {
   background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
@@ -256,23 +148,6 @@ onMounted(async () => {
   background: linear-gradient(135deg, #43e97b 0%, #38f9d7 100%);
 }
 
-.stat-info {
-  display: flex;
-  flex-direction: column;
-}
-
-.stat-value {
-  font-size: 1.75rem;
-  font-weight: 700;
-  color: var(--p-text-color);
-  line-height: 1;
-}
-
-.stat-label {
-  font-size: 0.875rem;
-  color: var(--p-text-muted-color);
-  margin-top: 0.25rem;
-}
 
 .quick-actions-card :deep(.p-card-title) {
   font-size: 1.125rem;
@@ -353,5 +228,33 @@ onMounted(async () => {
 .activity-time {
   font-size: 0.75rem;
   color: var(--p-text-muted-color);
+}
+
+.tech-list {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+}
+
+.tech-list li {
+  display: flex;
+  align-items: center;
+  color: var(--p-text-color);
+}
+
+.tech-list i {
+  color: var(--p-primary-color);
+  font-size: 1.25rem;
+}
+
+.mr-2 {
+  margin-right: 0.5rem;
+}
+
+.mb-3 {
+  margin-bottom: 1rem;
 }
 </style>

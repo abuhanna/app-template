@@ -1,12 +1,6 @@
 <template>
   <div class="users-page">
-    <div class="page-header">
-      <div>
-        <h1>User Management</h1>
-        <p class="page-subtitle">Manage system users and their permissions</p>
-      </div>
-      <Button label="Add User" icon="pi pi-plus" @click="openCreateDialog" />
-    </div>
+
 
     <!-- Users Table -->
     <Card>
@@ -25,14 +19,16 @@
           class="users-table"
         >
           <template #header>
-            <div class="table-header">
+            <div class="flex flex-wrap align-items-center justify-content-between gap-2">
               <IconField>
                 <InputIcon class="pi pi-search" />
                 <InputText
                   v-model="filters['global'].value"
                   placeholder="Search users..."
+                  class="w-20rem"
                 />
               </IconField>
+              <Button label="Add User" icon="pi pi-user-plus" @click="openCreateDialog" />
             </div>
           </template>
 
@@ -54,9 +50,15 @@
 
           <Column field="email" header="Email" sortable style="min-width: 200px" />
 
-          <Column field="name" header="Name" sortable style="min-width: 150px">
+          <Column field="firstName" header="First Name" sortable style="min-width: 150px">
             <template #body="{ data }">
-              {{ data.name || '-' }}
+              {{ data.firstName || '-' }}
+            </template>
+          </Column>
+
+          <Column field="lastName" header="Last Name" sortable style="min-width: 150px">
+            <template #body="{ data }">
+              {{ data.lastName || '-' }}
             </template>
           </Column>
 
@@ -111,92 +113,99 @@
     <Dialog
       v-model:visible="dialogVisible"
       :header="editingUser ? 'Edit User' : 'Create User'"
-      :style="{ width: '500px' }"
+      :style="{ width: '32rem' }"
       modal
-      class="user-dialog"
     >
-      <form @submit.prevent="handleSubmit" class="dialog-form">
-        <div class="form-field">
+      <div class="flex flex-column gap-4">
+        <div class="flex flex-column gap-2">
           <label for="username">Username *</label>
           <InputText
             id="username"
             v-model="form.username"
             :disabled="!!editingUser"
             :invalid="!!formErrors.username"
+            placeholder="Enter username"
             class="w-full"
           />
-          <small v-if="formErrors.username" class="p-error">{{ formErrors.username }}</small>
+          <small v-if="formErrors.username" class="text-red-500">{{ formErrors.username }}</small>
         </div>
 
-        <div class="form-field">
+        <div class="flex flex-column gap-2">
           <label for="email">Email *</label>
           <InputText
             id="email"
             v-model="form.email"
             type="email"
             :invalid="!!formErrors.email"
+            placeholder="user@example.com"
             class="w-full"
           />
-          <small v-if="formErrors.email" class="p-error">{{ formErrors.email }}</small>
+          <small v-if="formErrors.email" class="text-red-500">{{ formErrors.email }}</small>
         </div>
 
-        <div class="form-field">
-          <label for="name">Name</label>
-          <InputText id="name" v-model="form.name" class="w-full" />
+        <div class="grid">
+          <div class="col-6 flex flex-column gap-2">
+            <label for="firstName">First Name</label>
+            <InputText id="firstName" v-model="form.firstName" placeholder="John" class="w-full" />
+          </div>
+          <div class="col-6 flex flex-column gap-2">
+            <label for="lastName">Last Name</label>
+            <InputText id="lastName" v-model="form.lastName" placeholder="Doe" class="w-full" />
+          </div>
         </div>
 
-        <div v-if="!editingUser" class="form-field">
+        <div v-if="!editingUser" class="flex flex-column gap-2">
           <label for="password">Password *</label>
           <Password
             id="password"
             v-model="form.password"
             :invalid="!!formErrors.password"
             toggleMask
-            inputClass="w-full"
+            placeholder="Minimum 6 characters"
+            fluid
             class="w-full"
           />
-          <small v-if="formErrors.password" class="p-error">{{ formErrors.password }}</small>
+          <small v-if="formErrors.password" class="text-red-500">{{ formErrors.password }}</small>
         </div>
 
-        <div class="form-field">
-          <label for="role">Role *</label>
-          <Select
-            id="role"
-            v-model="form.role"
-            :options="roleOptions"
-            optionLabel="label"
-            optionValue="value"
-            :invalid="!!formErrors.role"
-            class="w-full"
-          />
-          <small v-if="formErrors.role" class="p-error">{{ formErrors.role }}</small>
-        </div>
-
-        <div class="form-field">
-          <label for="department">Department</label>
-          <Select
-            id="department"
-            v-model="form.departmentId"
-            :options="departmentOptions"
-            optionLabel="name"
-            optionValue="id"
-            placeholder="Select department"
-            showClear
-            class="w-full"
-          />
-        </div>
-
-        <div v-if="editingUser" class="form-field">
-          <label for="isActive">Status</label>
-          <div class="flex align-items-center gap-2">
-            <ToggleSwitch id="isActive" v-model="form.isActive" />
-            <span>{{ form.isActive ? 'Active' : 'Inactive' }}</span>
+        <div class="grid">
+          <div class="col-6 flex flex-column gap-2">
+            <label for="role">Role *</label>
+            <Select
+              id="role"
+              v-model="form.role"
+              :options="roleOptions"
+              optionLabel="label"
+              optionValue="value"
+              :invalid="!!formErrors.role"
+              placeholder="Select role"
+              class="w-full"
+            />
+            <small v-if="formErrors.role" class="text-red-500">{{ formErrors.role }}</small>
+          </div>
+          <div class="col-6 flex flex-column gap-2">
+            <label for="department">Department</label>
+            <Select
+              id="department"
+              v-model="form.departmentId"
+              :options="departmentOptions"
+              optionLabel="name"
+              optionValue="id"
+              placeholder="Select department"
+              showClear
+              class="w-full"
+            />
           </div>
         </div>
-      </form>
+
+        <div v-if="editingUser" class="flex align-items-center gap-3">
+          <ToggleSwitch id="isActive" v-model="form.isActive" />
+          <label for="isActive">{{ form.isActive ? 'Active' : 'Inactive' }}</label>
+        </div>
+      </div>
 
       <template #footer>
-        <Button label="Cancel" text @click="closeDialog" />
+        <Button label="Cancel" severity="secondary" @click="closeDialog" />
         <Button
           :label="editingUser ? 'Update' : 'Create'"
           :loading="saving"
@@ -253,7 +262,8 @@ const roleOptions = [
 const form = reactive({
   username: '',
   email: '',
-  name: '',
+  firstName: '',
+  lastName: '',
   password: '',
   role: 'User',
   departmentId: null,
@@ -279,7 +289,8 @@ const getInitials = (name) => {
 const resetForm = () => {
   form.username = ''
   form.email = ''
-  form.name = ''
+  form.firstName = ''
+  form.lastName = ''
   form.password = ''
   form.role = 'User'
   form.departmentId = null
@@ -297,7 +308,8 @@ const openEditDialog = (user) => {
   editingUser.value = user
   form.username = user.username
   form.email = user.email
-  form.name = user.name || ''
+  form.firstName = user.firstName || ''
+  form.lastName = user.lastName || ''
   form.role = user.role
   form.departmentId = user.departmentId
   form.isActive = user.isActive
@@ -348,7 +360,8 @@ const handleSubmit = async () => {
     if (editingUser.value) {
       await userStore.updateUser(editingUser.value.id, {
         email: form.email,
-        name: form.name,
+        firstName: form.firstName,
+        lastName: form.lastName,
         role: form.role,
         departmentId: form.departmentId,
         isActive: form.isActive,
@@ -358,13 +371,15 @@ const handleSubmit = async () => {
       await userStore.createUser({
         username: form.username,
         email: form.email,
-        name: form.name,
+        firstName: form.firstName,
+        lastName: form.lastName,
         password: form.password,
         role: form.role,
         departmentId: form.departmentId,
       })
       notificationStore.success('User created successfully')
     }
+    await userStore.fetchUsers()
     closeDialog()
   } catch (error) {
     notificationStore.error(error.response?.data?.message || 'Operation failed')
@@ -380,6 +395,7 @@ const handleDelete = async (user) => {
   try {
     await userStore.deleteUser(user.id)
     notificationStore.success('User deleted successfully')
+    await userStore.fetchUsers()
   } catch (error) {
     notificationStore.error(error.response?.data?.message || 'Delete failed')
   }
@@ -397,93 +413,41 @@ onMounted(async () => {
 
 <style scoped>
 .users-page {
-  display: flex;
-  flex-direction: column;
-  gap: 1.5rem;
+  padding: 1rem;
 }
 
-.page-header {
-  display: flex;
-  justify-content: space-between;
-  align-items: flex-start;
-  flex-wrap: wrap;
-  gap: 1rem;
-}
 
-.page-header h1 {
-  margin: 0 0 0.25rem 0;
-  font-size: 1.5rem;
-  font-weight: 700;
-  color: var(--p-text-color);
-}
 
-.page-subtitle {
-  margin: 0;
-  color: var(--p-text-muted-color);
-  font-size: 0.875rem;
-}
-
-.table-header {
-  display: flex;
-  justify-content: flex-end;
-}
-
+/* Empty state styling */
 .table-empty {
   display: flex;
   flex-direction: column;
   align-items: center;
-  justify-content: center;
   padding: 3rem;
-  color: var(--p-text-muted-color);
   gap: 0.5rem;
+  color: var(--p-text-muted-color);
 }
 
 .table-empty i {
-  font-size: 2.5rem;
+  font-size: 3rem;
 }
 
+/* User cell with avatar */
 .user-cell {
   display: flex;
   align-items: center;
   gap: 0.75rem;
 }
 
+/* Action buttons layout */
 .action-buttons {
   display: flex;
   gap: 0.25rem;
 }
 
-.dialog-form {
-  display: flex;
-  flex-direction: column;
-  gap: 1rem;
-}
-
-.form-field {
-  display: flex;
-  flex-direction: column;
-  gap: 0.5rem;
-}
-
-.form-field label {
-  font-weight: 500;
-  font-size: 0.875rem;
-  color: var(--p-text-color);
-}
-
-.w-full {
-  width: 100%;
-}
-
-.flex {
-  display: flex;
-}
-
-.align-items-center {
-  align-items: center;
-}
-
-.gap-2 {
-  gap: 0.5rem;
+/* Error text styling */
+.text-red-500 {
+  color: var(--p-red-500);
 }
 </style>
+

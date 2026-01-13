@@ -22,10 +22,7 @@ export default {
         preset: Aura,
         options: {
           darkModeSelector: '.app-dark',
-          cssLayer: {
-            name: 'primevue',
-            order: 'tailwind-base, primevue, tailwind-utilities',
-          },
+
         },
       },
       ripple: true,

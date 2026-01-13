@@ -32,7 +32,7 @@ export async function resetPassword (data) {
 }
 
 export async function refreshToken (token) {
-  const response = await api.post('/auth/refresh', { token })
+  const response = await api.post('/auth/refresh', { refreshToken: token })
   return response.data
 }
 

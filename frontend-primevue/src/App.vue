@@ -23,14 +23,37 @@
 </template>
 
 <script setup>
-import { onMounted, ref } from 'vue'
+import { onMounted, ref, watch } from 'vue'
 import { useAuthStore } from '@/stores/auth'
+import { useNotificationStore } from '@/stores/notification'
+import { useToast } from 'primevue/usetoast'
 import Toast from 'primevue/toast'
 import ProgressSpinner from 'primevue/progressspinner'
 
 const authStore = useAuthStore()
+const notificationStore = useNotificationStore()
+const toast = useToast()
+
 const isInitializing = ref(true)
 const isDarkMode = ref(false)
+
+// Watch for notifications and display toasts
+watch(() => notificationStore.show, (newValue) => {
+  if (newValue) {
+    toast.add({
+      severity: notificationStore.type,
+      summary: notificationStore.type.charAt(0).toUpperCase() + notificationStore.type.slice(1),
+      detail: notificationStore.message,
+      life: notificationStore.timeout
+    })
+    
+    // Reset show state so it can be triggered again even with same message
+    // Use a small timeout to avoid immediate reset loops if any
+    setTimeout(() => {
+        notificationStore.hide()
+    }, 100)
+  }
+})
 
 onMounted(() => {
   // Check system preference for dark mode

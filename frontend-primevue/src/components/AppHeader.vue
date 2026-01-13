@@ -9,7 +9,7 @@
         @click="$emit('toggle-sidebar')"
         class="menu-button"
       />
-      <span class="app-title">AppTemplate</span>
+      <span class="page-title">{{ pageTitle }}</span>
     </div>
 
     <div class="header-right">
@@ -39,7 +39,7 @@
 
 <script setup>
 import { ref, computed } from 'vue'
-import { useRouter } from 'vue-router'
+import { useRouter, useRoute } from 'vue-router'
 import { useAuthStore } from '@/stores/auth'
 import Button from 'primevue/button'
 import Avatar from 'primevue/avatar'
@@ -49,8 +49,21 @@ import NotificationMenu from '@/components/common/NotificationMenu.vue'
 defineEmits(['toggle-sidebar'])
 
 const router = useRouter()
+const route = useRoute()
 const authStore = useAuthStore()
 const userMenu = ref()
+
+// Dynamic page title based on route
+const pageTitle = computed(() => {
+  // Check for meta title first
+  if (route.meta?.title) {
+    return route.meta.title
+  }
+  
+  // Derive from route path
+  const path = route.path.split('/').filter(Boolean)[0] || 'dashboard'
+  return path.charAt(0).toUpperCase() + path.slice(1).replace(/-/g, ' ')
+})
 
 const userName = computed(() => authStore.user?.name || authStore.user?.username || 'User')
 const userInitials = computed(() => {
@@ -108,7 +121,7 @@ const handleLogout = async () => {
   gap: 0.75rem;
 }
 
-.app-title {
+.page-title {
   font-size: 1.25rem;
   font-weight: 600;
   color: var(--p-text-color);

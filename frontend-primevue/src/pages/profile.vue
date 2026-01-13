@@ -1,135 +1,136 @@
 <template>
-  <div class="profile-page">
-    <div class="page-header">
-      <h1>My Profile</h1>
-      <p class="page-subtitle">Manage your account settings</p>
-    </div>
-
-    <div class="profile-grid">
+  <div class="flex flex-column gap-4 p-3">
+    <div class="grid">
       <!-- Profile Information -->
-      <Card class="profile-card">
-        <template #title>
-          <div class="card-title-with-icon">
-            <i class="pi pi-user"></i>
-            <span>Profile Information</span>
-          </div>
-        </template>
-        <template #content>
-          <form @submit.prevent="handleUpdateProfile" class="profile-form">
-            <div class="form-field">
-              <label for="username">Username</label>
-              <InputText id="username" :value="user?.username" disabled class="w-full" />
-              <small class="help-text">Username cannot be changed</small>
+      <div class="col-12 md:col-6">
+        <Card class="h-full">
+            <template #title>
+            <div class="flex align-items-center gap-2">
+                <i class="pi pi-user text-primary"></i>
+                <span>Profile Information</span>
             </div>
+            </template>
+            <template #content>
+            <form @submit.prevent="handleUpdateProfile" class="flex flex-column gap-3">
+                <div class="flex flex-column gap-2">
+                <label for="username" class="font-medium">Username</label>
+                <InputText id="username" :value="user?.username" disabled class="w-full" />
+                <small class="text-color-secondary">Username cannot be changed</small>
+                </div>
 
-            <div class="form-field">
-              <label for="email">Email *</label>
-              <InputText
-                id="email"
-                v-model="profileForm.email"
-                type="email"
-                :invalid="!!profileErrors.email"
-                class="w-full"
-              />
-              <small v-if="profileErrors.email" class="p-error">{{ profileErrors.email }}</small>
-            </div>
+                <div class="flex flex-column gap-2">
+                <label for="email" class="font-medium">Email *</label>
+                <InputText
+                    id="email"
+                    v-model="profileForm.email"
+                    type="email"
+                    :invalid="!!profileErrors.email"
+                    class="w-full"
+                />
+                <small v-if="profileErrors.email" class="text-red-500">{{ profileErrors.email }}</small>
+                </div>
 
-            <div class="form-field">
-              <label for="name">Name</label>
-              <InputText id="name" v-model="profileForm.name" class="w-full" />
-            </div>
+                <div class="flex flex-column gap-2">
+                <label for="name" class="font-medium">Name</label>
+                <InputText id="name" v-model="profileForm.name" class="w-full" />
+                </div>
 
-            <div class="form-field">
-              <label>Role</label>
-              <Tag :value="user?.role" :severity="user?.role === 'Admin' ? 'danger' : 'info'" />
-            </div>
+                <div class="flex flex-column gap-2">
+                <label class="font-medium">Role</label>
+                <div class="flex">
+                    <Tag :value="user?.role" :severity="user?.role === 'Admin' ? 'danger' : 'info'" />
+                </div>
+                </div>
 
-            <div class="form-field">
-              <label>Department</label>
-              <span>{{ user?.departmentName || 'Not assigned' }}</span>
-            </div>
+                <div class="flex flex-column gap-2">
+                <label class="font-medium">Department</label>
+                <span>{{ user?.departmentName || 'Not assigned' }}</span>
+                </div>
 
-            <div class="form-actions">
-              <Button
-                type="submit"
-                label="Update Profile"
-                :loading="savingProfile"
-                icon="pi pi-check"
-              />
-            </div>
-          </form>
-        </template>
-      </Card>
+                <div class="mt-2">
+                <Button
+                    type="submit"
+                    label="Update Profile"
+                    :loading="savingProfile"
+                    icon="pi pi-check"
+                />
+                </div>
+            </form>
+            </template>
+        </Card>
+      </div>
 
       <!-- Change Password -->
-      <Card class="password-card">
-        <template #title>
-          <div class="card-title-with-icon">
-            <i class="pi pi-lock"></i>
-            <span>Change Password</span>
-          </div>
-        </template>
-        <template #content>
-          <form @submit.prevent="handleChangePassword" class="password-form">
-            <div class="form-field">
-              <label for="currentPassword">Current Password *</label>
-              <Password
-                id="currentPassword"
-                v-model="passwordForm.currentPassword"
-                :feedback="false"
-                toggleMask
-                :invalid="!!passwordErrors.currentPassword"
-                inputClass="w-full"
-                class="w-full"
-              />
-              <small v-if="passwordErrors.currentPassword" class="p-error">
-                {{ passwordErrors.currentPassword }}
-              </small>
+      <div class="col-12 md:col-6">
+        <Card class="h-full">
+            <template #title>
+            <div class="flex align-items-center gap-2">
+                <i class="pi pi-lock text-primary"></i>
+                <span>Change Password</span>
             </div>
+            </template>
+            <template #content>
+            <form @submit.prevent="handleChangePassword" class="flex flex-column gap-3">
+                <div class="flex flex-column gap-2">
+                <label for="currentPassword" class="font-medium">Current Password *</label>
+                <Password
+                    id="currentPassword"
+                    v-model="passwordForm.currentPassword"
+                    :feedback="false"
+                    toggleMask
+                    :invalid="!!passwordErrors.currentPassword"
+                    inputClass="w-full"
+                    class="w-full"
+                />
+                <small v-if="passwordErrors.currentPassword" class="text-red-500">
+                    {{ passwordErrors.currentPassword }}
+                </small>
+                </div>
 
-            <div class="form-field">
-              <label for="newPassword">New Password *</label>
-              <Password
-                id="newPassword"
-                v-model="passwordForm.newPassword"
-                toggleMask
-                :invalid="!!passwordErrors.newPassword"
-                inputClass="w-full"
-                class="w-full"
-              />
-              <small v-if="passwordErrors.newPassword" class="p-error">
-                {{ passwordErrors.newPassword }}
-              </small>
-            </div>
+                <div class="flex flex-column gap-2">
+                <label for="newPassword" class="font-medium">New Password *</label>
+                <Password
+                    id="newPassword"
+                    v-model="passwordForm.newPassword"
+                    toggleMask
+                    :invalid="!!passwordErrors.newPassword"
+                    inputClass="w-full"
+                    class="w-full"
+                />
+                <small v-if="passwordErrors.newPassword" class="text-red-500">
+                    {{ passwordErrors.newPassword }}
+                </small>
+                </div>
 
-            <div class="form-field">
-              <label for="confirmPassword">Confirm New Password *</label>
-              <Password
-                id="confirmPassword"
-                v-model="passwordForm.confirmPassword"
-                :feedback="false"
-                toggleMask
-                :invalid="!!passwordErrors.confirmPassword"
-                inputClass="w-full"
-                class="w-full"
-              />
-              <small v-if="passwordErrors.confirmPassword" class="p-error">
-                {{ passwordErrors.confirmPassword }}
-              </small>
-            </div>
+                <div class="flex flex-column gap-2">
+                <label for="confirmPassword" class="font-medium">Confirm New Password *</label>
+                <Password
+                    id="confirmPassword"
+                    v-model="passwordForm.confirmPassword"
+                    :feedback="false"
+                    toggleMask
+                    :invalid="!!passwordErrors.confirmPassword"
+                    inputClass="w-full"
+                    class="w-full"
+                />
+                <small v-if="passwordErrors.confirmPassword" class="text-red-500">
+                    {{ passwordErrors.confirmPassword }}
+                </small>
+                </div>
 
-            <div class="form-actions">
-              <Button
-                type="submit"
-                label="Change Password"
-                :loading="savingPassword"
-                icon="pi pi-lock"
-                severity="warning"
-              />
-            </div>
-          </form>
-        </template>
-      </Card>
+                <div class="mt-2">
+                <Button
+                    type="submit"
+                    label="Change Password"
+                    :loading="savingPassword"
+                    icon="pi pi-lock"
+                    severity="warning"
+                />
+                </div>
+            </form>
+            </template>
+        </Card>
+      </div>
     </div>
   </div>
 </template>
@@ -264,76 +265,7 @@ const handleChangePassword = async () => {
 </script>
 
 <style scoped>
-.profile-page {
-  display: flex;
-  flex-direction: column;
-  gap: 1.5rem;
-}
-
-.page-header h1 {
-  margin: 0 0 0.25rem 0;
-  font-size: 1.5rem;
-  font-weight: 700;
-  color: var(--p-text-color);
-}
-
-.page-subtitle {
-  margin: 0;
-  color: var(--p-text-muted-color);
-  font-size: 0.875rem;
-}
-
-.profile-grid {
-  display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(400px, 1fr));
-  gap: 1.5rem;
-}
-
-@media (max-width: 480px) {
-  .profile-grid {
-    grid-template-columns: 1fr;
-  }
-}
-
-.card-title-with-icon {
-  display: flex;
-  align-items: center;
-  gap: 0.5rem;
-}
-
-.card-title-with-icon i {
-  color: var(--p-primary-color);
-}
-
-.profile-form,
-.password-form {
-  display: flex;
-  flex-direction: column;
-  gap: 1rem;
-}
-
-.form-field {
-  display: flex;
-  flex-direction: column;
-  gap: 0.5rem;
-}
-
-.form-field label {
-  font-weight: 500;
-  font-size: 0.875rem;
-  color: var(--p-text-color);
-}
-
-.help-text {
-  font-size: 0.75rem;
-  color: var(--p-text-muted-color);
-}
-
-.form-actions {
-  margin-top: 0.5rem;
-}
-
-.w-full {
-  width: 100%;
+.text-red-500 {
+  color: var(--p-red-500);
 }
 </style>

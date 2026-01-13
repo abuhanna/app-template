@@ -1,12 +1,6 @@
 <template>
   <div class="departments-page">
-    <div class="page-header">
-      <div>
-        <h1>Department Management</h1>
-        <p class="page-subtitle">Manage organizational departments</p>
-      </div>
-      <Button label="Add Department" icon="pi pi-plus" @click="openCreateDialog" />
-    </div>
+
 
     <!-- Departments Table -->
     <Card>
@@ -25,14 +19,16 @@
           class="departments-table"
         >
           <template #header>
-            <div class="table-header">
+            <div class="flex flex-wrap align-items-center justify-content-between gap-2">
               <IconField>
                 <InputIcon class="pi pi-search" />
                 <InputText
                   v-model="filters['global'].value"
                   placeholder="Search departments..."
+                  class="w-20rem"
                 />
               </IconField>
+              <Button label="Add Department" icon="pi pi-building" @click="openCreateDialog" />
             </div>
           </template>
 
@@ -101,13 +97,12 @@
     <!-- Create/Edit Dialog -->
     <Dialog
       v-model:visible="dialogVisible"
-      :header="editingDepartment ? 'Edit Department' : 'Create Department'"
-      :style="{ width: '500px' }"
+      :header="editingDepartment ? 'Edit Department' : 'Create New Department'"
+      :style="{ width: '32rem' }"
       modal
-      class="department-dialog"
     >
-      <form @submit.prevent="handleSubmit" class="dialog-form">
-        <div class="form-field">
+      <div class="flex flex-column gap-3">
+        <div class="flex flex-column gap-2 mb-4">
           <label for="code">Code *</label>
           <InputText
             id="code"
@@ -117,10 +112,10 @@
             class="w-full"
             placeholder="e.g., IT, HR, FIN"
           />
-          <small v-if="formErrors.code" class="p-error">{{ formErrors.code }}</small>
+          <small v-if="formErrors.code" class="text-red-500">{{ formErrors.code }}</small>
         </div>
 
-        <div class="form-field">
+        <div class="flex flex-column gap-2 mb-4">
           <label for="name">Name *</label>
           <InputText
             id="name"
@@ -129,10 +124,10 @@
             class="w-full"
             placeholder="e.g., Information Technology"
           />
-          <small v-if="formErrors.name" class="p-error">{{ formErrors.name }}</small>
+          <small v-if="formErrors.name" class="text-red-500">{{ formErrors.name }}</small>
         </div>
 
-        <div class="form-field">
+        <div class="flex flex-column gap-2 mb-4">
           <label for="description">Description</label>
           <Textarea
             id="description"
@@ -143,17 +138,15 @@
           />
         </div>
 
-        <div v-if="editingDepartment" class="form-field">
-          <label for="isActive">Status</label>
-          <div class="flex align-items-center gap-2">
-            <ToggleSwitch id="isActive" v-model="form.isActive" />
-            <span>{{ form.isActive ? 'Active' : 'Inactive' }}</span>
-          </div>
+        <div v-if="editingDepartment" class="flex align-items-center gap-2">
+          <ToggleSwitch id="isActive" v-model="form.isActive" />
+          <label for="isActive">Status: {{ form.isActive ? 'Active' : 'Inactive' }}</label>
         </div>
-      </form>
 
+
+      </div>
       <template #footer>
-        <Button label="Cancel" text @click="closeDialog" />
+        <Button label="Cancel" severity="secondary" @click="closeDialog" />
         <Button
           :label="editingDepartment ? 'Update' : 'Create'"
           :loading="saving"
@@ -284,6 +277,7 @@ const handleSubmit = async () => {
       })
       notificationStore.success('Department created successfully')
     }
+    await departmentStore.fetchDepartments()
     closeDialog()
   } catch (error) {
     notificationStore.error(error.response?.data?.message || 'Operation failed')
@@ -299,6 +293,7 @@ const handleDelete = async (department) => {
   try {
     await departmentStore.deleteDepartment(department.id)
     notificationStore.success('Department deleted successfully')
+    await departmentStore.fetchDepartments()
   } catch (error) {
     notificationStore.error(error.response?.data?.message || 'Delete failed')
   }
@@ -316,49 +311,22 @@ onMounted(async () => {
 
 <style scoped>
 .departments-page {
-  display: flex;
-  flex-direction: column;
-  gap: 1.5rem;
+  padding: 1rem;
 }
 
-.page-header {
-  display: flex;
-  justify-content: space-between;
-  align-items: flex-start;
-  flex-wrap: wrap;
-  gap: 1rem;
-}
 
-.page-header h1 {
-  margin: 0 0 0.25rem 0;
-  font-size: 1.5rem;
-  font-weight: 700;
-  color: var(--p-text-color);
-}
-
-.page-subtitle {
-  margin: 0;
-  color: var(--p-text-muted-color);
-  font-size: 0.875rem;
-}
-
-.table-header {
-  display: flex;
-  justify-content: flex-end;
-}
 
 .table-empty {
   display: flex;
   flex-direction: column;
   align-items: center;
-  justify-content: center;
   padding: 3rem;
-  color: var(--p-text-muted-color);
   gap: 0.5rem;
+  color: var(--p-text-muted-color);
 }
 
 .table-empty i {
-  font-size: 2.5rem;
+  font-size: 3rem;
 }
 
 .action-buttons {
@@ -366,37 +334,7 @@ onMounted(async () => {
   gap: 0.25rem;
 }
 
-.dialog-form {
-  display: flex;
-  flex-direction: column;
-  gap: 1rem;
-}
-
-.form-field {
-  display: flex;
-  flex-direction: column;
-  gap: 0.5rem;
-}
-
-.form-field label {
-  font-weight: 500;
-  font-size: 0.875rem;
-  color: var(--p-text-color);
-}
-
-.w-full {
-  width: 100%;
-}
-
-.flex {
-  display: flex;
-}
-
-.align-items-center {
-  align-items: center;
-}
-
-.gap-2 {
-  gap: 0.5rem;
+.text-red-500 {
+  color: var(--p-red-500);
 }
 </style>

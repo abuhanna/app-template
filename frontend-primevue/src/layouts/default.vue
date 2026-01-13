@@ -4,7 +4,7 @@
     <AppSidebar v-model:visible="sidebarVisible" />
 
     <!-- Main Content Area -->
-    <div class="layout-main-container">
+    <div class="layout-main-container" :class="{ 'sidebar-collapsed': !sidebarVisible }">
       <!-- Header -->
       <AppHeader @toggle-sidebar="sidebarVisible = !sidebarVisible" />
 
@@ -38,11 +38,6 @@ const notificationStore = usePersistentNotificationStore()
 
 const sidebarVisible = ref(true)
 
-// Handle responsive sidebar
-const handleResize = () => {
-  sidebarVisible.value = window.innerWidth >= 992
-}
-
 onMounted(() => {
   // Check authentication
   if (!authStore.isAuthenticated) {
@@ -50,33 +45,33 @@ onMounted(() => {
     return
   }
 
-  // Connect to SignalR for notifications
-  notificationStore.connect()
-
-  // Handle responsive sidebar
-  handleResize()
-  window.addEventListener('resize', handleResize)
+  // Connect to real-time notifications
+  notificationStore.initSignalR()
 })
 
 onUnmounted(() => {
-  window.removeEventListener('resize', handleResize)
-  notificationStore.disconnect()
+  if (notificationStore.disconnect) {
+    notificationStore.disconnect()
+  }
 })
 </script>
 
 <style scoped>
 .layout-wrapper {
-  display: flex;
   min-height: 100vh;
   background-color: var(--p-surface-ground);
 }
 
 .layout-main-container {
+  margin-left: 260px;
   display: flex;
   flex-direction: column;
-  flex: 1;
-  min-width: 0;
+  min-height: 100vh;
   transition: margin-left 0.3s ease;
+}
+
+.layout-main-container.sidebar-collapsed {
+  margin-left: 64px;
 }
 
 .layout-main {
