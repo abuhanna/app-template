@@ -20,6 +20,6 @@ public class NotificationDto {
     private String type;
     private String referenceId;
     private String referenceType;
-    private boolean read;
+    private boolean isRead;
     private LocalDateTime createdAt;
 }

@@ -22,7 +22,7 @@ export class NotificationOrmEntity {
   @Column()
   type: string;
 
-  @Column({ nullable: true })
+  @Column({ type: 'varchar', nullable: true })
   link: string | null;
 
   @Column({ name: 'is_read', default: false })

@@ -40,7 +40,8 @@ public class GetDepartmentByIdQueryHandler : IRequestHandler<GetDepartmentByIdQu
             Description = department.Description,
             IsActive = department.IsActive,
             CreatedAt = department.CreatedAt,
-            UserCount = department.Users.Count(u => u.IsActive)
+            CreatedAt = department.CreatedAt,
+            UpdatedAt = department.UpdatedAt
         };
     }
 }

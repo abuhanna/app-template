@@ -57,7 +57,8 @@ public class GetUsersQueryHandler : IRequestHandler<GetUsersQuery, List<UserDto>
                 Id = u.Id,
                 Username = u.Username,
                 Email = u.Email,
-                Name = u.Name,
+                Email = u.Email,
+                FullName = u.Name,
                 Role = u.Role,
                 DepartmentId = u.DepartmentId,
                 DepartmentName = u.Department != null ? u.Department.Name : null,
@@ -66,6 +67,14 @@ public class GetUsersQueryHandler : IRequestHandler<GetUsersQuery, List<UserDto>
                 LastLoginAt = u.LastLoginAt
             })
             .ToListAsync(cancellationToken);
+
+        // Post-process name splitting
+        foreach (var user in users)
+        {
+            var nameParts = user.FullName?.Split(' ', 2) ?? Array.Empty<string>();
+            user.FirstName = nameParts.Length > 0 ? nameParts[0] : "";
+            user.LastName = nameParts.Length > 1 ? nameParts[1] : "";
+        }
 
         _logger.LogInformation("Successfully fetched {Count} users", users.Count);
 

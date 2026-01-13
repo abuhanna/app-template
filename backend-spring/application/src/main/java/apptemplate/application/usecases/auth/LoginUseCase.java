@@ -30,8 +30,9 @@ public class LoginUseCase {
 
     @Transactional
     public LoginResponse execute(LoginRequest request) {
-        // Find user by username
+        // Find user by username or email
         User user = userRepository.findByUsername(request.getUsername())
+                .or(() -> userRepository.findByEmail(request.getUsername()))
                 .orElseThrow(() -> new AuthenticationException("Invalid username or password"));
 
         // Verify password

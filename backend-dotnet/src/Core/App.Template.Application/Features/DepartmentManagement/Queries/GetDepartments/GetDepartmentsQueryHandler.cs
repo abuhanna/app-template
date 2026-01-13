@@ -52,7 +52,7 @@ public class GetDepartmentsQueryHandler : IRequestHandler<GetDepartmentsQuery, L
                 Description = d.Description,
                 IsActive = d.IsActive,
                 CreatedAt = d.CreatedAt,
-                UserCount = d.Users.Count(u => u.IsActive)
+                UpdatedAt = d.UpdatedAt
             })
             .ToListAsync(cancellationToken);
 

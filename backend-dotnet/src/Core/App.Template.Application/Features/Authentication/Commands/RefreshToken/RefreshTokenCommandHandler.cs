@@ -32,7 +32,7 @@ public class RefreshTokenCommandHandler : IRequestHandler<RefreshTokenCommand, L
         var refreshToken = await _context.RefreshTokens
             .Include(rt => rt.User)
                 .ThenInclude(u => u.Department)
-            .FirstOrDefaultAsync(rt => rt.Token == request.Token, cancellationToken);
+            .FirstOrDefaultAsync(rt => rt.Token == request.RefreshToken, cancellationToken);
 
         if (refreshToken == null)
         {

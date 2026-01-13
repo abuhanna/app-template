@@ -10,5 +10,6 @@ public interface DepartmentMapper {
 
     DepartmentMapper INSTANCE = Mappers.getMapper(DepartmentMapper.class);
 
+    @Mapping(target = "isActive", source = "active")
     DepartmentDto toDto(Department department);
 }

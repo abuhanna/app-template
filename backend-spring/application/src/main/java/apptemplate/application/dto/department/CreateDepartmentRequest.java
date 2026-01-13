@@ -25,5 +25,5 @@ public class CreateDepartmentRequest {
     @Size(max = 500, message = "Description must not exceed 500 characters")
     private String description;
 
-    private Boolean active;
+    private Boolean isActive;
 }

@@ -12,5 +12,6 @@ public interface NotificationMapper {
     NotificationMapper INSTANCE = Mappers.getMapper(NotificationMapper.class);
 
     @Mapping(target = "type", expression = "java(notification.getType().name())")
+    @Mapping(target = "isRead", source = "read")
     NotificationDto toDto(Notification notification);
 }

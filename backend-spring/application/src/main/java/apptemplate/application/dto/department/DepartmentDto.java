@@ -17,7 +17,7 @@ public class DepartmentDto {
     private String code;
     private String name;
     private String description;
-    private boolean active;
+    private boolean isActive;
     private LocalDateTime createdAt;
     private LocalDateTime updatedAt;
 }

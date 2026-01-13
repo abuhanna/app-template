@@ -45,7 +45,7 @@ export class UserOrmEntity {
   @Column({ name: 'last_login_at', type: 'timestamptz', nullable: true })
   lastLoginAt: Date | null;
 
-  @Column({ name: 'password_reset_token', nullable: true })
+  @Column({ name: 'password_reset_token', type: 'varchar', nullable: true })
   passwordResetToken: string | null;
 
   @Column({ name: 'password_reset_token_expires_at', type: 'timestamptz', nullable: true })

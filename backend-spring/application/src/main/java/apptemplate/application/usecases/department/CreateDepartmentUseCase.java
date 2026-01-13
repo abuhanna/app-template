@@ -30,7 +30,7 @@ public class CreateDepartmentUseCase {
                 .code(request.getCode().toUpperCase())
                 .name(request.getName())
                 .description(request.getDescription())
-                .active(request.getActive() != null ? request.getActive() : true)
+                .active(request.getIsActive() != null ? request.getIsActive() : true)
                 .build();
 
         departmentRepository.save(department);

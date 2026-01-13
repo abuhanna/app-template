@@ -14,7 +14,10 @@ public class UserInfoResponse {
     private Long id;
     private String username;
     private String email;
-    private String name;
+    private String firstName;
+    private String lastName;
+    private String fullName;
+    private boolean isActive;
     private String role;
     private Long departmentId;
     private String departmentName;

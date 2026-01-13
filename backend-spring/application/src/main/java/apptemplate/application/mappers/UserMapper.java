@@ -14,9 +14,17 @@ public interface UserMapper {
 
     @Mapping(target = "role", expression = "java(user.getRole().name())")
     @Mapping(target = "departmentName", ignore = true)
+    @Mapping(target = "fullName", source = "name")
+    @Mapping(target = "isActive", source = "active")
+    @Mapping(target = "firstName", expression = "java(user.getName() != null ? user.getName().split(\" \")[0] : \"\")")
+    @Mapping(target = "lastName", expression = "java(user.getName() != null && user.getName().contains(\" \") ? user.getName().substring(user.getName().indexOf(\" \") + 1) : \"\")")
     UserDto toDto(User user);
 
     @Mapping(target = "role", expression = "java(user.getRole().name())")
     @Mapping(target = "departmentName", ignore = true)
+    @Mapping(target = "fullName", source = "name")
+    @Mapping(target = "isActive", source = "active")
+    @Mapping(target = "firstName", expression = "java(user.getName() != null ? user.getName().split(\" \")[0] : \"\")")
+    @Mapping(target = "lastName", expression = "java(user.getName() != null && user.getName().contains(\" \") ? user.getName().substring(user.getName().indexOf(\" \") + 1) : \"\")")
     UserInfoResponse toUserInfoResponse(User user);
 }

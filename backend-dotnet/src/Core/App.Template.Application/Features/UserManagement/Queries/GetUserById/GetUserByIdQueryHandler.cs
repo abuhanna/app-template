@@ -32,12 +32,18 @@ public class GetUserByIdQueryHandler : IRequestHandler<GetUserByIdQuery, UserDto
             return null;
         }
 
+        var nameParts = user.Name?.Split(' ', 2) ?? Array.Empty<string>();
+        var firstName = nameParts.Length > 0 ? nameParts[0] : "";
+        var lastName = nameParts.Length > 1 ? nameParts[1] : "";
+
         return new UserDto
         {
             Id = user.Id,
             Username = user.Username,
             Email = user.Email,
-            Name = user.Name,
+            FirstName = firstName,
+            LastName = lastName,
+            FullName = user.Name,
             Role = user.Role,
             DepartmentId = user.DepartmentId,
             DepartmentName = user.Department?.Name,

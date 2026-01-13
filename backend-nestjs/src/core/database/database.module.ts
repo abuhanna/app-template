@@ -1,6 +1,10 @@
 import { Module } from '@nestjs/common';
 import { TypeOrmModule } from '@nestjs/typeorm';
 import { ConfigModule, ConfigService } from '@nestjs/config';
+import { UserOrmEntity } from '../../modules/user-management/infrastructure/persistence/user.orm-entity';
+import { DepartmentOrmEntity } from '../../modules/department-management/infrastructure/persistence/department.orm-entity';
+import { NotificationOrmEntity } from '../../modules/notification/infrastructure/persistence/notification.orm-entity';
+import { RefreshTokenOrmEntity } from '../../modules/auth/infrastructure/persistence/refresh-token.orm-entity';
 
 @Module({
   imports: [
@@ -14,7 +18,12 @@ import { ConfigModule, ConfigService } from '@nestjs/config';
         username: configService.get<string>('DB_USERNAME', 'postgres'),
         password: configService.get<string>('DB_PASSWORD', 'postgres'),
         database: configService.get<string>('DB_NAME', 'apptemplate_dev'),
-        entities: [__dirname + '/../../**/*.orm-entity{.ts,.js}'],
+        entities: [
+          UserOrmEntity,
+          DepartmentOrmEntity,
+          NotificationOrmEntity,
+          RefreshTokenOrmEntity,
+        ],
         migrations: [__dirname + '/migrations/*{.ts,.js}'],
         synchronize: configService.get<boolean>('DB_SYNCHRONIZE', false),
         logging: configService.get<boolean>('DB_LOGGING', false),

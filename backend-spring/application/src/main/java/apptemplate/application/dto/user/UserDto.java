@@ -16,11 +16,13 @@ public class UserDto {
     private Long id;
     private String username;
     private String email;
-    private String name;
+    private String firstName;
+    private String lastName;
+    private String fullName;
     private String role;
     private Long departmentId;
     private String departmentName;
-    private boolean active;
+    private boolean isActive;
     private LocalDateTime lastLoginAt;
     private LocalDateTime createdAt;
     private LocalDateTime updatedAt;

@@ -2,6 +2,7 @@ import { CommandHandler, ICommandHandler } from '@nestjs/cqrs';
 import { Inject, UnauthorizedException } from '@nestjs/common';
 import { RefreshTokenCommand } from './refresh-token.command';
 import { LoginResponseDto } from '../dto/login-response.dto';
+import { UserDto } from '@/modules/user-management/application/dto/user.dto';
 import { IUserRepository } from '@/modules/user-management/domain/interfaces/user.repository.interface';
 import { IJwtTokenService } from '../../domain/interfaces/jwt-token.service.interface';
 import { IRefreshTokenRepository } from '../../domain/interfaces/refresh-token.repository.interface';
@@ -64,6 +65,21 @@ export class RefreshTokenHandler implements ICommandHandler<RefreshTokenCommand>
       tokenPair.accessToken,
       tokenPair.refreshToken,
       expiresIn,
+      tokenPair.refreshTokenExpiresAt,
+      new UserDto({
+        id: user.id,
+        email: user.email,
+        username: user.username,
+        firstName: user.firstName,
+        lastName: user.lastName,
+        fullName: user.fullName,
+        role: user.role,
+        departmentId: user.departmentId,
+        isActive: user.isActive,
+        lastLoginAt: user.lastLoginAt,
+        createdAt: user.createdAt,
+        updatedAt: user.updatedAt,
+      }),
     );
   }
 }

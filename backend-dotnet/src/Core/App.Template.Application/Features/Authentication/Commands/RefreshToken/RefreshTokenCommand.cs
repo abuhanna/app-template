@@ -11,5 +11,5 @@ public record RefreshTokenCommand : IRequest<LoginResponseDto>
     /// <summary>
     /// The refresh token
     /// </summary>
-    public required string Token { get; init; }
+    public required string RefreshToken { get; init; }
 }

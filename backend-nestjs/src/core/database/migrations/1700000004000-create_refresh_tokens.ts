@@ -1,12 +1,12 @@
 import { MigrationInterface, QueryRunner, Table, TableForeignKey } from 'typeorm';
 
-export class CreateNotifications1700000003 implements MigrationInterface {
-  name = 'CreateNotifications1700000003';
+export class CreateRefreshTokens1700000004000 implements MigrationInterface {
+  name = 'CreateRefreshTokens1700000004000';
 
   public async up(queryRunner: QueryRunner): Promise<void> {
     await queryRunner.createTable(
       new Table({
-        name: 'notifications',
+        name: 'refresh_tokens',
         columns: [
           {
             name: 'id',
@@ -20,32 +20,38 @@ export class CreateNotifications1700000003 implements MigrationInterface {
             type: 'bigint',
           },
           {
-            name: 'title',
+            name: 'token',
             type: 'varchar',
-            length: '255',
+            isUnique: true,
           },
           {
-            name: 'message',
-            type: 'text',
+            name: 'expires_at',
+            type: 'timestamptz',
           },
           {
-            name: 'type',
-            type: 'varchar',
-            length: '50',
-          },
-          {
-            name: 'link',
+            name: 'device_info',
             type: 'varchar',
             isNullable: true,
           },
           {
-            name: 'is_read',
+            name: 'ip_address',
+            type: 'varchar',
+            length: '45',
+            isNullable: true,
+          },
+          {
+            name: 'is_revoked',
             type: 'boolean',
             default: false,
           },
           {
-            name: 'read_at',
+            name: 'revoked_at',
             type: 'timestamptz',
+            isNullable: true,
+          },
+          {
+            name: 'replaced_by_token',
+            type: 'varchar',
             isNullable: true,
           },
           {
@@ -60,7 +66,7 @@ export class CreateNotifications1700000003 implements MigrationInterface {
 
     // Create foreign key to users
     await queryRunner.createForeignKey(
-      'notifications',
+      'refresh_tokens',
       new TableForeignKey({
         columnNames: ['user_id'],
         referencedColumnNames: ['id'],
@@ -71,14 +77,17 @@ export class CreateNotifications1700000003 implements MigrationInterface {
 
     // Create indexes
     await queryRunner.query(
-      `CREATE INDEX "IDX_notifications_user_id" ON "notifications" ("user_id")`,
+      `CREATE INDEX "IDX_refresh_tokens_token" ON "refresh_tokens" ("token")`,
     );
     await queryRunner.query(
-      `CREATE INDEX "IDX_notifications_user_id_is_read" ON "notifications" ("user_id", "is_read")`,
+      `CREATE INDEX "IDX_refresh_tokens_user_id" ON "refresh_tokens" ("user_id")`,
+    );
+    await queryRunner.query(
+      `CREATE INDEX "IDX_refresh_tokens_expires_at" ON "refresh_tokens" ("expires_at")`,
     );
   }
 
   public async down(queryRunner: QueryRunner): Promise<void> {
-    await queryRunner.dropTable('notifications');
+    await queryRunner.dropTable('refresh_tokens');
   }
 }

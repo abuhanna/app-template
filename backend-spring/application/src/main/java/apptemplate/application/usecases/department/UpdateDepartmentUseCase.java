@@ -39,7 +39,7 @@ public class UpdateDepartmentUseCase {
                 request.getName(),
                 request.getDescription()
         );
-        department.setActiveStatus(request.getActive());
+        department.setActiveStatus(request.getIsActive());
 
         departmentRepository.save(department);
 
