@@ -102,16 +102,76 @@ export async function generateProject(config: ProjectConfig): Promise<void> {
     }
   }
 
-  // Step 5: Create .env file from example
-  const envExamplePath = path.join(absolutePath, '.env.example');
-  const envPath = path.join(absolutePath, '.env');
-  if (fs.existsSync(envExamplePath) && !fs.existsSync(envPath)) {
-    fs.copyFileSync(envExamplePath, envPath);
-  }
+  // Step 5: Setup environment files
+  await setupEnvironmentFiles(absolutePath, config);
 
   // Step 6: Create appsettings.Development.json from example (for .NET projects)
   if (config.projectType !== 'frontend' && config.backend === 'dotnet') {
     await createAppSettingsFromExample(absolutePath, config);
+  }
+}
+
+/**
+ * Setup environment files based on project stack
+ */
+async function setupEnvironmentFiles(projectPath: string, config: ProjectConfig): Promise<void> {
+  // 1. Frontend Environment
+  if (config.projectType !== 'backend') {
+    let frontendDir: string;
+    if (config.projectType === 'fullstack') {
+      frontendDir = path.join(projectPath, 'frontend');
+    } else {
+      frontendDir = config.placeInRoot ? projectPath : path.join(projectPath, 'frontend');
+    }
+
+    const envExample = path.join(frontendDir, '.env.example');
+    const envDest = path.join(frontendDir, '.env');
+
+    if (fs.existsSync(envExample) && !fs.existsSync(envDest)) {
+      fs.copyFileSync(envExample, envDest);
+
+      // Update VITE_BACKEND_TYPE for fullstack projects
+      if (config.projectType === 'fullstack') {
+        let content = fs.readFileSync(envDest, 'utf-8');
+        let backendType = 'dotnet';
+        if (config.backend === 'nestjs') backendType = 'nest';
+        if (config.backend === 'spring') backendType = 'spring';
+        
+        // Replace logical default 'dotnet' with actual selection
+        // Also handle if .env.example doesn't have it set to dotnet by using regex
+        content = content.replace(/^VITE_BACKEND_TYPE=.*$/m, `VITE_BACKEND_TYPE=${backendType}`);
+        
+        fs.writeFileSync(envDest, content);
+      }
+    }
+  }
+
+  // 2. Backend Environment
+  if (config.projectType !== 'frontend') {
+     let backendDir: string;
+     if (config.projectType === 'fullstack') {
+       backendDir = path.join(projectPath, 'backend');
+     } else {
+       backendDir = config.placeInRoot ? projectPath : path.join(projectPath, 'backend');
+     }
+
+     // NestJS
+     if (config.backend === 'nestjs') {
+       const envExample = path.join(backendDir, '.env.example');
+       const envDest = path.join(backendDir, '.env');
+       if (fs.existsSync(envExample) && !fs.existsSync(envDest)) {
+         fs.copyFileSync(envExample, envDest);
+       }
+     }
+
+     // Spring Boot
+     if (config.backend === 'spring') {
+        const ymlExample = path.join(backendDir, 'api', 'src', 'main', 'resources', 'application.example.yml');
+        const ymlDest = path.join(backendDir, 'api', 'src', 'main', 'resources', 'application.yml');
+         if (fs.existsSync(ymlExample) && !fs.existsSync(ymlDest)) {
+           fs.copyFileSync(ymlExample, ymlDest);
+         }
+     }
   }
 }
 
