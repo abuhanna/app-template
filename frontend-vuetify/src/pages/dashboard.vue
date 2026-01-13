@@ -52,36 +52,6 @@
         </v-card>
       </v-col>
     </v-row>
-
-    <v-row class="mt-4">
-      <v-col cols="12">
-        <v-card>
-          <v-card-title>Welcome to AppTemplate</v-card-title>
-          <v-card-text>
-            <p>
-              This is a fullstack application template built with:
-            </p>
-            <v-list>
-              <v-list-item prepend-icon="mdi-server">
-                <v-list-item-title>Backend: .NET 8 with Clean Architecture</v-list-item-title>
-              </v-list-item>
-              <v-list-item prepend-icon="mdi-vuejs">
-                <v-list-item-title>Frontend: Vue 3 + Vuetify 3 + Vite</v-list-item-title>
-              </v-list-item>
-              <v-list-item prepend-icon="mdi-database">
-                <v-list-item-title>Database: PostgreSQL with Entity Framework Core</v-list-item-title>
-              </v-list-item>
-              <v-list-item prepend-icon="mdi-lock">
-                <v-list-item-title>Authentication: JWT with local users + optional SSO</v-list-item-title>
-              </v-list-item>
-              <v-list-item prepend-icon="mdi-bell-ring">
-                <v-list-item-title>Real-time: SignalR for notifications</v-list-item-title>
-              </v-list-item>
-            </v-list>
-          </v-card-text>
-        </v-card>
-      </v-col>
-    </v-row>
   </v-container>
 </template>
 
