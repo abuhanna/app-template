@@ -24,7 +24,7 @@
                   Welcome Back
                 </h1>
                 <p class="text-subtitle-1" style="color: #424242;">
-                  Sign in to continue to BPM System
+                  Sign in to continue to App Template
                 </p>
               </div>
 
@@ -88,7 +88,7 @@
           <!-- Footer Text -->
           <div class="text-center mt-6">
             <p class="text-body-2" style="color: rgba(255, 255, 255, 0.9); text-shadow: 0 1px 2px rgba(0, 0, 0, 0.3);">
-              © 2025 BPM System. All rights reserved.
+              © 2025 App Template. All rights reserved.
             </p>
           </div>
         </v-col>

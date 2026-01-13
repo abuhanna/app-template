@@ -24,9 +24,9 @@ export class LoginHandler implements ICommandHandler<LoginCommand> {
 
   async execute(command: LoginCommand): Promise<LoginResponseDto> {
     // Find user by username or email
-    let user = await this.userRepository.findByUsername(command.usernameOrEmail);
+    let user = await this.userRepository.findByUsername(command.username);
     if (!user) {
-      user = await this.userRepository.findByEmail(command.usernameOrEmail);
+      user = await this.userRepository.findByEmail(command.username);
     }
 
     if (!user) {

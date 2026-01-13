@@ -88,7 +88,14 @@
               type="password"
               :rules="[v => !!v || 'Password is required', v => v.length >= 6 || 'Min 6 characters']"
             />
-            <v-text-field v-model="form.name" label="Full Name" />
+            <v-row>
+              <v-col cols="12" md="6">
+                <v-text-field v-model="form.firstName" label="First Name" />
+              </v-col>
+              <v-col cols="12" md="6">
+                <v-text-field v-model="form.lastName" label="Last Name" />
+              </v-col>
+            </v-row>
             <v-select
               v-model="form.role"
               :items="['Admin', 'User', 'Manager']"
@@ -143,7 +150,8 @@ const form = ref({
   username: '',
   email: '',
   password: '',
-  name: '',
+  firstName: '',
+  lastName: '',
   role: 'User',
   departmentId: null,
   isActive: true
@@ -151,7 +159,8 @@ const form = ref({
 
 const headers = [
   { title: 'Username', key: 'username' },
-  { title: 'Name', key: 'name' },
+  { title: 'Username', key: 'username' },
+  { title: 'Name', key: 'fullName' },
   { title: 'Email', key: 'email' },
   { title: 'Role', key: 'role' },
   { title: 'Department', key: 'departmentName' },
@@ -175,7 +184,9 @@ const filteredUsers = computed(() => {
     const s = search.value.toLowerCase()
     result = result.filter(u =>
       u.username?.toLowerCase().includes(s) ||
-      u.name?.toLowerCase().includes(s) ||
+      u.firstName?.toLowerCase().includes(s) ||
+      u.lastName?.toLowerCase().includes(s) ||
+      u.fullName?.toLowerCase().includes(s) ||
       u.email?.toLowerCase().includes(s)
     )
   }
@@ -198,7 +209,8 @@ const openCreateDialog = () => {
     username: '',
     email: '',
     password: '',
-    name: '',
+    firstName: '',
+    lastName: '',
     role: 'User',
     departmentId: null,
     isActive: true
@@ -213,7 +225,8 @@ const openEditDialog = (user) => {
     username: user.username,
     email: user.email,
     password: '',
-    name: user.name,
+    firstName: user.firstName,
+    lastName: user.lastName,
     role: user.role,
     departmentId: user.departmentId,
     isActive: user.isActive
@@ -230,7 +243,8 @@ const saveUser = async () => {
     if (isEditing.value) {
       await userStore.updateUser(form.value.id, {
         email: form.value.email,
-        name: form.value.name,
+        firstName: form.value.firstName,
+        lastName: form.value.lastName,
         role: form.value.role,
         departmentId: form.value.departmentId,
         isActive: form.value.isActive

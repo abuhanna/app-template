@@ -119,7 +119,6 @@ const headers = [
   { title: 'Code', key: 'code' },
   { title: 'Name', key: 'name' },
   { title: 'Description', key: 'description' },
-  { title: 'Users', key: 'userCount' },
   { title: 'Status', key: 'isActive' },
   { title: 'Actions', key: 'actions', sortable: false, align: 'end' }
 ]
@@ -199,11 +198,6 @@ const saveDepartment = async () => {
 }
 
 const confirmDelete = async (department) => {
-  if (department.userCount > 0) {
-    notificationStore.showError('Cannot delete department with active users')
-    return
-  }
-
   const confirmed = await confirm({
     title: 'Deactivate Department',
     message: `Are you sure you want to deactivate ${department.name}?`,
