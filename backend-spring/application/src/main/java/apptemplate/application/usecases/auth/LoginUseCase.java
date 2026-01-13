@@ -63,7 +63,9 @@ public class LoginUseCase {
 
         return LoginResponse.builder()
                 .token(accessToken)
+                .tokenType("Bearer")
                 .refreshToken(refreshToken.getToken())
+                .refreshTokenExpiresAt(refreshToken.getExpiresAt())
                 .expiresIn(jwtTokenService.getExpirationSeconds())
                 .user(userMapper.toUserInfoResponse(user))
                 .build();
