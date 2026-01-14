@@ -17,15 +17,16 @@ export async function downloadTemplate(repo: string, folder: string, destPath: s
   await emitter.clone(destPath);
 }
 
+
 /**
  * Download root configuration files based on project type
  */
 export async function copyRootFiles(repo: string, destPath: string, config: ProjectConfig): Promise<void> {
   // Common files for all projects
+  // REMOVED 'README.md' from here
   const commonFiles = [
     '.env.example',
     '.gitignore',
-    'README.md',
     'CLAUDE.md',
   ];
 
@@ -47,7 +48,21 @@ export async function copyRootFiles(repo: string, destPath: string, config: Proj
       copyFileFromTemp(tempDir, file, destPath, file);
     }
 
-    // 2. Fullstack Specific Logic
+    // 2. Dynamic README Selection
+    if (config.projectType === 'fullstack') {
+      // Fullstack README
+      const readmeTemplate = `docker/templates/root/README.fullstack.${config.backend}.md`;
+      copyFileFromTemp(tempDir, readmeTemplate, destPath, 'README.md');
+    } else if (!config.placeInRoot) {
+      // Split project (subdirectory) - generic README
+      const readmeTemplate = `docker/templates/root/README.multirepo.md`;
+      copyFileFromTemp(tempDir, readmeTemplate, destPath, 'README.md');
+    } 
+    // If placeInRoot is true (Backend/Frontend Only in root), we do NOTHING.
+    // The component's own README.md has already been downloaded to the root by downloadTemplate logic.
+    // We effectively preserve it.
+
+    // 3. Fullstack Specific Logic
     if (config.projectType === 'fullstack') {
       // Copy root docker folder (nginx, supervisor, etc.)
       // We exclude templates from the final copy implicitly by not copying the 'templates' subfolder if we iterate, 
