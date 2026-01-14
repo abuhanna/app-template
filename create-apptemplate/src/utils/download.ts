@@ -21,7 +21,7 @@ export async function downloadTemplate(repo: string, folder: string, destPath: s
  * Download root configuration files based on project type
  */
 export async function copyRootFiles(repo: string, destPath: string, config: ProjectConfig): Promise<void> {
-  // Files to download based on project type
+  // Common files for all projects
   const commonFiles = [
     '.env.example',
     '.gitignore',
@@ -29,62 +29,11 @@ export async function copyRootFiles(repo: string, destPath: string, config: Proj
     'CLAUDE.md',
   ];
 
-  const fullstackFiles = [
-    'Dockerfile',
-    'docker-compose.yml',
-    'docker-compose.staging.yml',
-    'docker-compose.production.yml',
-    'Makefile',
-  ];
-
-  const backendOnlyFiles = [
-    'docker/Dockerfile.backend',
-    'docker-compose.backend.yml',
-  ];
-
-  const frontendOnlyFiles = [
-    'docker/Dockerfile.frontend',
-    'docker/nginx/frontend-only.conf',
-    'docker-compose.frontend.yml',
-  ];
-
-  // Determine which files to download
-  let filesToDownload = [...commonFiles];
-
-  switch (config.projectType) {
-    case 'fullstack':
-      filesToDownload = [...filesToDownload, ...fullstackFiles];
-      break;
-    case 'backend':
-      filesToDownload = [...filesToDownload, ...backendOnlyFiles];
-      break;
-    case 'frontend':
-      filesToDownload = [...filesToDownload, ...frontendOnlyFiles];
-      break;
-  }
-
-  // Download docker folder for all project types
-  const dockerFolder = 'docker';
-  const dockerDest = path.join(destPath, dockerFolder);
-
-  try {
-    await downloadTemplate(repo, dockerFolder, dockerDest);
-  } catch {
-    // Docker folder might not exist for all project types, ignore error
-  }
-
-  // Note: We intentionally DO NOT download the scripts folder
-  // The create-project and rename-project scripts are for manual repo cloning
-  // Projects created via npm CLI don't need these scripts
-
-  // Download individual root files
-  // Note: degit doesn't support individual file downloads, so we download the whole repo
-  // and then filter the files we need. This is a workaround.
-
   // Create a temporary directory for the full repo download
   const tempDir = path.join(destPath, '.temp-download');
 
   try {
+    // Download the entire repository to temp dir
     const emitter = degit(repo, {
       cache: false,
       force: true,
@@ -93,24 +42,76 @@ export async function copyRootFiles(repo: string, destPath: string, config: Proj
 
     await emitter.clone(tempDir);
 
-    // Copy only the files we need
-    for (const file of filesToDownload) {
-      const srcFile = path.join(tempDir, file);
-      const destFile = path.join(destPath, file);
-
-      if (fs.existsSync(srcFile)) {
-        // Ensure parent directory exists
-        const parentDir = path.dirname(destFile);
-        if (!fs.existsSync(parentDir)) {
-          fs.mkdirSync(parentDir, { recursive: true });
-        }
-        fs.copyFileSync(srcFile, destFile);
-      }
+    // 1. Copy Common Files
+    for (const file of commonFiles) {
+      copyFileFromTemp(tempDir, file, destPath, file);
     }
+
+    // 2. Fullstack Specific Logic
+    if (config.projectType === 'fullstack') {
+      // Copy root docker folder (nginx, supervisor, etc.)
+      // We exclude templates from the final copy implicitly by not copying the 'templates' subfolder if we iterate, 
+      // or we just copy 'docker' and then delete 'templates' later. 
+      // For simplicity, let's copy 'docker/nginx' and 'docker/supervisor' explicitly.
+      copyDirectoryFromTemp(tempDir, 'docker/nginx', path.join(destPath, 'docker/nginx'));
+      copyDirectoryFromTemp(tempDir, 'docker/supervisor', path.join(destPath, 'docker/supervisor'));
+
+      // Select and copy root Dockerfile
+      const dockerfileTemplate = `docker/templates/root/Dockerfile.${config.backend}`;
+      copyFileFromTemp(tempDir, dockerfileTemplate, destPath, 'Dockerfile');
+
+      // Select and copy root docker-compose.yml
+      const composeTemplate = `docker/templates/root/docker-compose.${config.backend}.yml`;
+      copyFileFromTemp(tempDir, composeTemplate, destPath, 'docker-compose.yml');
+
+      // Select and copy root supervisord.conf
+      const supervisorTemplate = `docker/templates/root/supervisord.${config.backend}.conf`;
+      copyFileFromTemp(tempDir, supervisorTemplate, destPath, 'docker/supervisor/supervisord.conf');
+      
+      // Copy Makefile if it exists
+      copyFileFromTemp(tempDir, 'Makefile', destPath, 'Makefile');
+      copyFileFromTemp(tempDir, 'docker-compose.staging.yml', destPath, 'docker-compose.staging.yml');
+      copyFileFromTemp(tempDir, 'docker-compose.production.yml', destPath, 'docker-compose.production.yml');
+    }
+
+    // 3. Non-Fullstack Logic
+    // We do NOT copy root Dockerfile or docker-compose.yml.
+    // We do NOT copy the 'docker' folder (standalone backends/frontends are self-contained).
+
   } finally {
     // Clean up temp directory
     if (fs.existsSync(tempDir)) {
       fs.rmSync(tempDir, { recursive: true, force: true });
     }
+  }
+}
+
+/**
+ * Helper to copy a file from temp dir to destination
+ */
+function copyFileFromTemp(tempDir: string, srcRelative: string, destBase: string, destRelative: string): void {
+  const srcPath = path.join(tempDir, srcRelative);
+  const destPath = path.join(destBase, destRelative);
+
+  if (fs.existsSync(srcPath)) {
+    const parentDir = path.dirname(destPath);
+    if (!fs.existsSync(parentDir)) {
+      fs.mkdirSync(parentDir, { recursive: true });
+    }
+    fs.copyFileSync(srcPath, destPath);
+  }
+}
+
+/**
+ * Helper to copy a directory from temp dir to destination
+ */
+function copyDirectoryFromTemp(tempDir: string, srcRelative: string, destPath: string): void {
+  const srcPath = path.join(tempDir, srcRelative);
+
+  if (fs.existsSync(srcPath)) {
+    if (!fs.existsSync(destPath)) {
+      fs.mkdirSync(destPath, { recursive: true });
+    }
+    fs.cpSync(srcPath, destPath, { recursive: true });
   }
 }

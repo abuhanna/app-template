@@ -105,9 +105,41 @@ export async function generateProject(config: ProjectConfig): Promise<void> {
   // Step 5: Setup environment files
   await setupEnvironmentFiles(absolutePath, config);
 
-  // Step 6: Create appsettings.Development.json from example (for .NET projects)
+  // Step 6: Cleanup Docker files for Fullstack projects
+  // (Fullstack uses root Dockerfile, so we remove the individual ones)
+  if (config.projectType === 'fullstack') {
+    spinner.start('Cleaning up Docker configuration...');
+    try {
+      cleanupFullstackDockerFiles(absolutePath);
+      spinner.stop('Docker configuration cleaned up');
+    } catch {
+      // Ignore errors if files don't exist
+      spinner.stop('Docker cleanup skipped');
+    }
+  }
+
+  // Step 7: Create appsettings.Development.json from example (for .NET projects)
   if (config.projectType !== 'frontend' && config.backend === 'dotnet') {
     await createAppSettingsFromExample(absolutePath, config);
+  }
+}
+
+/**
+ * Remove individual Docker files from backend/frontend folders for fullstack projects
+ */
+function cleanupFullstackDockerFiles(projectPath: string): void {
+  const filesToDelete = [
+    'backend/Dockerfile',
+    'backend/docker-compose.yml',
+    'frontend/Dockerfile',
+    'frontend/docker-compose.yml',
+  ];
+
+  for (const file of filesToDelete) {
+    const filePath = path.join(projectPath, file);
+    if (fs.existsSync(filePath)) {
+      fs.rmSync(filePath);
+    }
   }
 }
 
