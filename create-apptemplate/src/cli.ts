@@ -1,8 +1,9 @@
-import type { CLIArgs, ProjectType, BackendFramework, UILibrary } from './types.js';
+import type { CLIArgs, ProjectType, BackendFramework, FrontendFramework, UILibrary } from './types.js';
 
 const validProjectTypes: ProjectType[] = ['fullstack', 'backend', 'frontend'];
 const validBackends: BackendFramework[] = ['dotnet', 'spring', 'nestjs'];
-const validUILibraries: UILibrary[] = ['vuetify', 'primevue'];
+const validFrontendFrameworks: FrontendFramework[] = ['vue', 'react'];
+const validUILibraries: UILibrary[] = ['vuetify', 'primevue', 'primereact', 'mui'];
 
 export function parseArgs(): CLIArgs {
   const args = process.argv.slice(2);
@@ -60,6 +61,17 @@ export function parseArgs(): CLIArgs {
       continue;
     }
 
+    if (arg === '-f' || arg === '--framework') {
+      const value = args[++i];
+      if (isValidFrontendFramework(value)) {
+        result.framework = value;
+      } else {
+        console.warn(`Warning: Invalid frontend framework "${value}". Valid options: ${validFrontendFrameworks.join(', ')}`);
+      }
+      i++;
+      continue;
+    }
+
     if (arg === '-u' || arg === '--ui') {
       const value = args[++i];
       if (isValidUI(value)) {
@@ -99,6 +111,10 @@ function isValidProjectType(value: string | undefined): value is ProjectType {
 
 function isValidBackend(value: string | undefined): value is BackendFramework {
   return value !== undefined && validBackends.includes(value as BackendFramework);
+}
+
+function isValidFrontendFramework(value: string | undefined): value is FrontendFramework {
+  return value !== undefined && validFrontendFrameworks.includes(value as FrontendFramework);
 }
 
 function isValidUI(value: string | undefined): value is UILibrary {

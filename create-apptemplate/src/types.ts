@@ -1,11 +1,13 @@
 export type ProjectType = 'fullstack' | 'backend' | 'frontend';
 export type BackendFramework = 'dotnet' | 'spring' | 'nestjs';
-export type UILibrary = 'vuetify' | 'primevue';
+export type FrontendFramework = 'vue' | 'react';
+export type UILibrary = 'vuetify' | 'primevue' | 'primereact' | 'mui';
 
 export interface ProjectConfig {
   projectPath: string;
   projectType: ProjectType;
   backend: BackendFramework;
+  frontendFramework: FrontendFramework;
   ui: UILibrary;
   projectName?: string; // Only required for dotnet/spring (namespace)
   installDeps: boolean;
@@ -16,6 +18,7 @@ export interface CLIArgs {
   projectPath?: string;
   type?: ProjectType;
   backend?: BackendFramework;
+  framework?: FrontendFramework;
   ui?: UILibrary;
   projectName?: string;
   install?: boolean;

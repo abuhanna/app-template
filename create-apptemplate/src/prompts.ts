@@ -2,7 +2,7 @@ import * as p from '@clack/prompts';
 import pc from 'picocolors';
 import path from 'path';
 import fs from 'fs';
-import type { CLIArgs, ProjectConfig, ProjectType, BackendFramework, UILibrary } from './types.js';
+import type { CLIArgs, ProjectConfig, ProjectType, BackendFramework, FrontendFramework, UILibrary } from './types.js';
 
 export async function runInteractivePrompts(cliArgs: CLIArgs): Promise<ProjectConfig | symbol> {
   // Project path
@@ -79,23 +79,60 @@ export async function runInteractivePrompts(cliArgs: CLIArgs): Promise<ProjectCo
     backend = result;
   }
 
-  // UI library (skip for backend-only)
-  let ui: UILibrary = cliArgs.ui || 'vuetify';
-  if (projectType !== 'backend' && !cliArgs.ui) {
+  // Frontend framework (skip for backend-only)
+  let frontendFramework: FrontendFramework = cliArgs.framework || 'vue';
+  if (projectType !== 'backend' && !cliArgs.framework) {
     const result = await p.select({
-      message: 'Which UI library would you like to use?',
+      message: 'Which frontend framework would you like to use?',
       options: [
         {
-          value: 'vuetify' as UILibrary,
-          label: 'Vuetify',
-          hint: 'Material Design 3, 80+ components',
+          value: 'vue' as FrontendFramework,
+          label: 'Vue 3',
+          hint: 'Composition API, Pinia, File-based routing',
         },
         {
-          value: 'primevue' as UILibrary,
-          label: 'PrimeVue',
-          hint: 'Aura theme, 90+ components',
+          value: 'react' as FrontendFramework,
+          label: 'React 18',
+          hint: 'Zustand, React Router v6, TypeScript',
         },
       ],
+    });
+    if (p.isCancel(result)) return result;
+    frontendFramework = result;
+  }
+
+  // UI library (skip for backend-only, options depend on frontend framework)
+  let ui: UILibrary = cliArgs.ui || (frontendFramework === 'vue' ? 'vuetify' : 'mui');
+  if (projectType !== 'backend' && !cliArgs.ui) {
+    const vueOptions = [
+      {
+        value: 'vuetify' as UILibrary,
+        label: 'Vuetify',
+        hint: 'Material Design 3, 80+ components',
+      },
+      {
+        value: 'primevue' as UILibrary,
+        label: 'PrimeVue',
+        hint: 'Aura theme, 90+ components',
+      },
+    ];
+
+    const reactOptions = [
+      {
+        value: 'mui' as UILibrary,
+        label: 'MUI (Material UI)',
+        hint: 'Material Design, most popular React UI library',
+      },
+      {
+        value: 'primereact' as UILibrary,
+        label: 'PrimeReact',
+        hint: 'Enterprise-grade, 90+ components',
+      },
+    ];
+
+    const result = await p.select({
+      message: 'Which UI library would you like to use?',
+      options: frontendFramework === 'vue' ? vueOptions : reactOptions,
     });
     if (p.isCancel(result)) return result;
     ui = result;
@@ -160,6 +197,7 @@ export async function runInteractivePrompts(cliArgs: CLIArgs): Promise<ProjectCo
     summaryLines.push(`${pc.cyan('Backend:')}          ${getBackendLabel(backend)}`);
   }
   if (projectType !== 'backend') {
+    summaryLines.push(`${pc.cyan('Frontend:')}         ${getFrontendLabel(frontendFramework)}`);
     summaryLines.push(`${pc.cyan('UI Library:')}       ${getUILabel(ui)}`);
   }
   if (needsNamespace && projectName) {
@@ -184,6 +222,7 @@ export async function runInteractivePrompts(cliArgs: CLIArgs): Promise<ProjectCo
     projectPath,
     projectType,
     backend,
+    frontendFramework,
     ui,
     projectName,
     installDeps,
@@ -206,10 +245,20 @@ function getBackendLabel(backend: BackendFramework): string {
   return labels[backend];
 }
 
+function getFrontendLabel(framework: FrontendFramework): string {
+  const labels: Record<FrontendFramework, string> = {
+    vue: 'Vue 3',
+    react: 'React 18',
+  };
+  return labels[framework];
+}
+
 function getUILabel(ui: UILibrary): string {
   const labels: Record<UILibrary, string> = {
     vuetify: 'Vuetify (Material Design)',
     primevue: 'PrimeVue (Aura Theme)',
+    mui: 'MUI (Material UI)',
+    primereact: 'PrimeReact',
   };
   return labels[ui];
 }

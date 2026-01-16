@@ -278,7 +278,9 @@ async function updateFolderReferences(projectPath: string, config: ProjectConfig
       if (config.projectType !== 'backend') {
         content = content
           .replace(/frontend-vuetify/g, frontendReplace)
-          .replace(/frontend-primevue/g, frontendReplace);
+          .replace(/frontend-primevue/g, frontendReplace)
+          .replace(/frontend-primereact/g, frontendReplace)
+          .replace(/frontend-mui/g, frontendReplace);
       }
 
       fs.writeFileSync(filePath, content);
@@ -321,7 +323,9 @@ function updateDockerFolderFiles(
       if (config.projectType !== 'backend') {
         content = content
           .replace(/frontend-vuetify/g, frontendReplace)
-          .replace(/frontend-primevue/g, frontendReplace);
+          .replace(/frontend-primevue/g, frontendReplace)
+          .replace(/frontend-primereact/g, frontendReplace)
+          .replace(/frontend-mui/g, frontendReplace);
       }
 
       fs.writeFileSync(fullPath, content);

@@ -35,11 +35,13 @@ async function main(): Promise<void> {
 
     if (cliArgs.projectPath && cliArgs.backend && (!needsNamespace || cliArgs.projectName)) {
       // Non-interactive mode - all required options provided
+      const frontendFramework = cliArgs.framework || 'vue';
       config = {
         projectPath: cliArgs.projectPath,
         projectType,
         backend,
-        ui: cliArgs.ui || 'vuetify',
+        frontendFramework,
+        ui: cliArgs.ui || (frontendFramework === 'vue' ? 'vuetify' : 'mui'),
         projectName: cliArgs.projectName,
         installDeps: cliArgs.install || false,
         placeInRoot: cliArgs.root || false,
@@ -81,7 +83,8 @@ ${pc.bold('Usage:')}
 ${pc.bold('Options:')}
   ${pc.yellow('-t, --type')}       Project type: fullstack, backend, frontend ${pc.gray('(default: fullstack)')}
   ${pc.yellow('-b, --backend')}    Backend framework: dotnet, spring, nestjs
-  ${pc.yellow('-u, --ui')}         UI library: vuetify, primevue ${pc.gray('(default: vuetify)')}
+  ${pc.yellow('-f, --framework')}  Frontend framework: vue, react ${pc.gray('(default: vue)')}
+  ${pc.yellow('-u, --ui')}         UI library: vuetify, primevue (Vue) | mui, primereact (React)
   ${pc.yellow('-n, --name')}       Project namespace (Company.Project format, .NET/Spring only)
   ${pc.yellow('-r, --root')}       Place files in project root ${pc.gray('(backend/frontend-only)')}
   ${pc.yellow('-i, --install')}    Install dependencies after creation
@@ -100,6 +103,9 @@ ${pc.bold('Examples:')}
 
   ${pc.gray('# Create frontend-only project with PrimeVue')}
   npm create apptemplate@latest my-spa -t frontend -u primevue
+
+  ${pc.gray('# Create fullstack project with React + MUI')}
+  npm create apptemplate@latest my-app -b dotnet -f react -u mui -n "MyCompany.MyApp"
 
   ${pc.gray('# Create backend in project root (no subfolder)')}
   npm create apptemplate@latest my-api -t backend -b nestjs --root
