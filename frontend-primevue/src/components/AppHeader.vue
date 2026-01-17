@@ -13,6 +13,18 @@
     </div>
 
     <div class="header-right">
+      <!-- Language Switcher -->
+      <Button
+        type="button"
+        @click="toggleLangMenu"
+        icon="pi pi-globe"
+        text
+        rounded
+        severity="secondary"
+        class="lang-button"
+      />
+      <Menu ref="langMenu" :model="langMenuItems" :popup="true" />
+
       <!-- Theme Toggle -->
       <Button
         type="button"
@@ -54,6 +66,7 @@ import { ref, computed } from 'vue'
 import { useRouter, useRoute } from 'vue-router'
 import { useAuthStore } from '@/stores/auth'
 import { useThemeStore } from '@/stores/theme'
+import { useLocaleStore } from '@/stores/locale'
 import Button from 'primevue/button'
 import Avatar from 'primevue/avatar'
 import Menu from 'primevue/menu'
@@ -65,8 +78,10 @@ const router = useRouter()
 const route = useRoute()
 const authStore = useAuthStore()
 const themeStore = useThemeStore()
+const localeStore = useLocaleStore()
 const userMenu = ref()
 const themeMenu = ref()
+const langMenu = ref()
 
 const themeIcon = computed(() => {
   const icons = {
@@ -97,6 +112,18 @@ const themeMenuItems = ref([
 
 const toggleThemeMenu = (event) => {
   themeMenu.value.toggle(event)
+}
+
+const langMenuItems = computed(() =>
+  localeStore.availableLocales.map(lang => ({
+    label: lang.name,
+    icon: localeStore.locale === lang.code ? 'pi pi-check' : '',
+    command: () => localeStore.setLocale(lang.code),
+  }))
+)
+
+const toggleLangMenu = (event) => {
+  langMenu.value.toggle(event)
 }
 
 // Dynamic page title based on route

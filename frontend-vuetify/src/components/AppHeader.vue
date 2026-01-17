@@ -28,6 +28,33 @@
 
     <!-- Action Buttons -->
     <div class="d-flex align-center mr-2">
+      <!-- Language Switcher -->
+      <v-menu offset-y>
+        <template #activator="{ props }">
+          <v-btn
+            v-bind="props"
+            icon
+            variant="text"
+            size="small"
+          >
+            <v-icon>mdi-translate</v-icon>
+          </v-btn>
+        </template>
+        <v-list density="compact" nav min-width="160">
+          <v-list-item
+            v-for="lang in localeStore.availableLocales"
+            :key="lang.code"
+            :active="localeStore.locale === lang.code"
+            @click="localeStore.setLocale(lang.code)"
+          >
+            <template #prepend>
+              <span class="mr-2">{{ lang.flag }}</span>
+            </template>
+            <v-list-item-title>{{ lang.name }}</v-list-item-title>
+          </v-list-item>
+        </v-list>
+      </v-menu>
+
       <!-- Theme Toggle -->
       <v-menu offset-y>
         <template #activator="{ props }">
@@ -121,6 +148,7 @@
   import { useConfirmDialog } from '@/composables/useConfirmDialog'
   import { useAuthStore } from '@/stores/auth'
   import { useThemeStore } from '@/stores/theme'
+  import { useLocaleStore } from '@/stores/locale'
 
   defineEmits(['toggle-sidebar'])
 
@@ -129,6 +157,7 @@
   const confirmDialog = useConfirmDialog()
   const authStore = useAuthStore()
   const themeStore = useThemeStore()
+  const localeStore = useLocaleStore()
   const { user } = storeToRefs(authStore)
 
   const themeOptions = [

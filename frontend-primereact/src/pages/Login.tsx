@@ -122,7 +122,6 @@ export default function Login() {
                 toggleMask
                 invalid={!!errors.password}
                 inputClassName="w-full"
-                size="large"
               />
               {errors.password && <small className="p-error">{errors.password}</small>}
             </div>

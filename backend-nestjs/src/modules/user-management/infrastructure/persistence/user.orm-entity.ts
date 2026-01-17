@@ -51,6 +51,9 @@ export class UserOrmEntity {
   @Column({ name: 'password_reset_token_expires_at', type: 'timestamptz', nullable: true })
   passwordResetTokenExpiresAt: Date | null;
 
+  @Column({ name: 'password_history', type: 'simple-array', nullable: true })
+  passwordHistory: string[];
+
   @CreateDateColumn({ name: 'created_at', type: 'timestamptz' })
   createdAt: Date;
 

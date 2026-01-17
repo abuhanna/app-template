@@ -9,6 +9,7 @@ import { DepartmentManagementModule } from './modules/department-management/depa
 import { NotificationModule } from './modules/notification/notification.module';
 import { FileManagementModule } from './modules/file-management/file-management.module';
 import { AuditLogModule } from './modules/audit-log/audit-log.module';
+import { HealthModule } from './modules/health/health.module';
 import { SeederModule } from './core/database/seed.module';
 
 @Module({
@@ -30,6 +31,7 @@ import { SeederModule } from './core/database/seed.module';
     }),
     CoreModule,
     SeederModule,
+    HealthModule,
     AuthModule,
     UserManagementModule,
     DepartmentManagementModule,

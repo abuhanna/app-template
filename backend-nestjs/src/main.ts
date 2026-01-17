@@ -4,8 +4,12 @@ import { ConfigService } from '@nestjs/config';
 import { DocumentBuilder, SwaggerModule } from '@nestjs/swagger';
 import { AppModule } from './app.module';
 import { GlobalExceptionFilter } from './core/filters/global-exception.filter';
+import { validateEnvironment } from './common/validators/environment.validator';
 
 import { Logger } from 'nestjs-pino';
+
+// Validate environment configuration early (fail-fast)
+validateEnvironment();
 
 async function bootstrap() {
   const app = await NestFactory.create(AppModule, { bufferLogs: true });

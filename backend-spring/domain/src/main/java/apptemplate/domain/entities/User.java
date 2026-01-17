@@ -33,6 +33,9 @@ public class User extends AuditableEntity {
     private String passwordResetToken;
     private LocalDateTime passwordResetTokenExpiry;
 
+    // Password history (stores last 5 password hashes as JSON array)
+    private String passwordHistory;
+
     /**
      * Creates a new user.
      */
@@ -59,11 +62,45 @@ public class User extends AuditableEntity {
     }
 
     /**
-     * Updates user password.
+     * Updates user password and adds current password to history.
      */
     public void updatePassword(String passwordHash) {
+        // Add current password to history before updating
+        addToPasswordHistory(this.passwordHash);
         this.passwordHash = passwordHash;
         clearPasswordResetToken();
+    }
+
+    /**
+     * Adds a password hash to history, keeping only last 5.
+     */
+    private void addToPasswordHistory(String hash) {
+        if (hash == null || hash.isEmpty()) return;
+
+        java.util.List<String> history = getPasswordHistoryList();
+        history.add(hash);
+        // Keep only last 5
+        while (history.size() > 5) {
+            history.remove(0);
+        }
+        this.passwordHistory = String.join(",", history);
+    }
+
+    /**
+     * Gets password history as a list.
+     */
+    public java.util.List<String> getPasswordHistoryList() {
+        if (passwordHistory == null || passwordHistory.isEmpty()) {
+            return new java.util.ArrayList<>();
+        }
+        return new java.util.ArrayList<>(java.util.Arrays.asList(passwordHistory.split(",")));
+    }
+
+    /**
+     * Checks if a password hash exists in history.
+     */
+    public boolean isPasswordInHistory(String hash) {
+        return getPasswordHistoryList().contains(hash);
     }
 
     /**

@@ -110,7 +110,6 @@ export default function ResetPassword() {
                   toggleMask
                   invalid={!!errors.password}
                   inputClassName="w-full"
-                  size="large"
                 />
                 {errors.password && <small className="p-error">{errors.password}</small>}
               </div>
@@ -127,7 +126,6 @@ export default function ResetPassword() {
                   toggleMask
                   invalid={!!errors.confirmPassword}
                   inputClassName="w-full"
-                  size="large"
                 />
                 {errors.confirmPassword && (
                   <small className="p-error">{errors.confirmPassword}</small>

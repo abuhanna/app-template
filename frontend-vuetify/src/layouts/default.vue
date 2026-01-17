@@ -3,7 +3,10 @@
     <AppSidebar v-model="drawer" />
     <AppHeader @toggle-sidebar="drawer = !drawer" />
     <v-main>
-      <router-view />
+      <v-container fluid class="pa-4">
+        <Breadcrumbs />
+        <router-view />
+      </v-container>
     </v-main>
     <AppNotification />
     <ConfirmDialog />
@@ -17,6 +20,7 @@
   import AppNotification from '@/components/AppNotification.vue'
   import AppSidebar from '@/components/AppSidebar.vue'
   import ConfirmDialog from '@/components/ConfirmDialog.vue'
+  import Breadcrumbs from '@/components/layout/Breadcrumbs.vue'
   import { usePersistentNotificationStore } from '@/stores/persistentNotification'
 
   const { mobile } = useDisplay()

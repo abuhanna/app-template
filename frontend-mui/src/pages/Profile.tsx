@@ -14,6 +14,7 @@ import {
 import { useAuthStore, useNotificationStore } from '@/stores'
 import * as userApi from '@/services/userApi'
 import * as authApi from '@/services/authApi'
+import { PasswordStrength } from '@/components/common/PasswordStrength'
 
 export default function Profile() {
   const user = useAuthStore((state) => state.user)
@@ -205,6 +206,7 @@ export default function Profile() {
                   }
                   margin="normal"
                 />
+                <PasswordStrength password={passwordData.newPassword} />
                 <TextField
                   fullWidth
                   label="Confirm New Password"

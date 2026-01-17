@@ -7,6 +7,7 @@ import { Tag } from 'primereact/tag'
 import { useAuthStore } from '@/stores/authStore'
 import { useNotificationStore } from '@/stores/notificationStore'
 import { authApi } from '@/services/authApi'
+import { PasswordStrength } from '@/components/common/PasswordStrength'
 
 interface ProfileErrors {
   email: string
@@ -259,11 +260,13 @@ export default function Profile() {
                   onChange={(e) =>
                     setPasswordForm({ ...passwordForm, newPassword: e.target.value })
                   }
+                  feedback={false}
                   toggleMask
                   invalid={!!passwordErrors.newPassword}
                   inputClassName="w-full"
                   className="w-full"
                 />
+                <PasswordStrength password={passwordForm.newPassword} />
                 {passwordErrors.newPassword && (
                   <small className="text-red-500">{passwordErrors.newPassword}</small>
                 )}

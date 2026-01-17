@@ -13,6 +13,7 @@ public class User : AuditableEntity
     public DateTime? LastLoginAt { get; private set; }
     public string? PasswordResetToken { get; private set; }
     public DateTime? PasswordResetTokenExpiry { get; private set; }
+    public List<string> PasswordHistory { get; private set; } = new();
 
     private User() { }
 
@@ -39,8 +40,23 @@ public class User : AuditableEntity
 
     public void UpdatePassword(string passwordHash)
     {
+        // Add current password to history before updating
+        if (!string.IsNullOrEmpty(PasswordHash))
+        {
+            PasswordHistory.Add(PasswordHash);
+            // Keep only last 5 passwords in history
+            if (PasswordHistory.Count > 5)
+            {
+                PasswordHistory.RemoveAt(0);
+            }
+        }
         PasswordHash = passwordHash;
         // UpdatedAt and UpdatedBy are set automatically by DbContext
+    }
+
+    public bool IsPasswordInHistory(string passwordHash)
+    {
+        return PasswordHistory.Contains(passwordHash);
     }
 
     public void SetActive(bool isActive)

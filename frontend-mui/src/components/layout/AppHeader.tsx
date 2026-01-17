@@ -19,8 +19,10 @@ import {
   LightMode as LightModeIcon,
   DarkMode as DarkModeIcon,
   Computer as ComputerIcon,
+  Translate as TranslateIcon,
 } from '@mui/icons-material'
 import { useAuthStore, useThemeStore, ThemeMode } from '@/stores'
+import { useLocaleStore } from '@/stores/localeStore'
 import { NotificationMenu } from '@/components/common/NotificationMenu'
 import { ConfirmDialog } from '@/components'
 
@@ -43,8 +45,12 @@ export function AppHeader({ onToggleSidebar }: AppHeaderProps) {
   const logout = useAuthStore((state) => state.logout)
   const themeMode = useThemeStore((state) => state.themeMode)
   const setTheme = useThemeStore((state) => state.setTheme)
+  const locale = useLocaleStore((state) => state.locale)
+  const availableLocales = useLocaleStore((state) => state.availableLocales)
+  const setLocale = useLocaleStore((state) => state.setLocale)
   const [anchorEl, setAnchorEl] = useState<null | HTMLElement>(null)
   const [themeAnchorEl, setThemeAnchorEl] = useState<null | HTMLElement>(null)
+  const [langAnchorEl, setLangAnchorEl] = useState<null | HTMLElement>(null)
   const [logoutDialogOpen, setLogoutDialogOpen] = useState(false)
 
   const themeOptions: { mode: ThemeMode; label: string; icon: React.ReactNode }[] = [
@@ -75,6 +81,19 @@ export function AppHeader({ onToggleSidebar }: AppHeaderProps) {
   const handleThemeChange = (mode: ThemeMode) => {
     setTheme(mode)
     handleThemeMenuClose()
+  }
+
+  const handleLangMenuOpen = (event: React.MouseEvent<HTMLElement>) => {
+    setLangAnchorEl(event.currentTarget)
+  }
+
+  const handleLangMenuClose = () => {
+    setLangAnchorEl(null)
+  }
+
+  const handleLangChange = (code: string) => {
+    setLocale(code)
+    handleLangMenuClose()
   }
 
   const pageTitle = pageTitles[location.pathname] || 'AppTemplate'
@@ -137,6 +156,29 @@ export function AppHeader({ onToggleSidebar }: AppHeaderProps) {
         </Typography>
 
         <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+          {/* Language Switcher */}
+          <IconButton onClick={handleLangMenuOpen} size="small">
+            <TranslateIcon />
+          </IconButton>
+          <Menu
+            anchorEl={langAnchorEl}
+            open={Boolean(langAnchorEl)}
+            onClose={handleLangMenuClose}
+            transformOrigin={{ horizontal: 'right', vertical: 'top' }}
+            anchorOrigin={{ horizontal: 'right', vertical: 'bottom' }}
+          >
+            {availableLocales.map((lang) => (
+              <MenuItem
+                key={lang.code}
+                onClick={() => handleLangChange(lang.code)}
+                selected={locale === lang.code}
+              >
+                <ListItemIcon>{lang.flag}</ListItemIcon>
+                {lang.name}
+              </MenuItem>
+            ))}
+          </Menu>
+
           {/* Theme Toggle */}
           <IconButton onClick={handleThemeMenuOpen} size="small">
             {getCurrentThemeIcon()}

@@ -34,6 +34,7 @@ export class User {
     public lastLoginAt: Date | null,
     public passwordResetToken: string | null,
     public passwordResetTokenExpiresAt: Date | null,
+    public passwordHistory: string[], // Stores last 5 password hashes
     public createdAt: Date,
     public updatedAt: Date,
     public createdBy: number | null,
@@ -55,6 +56,7 @@ export class User {
       null,
       null,
       null,
+      [], // Empty password history
       now,
       now,
       null,
@@ -75,6 +77,7 @@ export class User {
     lastLoginAt: Date | null,
     passwordResetToken: string | null,
     passwordResetTokenExpiresAt: Date | null,
+    passwordHistory: string[],
     createdAt: Date,
     updatedAt: Date,
     createdBy: number | null,
@@ -93,6 +96,7 @@ export class User {
       lastLoginAt,
       passwordResetToken,
       passwordResetTokenExpiresAt,
+      passwordHistory,
       createdAt,
       updatedAt,
       createdBy,
@@ -112,9 +116,21 @@ export class User {
   }
 
   updatePassword(passwordHash: string): void {
+    // Add current password to history before updating
+    if (this.passwordHash) {
+      this.passwordHistory.push(this.passwordHash);
+      // Keep only last 5 passwords
+      if (this.passwordHistory.length > 5) {
+        this.passwordHistory.shift();
+      }
+    }
     this.passwordHash = passwordHash;
     this.clearPasswordResetToken();
     this.updatedAt = new Date();
+  }
+
+  isPasswordInHistory(passwordHash: string): boolean {
+    return this.passwordHistory.includes(passwordHash);
   }
 
   recordLogin(): void {

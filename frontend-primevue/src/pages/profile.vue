@@ -93,10 +93,12 @@
                     id="newPassword"
                     v-model="passwordForm.newPassword"
                     toggleMask
+                    :feedback="false"
                     :invalid="!!passwordErrors.newPassword"
                     inputClass="w-full"
                     class="w-full"
                 />
+                <PasswordStrength :password="passwordForm.newPassword" />
                 <small v-if="passwordErrors.newPassword" class="text-red-500">
                     {{ passwordErrors.newPassword }}
                 </small>
@@ -145,6 +147,7 @@ import Button from 'primevue/button'
 import InputText from 'primevue/inputtext'
 import Password from 'primevue/password'
 import Tag from 'primevue/tag'
+import PasswordStrength from '@/components/common/PasswordStrength.vue'
 
 const authStore = useAuthStore()
 const notificationStore = useNotificationStore()

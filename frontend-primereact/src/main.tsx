@@ -1,3 +1,10 @@
+// Environment validation (fail-fast)
+import { validateEnvironment } from './utils/envValidator'
+validateEnvironment()
+
+// i18n initialization (must be imported early)
+import './i18n'
+
 import { StrictMode } from 'react'
 import { createRoot } from 'react-dom/client'
 import { RouterProvider } from 'react-router-dom'

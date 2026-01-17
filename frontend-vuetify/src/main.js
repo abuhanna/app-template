@@ -4,6 +4,10 @@
  * Bootstraps Vuetify and other plugins then mounts the App`
  */
 
+// Environment validation (fail-fast)
+import { validateEnvironment } from '@/utils/envValidator'
+validateEnvironment()
+
 // Composables
 import { createApp } from 'vue'
 

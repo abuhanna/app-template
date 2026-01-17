@@ -153,7 +153,6 @@
                 label="New Password"
                 type="password"
                 variant="outlined"
-                class="mb-4"
                 :rules="[
                   v => !!v || 'New password is required',
                   v => v.length >= 8 || 'Password must be at least 8 characters',
@@ -162,6 +161,7 @@
                   v => /[0-9]/.test(v) || 'Must contain a number'
                 ]"
               />
+              <PasswordStrength :password="passwordForm.newPassword" class="mb-4" />
 
               <v-text-field
                 v-model="passwordForm.confirmPassword"
@@ -195,6 +195,7 @@
   import { getProfile, updateProfile } from '@/services/authApi'
   import { changePassword as apiChangePassword } from '@/services/userApi'
   import { useNotificationStore } from '@/stores/notification'
+  import PasswordStrength from '@/components/common/PasswordStrength.vue'
 
   const notificationStore = useNotificationStore()
 

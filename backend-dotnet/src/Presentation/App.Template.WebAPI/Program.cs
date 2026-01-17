@@ -12,6 +12,7 @@ using AppTemplate.Infrastructure.Hubs;
 using AppTemplate.Infrastructure.SignalR;
 using AppTemplate.Infrastructure.Persistence.DataContext;
 using AppTemplate.Infrastructure.Services;
+using AppTemplate.WebAPI.Configuration;
 using AppTemplate.WebAPI.Middleware;
 
 using MediatR;
@@ -23,6 +24,9 @@ using Microsoft.IdentityModel.Logging;
 using Microsoft.OpenApi.Models;
 
 var builder = WebApplication.CreateBuilder(args);
+
+// Validate environment configuration early (fail-fast)
+EnvironmentValidator.Validate(builder.Configuration);
 
 // Configure Serilog with enhanced enrichment for production tracing
 builder.Host.UseSerilog((context, services, configuration) => configuration
@@ -356,15 +360,7 @@ app.MapGet("/", () => Results.Ok(new
 .WithTags("Info")
 .Produces(200);
 
-// Add health check endpoint
-app.MapGet("/health", () => Results.Ok(new
-{
-    status = "Healthy",
-    timestamp = DateTime.UtcNow
-}))
-.WithName("HealthCheck")
-.WithTags("Health")
-.Produces(200);
+// Health check endpoints are now handled by HealthController
 
 app.MapControllers();
 app.MapHub<NotificationHub>("/hubs/notifications"); // Map SignalR Hub

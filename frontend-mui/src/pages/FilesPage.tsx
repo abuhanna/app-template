@@ -22,13 +22,13 @@ import {
   CircularProgress,
 } from '@mui/material'
 import { Upload as UploadIcon, Download as DownloadIcon, Delete as DeleteIcon } from '@mui/icons-material'
-import { useToastStore } from '@/stores'
+import { useNotificationStore } from '@/stores'
 import { ConfirmDialog } from '@/components'
 import fileService, { UploadedFile, UploadFileMetadata } from '@/services/fileService'
 
 export function FilesPage() {
-  const showSuccess = useToastStore((state) => state.showSuccess)
-  const showError = useToastStore((state) => state.showError)
+  const showSuccess = useNotificationStore((state) => state.showSuccess)
+  const showError = useNotificationStore((state) => state.showError)
 
   const [loading, setLoading] = useState(false)
   const [uploading, setUploading] = useState(false)

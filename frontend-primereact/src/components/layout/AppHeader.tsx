@@ -3,7 +3,7 @@ import { useNavigate, useLocation } from 'react-router-dom'
 import { Button } from 'primereact/button'
 import { Avatar } from 'primereact/avatar'
 import { Menu } from 'primereact/menu'
-import { useAuthStore, useThemeStore, ThemeMode } from '@/stores'
+import { useAuthStore, useThemeStore, useLocaleStore } from '@/stores'
 import { NotificationMenu } from '@/components/common/NotificationMenu'
 import { ConfirmDialog } from '@/components'
 
@@ -26,8 +26,12 @@ export function AppHeader({ onToggleSidebar }: AppHeaderProps) {
   const logout = useAuthStore((state) => state.logout)
   const themeMode = useThemeStore((state) => state.themeMode)
   const setTheme = useThemeStore((state) => state.setTheme)
+  const locale = useLocaleStore((state) => state.locale)
+  const setLocale = useLocaleStore((state) => state.setLocale)
+  const availableLocales = useLocaleStore((state) => state.availableLocales)
   const menu = useRef<Menu>(null)
   const themeMenu = useRef<Menu>(null)
+  const langMenu = useRef<Menu>(null)
   const [logoutDialogVisible, setLogoutDialogVisible] = useState(false)
 
   const getThemeIcon = () => {
@@ -58,6 +62,13 @@ export function AppHeader({ onToggleSidebar }: AppHeaderProps) {
       command: () => setTheme('system'),
     },
   ]
+
+  const langMenuItems = availableLocales.map((loc) => ({
+    label: `${loc.flag} ${loc.name}`,
+    command: () => setLocale(loc.code),
+  }))
+
+  const currentLocaleFlag = availableLocales.find((l) => l.code === locale)?.flag || '🌐'
 
   const pageTitle = pageTitles[location.pathname] || 'AppTemplate'
 
@@ -123,6 +134,17 @@ export function AppHeader({ onToggleSidebar }: AppHeaderProps) {
         </div>
 
         <div className="flex align-items-center gap-2">
+          {/* Language Switcher */}
+          <Menu model={langMenuItems} popup ref={langMenu} />
+          <Button
+            text
+            rounded
+            onClick={(e) => langMenu.current?.toggle(e)}
+            className="p-button-text"
+          >
+            <span style={{ fontSize: '1.25rem' }}>{currentLocaleFlag}</span>
+          </Button>
+
           {/* Theme Toggle */}
           <Menu model={themeMenuItems} popup ref={themeMenu} />
           <Button

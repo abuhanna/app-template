@@ -10,6 +10,7 @@
 
       <!-- Page Content -->
       <main class="layout-main">
+        <Breadcrumbs />
         <router-view />
       </main>
 
@@ -30,6 +31,7 @@ import { usePersistentNotificationStore } from '@/stores/persistentNotification'
 import AppSidebar from '@/components/AppSidebar.vue'
 import AppHeader from '@/components/AppHeader.vue'
 import AppFooter from '@/components/AppFooter.vue'
+import Breadcrumbs from '@/components/layout/Breadcrumbs.vue'
 import ConfirmDialog from 'primevue/confirmdialog'
 
 const router = useRouter()

@@ -2,6 +2,7 @@ import { useState, useEffect, useRef } from 'react'
 import { Toast } from 'primereact/toast'
 import { AppHeader } from '@/components/layout/AppHeader'
 import { AppSidebar } from '@/components/layout/AppSidebar'
+import { Breadcrumbs } from '@/components/layout/Breadcrumbs'
 import { usePersistentNotificationStore, useNotificationStore } from '@/stores'
 
 interface DefaultLayoutProps {
@@ -65,7 +66,10 @@ export function DefaultLayout({ children }: DefaultLayoutProps) {
         style={{ marginLeft: currentSidebarWidth }}
       >
         <AppHeader onToggleSidebar={() => setSidebarCollapsed(!sidebarCollapsed)} />
-        <main className="layout-main">{children}</main>
+        <main className="layout-main">
+          <Breadcrumbs />
+          {children}
+        </main>
       </div>
     </div>
   )

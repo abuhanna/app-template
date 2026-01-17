@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react'
 import { Box, useMediaQuery, styled, useTheme } from '@mui/material'
 import { AppHeader } from '@/components/layout/AppHeader'
 import { AppSidebar } from '@/components/layout/AppSidebar'
+import { Breadcrumbs } from '@/components/layout/Breadcrumbs'
 import { AppNotification } from '@/components/AppNotification'
 import { usePersistentNotificationStore } from '@/stores'
 
@@ -72,6 +73,7 @@ export function DefaultLayout({ children }: DefaultLayoutProps) {
             backgroundColor: 'grey.100',
           }}
         >
+          <Breadcrumbs />
           {children}
         </Box>
       </ContentWrapper>
