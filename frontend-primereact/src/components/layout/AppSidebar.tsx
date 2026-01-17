@@ -1,6 +1,8 @@
 import { useLocation, useNavigate } from 'react-router-dom'
 import { Tooltip } from 'primereact/tooltip'
 import { useAuthStore } from '@/stores'
+import { menuItems } from '@/config/menuConfig'
+import { filterMenuByRole, groupMenuBySection } from '@/utils/menuUtils'
 
 interface AppSidebarProps {
   collapsed: boolean
@@ -10,17 +12,13 @@ export function AppSidebar({ collapsed }: AppSidebarProps) {
   const location = useLocation()
   const navigate = useNavigate()
   const user = useAuthStore((state) => state.user)
-  const isAdmin = user?.role === 'Admin'
 
-  const menuItems = [
-    { label: 'Dashboard', icon: 'pi pi-home', path: '/dashboard' },
-    { label: 'Notifications', icon: 'pi pi-bell', path: '/notifications' },
-  ]
+  const filteredItems = filterMenuByRole(menuItems, user?.role)
+  const groupedItems = groupMenuBySection(filteredItems)
 
-  const adminMenuItems = [
-    { label: 'Users', icon: 'pi pi-users', path: '/users' },
-    { label: 'Departments', icon: 'pi pi-building', path: '/departments' },
-  ]
+  // Get items without section (main menu) and items with sections
+  const mainMenuItems = groupedItems.get(undefined) || []
+  const sectionEntries = Array.from(groupedItems.entries()).filter(([key]) => key !== undefined)
 
   const isActive = (path: string) => {
     return location.pathname === path || location.pathname.startsWith(path + '/')
@@ -42,8 +40,9 @@ export function AppSidebar({ collapsed }: AppSidebarProps) {
 
       {/* Navigation Menu */}
       <nav className="sidebar-nav">
+        {/* Main Menu Items (no section) */}
         <ul className="nav-list">
-          {menuItems.map((item) => (
+          {mainMenuItems.map((item) => (
             <li key={item.path}>
               <a
                 className={`nav-item ${isActive(item.path) ? 'active' : ''}`}
@@ -60,12 +59,12 @@ export function AppSidebar({ collapsed }: AppSidebarProps) {
           ))}
         </ul>
 
-        {/* Admin Section */}
-        {isAdmin && (
-          <div className="nav-section">
-            {!collapsed && <span className="nav-section-title">Administration</span>}
+        {/* Sectioned Menu Items */}
+        {sectionEntries.map(([sectionName, items]) => (
+          <div key={sectionName} className="nav-section">
+            {!collapsed && <span className="nav-section-title">{sectionName}</span>}
             <ul className="nav-list">
-              {adminMenuItems.map((item) => (
+              {items.map((item) => (
                 <li key={item.path}>
                   <a
                     className={`nav-item ${isActive(item.path) ? 'active' : ''}`}
@@ -82,7 +81,7 @@ export function AppSidebar({ collapsed }: AppSidebarProps) {
               ))}
             </ul>
           </div>
-        )}
+        ))}
       </nav>
     </aside>
   )

@@ -23,23 +23,14 @@
     <v-list class="pa-3" density="comfortable" nav>
       <v-list-item
         v-for="item in navigationItems"
-        :key="item.title"
+        :key="item.path"
         class="mb-1 nav-item"
         :prepend-icon="item.icon"
         rounded="lg"
-        :to="item.to"
-        :value="item.title"
+        :to="item.path"
+        :value="item.label"
       >
-        <v-list-item-title>{{ item.title }}</v-list-item-title>
-        <template v-if="item.badge" #append>
-          <v-chip
-            :color="item.badgeColor || 'primary'"
-            density="compact"
-            size="x-small"
-          >
-            {{ item.badge }}
-          </v-chip>
-        </template>
+        <v-list-item-title>{{ item.label }}</v-list-item-title>
       </v-list-item>
     </v-list>
   </v-navigation-drawer>
@@ -47,7 +38,9 @@
 
 <script setup>
   import { computed } from 'vue'
+  import { menuItems } from '@/config/menuConfig'
   import { useAuthStore } from '@/stores/auth'
+  import { filterMenuByRole } from '@/utils/menuUtils'
 
   defineProps({
     modelValue: {
@@ -60,55 +53,9 @@
 
   const authStore = useAuthStore()
 
-  // All available menu items
-  const allMenuItems = [
-    {
-      title: 'Dashboard',
-      icon: 'mdi-view-dashboard',
-      to: '/dashboard',
-    },
-    {
-      title: 'Users',
-      icon: 'mdi-account-group',
-      to: '/users',
-    },
-    {
-      title: 'Departments',
-      icon: 'mdi-office-building',
-      to: '/departments',
-    },
-    {
-      title: 'Notifications',
-      icon: 'mdi-bell',
-      to: '/notifications',
-    },
-  ]
-
-  // Restricted menu items for regular users
-  const restrictedMenuItems = [
-    {
-      title: 'Dashboard',
-      icon: 'mdi-view-dashboard',
-      to: '/dashboard',
-    },
-    {
-      title: 'Notifications',
-      icon: 'mdi-bell',
-      to: '/notifications',
-    },
-  ]
-
   // Filter navigation items based on user role
   const navigationItems = computed(() => {
-    const role = authStore.user?.role
-
-    // Admin users get all menus
-    if (role === 'Admin') {
-      return allMenuItems
-    }
-
-    // Regular users get restricted menus
-    return restrictedMenuItems
+    return filterMenuByRole(menuItems, authStore.user?.role)
   })
 </script>
 

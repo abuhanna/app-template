@@ -1,0 +1,36 @@
+/**
+ * @typedef {Object} MenuItem
+ * @property {string} label - Display text for the menu item
+ * @property {string} path - Route path
+ * @property {string} icon - MDI icon name
+ * @property {string[]} [roles] - Required roles (empty/undefined = accessible to all)
+ * @property {string} [section] - Optional grouping (e.g., "Administration")
+ */
+
+/** @type {MenuItem[]} */
+export const menuItems = [
+  {
+    label: 'Dashboard',
+    path: '/dashboard',
+    icon: 'mdi-view-dashboard',
+  },
+  {
+    label: 'Notifications',
+    path: '/notifications',
+    icon: 'mdi-bell',
+  },
+  {
+    label: 'Users',
+    path: '/users',
+    icon: 'mdi-account-group',
+    roles: ['Admin'],
+    section: 'Administration',
+  },
+  {
+    label: 'Departments',
+    path: '/departments',
+    icon: 'mdi-office-building',
+    roles: ['Admin'],
+    section: 'Administration',
+  },
+]

@@ -10,8 +10,9 @@
 
     <!-- Navigation Menu -->
     <nav class="sidebar-nav">
+      <!-- Main Menu Items (no section) -->
       <ul class="nav-list">
-        <li v-for="item in menuItems" :key="item.path">
+        <li v-for="item in mainMenuItems" :key="item.path">
           <router-link
             :to="item.path"
             class="nav-item"
@@ -24,11 +25,11 @@
         </li>
       </ul>
 
-      <!-- Admin Section -->
-      <div v-if="isAdmin" class="nav-section">
-        <span v-if="visible" class="nav-section-title">Administration</span>
+      <!-- Sectioned Menu Items -->
+      <div v-for="[sectionName, items] in sectionEntries" :key="sectionName" class="nav-section">
+        <span v-if="visible" class="nav-section-title">{{ sectionName }}</span>
         <ul class="nav-list">
-          <li v-for="item in adminMenuItems" :key="item.path">
+          <li v-for="item in items" :key="item.path">
             <router-link
               :to="item.path"
               class="nav-item"
@@ -48,24 +49,24 @@
 <script setup>
 import { computed } from 'vue'
 import { useRoute } from 'vue-router'
+import { menuItems } from '@/config/menuConfig'
 import { useAuthStore } from '@/stores/auth'
+import { filterMenuByRole, groupMenuBySection } from '@/utils/menuUtils'
 
 const visible = defineModel('visible', { default: true })
 
 const route = useRoute()
 const authStore = useAuthStore()
 
-const isAdmin = computed(() => authStore.user?.role === 'Admin')
+// Filter and group menu items based on user role
+const filteredItems = computed(() => filterMenuByRole(menuItems, authStore.user?.role))
+const groupedItems = computed(() => groupMenuBySection(filteredItems.value))
 
-const menuItems = [
-  { label: 'Dashboard', path: '/dashboard', icon: 'pi pi-home' },
-  { label: 'Notifications', path: '/notifications', icon: 'pi pi-bell' },
-]
-
-const adminMenuItems = [
-  { label: 'Users', path: '/users', icon: 'pi pi-users' },
-  { label: 'Departments', path: '/departments', icon: 'pi pi-building' },
-]
+// Get items without section (main menu) and items with sections
+const mainMenuItems = computed(() => groupedItems.value.get(undefined) || [])
+const sectionEntries = computed(() =>
+  Array.from(groupedItems.value.entries()).filter(([key]) => key !== undefined)
+)
 
 const isActive = (path) => {
   return route.path === path || route.path.startsWith(path + '/')

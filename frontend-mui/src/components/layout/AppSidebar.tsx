@@ -10,13 +10,9 @@ import {
   Typography,
   Divider,
 } from '@mui/material'
-import {
-  Dashboard as DashboardIcon,
-  People as PeopleIcon,
-  Business as BusinessIcon,
-  Notifications as NotificationsIcon,
-} from '@mui/icons-material'
 import { useAuthStore } from '@/stores'
+import { menuItems } from '@/config/menuConfig'
+import { filterMenuByRole } from '@/utils/menuUtils'
 
 interface AppSidebarProps {
   open: boolean
@@ -25,27 +21,12 @@ interface AppSidebarProps {
   isMobile: boolean
 }
 
-interface NavItem {
-  title: string
-  path: string
-  icon: React.ReactNode
-  adminOnly?: boolean
-}
-
-const navItems: NavItem[] = [
-  { title: 'Dashboard', path: '/dashboard', icon: <DashboardIcon /> },
-  { title: 'Users', path: '/users', icon: <PeopleIcon />, adminOnly: true },
-  { title: 'Departments', path: '/departments', icon: <BusinessIcon />, adminOnly: true },
-  { title: 'Notifications', path: '/notifications', icon: <NotificationsIcon /> },
-]
-
 export function AppSidebar({ open, onClose, width, isMobile }: AppSidebarProps) {
   const location = useLocation()
   const navigate = useNavigate()
   const user = useAuthStore((state) => state.user)
-  const isAdmin = user?.role === 'Admin'
 
-  const filteredNavItems = navItems.filter((item) => !item.adminOnly || isAdmin)
+  const filteredNavItems = filterMenuByRole(menuItems, user?.role)
 
   const handleNavigation = (path: string) => {
     navigate(path)
@@ -107,7 +88,7 @@ export function AppSidebar({ open, onClose, width, isMobile }: AppSidebarProps) 
               }}
             >
               <ListItemIcon sx={{ minWidth: 40 }}>{item.icon}</ListItemIcon>
-              <ListItemText primary={item.title} />
+              <ListItemText primary={item.label} />
             </ListItemButton>
           </ListItem>
         ))}
