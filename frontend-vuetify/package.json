@@ -13,8 +13,7 @@
     "format:check": "prettier --check \"src/**/*.{js,vue,css,scss}\"",
     "test": "vitest run",
     "test:watch": "vitest",
-    "test:coverage": "vitest run --coverage",
-    "prepare": "cd .. && husky frontend/.husky"
+    "test:coverage": "vitest run --coverage"
   },
   "dependencies": {
     "@fontsource/roboto": "5.2.7",

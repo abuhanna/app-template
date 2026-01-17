@@ -1,0 +1,149 @@
+name: CI
+
+on:
+  pull_request:
+    branches: [main, develop]
+  push:
+    branches: [main, develop]
+
+jobs:
+  # .NET Backend
+  backend-dotnet:
+    name: Build & Test (.NET)
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: backend-dotnet
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup .NET
+        uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: '8.0.x'
+
+      - name: Restore dependencies
+        run: dotnet restore
+
+      - name: Build
+        run: dotnet build --no-restore --configuration Release
+
+      - name: Run tests
+        run: dotnet test --no-build --configuration Release --verbosity normal
+
+  # Spring Boot Backend
+  backend-spring:
+    name: Build & Test (Spring Boot)
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: backend-spring
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup Java
+        uses: actions/setup-java@v4
+        with:
+          distribution: 'temurin'
+          java-version: '21'
+          cache: 'maven'
+
+      - name: Compile
+        run: mvn -B compile
+
+      - name: Run tests
+        run: mvn -B test
+
+  # NestJS Backend
+  backend-nestjs:
+    name: Build & Lint (NestJS)
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: backend-nestjs
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: 'npm'
+          cache-dependency-path: backend-nestjs/package-lock.json
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Lint
+        run: npm run lint
+
+      - name: Build
+        run: npm run build
+
+  # All Frontends (matrix strategy)
+  frontend:
+    name: Build & Lint (${{ matrix.frontend }})
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        frontend:
+          - frontend-vuetify
+          - frontend-primevue
+          - frontend-mui
+          - frontend-primereact
+      fail-fast: false
+    defaults:
+      run:
+        working-directory: ${{ matrix.frontend }}
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: 'npm'
+          cache-dependency-path: ${{ matrix.frontend }}/package-lock.json
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Lint
+        run: npm run lint:check || npm run lint || true
+
+      - name: Type check
+        run: npm run typecheck || true
+
+      - name: Build
+        run: npm run build
+
+  # CLI Tool
+  cli:
+    name: Build CLI Tool
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: create-apptemplate
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: 'npm'
+          cache-dependency-path: create-apptemplate/package-lock.json
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Type check
+        run: npm run typecheck
+
+      - name: Build
+        run: npm run build

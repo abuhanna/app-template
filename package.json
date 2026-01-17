@@ -1,0 +1,40 @@
+{
+  "name": "apptemplate-monorepo",
+  "version": "1.0.0",
+  "private": true,
+  "description": "AppTemplate - Fullstack Application Scaffolding Tool",
+  "scripts": {
+    "prepare": "husky"
+  },
+  "devDependencies": {
+    "@commitlint/cli": "^19.6.1",
+    "@commitlint/config-conventional": "^19.6.0",
+    "husky": "^9.1.7",
+    "lint-staged": "^15.4.3"
+  },
+  "lint-staged": {
+    "frontend-vuetify/**/*.{js,vue}": [
+      "eslint --fix",
+      "prettier --write"
+    ],
+    "frontend-primevue/**/*.{js,vue}": [
+      "eslint --fix",
+      "prettier --write"
+    ],
+    "frontend-mui/**/*.{ts,tsx}": [
+      "eslint --fix",
+      "prettier --write"
+    ],
+    "frontend-primereact/**/*.{ts,tsx}": [
+      "eslint --fix",
+      "prettier --write"
+    ],
+    "create-apptemplate/**/*.ts": [
+      "eslint --fix",
+      "prettier --write"
+    ]
+  },
+  "engines": {
+    "node": ">=20.0.0"
+  }
+}
