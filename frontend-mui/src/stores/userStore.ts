@@ -7,9 +7,6 @@ interface UserState {
   users: User[]
   selectedUser: User | null
   loading: boolean
-  total: number
-  page: number
-  pageSize: number
 
   // Actions
   fetchUsers: (params?: { page?: number; pageSize?: number; search?: string }) => Promise<void>
@@ -25,25 +22,14 @@ export const useUserStore = create<UserState>((set) => ({
   users: [],
   selectedUser: null,
   loading: false,
-  total: 0,
-  page: 1,
-  pageSize: 10,
 
   fetchUsers: async (params) => {
     set({ loading: true })
     try {
-      const response = await userApi.getUsers(params)
-      set({
-        users: response.data,
-        total: response.total,
-        page: response.page,
-        pageSize: response.pageSize,
-        loading: false,
-      })
+      const users = await userApi.getUsers(params)
+      set({ users, loading: false })
     } catch (error) {
       set({ loading: false })
-      const notification = useNotificationStore.getState()
-      notification.showError('Failed to fetch users')
       throw error
     }
   },
@@ -55,8 +41,6 @@ export const useUserStore = create<UserState>((set) => ({
       set({ selectedUser: user, loading: false })
     } catch (error) {
       set({ loading: false })
-      const notification = useNotificationStore.getState()
-      notification.showError('Failed to fetch user')
       throw error
     }
   },
@@ -74,8 +58,6 @@ export const useUserStore = create<UserState>((set) => ({
       return user
     } catch (error) {
       set({ loading: false })
-      const notification = useNotificationStore.getState()
-      notification.showError('Failed to create user')
       throw error
     }
   },
@@ -93,8 +75,6 @@ export const useUserStore = create<UserState>((set) => ({
       notification.showSuccess('User updated successfully')
     } catch (error) {
       set({ loading: false })
-      const notification = useNotificationStore.getState()
-      notification.showError('Failed to update user')
       throw error
     }
   },
@@ -112,8 +92,6 @@ export const useUserStore = create<UserState>((set) => ({
       notification.showSuccess('User deleted successfully')
     } catch (error) {
       set({ loading: false })
-      const notification = useNotificationStore.getState()
-      notification.showError('Failed to delete user')
       throw error
     }
   },
@@ -123,6 +101,6 @@ export const useUserStore = create<UserState>((set) => ({
   },
 
   clearUsers: () => {
-    set({ users: [], selectedUser: null, total: 0 })
+    set({ users: [], selectedUser: null })
   },
 }))

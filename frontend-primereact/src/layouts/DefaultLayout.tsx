@@ -1,6 +1,5 @@
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useRef } from 'react'
 import { Toast } from 'primereact/toast'
-import { useRef } from 'react'
 import { AppHeader } from '@/components/layout/AppHeader'
 import { AppSidebar } from '@/components/layout/AppSidebar'
 import { usePersistentNotificationStore, useNotificationStore } from '@/stores'
@@ -9,7 +8,8 @@ interface DefaultLayoutProps {
   children: React.ReactNode
 }
 
-const DRAWER_WIDTH = 260
+const SIDEBAR_WIDTH = 260
+const SIDEBAR_COLLAPSED_WIDTH = 64
 
 // Map notification types to PrimeReact Toast severities
 const mapSeverity = (type: string): 'success' | 'info' | 'warn' | 'error' => {
@@ -18,12 +18,12 @@ const mapSeverity = (type: string): 'success' | 'info' | 'warn' | 'error' => {
 }
 
 export function DefaultLayout({ children }: DefaultLayoutProps) {
-  const [sidebarVisible, setSidebarVisible] = useState(true)
+  const [sidebarCollapsed, setSidebarCollapsed] = useState(false)
   const toast = useRef<Toast>(null)
+  const shownNotifications = useRef<Set<string>>(new Set())
   const initConnection = usePersistentNotificationStore((state) => state.initConnection)
   const disconnect = usePersistentNotificationStore((state) => state.disconnect)
   const notifications = useNotificationStore((state) => state.notifications)
-  const removeNotification = useNotificationStore((state) => state.removeNotification)
 
   useEffect(() => {
     initConnection()
@@ -34,27 +34,37 @@ export function DefaultLayout({ children }: DefaultLayoutProps) {
 
   // Show toast notifications
   useEffect(() => {
-    if (notifications.length > 0 && toast.current) {
-      const notification = notifications[notifications.length - 1]
-      toast.current.show({
-        severity: mapSeverity(notification.type),
-        summary: notification.type.charAt(0).toUpperCase() + notification.type.slice(1),
-        detail: notification.message,
-        life: notification.duration,
+    if (notifications?.length > 0 && toast.current) {
+      notifications.forEach((notification) => {
+        // Only show each notification once
+        if (!shownNotifications.current.has(notification.id)) {
+          shownNotifications.current.add(notification.id)
+          toast.current?.show({
+            severity: mapSeverity(notification.type),
+            summary: notification.type.charAt(0).toUpperCase() + notification.type.slice(1),
+            detail: notification.message,
+            life: notification.duration,
+          })
+          // Remove from store after showing
+          setTimeout(() => {
+            useNotificationStore.getState().removeNotification(notification.id)
+          }, 100)
+        }
       })
-      setTimeout(() => removeNotification(notification.id), 100)
     }
-  }, [notifications, removeNotification])
+  }, [notifications])
+
+  const currentSidebarWidth = sidebarCollapsed ? SIDEBAR_COLLAPSED_WIDTH : SIDEBAR_WIDTH
 
   return (
     <div className="layout-wrapper">
       <Toast ref={toast} position="top-right" />
-      <AppSidebar visible={sidebarVisible} onHide={() => setSidebarVisible(false)} width={DRAWER_WIDTH} />
+      <AppSidebar collapsed={sidebarCollapsed} />
       <div
         className="layout-main-container"
-        style={{ marginLeft: sidebarVisible ? DRAWER_WIDTH : 0 }}
+        style={{ marginLeft: currentSidebarWidth }}
       >
-        <AppHeader onToggleSidebar={() => setSidebarVisible(!sidebarVisible)} />
+        <AppHeader onToggleSidebar={() => setSidebarCollapsed(!sidebarCollapsed)} />
         <main className="layout-main">{children}</main>
       </div>
     </div>

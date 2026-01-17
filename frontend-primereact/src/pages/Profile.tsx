@@ -1,220 +1,304 @@
-import { useState } from 'react'
+import React, { useState, useEffect } from 'react'
 import { Card } from 'primereact/card'
 import { InputText } from 'primereact/inputtext'
 import { Password } from 'primereact/password'
 import { Button } from 'primereact/button'
-import { Divider } from 'primereact/divider'
-import { Message } from 'primereact/message'
+import { Tag } from 'primereact/tag'
 import { useAuthStore } from '@/stores/authStore'
 import { useNotificationStore } from '@/stores/notificationStore'
-import { userApi } from '@/services/userApi'
 import { authApi } from '@/services/authApi'
+
+interface ProfileErrors {
+  email: string
+}
+
+interface PasswordErrors {
+  currentPassword: string
+  newPassword: string
+  confirmPassword: string
+}
 
 export default function Profile() {
   const user = useAuthStore((state) => state.user)
   const setUser = useAuthStore((state) => state.setUser)
-  const showNotification = useNotificationStore((state) => state.showNotification)
+  const showSuccess = useNotificationStore((state) => state.showSuccess)
 
-  const [profileData, setProfileData] = useState({
-    firstName: user?.firstName || '',
-    lastName: user?.lastName || '',
-    email: user?.email || '',
+  const [profileForm, setProfileForm] = useState({
+    email: '',
+    name: '',
   })
-  const [profileLoading, setProfileLoading] = useState(false)
-  const [profileError, setProfileError] = useState('')
+  const [profileErrors, setProfileErrors] = useState<ProfileErrors>({ email: '' })
+  const [savingProfile, setSavingProfile] = useState(false)
 
-  const [passwordData, setPasswordData] = useState({
+  const [passwordForm, setPasswordForm] = useState({
     currentPassword: '',
     newPassword: '',
     confirmPassword: '',
   })
-  const [passwordLoading, setPasswordLoading] = useState(false)
-  const [passwordError, setPasswordError] = useState('')
+  const [passwordErrors, setPasswordErrors] = useState<PasswordErrors>({
+    currentPassword: '',
+    newPassword: '',
+    confirmPassword: '',
+  })
+  const [savingPassword, setSavingPassword] = useState(false)
 
-  const handleProfileSubmit = async (e: React.FormEvent) => {
+  useEffect(() => {
+    if (user) {
+      setProfileForm({
+        email: user.email || '',
+        name: user.name || '',
+      })
+    }
+  }, [user])
+
+  const validateProfile = (): boolean => {
+    const errors: ProfileErrors = { email: '' }
+    let valid = true
+
+    if (!profileForm.email.trim()) {
+      errors.email = 'Email is required'
+      valid = false
+    } else if (!/\S+@\S+\.\S+/.test(profileForm.email)) {
+      errors.email = 'Invalid email format'
+      valid = false
+    }
+
+    setProfileErrors(errors)
+    return valid
+  }
+
+  const validatePassword = (): boolean => {
+    const errors: PasswordErrors = {
+      currentPassword: '',
+      newPassword: '',
+      confirmPassword: '',
+    }
+    let valid = true
+
+    if (!passwordForm.currentPassword) {
+      errors.currentPassword = 'Current password is required'
+      valid = false
+    }
+
+    if (!passwordForm.newPassword) {
+      errors.newPassword = 'New password is required'
+      valid = false
+    } else if (passwordForm.newPassword.length < 6) {
+      errors.newPassword = 'Password must be at least 6 characters'
+      valid = false
+    }
+
+    if (!passwordForm.confirmPassword) {
+      errors.confirmPassword = 'Please confirm your new password'
+      valid = false
+    } else if (passwordForm.newPassword !== passwordForm.confirmPassword) {
+      errors.confirmPassword = 'Passwords do not match'
+      valid = false
+    }
+
+    setPasswordErrors(errors)
+    return valid
+  }
+
+  const handleUpdateProfile = async (e: React.FormEvent) => {
     e.preventDefault()
-    setProfileError('')
-    setProfileLoading(true)
+    if (!validateProfile()) return
 
+    setSavingProfile(true)
     try {
-      const updatedUser = await userApi.updateMyProfile(profileData)
+      const updatedUser = await authApi.updateProfile({
+        email: profileForm.email,
+        name: profileForm.name,
+      })
       setUser(updatedUser)
-      showNotification('Profile updated successfully', 'success')
-    } catch (err: any) {
-      setProfileError(err.response?.data?.message || 'Failed to update profile')
+      showSuccess('Profile updated successfully')
+    } catch {
+      // Error toast is shown automatically by API interceptor
     } finally {
-      setProfileLoading(false)
+      setSavingProfile(false)
     }
   }
 
-  const handlePasswordSubmit = async (e: React.FormEvent) => {
+  const handleChangePassword = async (e: React.FormEvent) => {
     e.preventDefault()
-    setPasswordError('')
+    if (!validatePassword()) return
 
-    if (passwordData.newPassword !== passwordData.confirmPassword) {
-      setPasswordError('Passwords do not match')
-      return
-    }
-
-    if (passwordData.newPassword.length < 8) {
-      setPasswordError('Password must be at least 8 characters')
-      return
-    }
-
-    setPasswordLoading(true)
-
+    setSavingPassword(true)
     try {
-      await authApi.changePassword(passwordData.currentPassword, passwordData.newPassword)
-      setPasswordData({ currentPassword: '', newPassword: '', confirmPassword: '' })
-      showNotification('Password changed successfully', 'success')
-    } catch (err: any) {
-      setPasswordError(err.response?.data?.message || 'Failed to change password')
+      await authApi.changePassword({
+        currentPassword: passwordForm.currentPassword,
+        newPassword: passwordForm.newPassword,
+      })
+      showSuccess('Password changed successfully')
+      setPasswordForm({ currentPassword: '', newPassword: '', confirmPassword: '' })
+      setPasswordErrors({ currentPassword: '', newPassword: '', confirmPassword: '' })
+    } catch {
+      // Error toast is shown automatically by API interceptor
     } finally {
-      setPasswordLoading(false)
+      setSavingPassword(false)
     }
   }
+
+  const profileTitle = (
+    <div className="flex align-items-center gap-2">
+      <i className="pi pi-user text-primary"></i>
+      <span>Profile Information</span>
+    </div>
+  )
+
+  const passwordTitle = (
+    <div className="flex align-items-center gap-2">
+      <i className="pi pi-lock text-primary"></i>
+      <span>Change Password</span>
+    </div>
+  )
 
   return (
-    <div>
-      <div className="text-3xl font-bold mb-4">Profile</div>
-
+    <div className="flex flex-column gap-4 p-3">
       <div className="grid">
-        <div className="col-12 lg:col-6">
-          <Card title="Profile Information">
-            {profileError && (
-              <Message severity="error" text={profileError} className="w-full mb-4" />
-            )}
-
-            <form onSubmit={handleProfileSubmit}>
-              <div className="mb-4">
-                <label htmlFor="firstName" className="block text-900 font-medium mb-2">
-                  First Name
+        {/* Profile Information */}
+        <div className="col-12 md:col-6">
+          <Card title={profileTitle} className="h-full">
+            <form onSubmit={handleUpdateProfile} className="flex flex-column gap-3">
+              <div className="flex flex-column gap-2">
+                <label htmlFor="username" className="font-medium">
+                  Username
                 </label>
-                <InputText
-                  id="firstName"
-                  value={profileData.firstName}
-                  onChange={(e) => setProfileData({ ...profileData, firstName: e.target.value })}
-                  className="w-full"
-                  required
-                />
+                <InputText id="username" value={user?.username || ''} disabled className="w-full" />
+                <small className="text-color-secondary">Username cannot be changed</small>
               </div>
 
-              <div className="mb-4">
-                <label htmlFor="lastName" className="block text-900 font-medium mb-2">
-                  Last Name
-                </label>
-                <InputText
-                  id="lastName"
-                  value={profileData.lastName}
-                  onChange={(e) => setProfileData({ ...profileData, lastName: e.target.value })}
-                  className="w-full"
-                  required
-                />
-              </div>
-
-              <div className="mb-4">
-                <label htmlFor="email" className="block text-900 font-medium mb-2">
-                  Email
+              <div className="flex flex-column gap-2">
+                <label htmlFor="email" className="font-medium">
+                  Email *
                 </label>
                 <InputText
                   id="email"
                   type="email"
-                  value={profileData.email}
-                  onChange={(e) => setProfileData({ ...profileData, email: e.target.value })}
+                  value={profileForm.email}
+                  onChange={(e) => setProfileForm({ ...profileForm, email: e.target.value })}
+                  invalid={!!profileErrors.email}
                   className="w-full"
-                  required
+                />
+                {profileErrors.email && (
+                  <small className="text-red-500">{profileErrors.email}</small>
+                )}
+              </div>
+
+              <div className="flex flex-column gap-2">
+                <label htmlFor="name" className="font-medium">
+                  Name
+                </label>
+                <InputText
+                  id="name"
+                  value={profileForm.name}
+                  onChange={(e) => setProfileForm({ ...profileForm, name: e.target.value })}
+                  className="w-full"
                 />
               </div>
 
-              <div className="mb-4">
-                <label className="block text-900 font-medium mb-2">Username</label>
-                <InputText value={user?.username || ''} className="w-full" disabled />
-                <small className="text-500">Username cannot be changed</small>
+              <div className="flex flex-column gap-2">
+                <label className="font-medium">Role</label>
+                <div className="flex">
+                  <Tag
+                    value={user?.role || 'User'}
+                    severity={user?.role === 'Admin' ? 'danger' : 'info'}
+                  />
+                </div>
               </div>
 
-              <div className="mb-4">
-                <label className="block text-900 font-medium mb-2">Department</label>
-                <InputText value={user?.departmentName || 'Not Assigned'} className="w-full" disabled />
+              <div className="flex flex-column gap-2">
+                <label className="font-medium">Department</label>
+                <span>{user?.departmentName || 'Not assigned'}</span>
               </div>
 
-              <Button
-                type="submit"
-                label="Update Profile"
-                icon="pi pi-check"
-                loading={profileLoading}
-              />
+              <div className="mt-2">
+                <Button
+                  type="submit"
+                  label="Update Profile"
+                  loading={savingProfile}
+                  icon="pi pi-check"
+                />
+              </div>
             </form>
           </Card>
         </div>
 
-        <div className="col-12 lg:col-6">
-          <Card title="Change Password">
-            {passwordError && (
-              <Message severity="error" text={passwordError} className="w-full mb-4" />
-            )}
-
-            <form onSubmit={handlePasswordSubmit}>
-              <div className="mb-4">
-                <label htmlFor="currentPassword" className="block text-900 font-medium mb-2">
-                  Current Password
+        {/* Change Password */}
+        <div className="col-12 md:col-6">
+          <Card title={passwordTitle} className="h-full">
+            <form onSubmit={handleChangePassword} className="flex flex-column gap-3">
+              <div className="flex flex-column gap-2">
+                <label htmlFor="currentPassword" className="font-medium">
+                  Current Password *
                 </label>
                 <Password
                   id="currentPassword"
-                  value={passwordData.currentPassword}
+                  value={passwordForm.currentPassword}
                   onChange={(e) =>
-                    setPasswordData({ ...passwordData, currentPassword: e.target.value })
+                    setPasswordForm({ ...passwordForm, currentPassword: e.target.value })
                   }
-                  className="w-full"
-                  inputClassName="w-full"
-                  toggleMask
                   feedback={false}
-                  required
+                  toggleMask
+                  invalid={!!passwordErrors.currentPassword}
+                  inputClassName="w-full"
+                  className="w-full"
                 />
+                {passwordErrors.currentPassword && (
+                  <small className="text-red-500">{passwordErrors.currentPassword}</small>
+                )}
               </div>
 
-              <Divider />
-
-              <div className="mb-4">
-                <label htmlFor="newPassword" className="block text-900 font-medium mb-2">
-                  New Password
+              <div className="flex flex-column gap-2">
+                <label htmlFor="newPassword" className="font-medium">
+                  New Password *
                 </label>
                 <Password
                   id="newPassword"
-                  value={passwordData.newPassword}
+                  value={passwordForm.newPassword}
                   onChange={(e) =>
-                    setPasswordData({ ...passwordData, newPassword: e.target.value })
+                    setPasswordForm({ ...passwordForm, newPassword: e.target.value })
                   }
-                  className="w-full"
-                  inputClassName="w-full"
                   toggleMask
-                  required
+                  invalid={!!passwordErrors.newPassword}
+                  inputClassName="w-full"
+                  className="w-full"
                 />
+                {passwordErrors.newPassword && (
+                  <small className="text-red-500">{passwordErrors.newPassword}</small>
+                )}
               </div>
 
-              <div className="mb-4">
-                <label htmlFor="confirmPassword" className="block text-900 font-medium mb-2">
-                  Confirm New Password
+              <div className="flex flex-column gap-2">
+                <label htmlFor="confirmPassword" className="font-medium">
+                  Confirm New Password *
                 </label>
                 <Password
                   id="confirmPassword"
-                  value={passwordData.confirmPassword}
+                  value={passwordForm.confirmPassword}
                   onChange={(e) =>
-                    setPasswordData({ ...passwordData, confirmPassword: e.target.value })
+                    setPasswordForm({ ...passwordForm, confirmPassword: e.target.value })
                   }
-                  className="w-full"
-                  inputClassName="w-full"
-                  toggleMask
                   feedback={false}
-                  required
+                  toggleMask
+                  invalid={!!passwordErrors.confirmPassword}
+                  inputClassName="w-full"
+                  className="w-full"
                 />
+                {passwordErrors.confirmPassword && (
+                  <small className="text-red-500">{passwordErrors.confirmPassword}</small>
+                )}
               </div>
 
-              <Button
-                type="submit"
-                label="Change Password"
-                icon="pi pi-lock"
-                loading={passwordLoading}
-              />
+              <div className="mt-2">
+                <Button
+                  type="submit"
+                  label="Change Password"
+                  loading={savingPassword}
+                  icon="pi pi-lock"
+                  severity="warning"
+                />
+              </div>
             </form>
           </Card>
         </div>

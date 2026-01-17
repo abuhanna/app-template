@@ -1,8 +1,7 @@
 <template>
   <v-container fluid>
     <v-row>
-      <v-col cols="12" class="d-flex justify-space-between align-center">
-        <h1 class="text-h4">Users</h1>
+      <v-col cols="12" class="d-flex justify-end">
         <v-btn color="primary" prepend-icon="mdi-plus" @click="openCreateDialog">
           Add User
         </v-btn>

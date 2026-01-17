@@ -19,6 +19,7 @@ import {
 } from '@mui/icons-material'
 import { useAuthStore } from '@/stores'
 import { NotificationMenu } from '@/components/common/NotificationMenu'
+import { ConfirmDialog } from '@/components'
 
 interface AppHeaderProps {
   onToggleSidebar: () => void
@@ -27,8 +28,8 @@ interface AppHeaderProps {
 const pageTitles: Record<string, string> = {
   '/dashboard': 'Dashboard',
   '/profile': 'Profile',
-  '/users': 'User Management',
-  '/departments': 'Department Management',
+  '/users': 'Users',
+  '/departments': 'Departments',
   '/notifications': 'Notifications',
 }
 
@@ -38,6 +39,7 @@ export function AppHeader({ onToggleSidebar }: AppHeaderProps) {
   const user = useAuthStore((state) => state.user)
   const logout = useAuthStore((state) => state.logout)
   const [anchorEl, setAnchorEl] = useState<null | HTMLElement>(null)
+  const [logoutDialogOpen, setLogoutDialogOpen] = useState(false)
 
   const pageTitle = pageTitles[location.pathname] || 'AppTemplate'
 
@@ -54,10 +56,19 @@ export function AppHeader({ onToggleSidebar }: AppHeaderProps) {
     navigate('/profile')
   }
 
-  const handleLogout = async () => {
+  const handleLogoutClick = () => {
     handleMenuClose()
+    setLogoutDialogOpen(true)
+  }
+
+  const handleLogoutConfirm = async () => {
+    setLogoutDialogOpen(false)
     await logout()
     navigate('/login')
+  }
+
+  const handleLogoutCancel = () => {
+    setLogoutDialogOpen(false)
   }
 
   const getInitials = () => {
@@ -120,7 +131,7 @@ export function AppHeader({ onToggleSidebar }: AppHeaderProps) {
               </ListItemIcon>
               Profile
             </MenuItem>
-            <MenuItem onClick={handleLogout}>
+            <MenuItem onClick={handleLogoutClick}>
               <ListItemIcon>
                 <LogoutIcon fontSize="small" />
               </ListItemIcon>
@@ -129,6 +140,17 @@ export function AppHeader({ onToggleSidebar }: AppHeaderProps) {
           </Menu>
         </Box>
       </Toolbar>
+
+      <ConfirmDialog
+        open={logoutDialogOpen}
+        title="Sign Out"
+        message={`Are you sure you want to sign out?\n\nYou will be redirected to the login page.`}
+        confirmText="Sign Out"
+        cancelText="Stay Logged In"
+        confirmColor="warning"
+        onConfirm={handleLogoutConfirm}
+        onCancel={handleLogoutCancel}
+      />
     </AppBar>
   )
 }

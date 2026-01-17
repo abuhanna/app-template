@@ -44,12 +44,12 @@ export function NotificationMenu() {
     navigate('/notifications')
   }
 
-  const recentNotifications = notifications.slice(0, 5)
+  const recentNotifications = (notifications || []).slice(0, 5)
 
   return (
     <>
       <IconButton color="inherit" onClick={handleOpen}>
-        <Badge badgeContent={unreadCount} color="error">
+        <Badge badgeContent={unreadCount ?? 0} color="error">
           <NotificationsIcon />
         </Badge>
       </IconButton>

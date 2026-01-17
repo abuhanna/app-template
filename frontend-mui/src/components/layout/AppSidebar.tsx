@@ -126,6 +126,7 @@ export function AppSidebar({ open, onClose, width, isMobile }: AppSidebarProps) 
   return (
     <Drawer
       variant={isMobile ? 'temporary' : 'persistent'}
+      anchor="left"
       open={open}
       onClose={onClose}
       sx={{

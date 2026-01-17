@@ -9,24 +9,8 @@ export const usePersistentNotificationStore = defineStore('persistentNotificatio
   const notifications = ref([])
   const loading = ref(false)
   const connection = ref(null)
-  const notificationPermission = ref('default')
 
   const unreadCount = computed(() => notifications.value.filter(n => !n.isRead).length)
-
-  const checkPermission = () => {
-    if ('Notification' in window) {
-      notificationPermission.value = Notification.permission
-    }
-  }
-
-  const requestPermission = async () => {
-    if ('Notification' in window) {
-      const permission = await Notification.requestPermission()
-      notificationPermission.value = permission
-      return permission
-    }
-    return 'denied'
-  }
 
   const handleNotification = (notification) => {
     // Add to list immediately
@@ -35,22 +19,9 @@ export const usePersistentNotificationStore = defineStore('persistentNotificatio
     // Show toast/snackbar
     const notificationStore = useNotificationStore()
     notificationStore.showInfo(`New Notification: ${notification.title}`)
-
-    // Show native notification
-    if ('Notification' in window && Notification.permission === 'granted') {
-      const n = new Notification(notification.title, {
-        body: notification.message,
-        icon: '/favicon.ico',
-      })
-      n.addEventListener('click', () => {
-        window.focus()
-        n.close()
-      })
-    }
   }
 
   const initSignalR = async () => {
-    checkPermission()
     const authStore = useAuthStore()
     const token = authStore.token
 
@@ -67,7 +38,7 @@ export const usePersistentNotificationStore = defineStore('persistentNotificatio
     if (backendType === 'nest') {
       // Socket.io for NestJS
       const socketUrl = import.meta.env.VITE_API_BASE_URL.replace('/api', '')
-      
+
       const { io } = await import('socket.io-client')
       connection.value = io(`${socketUrl}/notifications`, {
         auth: {
@@ -172,12 +143,9 @@ export const usePersistentNotificationStore = defineStore('persistentNotificatio
     notifications,
     loading,
     unreadCount,
-    notificationPermission,
     fetchNotifications,
     markAsRead,
     markAllAsRead,
     initSignalR,
-    requestPermission,
-    checkPermission,
   }
 })

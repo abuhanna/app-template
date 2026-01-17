@@ -12,7 +12,6 @@ interface PersistentNotificationState {
   notifications: Notification[]
   loading: boolean
   connection: ConnectionType
-  notificationPermission: NotificationPermission
   unreadCount: number
 
   // Actions
@@ -21,7 +20,6 @@ interface PersistentNotificationState {
   fetchNotifications: (params?: { limit?: number }) => Promise<void>
   markAsRead: (id: string) => Promise<boolean>
   markAllAsRead: () => Promise<boolean>
-  requestPermission: () => Promise<NotificationPermission>
   addNotification: (notification: Notification) => void
 }
 
@@ -29,7 +27,6 @@ export const usePersistentNotificationStore = create<PersistentNotificationState
   notifications: [],
   loading: false,
   connection: null,
-  notificationPermission: 'default',
   unreadCount: 0,
 
   initConnection: async () => {
@@ -45,14 +42,6 @@ export const usePersistentNotificationStore = create<PersistentNotificationState
         unreadCount: state.unreadCount + 1,
       }))
       useNotificationStore.getState().showInfo(`New: ${notification.title}`)
-
-      // Show native notification if permitted
-      if (Notification.permission === 'granted') {
-        new Notification(notification.title, {
-          body: notification.message,
-          icon: '/favicon.ico',
-        })
-      }
     }
 
     if (backendType === 'nest') {
@@ -133,9 +122,7 @@ export const usePersistentNotificationStore = create<PersistentNotificationState
     try {
       await notificationApi.markAsRead(id)
       set((state) => ({
-        notifications: state.notifications.map((n) =>
-          n.id === id ? { ...n, isRead: true } : n
-        ),
+        notifications: state.notifications.map((n) => (n.id === id ? { ...n, isRead: true } : n)),
         unreadCount: Math.max(0, state.unreadCount - 1),
       }))
       return true
@@ -157,15 +144,6 @@ export const usePersistentNotificationStore = create<PersistentNotificationState
       console.error('Failed to mark all notifications as read:', error)
       return false
     }
-  },
-
-  requestPermission: async () => {
-    if ('Notification' in window) {
-      const permission = await Notification.requestPermission()
-      set({ notificationPermission: permission })
-      return permission
-    }
-    return 'denied'
   },
 
   addNotification: (notification) => {

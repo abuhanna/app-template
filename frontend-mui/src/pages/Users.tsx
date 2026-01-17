@@ -3,7 +3,6 @@ import {
   Box,
   Card,
   CardContent,
-  Typography,
   Button,
   Table,
   TableBody,
@@ -25,14 +24,13 @@ import {
   Grid,
 } from '@mui/material'
 import { Add as AddIcon, Edit as EditIcon, Delete as DeleteIcon } from '@mui/icons-material'
-import { useUserStore, useDepartmentStore, useNotificationStore } from '@/stores'
+import { useUserStore, useDepartmentStore } from '@/stores'
 import { ConfirmDialog } from '@/components'
 import type { User, CreateUserRequest } from '@/types'
 
 export default function Users() {
   const { users, loading, fetchUsers, createUser, updateUser, deleteUser } = useUserStore()
   const { departments, fetchDepartments } = useDepartmentStore()
-  const showSuccess = useNotificationStore((state) => state.showSuccess)
 
   const [dialogOpen, setDialogOpen] = useState(false)
   const [confirmOpen, setConfirmOpen] = useState(false)
@@ -104,14 +102,12 @@ export default function Users() {
     if (selectedUser) {
       await deleteUser(selectedUser.id)
       setConfirmOpen(false)
-      showSuccess('User deleted successfully')
     }
   }
 
   return (
     <Box>
-      <Box sx={{ display: 'flex', justifyContent: 'space-between', mb: 3 }}>
-        <Typography variant="h4">User Management</Typography>
+      <Box sx={{ display: 'flex', justifyContent: 'flex-end', mb: 3 }}>
         <Button variant="contained" startIcon={<AddIcon />} onClick={handleOpenCreate}>
           Add User
         </Button>
@@ -133,7 +129,7 @@ export default function Users() {
                 </TableRow>
               </TableHead>
               <TableBody>
-                {users.map((user) => (
+                {(users || []).map((user) => (
                   <TableRow key={user.id}>
                     <TableCell>{user.username}</TableCell>
                     <TableCell>
@@ -247,7 +243,7 @@ export default function Users() {
                   onChange={(e) => setFormData({ ...formData, departmentId: e.target.value })}
                 >
                   <MenuItem value="">None</MenuItem>
-                  {departments.map((dept) => (
+                  {(departments || []).map((dept) => (
                     <MenuItem key={dept.id} value={dept.id}>
                       {dept.name}
                     </MenuItem>

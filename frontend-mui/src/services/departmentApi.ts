@@ -1,17 +1,12 @@
 import api from './api'
-import type {
-  Department,
-  CreateDepartmentRequest,
-  UpdateDepartmentRequest,
-  DepartmentListResponse,
-} from '@/types'
+import type { Department, CreateDepartmentRequest, UpdateDepartmentRequest } from '@/types'
 
 export async function getDepartments(params?: {
   page?: number
   pageSize?: number
   search?: string
-}): Promise<DepartmentListResponse> {
-  const response = await api.get<DepartmentListResponse>('/departments', { params })
+}): Promise<Department[]> {
+  const response = await api.get<Department[]>('/departments', { params })
   return response.data
 }
 
@@ -35,4 +30,12 @@ export async function updateDepartment(
 
 export async function deleteDepartment(id: string): Promise<void> {
   await api.delete(`/departments/${id}`)
+}
+
+export const departmentApi = {
+  getDepartments,
+  getDepartment,
+  createDepartment,
+  updateDepartment,
+  deleteDepartment,
 }

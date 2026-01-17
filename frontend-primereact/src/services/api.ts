@@ -1,5 +1,6 @@
 import axios, { AxiosError, InternalAxiosRequestConfig } from 'axios'
 import { useAuthStore } from '@/stores/authStore'
+import { useNotificationStore } from '@/stores/notificationStore'
 
 const api = axios.create({
   baseURL: import.meta.env.VITE_API_BASE_URL || 'http://localhost:5100/api',
@@ -36,6 +37,27 @@ api.interceptors.request.use(
   },
   (error) => Promise.reject(error)
 )
+
+// Helper to extract error message from response
+const getErrorMessage = (error: AxiosError): string => {
+  const data = error.response?.data as { message?: string; title?: string; errors?: Record<string, string[]> }
+
+  if (data?.message) return data.message
+  if (data?.title) return data.title
+  if (data?.errors) {
+    const firstError = Object.values(data.errors)[0]
+    if (firstError?.[0]) return firstError[0]
+  }
+
+  switch (error.response?.status) {
+    case 400: return 'Invalid request'
+    case 401: return 'Authentication required'
+    case 403: return 'Access denied'
+    case 404: return 'Resource not found'
+    case 500: return 'Server error'
+    default: return error.message || 'An error occurred'
+  }
+}
 
 // Response interceptor
 api.interceptors.response.use(
@@ -87,6 +109,14 @@ api.interceptors.response.use(
       } finally {
         isRefreshing = false
       }
+    }
+
+    // Show error toast for non-401 errors (401 is handled above with redirect)
+    // Skip auth endpoints as they handle their own error display
+    const isAuthEndpoint = originalRequest.url?.includes('/auth/')
+    if (error.response?.status !== 401 && !isAuthEndpoint) {
+      const message = getErrorMessage(error)
+      useNotificationStore.getState().showError(message)
     }
 
     return Promise.reject(error)

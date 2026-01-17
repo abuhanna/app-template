@@ -13,7 +13,7 @@ export function NotificationMenu() {
   const markAsRead = usePersistentNotificationStore((state) => state.markAsRead)
   const markAllAsRead = usePersistentNotificationStore((state) => state.markAllAsRead)
 
-  const recentNotifications = notifications.slice(0, 5)
+  const recentNotifications = (notifications || []).slice(0, 5)
 
   const handleNotificationClick = async (id: string) => {
     await markAsRead(id)

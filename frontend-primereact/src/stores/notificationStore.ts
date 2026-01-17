@@ -32,12 +32,7 @@ export const useNotificationStore = create<NotificationState>((set, get) => ({
     set((state) => ({
       notifications: [...state.notifications, notification],
     }))
-
-    if (duration > 0) {
-      setTimeout(() => {
-        get().removeNotification(id)
-      }, duration)
-    }
+    // Note: Removal is handled by the layout components after showing the toast
   },
 
   showSuccess: (message, duration) => {

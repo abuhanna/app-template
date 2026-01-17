@@ -1,100 +1,123 @@
-import { useState } from 'react'
-import { Link } from 'react-router-dom'
+import React, { useState } from 'react'
+import { useNavigate, Link } from 'react-router-dom'
 import { InputText } from 'primereact/inputtext'
 import { Button } from 'primereact/button'
-import { Card } from 'primereact/card'
 import { Message } from 'primereact/message'
 import { authApi } from '@/services/authApi'
+import '@/styles/auth.scss'
 
 export default function ForgotPassword() {
+  const navigate = useNavigate()
   const [email, setEmail] = useState('')
-  const [loading, setLoading] = useState(false)
+  const [emailError, setEmailError] = useState('')
   const [error, setError] = useState('')
-  const [success, setSuccess] = useState(false)
+  const [loading, setLoading] = useState(false)
+  const [submitted, setSubmitted] = useState(false)
+
+  const validate = (): boolean => {
+    setEmailError('')
+
+    if (!email.trim()) {
+      setEmailError('Email is required')
+      return false
+    }
+
+    if (!/\S+@\S+\.\S+/.test(email)) {
+      setEmailError('Invalid email format')
+      return false
+    }
+
+    return true
+  }
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
-    setError('')
+    if (!validate()) return
+
     setLoading(true)
+    setError('')
 
     try {
       await authApi.forgotPassword(email)
-      setSuccess(true)
-    } catch (err: any) {
-      setError(err.response?.data?.message || 'Failed to send reset email')
+      setSubmitted(true)
+    } catch {
+      // Don't reveal if email exists or not
+      setSubmitted(true)
     } finally {
       setLoading(false)
     }
   }
 
-  if (success) {
-    return (
-      <div className="flex align-items-center justify-content-center min-h-screen surface-ground">
-        <Card className="w-full max-w-30rem p-4">
-          <div className="text-center">
-            <div
-              className="flex align-items-center justify-content-center border-round mx-auto mb-4"
-              style={{ width: '4rem', height: '4rem', backgroundColor: 'var(--green-100)' }}
-            >
-              <i className="pi pi-check text-green-500 text-4xl" />
-            </div>
-            <div className="text-900 text-2xl font-medium mb-3">Check Your Email</div>
-            <p className="text-600 mb-4">
-              We've sent a password reset link to <strong>{email}</strong>. Please check your inbox
-              and follow the instructions to reset your password.
-            </p>
-            <Link to="/login" className="no-underline">
-              <Button label="Back to Login" icon="pi pi-arrow-left" className="w-full" />
-            </Link>
-          </div>
-        </Card>
-      </div>
-    )
-  }
-
   return (
-    <div className="flex align-items-center justify-content-center min-h-screen surface-ground">
-      <Card className="w-full max-w-30rem p-4">
-        <div className="text-center mb-5">
-          <div className="text-900 text-3xl font-medium mb-3">Forgot Password</div>
-          <span className="text-600 font-medium">
-            Enter your email address and we'll send you a link to reset your password.
-          </span>
+    <div className="auth-page forgot-password">
+      <div className="auth-card">
+        <div className="card-content">
+          {/* Header */}
+          <div className="auth-header">
+            <div className="logo-wrapper purple">
+              <i className="pi pi-lock"></i>
+            </div>
+            <h1>Forgot Password</h1>
+            <p>Enter your email address and we'll send you a link to reset your password.</p>
+          </div>
+
+          {!submitted ? (
+            <form onSubmit={handleSubmit} className="auth-form">
+              {error && (
+                <Message severity="error" text={error} className="mb-4 w-full" />
+              )}
+
+              <div className="field">
+                <label htmlFor="email">Email Address</label>
+                <InputText
+                  id="email"
+                  type="email"
+                  value={email}
+                  onChange={(e) => setEmail(e.target.value)}
+                  placeholder="Enter your email"
+                  disabled={loading}
+                  invalid={!!emailError}
+                  size="large"
+                />
+                {emailError && <small className="p-error">{emailError}</small>}
+              </div>
+
+              <Button
+                type="submit"
+                label="Send Reset Link"
+                loading={loading}
+                size="large"
+                className="submit-button purple"
+              />
+
+              <div className="back-to-login">
+                <Link to="/login" className="back-link purple">
+                  <i className="pi pi-arrow-left"></i>
+                  Back to Login
+                </Link>
+              </div>
+            </form>
+          ) : (
+            <div className="success-state">
+              <div className="success-icon">
+                <i className="pi pi-check-circle"></i>
+              </div>
+              <h2>Check Your Email</h2>
+              <p>
+                If an account exists for <strong>{email}</strong>, you will receive a password
+                reset link shortly.
+              </p>
+              <Button
+                label="Back to Login"
+                severity="secondary"
+                size="large"
+                onClick={() => navigate('/login')}
+                className="w-full"
+              />
+            </div>
+          )}
         </div>
-
-        {error && <Message severity="error" text={error} className="w-full mb-4" />}
-
-        <form onSubmit={handleSubmit}>
-          <div className="mb-4">
-            <label htmlFor="email" className="block text-900 font-medium mb-2">
-              Email Address
-            </label>
-            <InputText
-              id="email"
-              type="email"
-              value={email}
-              onChange={(e) => setEmail(e.target.value)}
-              placeholder="Enter your email"
-              className="w-full"
-              required
-            />
-          </div>
-
-          <Button
-            type="submit"
-            label="Send Reset Link"
-            icon="pi pi-send"
-            className="w-full mb-3"
-            loading={loading}
-          />
-
-          <div className="text-center">
-            <Link to="/login" className="text-primary no-underline">
-              Back to Login
-            </Link>
-          </div>
-        </form>
-      </Card>
+      </div>
     </div>
   )
 }

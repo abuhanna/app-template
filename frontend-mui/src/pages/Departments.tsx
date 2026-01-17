@@ -3,7 +3,6 @@ import {
   Box,
   Card,
   CardContent,
-  Typography,
   Button,
   Table,
   TableBody,
@@ -21,14 +20,13 @@ import {
   Grid,
 } from '@mui/material'
 import { Add as AddIcon, Edit as EditIcon, Delete as DeleteIcon } from '@mui/icons-material'
-import { useDepartmentStore, useNotificationStore } from '@/stores'
+import { useDepartmentStore } from '@/stores'
 import { ConfirmDialog } from '@/components'
 import type { Department, CreateDepartmentRequest } from '@/types'
 
 export default function Departments() {
   const { departments, loading, fetchDepartments, createDepartment, updateDepartment, deleteDepartment } =
     useDepartmentStore()
-  const showSuccess = useNotificationStore((state) => state.showSuccess)
 
   const [dialogOpen, setDialogOpen] = useState(false)
   const [confirmOpen, setConfirmOpen] = useState(false)
@@ -82,14 +80,12 @@ export default function Departments() {
     if (selectedDepartment) {
       await deleteDepartment(selectedDepartment.id)
       setConfirmOpen(false)
-      showSuccess('Department deleted successfully')
     }
   }
 
   return (
     <Box>
-      <Box sx={{ display: 'flex', justifyContent: 'space-between', mb: 3 }}>
-        <Typography variant="h4">Department Management</Typography>
+      <Box sx={{ display: 'flex', justifyContent: 'flex-end', mb: 3 }}>
         <Button variant="contained" startIcon={<AddIcon />} onClick={handleOpenCreate}>
           Add Department
         </Button>
@@ -109,7 +105,7 @@ export default function Departments() {
                 </TableRow>
               </TableHead>
               <TableBody>
-                {departments.map((dept) => (
+                {(departments || []).map((dept) => (
                   <TableRow key={dept.id}>
                     <TableCell>{dept.name}</TableCell>
                     <TableCell>

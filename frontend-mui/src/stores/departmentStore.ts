@@ -7,9 +7,6 @@ interface DepartmentState {
   departments: Department[]
   selectedDepartment: Department | null
   loading: boolean
-  total: number
-  page: number
-  pageSize: number
 
   // Actions
   fetchDepartments: (params?: { page?: number; pageSize?: number; search?: string }) => Promise<void>
@@ -25,25 +22,14 @@ export const useDepartmentStore = create<DepartmentState>((set) => ({
   departments: [],
   selectedDepartment: null,
   loading: false,
-  total: 0,
-  page: 1,
-  pageSize: 10,
 
   fetchDepartments: async (params) => {
     set({ loading: true })
     try {
-      const response = await departmentApi.getDepartments(params)
-      set({
-        departments: response.data,
-        total: response.total,
-        page: response.page,
-        pageSize: response.pageSize,
-        loading: false,
-      })
+      const departments = await departmentApi.getDepartments(params)
+      set({ departments, loading: false })
     } catch (error) {
       set({ loading: false })
-      const notification = useNotificationStore.getState()
-      notification.showError('Failed to fetch departments')
       throw error
     }
   },
@@ -55,8 +41,6 @@ export const useDepartmentStore = create<DepartmentState>((set) => ({
       set({ selectedDepartment: department, loading: false })
     } catch (error) {
       set({ loading: false })
-      const notification = useNotificationStore.getState()
-      notification.showError('Failed to fetch department')
       throw error
     }
   },
@@ -74,8 +58,6 @@ export const useDepartmentStore = create<DepartmentState>((set) => ({
       return department
     } catch (error) {
       set({ loading: false })
-      const notification = useNotificationStore.getState()
-      notification.showError('Failed to create department')
       throw error
     }
   },
@@ -94,8 +76,6 @@ export const useDepartmentStore = create<DepartmentState>((set) => ({
       notification.showSuccess('Department updated successfully')
     } catch (error) {
       set({ loading: false })
-      const notification = useNotificationStore.getState()
-      notification.showError('Failed to update department')
       throw error
     }
   },
@@ -114,8 +94,6 @@ export const useDepartmentStore = create<DepartmentState>((set) => ({
       notification.showSuccess('Department deleted successfully')
     } catch (error) {
       set({ loading: false })
-      const notification = useNotificationStore.getState()
-      notification.showError('Failed to delete department')
       throw error
     }
   },
@@ -125,6 +103,6 @@ export const useDepartmentStore = create<DepartmentState>((set) => ({
   },
 
   clearDepartments: () => {
-    set({ departments: [], selectedDepartment: null, total: 0 })
+    set({ departments: [], selectedDepartment: null })
   },
 }))

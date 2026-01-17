@@ -71,7 +71,7 @@ export default function Notifications() {
         <div className="flex justify-content-center py-6">
           <i className="pi pi-spin pi-spinner text-4xl text-500" />
         </div>
-      ) : notifications.length === 0 ? (
+      ) : !notifications || notifications.length === 0 ? (
         <Card>
           <div className="text-center py-6">
             <i className="pi pi-inbox text-6xl text-300 mb-4" />
@@ -81,7 +81,7 @@ export default function Notifications() {
         </Card>
       ) : (
         <div className="flex flex-column gap-3">
-          {notifications.map((notification) => (
+          {(notifications || []).map((notification) => (
             <Card
               key={notification.id}
               className={notification.isRead ? 'surface-ground' : 'surface-card border-left-3 border-primary'}

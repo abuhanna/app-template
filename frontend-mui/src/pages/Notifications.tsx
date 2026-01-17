@@ -53,9 +53,8 @@ export default function Notifications() {
 
   return (
     <Box>
-      <Box sx={{ display: 'flex', justifyContent: 'space-between', mb: 3 }}>
-        <Typography variant="h4">Notifications</Typography>
-        {unreadCount > 0 && (
+      {unreadCount > 0 && (
+        <Box sx={{ display: 'flex', justifyContent: 'flex-end', mb: 3 }}>
           <Button
             variant="outlined"
             startIcon={<MarkReadIcon />}
@@ -63,12 +62,12 @@ export default function Notifications() {
           >
             Mark all as read ({unreadCount})
           </Button>
-        )}
-      </Box>
+        </Box>
+      )}
 
       <Card>
         <CardContent>
-          {notifications.length === 0 ? (
+          {!notifications || notifications.length === 0 ? (
             <Box sx={{ textAlign: 'center', py: 4 }}>
               <Typography color="text.secondary">No notifications</Typography>
             </Box>

@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react'
-import { Box, useMediaQuery, useTheme } from '@mui/material'
+import { Box, useMediaQuery, styled, useTheme } from '@mui/material'
 import { AppHeader } from '@/components/layout/AppHeader'
 import { AppSidebar } from '@/components/layout/AppSidebar'
 import { AppNotification } from '@/components/AppNotification'
@@ -10,6 +10,31 @@ interface DefaultLayoutProps {
 }
 
 const DRAWER_WIDTH = 260
+
+const ContentWrapper = styled('div', { shouldForwardProp: (prop) => prop !== 'open' })<{
+  open?: boolean
+}>(({ theme }) => ({
+  display: 'flex',
+  flexDirection: 'column',
+  flexGrow: 1,
+  transition: theme.transitions.create('margin', {
+    easing: theme.transitions.easing.sharp,
+    duration: theme.transitions.duration.leavingScreen,
+  }),
+  marginLeft: `-${DRAWER_WIDTH}px`,
+  variants: [
+    {
+      props: ({ open }) => open,
+      style: {
+        transition: theme.transitions.create('margin', {
+          easing: theme.transitions.easing.easeOut,
+          duration: theme.transitions.duration.enteringScreen,
+        }),
+        marginLeft: 0,
+      },
+    },
+  ],
+}))
 
 export function DefaultLayout({ children }: DefaultLayoutProps) {
   const theme = useTheme()
@@ -37,30 +62,19 @@ export function DefaultLayout({ children }: DefaultLayoutProps) {
         width={DRAWER_WIDTH}
         isMobile={isMobile}
       />
-      <Box
-        sx={{
-          flex: 1,
-          display: 'flex',
-          flexDirection: 'column',
-          ml: isMobile ? 0 : sidebarOpen ? `${DRAWER_WIDTH}px` : 0,
-          transition: theme.transitions.create('margin', {
-            easing: theme.transitions.easing.sharp,
-            duration: theme.transitions.duration.leavingScreen,
-          }),
-        }}
-      >
+      <ContentWrapper open={isMobile ? true : sidebarOpen}>
         <AppHeader onToggleSidebar={() => setSidebarOpen(!sidebarOpen)} />
         <Box
           component="main"
           sx={{
-            flex: 1,
+            flexGrow: 1,
             p: 3,
             backgroundColor: 'grey.100',
           }}
         >
           {children}
         </Box>
-      </Box>
+      </ContentWrapper>
       <AppNotification />
     </Box>
   )

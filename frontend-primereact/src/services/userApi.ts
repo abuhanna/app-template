@@ -1,12 +1,12 @@
 import api from './api'
-import type { User, CreateUserRequest, UpdateUserRequest, UserListResponse } from '@/types'
+import type { User, CreateUserRequest, UpdateUserRequest } from '@/types'
 
 export async function getUsers(params?: {
   page?: number
   pageSize?: number
   search?: string
-}): Promise<UserListResponse> {
-  const response = await api.get<UserListResponse>('/users', { params })
+}): Promise<User[]> {
+  const response = await api.get<User[]>('/users', { params })
   return response.data
 }
 

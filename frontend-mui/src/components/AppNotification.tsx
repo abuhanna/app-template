@@ -7,7 +7,7 @@ export function AppNotification() {
 
   return (
     <Stack spacing={1} sx={{ position: 'fixed', bottom: 24, right: 24, zIndex: 2000 }}>
-      {notifications.map((notification) => (
+      {(notifications || []).map((notification) => (
         <Snackbar
           key={notification.id}
           open={true}

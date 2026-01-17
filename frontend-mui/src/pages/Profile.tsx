@@ -89,10 +89,6 @@ export default function Profile() {
 
   return (
     <Box>
-      <Typography variant="h4" gutterBottom>
-        Profile
-      </Typography>
-
       <Grid container spacing={3}>
         <Grid size={{ xs: 12, md: 4 }}>
           <Card>
