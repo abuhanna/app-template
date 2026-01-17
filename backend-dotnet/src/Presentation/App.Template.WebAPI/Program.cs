@@ -178,6 +178,7 @@ builder.Services.AddScoped<INotificationService, NotificationService>();
 builder.Services.AddScoped<IPasswordHashService, PasswordHashService>();
 builder.Services.AddScoped<IJwtTokenService, JwtTokenService>();
 builder.Services.AddScoped<IEmailService, EmailService>();
+builder.Services.AddScoped<IFileStorageService, FileStorageService>();
 builder.Services.AddScoped<AppTemplate.Infrastructure.Persistence.Seeding.DbSeeder>();
 
 // Register Correlation ID accessor for request tracing
@@ -341,7 +342,8 @@ app.MapGet("/", () => Results.Ok(new
         "User Management",
         "Department Management",
         "Authentication",
-        "Notifications"
+        "Notifications",
+        "File Management"
     },
     endpoints = new
     {

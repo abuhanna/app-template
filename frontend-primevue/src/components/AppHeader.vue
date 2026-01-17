@@ -13,6 +13,18 @@
     </div>
 
     <div class="header-right">
+      <!-- Theme Toggle -->
+      <Button
+        type="button"
+        @click="toggleThemeMenu"
+        :icon="themeIcon"
+        text
+        rounded
+        severity="secondary"
+        class="theme-button"
+      />
+      <Menu ref="themeMenu" :model="themeMenuItems" :popup="true" />
+
       <!-- Notifications -->
       <NotificationMenu />
 
@@ -41,6 +53,7 @@
 import { ref, computed } from 'vue'
 import { useRouter, useRoute } from 'vue-router'
 import { useAuthStore } from '@/stores/auth'
+import { useThemeStore } from '@/stores/theme'
 import Button from 'primevue/button'
 import Avatar from 'primevue/avatar'
 import Menu from 'primevue/menu'
@@ -51,7 +64,40 @@ defineEmits(['toggle-sidebar'])
 const router = useRouter()
 const route = useRoute()
 const authStore = useAuthStore()
+const themeStore = useThemeStore()
 const userMenu = ref()
+const themeMenu = ref()
+
+const themeIcon = computed(() => {
+  const icons = {
+    light: 'pi pi-sun',
+    dark: 'pi pi-moon',
+    system: 'pi pi-desktop',
+  }
+  return icons[themeStore.themeMode] || 'pi pi-desktop'
+})
+
+const themeMenuItems = ref([
+  {
+    label: 'Light',
+    icon: 'pi pi-sun',
+    command: () => themeStore.setTheme('light'),
+  },
+  {
+    label: 'Dark',
+    icon: 'pi pi-moon',
+    command: () => themeStore.setTheme('dark'),
+  },
+  {
+    label: 'System',
+    icon: 'pi pi-desktop',
+    command: () => themeStore.setTheme('system'),
+  },
+])
+
+const toggleThemeMenu = (event) => {
+  themeMenu.value.toggle(event)
+}
 
 // Dynamic page title based on route
 const pageTitle = computed(() => {

@@ -1,12 +1,14 @@
 package apptemplate.infrastructure.persistence.entities;
 
 import apptemplate.domain.enums.UserRole;
+import apptemplate.infrastructure.persistence.listeners.AuditEntityListener;
 import jakarta.persistence.*;
 import lombok.*;
 import java.time.LocalDateTime;
 
 @Entity
 @Table(name = "users")
+@EntityListeners(AuditEntityListener.class)
 @Getter
 @Setter
 @NoArgsConstructor

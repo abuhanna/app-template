@@ -183,3 +183,117 @@ body {
   letter-spacing: 0.5px;
   white-space: nowrap;
 }
+
+// Dark mode overrides
+html.app-dark {
+  --surface-ground: #121212;
+  --surface-section: #1e1e1e;
+  --surface-card: #1e1e1e;
+  --surface-overlay: #1e1e1e;
+  --surface-border: #383838;
+  --surface-hover: rgba(255, 255, 255, 0.04);
+  --text-color: rgba(255, 255, 255, 0.87);
+  --text-color-secondary: rgba(255, 255, 255, 0.6);
+  --primary-color: #90caf9;
+  --primary-color-text: #121212;
+
+  .layout-main {
+    background-color: #121212;
+  }
+
+  .card {
+    background: #1e1e1e;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.3);
+  }
+
+  // Override PrimeReact component styles for dark mode
+  .p-component {
+    color: var(--text-color);
+  }
+
+  .p-inputtext {
+    background: #2d2d2d;
+    border-color: var(--surface-border);
+    color: var(--text-color);
+
+    &:enabled:hover {
+      border-color: var(--primary-color);
+    }
+
+    &:enabled:focus {
+      border-color: var(--primary-color);
+      box-shadow: 0 0 0 0.2rem rgba(144, 202, 249, 0.2);
+    }
+  }
+
+  .p-button {
+    &.p-button-text {
+      color: var(--text-color);
+    }
+  }
+
+  .p-menu {
+    background: #1e1e1e;
+    border-color: var(--surface-border);
+
+    .p-menuitem-link {
+      color: var(--text-color);
+
+      &:hover {
+        background: var(--surface-hover);
+      }
+    }
+  }
+
+  .p-datatable {
+    .p-datatable-header,
+    .p-datatable-thead > tr > th {
+      background: #1e1e1e;
+      border-color: var(--surface-border);
+      color: var(--text-color);
+    }
+
+    .p-datatable-tbody > tr {
+      background: #1e1e1e;
+      color: var(--text-color);
+
+      > td {
+        border-color: var(--surface-border);
+      }
+
+      &:nth-child(even) {
+        background: #252525;
+      }
+
+      &:hover {
+        background: var(--surface-hover);
+      }
+    }
+  }
+
+  .p-dialog {
+    .p-dialog-header {
+      background: #1e1e1e;
+      border-color: var(--surface-border);
+      color: var(--text-color);
+    }
+
+    .p-dialog-content {
+      background: #1e1e1e;
+      color: var(--text-color);
+    }
+
+    .p-dialog-footer {
+      background: #1e1e1e;
+      border-color: var(--surface-border);
+    }
+  }
+
+  .p-toast {
+    .p-toast-message {
+      background: #2d2d2d;
+      border-color: var(--surface-border);
+      color: var(--text-color);
+    }
+  }
+}

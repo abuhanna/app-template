@@ -22,13 +22,18 @@
 <script setup>
   import { onMounted, ref } from 'vue'
   import { useAuthStore } from '@/stores/auth'
+  import { useThemeStore } from '@/stores/theme'
 
   const authStore = useAuthStore()
+  const themeStore = useThemeStore()
   const isInitializing = ref(true)
 
   onMounted(() => {
     // Initialize auth from localStorage
     authStore.initAuth()
+
+    // Initialize theme (store auto-applies on creation, but this ensures it's loaded)
+    // Theme is already applied in the store constructor
 
     // Small delay to ensure smooth transition
     setTimeout(() => {

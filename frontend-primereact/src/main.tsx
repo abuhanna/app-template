@@ -3,6 +3,7 @@ import { createRoot } from 'react-dom/client'
 import { RouterProvider } from 'react-router-dom'
 import { PrimeReactProvider } from 'primereact/api'
 import { router } from './router'
+import { AppThemeProvider } from './components/providers/AppThemeProvider'
 
 import 'primereact/resources/themes/lara-light-blue/theme.css'
 import 'primeicons/primeicons.css'
@@ -17,7 +18,9 @@ const primeReactConfig = {
 createRoot(document.getElementById('root')!).render(
   <StrictMode>
     <PrimeReactProvider value={primeReactConfig}>
-      <RouterProvider router={router} />
+      <AppThemeProvider>
+        <RouterProvider router={router} />
+      </AppThemeProvider>
     </PrimeReactProvider>
   </StrictMode>
 )

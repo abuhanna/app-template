@@ -16,8 +16,11 @@ import {
   Menu as MenuIcon,
   Person as PersonIcon,
   Logout as LogoutIcon,
+  LightMode as LightModeIcon,
+  DarkMode as DarkModeIcon,
+  Computer as ComputerIcon,
 } from '@mui/icons-material'
-import { useAuthStore } from '@/stores'
+import { useAuthStore, useThemeStore, ThemeMode } from '@/stores'
 import { NotificationMenu } from '@/components/common/NotificationMenu'
 import { ConfirmDialog } from '@/components'
 
@@ -38,8 +41,41 @@ export function AppHeader({ onToggleSidebar }: AppHeaderProps) {
   const location = useLocation()
   const user = useAuthStore((state) => state.user)
   const logout = useAuthStore((state) => state.logout)
+  const themeMode = useThemeStore((state) => state.themeMode)
+  const setTheme = useThemeStore((state) => state.setTheme)
   const [anchorEl, setAnchorEl] = useState<null | HTMLElement>(null)
+  const [themeAnchorEl, setThemeAnchorEl] = useState<null | HTMLElement>(null)
   const [logoutDialogOpen, setLogoutDialogOpen] = useState(false)
+
+  const themeOptions: { mode: ThemeMode; label: string; icon: React.ReactNode }[] = [
+    { mode: 'light', label: 'Light', icon: <LightModeIcon fontSize="small" /> },
+    { mode: 'dark', label: 'Dark', icon: <DarkModeIcon fontSize="small" /> },
+    { mode: 'system', label: 'System', icon: <ComputerIcon fontSize="small" /> },
+  ]
+
+  const getCurrentThemeIcon = () => {
+    switch (themeMode) {
+      case 'light':
+        return <LightModeIcon />
+      case 'dark':
+        return <DarkModeIcon />
+      default:
+        return <ComputerIcon />
+    }
+  }
+
+  const handleThemeMenuOpen = (event: React.MouseEvent<HTMLElement>) => {
+    setThemeAnchorEl(event.currentTarget)
+  }
+
+  const handleThemeMenuClose = () => {
+    setThemeAnchorEl(null)
+  }
+
+  const handleThemeChange = (mode: ThemeMode) => {
+    setTheme(mode)
+    handleThemeMenuClose()
+  }
 
   const pageTitle = pageTitles[location.pathname] || 'AppTemplate'
 
@@ -83,7 +119,7 @@ export function AppHeader({ onToggleSidebar }: AppHeaderProps) {
       position="sticky"
       color="inherit"
       elevation={1}
-      sx={{ backgroundColor: 'white' }}
+      sx={{ backgroundColor: 'background.paper' }}
     >
       <Toolbar>
         <IconButton
@@ -101,6 +137,29 @@ export function AppHeader({ onToggleSidebar }: AppHeaderProps) {
         </Typography>
 
         <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+          {/* Theme Toggle */}
+          <IconButton onClick={handleThemeMenuOpen} size="small">
+            {getCurrentThemeIcon()}
+          </IconButton>
+          <Menu
+            anchorEl={themeAnchorEl}
+            open={Boolean(themeAnchorEl)}
+            onClose={handleThemeMenuClose}
+            transformOrigin={{ horizontal: 'right', vertical: 'top' }}
+            anchorOrigin={{ horizontal: 'right', vertical: 'bottom' }}
+          >
+            {themeOptions.map((option) => (
+              <MenuItem
+                key={option.mode}
+                onClick={() => handleThemeChange(option.mode)}
+                selected={themeMode === option.mode}
+              >
+                <ListItemIcon>{option.icon}</ListItemIcon>
+                {option.label}
+              </MenuItem>
+            ))}
+          </Menu>
+
           <NotificationMenu />
 
           <IconButton onClick={handleMenuOpen} size="small">

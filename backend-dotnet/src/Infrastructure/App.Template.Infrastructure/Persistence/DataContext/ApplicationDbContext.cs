@@ -28,17 +28,33 @@ public class ApplicationDbContext : DbContext, IApplicationDbContext
     public DbSet<Department> Departments { get; set; }
     public DbSet<Notification> Notifications { get; set; }
     public DbSet<RefreshToken> RefreshTokens { get; set; }
+    public DbSet<UploadedFile> UploadedFiles { get; set; }
+    public DbSet<AuditLog> AuditLogs { get; set; }
+
+    // Entity types to exclude from audit logging
+    private static readonly HashSet<Type> ExcludedFromAudit = new()
+    {
+        typeof(AuditLog),
+        typeof(RefreshToken),
+        typeof(Notification)
+    };
 
     public override async Task<int> SaveChangesAsync(CancellationToken cancellationToken = default)
     {
         ApplyAuditInfo();
-        return await base.SaveChangesAsync(cancellationToken);
+        var auditEntries = OnBeforeSaveChanges();
+        var result = await base.SaveChangesAsync(cancellationToken);
+        await OnAfterSaveChangesAsync(auditEntries);
+        return result;
     }
 
     public override int SaveChanges()
     {
         ApplyAuditInfo();
-        return base.SaveChanges();
+        var auditEntries = OnBeforeSaveChanges();
+        var result = base.SaveChanges();
+        OnAfterSaveChangesAsync(auditEntries).GetAwaiter().GetResult();
+        return result;
     }
 
     private void ApplyAuditInfo()
@@ -58,6 +74,94 @@ public class ApplicationDbContext : DbContext, IApplicationDbContext
                     break;
             }
         }
+    }
+
+    private List<AuditEntry> OnBeforeSaveChanges()
+    {
+        ChangeTracker.DetectChanges();
+        var auditEntries = new List<AuditEntry>();
+        var currentUserId = _currentUserService?.UserId;
+
+        foreach (var entry in ChangeTracker.Entries())
+        {
+            // Skip audit logging for excluded entities and unchanged/detached entries
+            if (ExcludedFromAudit.Contains(entry.Entity.GetType()) ||
+                entry.State == EntityState.Detached ||
+                entry.State == EntityState.Unchanged)
+            {
+                continue;
+            }
+
+            var auditEntry = new AuditEntry(entry)
+            {
+                EntityName = entry.Entity.GetType().Name,
+                UserId = currentUserId
+            };
+
+            switch (entry.State)
+            {
+                case EntityState.Added:
+                    auditEntry.Action = AuditAction.Created;
+                    foreach (var property in entry.Properties)
+                    {
+                        if (property.IsTemporary)
+                        {
+                            auditEntry.TemporaryProperties.Add(property);
+                            continue;
+                        }
+                        auditEntry.NewValues[property.Metadata.Name] = property.CurrentValue;
+                    }
+                    break;
+
+                case EntityState.Deleted:
+                    auditEntry.Action = AuditAction.Deleted;
+                    foreach (var property in entry.Properties)
+                    {
+                        auditEntry.OldValues[property.Metadata.Name] = property.OriginalValue;
+                    }
+                    break;
+
+                case EntityState.Modified:
+                    auditEntry.Action = AuditAction.Updated;
+                    foreach (var property in entry.Properties)
+                    {
+                        if (property.IsModified)
+                        {
+                            auditEntry.AffectedColumns.Add(property.Metadata.Name);
+                            auditEntry.OldValues[property.Metadata.Name] = property.OriginalValue;
+                            auditEntry.NewValues[property.Metadata.Name] = property.CurrentValue;
+                        }
+                    }
+                    break;
+            }
+
+            auditEntries.Add(auditEntry);
+        }
+
+        // Add audit logs that don't have temporary properties
+        foreach (var entry in auditEntries.Where(e => !e.HasTemporaryProperties))
+        {
+            AuditLogs.Add(entry.ToAuditLog());
+        }
+
+        return auditEntries.Where(e => e.HasTemporaryProperties).ToList();
+    }
+
+    private async Task OnAfterSaveChangesAsync(List<AuditEntry> auditEntries)
+    {
+        if (auditEntries.Count == 0) return;
+
+        // Update temporary values (like auto-generated IDs) and add the audit logs
+        foreach (var entry in auditEntries)
+        {
+            foreach (var prop in entry.TemporaryProperties)
+            {
+                entry.NewValues[prop.Metadata.Name] = prop.CurrentValue;
+            }
+            AuditLogs.Add(entry.ToAuditLog());
+        }
+
+        await base.SaveChangesAsync();
     }
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
@@ -151,7 +255,48 @@ public class ApplicationDbContext : DbContext, IApplicationDbContext
                   .OnDelete(DeleteBehavior.Cascade);
         });
 
+        // UploadedFile configuration
+        modelBuilder.Entity<UploadedFile>(entity =>
+        {
+            entity.HasKey(e => e.Id);
+            entity.Property(e => e.Id).ValueGeneratedOnAdd();
+            entity.Property(e => e.FileName).IsRequired().HasMaxLength(255);
+            entity.Property(e => e.OriginalFileName).IsRequired().HasMaxLength(255);
+            entity.Property(e => e.ContentType).IsRequired().HasMaxLength(100);
+            entity.Property(e => e.FileSize).IsRequired();
+            entity.Property(e => e.StoragePath).IsRequired().HasMaxLength(500);
+            entity.Property(e => e.Description).HasMaxLength(500);
+            entity.Property(e => e.Category).HasMaxLength(100);
+            entity.Property(e => e.IsPublic).IsRequired();
+            entity.Property(e => e.CreatedAt).IsRequired();
+            entity.Property(e => e.UpdatedAt);
+            entity.Property(e => e.CreatedBy).HasMaxLength(100);
+            entity.Property(e => e.UpdatedBy).HasMaxLength(100);
 
+            entity.HasIndex(e => e.FileName).IsUnique();
+            entity.HasIndex(e => e.Category);
+            entity.HasIndex(e => e.CreatedBy);
+        });
+
+        // AuditLog configuration
+        modelBuilder.Entity<AuditLog>(entity =>
+        {
+            entity.HasKey(e => e.Id);
+            entity.Property(e => e.Id).ValueGeneratedOnAdd();
+            entity.Property(e => e.EntityName).IsRequired().HasMaxLength(100);
+            entity.Property(e => e.EntityId).IsRequired().HasMaxLength(50);
+            entity.Property(e => e.Action).IsRequired().HasConversion<string>();
+            entity.Property(e => e.OldValues).HasColumnType("text");
+            entity.Property(e => e.NewValues).HasColumnType("text");
+            entity.Property(e => e.AffectedColumns).HasColumnType("text");
+            entity.Property(e => e.UserId).HasMaxLength(100);
+            entity.Property(e => e.Timestamp).IsRequired();
+
+            entity.HasIndex(e => e.EntityName);
+            entity.HasIndex(e => e.EntityId);
+            entity.HasIndex(e => e.UserId);
+            entity.HasIndex(e => e.Timestamp);
+        });
 
         // Apply snake_case naming convention to all tables and columns
         // This MUST be called after all entity configurations

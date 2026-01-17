@@ -13,6 +13,8 @@ import Profile from '@/pages/Profile'
 import Users from '@/pages/Users'
 import Departments from '@/pages/Departments'
 import Notifications from '@/pages/Notifications'
+import FilesPage from '@/pages/FilesPage'
+import AuditLogsPage from '@/pages/AuditLogsPage'
 
 export const router = createBrowserRouter([
   {
@@ -55,6 +57,8 @@ export const router = createBrowserRouter([
         children: [
           { path: '/users', element: <Users /> },
           { path: '/departments', element: <Departments /> },
+          { path: '/files', element: <FilesPage /> },
+          { path: '/audit-logs', element: <AuditLogsPage /> },
         ],
       },
     ],

@@ -33,4 +33,18 @@ export const menuItems = [
     roles: ['Admin'],
     section: 'Administration',
   },
+  {
+    label: 'Files',
+    path: '/files',
+    icon: 'mdi-file-multiple',
+    roles: ['Admin'],
+    section: 'Administration',
+  },
+  {
+    label: 'Audit Logs',
+    path: '/audit-logs',
+    icon: 'mdi-history',
+    roles: ['Admin'],
+    section: 'Administration',
+  },
 ]

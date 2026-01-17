@@ -7,6 +7,8 @@ import { AuthModule } from './modules/auth/auth.module';
 import { UserManagementModule } from './modules/user-management/user-management.module';
 import { DepartmentManagementModule } from './modules/department-management/department-management.module';
 import { NotificationModule } from './modules/notification/notification.module';
+import { FileManagementModule } from './modules/file-management/file-management.module';
+import { AuditLogModule } from './modules/audit-log/audit-log.module';
 import { SeederModule } from './core/database/seed.module';
 
 @Module({
@@ -32,6 +34,8 @@ import { SeederModule } from './core/database/seed.module';
     UserManagementModule,
     DepartmentManagementModule,
     NotificationModule,
+    FileManagementModule,
+    AuditLogModule,
   ],
 })
 export class AppModule {}

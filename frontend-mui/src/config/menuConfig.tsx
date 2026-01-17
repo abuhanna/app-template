@@ -3,6 +3,8 @@ import {
   People as PeopleIcon,
   Business as BusinessIcon,
   Notifications as NotificationsIcon,
+  Folder as FolderIcon,
+  History as HistoryIcon,
 } from '@mui/icons-material'
 import type { ReactNode } from 'react'
 
@@ -36,6 +38,20 @@ export const menuItems: MenuItem[] = [
     label: 'Departments',
     path: '/departments',
     icon: <BusinessIcon />,
+    roles: ['Admin'],
+    section: 'Administration',
+  },
+  {
+    label: 'Files',
+    path: '/files',
+    icon: <FolderIcon />,
+    roles: ['Admin'],
+    section: 'Administration',
+  },
+  {
+    label: 'Audit Logs',
+    path: '/audit-logs',
+    icon: <HistoryIcon />,
     roles: ['Admin'],
     section: 'Administration',
   },

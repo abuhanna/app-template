@@ -1,5 +1,5 @@
 <template>
-  <div :class="{ 'app-dark': isDarkMode }">
+  <div>
     <!-- Loading Screen -->
     <Transition name="fade">
       <div v-if="isInitializing" class="loading-screen">
@@ -26,16 +26,17 @@
 import { onMounted, ref, watch } from 'vue'
 import { useAuthStore } from '@/stores/auth'
 import { useNotificationStore } from '@/stores/notification'
+import { useThemeStore } from '@/stores/theme'
 import { useToast } from 'primevue/usetoast'
 import Toast from 'primevue/toast'
 import ProgressSpinner from 'primevue/progressspinner'
 
 const authStore = useAuthStore()
 const notificationStore = useNotificationStore()
+const themeStore = useThemeStore()
 const toast = useToast()
 
 const isInitializing = ref(true)
-const isDarkMode = ref(false)
 
 // Watch for notifications and display toasts
 watch(() => notificationStore.show, (newValue) => {
@@ -46,7 +47,7 @@ watch(() => notificationStore.show, (newValue) => {
       detail: notificationStore.message,
       life: notificationStore.timeout
     })
-    
+
     // Reset show state so it can be triggered again even with same message
     // Use a small timeout to avoid immediate reset loops if any
     setTimeout(() => {
@@ -56,8 +57,8 @@ watch(() => notificationStore.show, (newValue) => {
 })
 
 onMounted(() => {
-  // Check system preference for dark mode
-  isDarkMode.value = window.matchMedia('(prefers-color-scheme: dark)').matches
+  // Initialize theme (store auto-applies on creation)
+  // Theme is already applied in the store constructor
 
   // Initialize auth from localStorage
   authStore.initAuth()
@@ -133,7 +134,87 @@ body {
 }
 
 /* Dark mode adjustments for PrimeVue */
-.app-dark {
+html.app-dark {
   color-scheme: dark;
+  --surface-ground: #121212;
+  --surface-section: #1e1e1e;
+  --surface-card: #1e1e1e;
+  --surface-overlay: #1e1e1e;
+  --surface-border: #383838;
+  --surface-hover: rgba(255, 255, 255, 0.04);
+  --text-color: rgba(255, 255, 255, 0.87);
+  --text-color-secondary: rgba(255, 255, 255, 0.6);
+  --p-text-color: rgba(255, 255, 255, 0.87);
+  --p-text-secondary-color: rgba(255, 255, 255, 0.6);
+  --p-surface-card: #1e1e1e;
+  --p-surface-border: #383838;
+  --p-surface-ground: #121212;
+  --p-surface-hover: rgba(255, 255, 255, 0.04);
+}
+
+html.app-dark body {
+  background-color: #121212;
+  color: rgba(255, 255, 255, 0.87);
+}
+
+html.app-dark .app-header {
+  background-color: #1e1e1e;
+  border-color: #383838;
+}
+
+html.app-dark .page-title {
+  color: rgba(255, 255, 255, 0.87);
+}
+
+html.app-dark .user-name {
+  color: rgba(255, 255, 255, 0.87);
+}
+
+html.app-dark .p-component {
+  color: rgba(255, 255, 255, 0.87);
+}
+
+html.app-dark .p-inputtext {
+  background: #2d2d2d;
+  border-color: #383838;
+  color: rgba(255, 255, 255, 0.87);
+}
+
+html.app-dark .p-button.p-button-text {
+  color: rgba(255, 255, 255, 0.87);
+}
+
+html.app-dark .p-menu {
+  background: #1e1e1e;
+  border-color: #383838;
+}
+
+html.app-dark .p-menuitem-text,
+html.app-dark .p-menuitem-icon {
+  color: rgba(255, 255, 255, 0.87);
+}
+
+html.app-dark .p-datatable .p-datatable-thead > tr > th,
+html.app-dark .p-datatable .p-datatable-tbody > tr {
+  background: #1e1e1e;
+  color: rgba(255, 255, 255, 0.87);
+  border-color: #383838;
+}
+
+html.app-dark .p-datatable .p-datatable-tbody > tr:nth-child(even) {
+  background: #252525;
+}
+
+html.app-dark .p-card {
+  background: #1e1e1e;
+  color: rgba(255, 255, 255, 0.87);
+}
+
+html.app-dark .p-dialog .p-dialog-header,
+html.app-dark .p-dialog .p-dialog-content,
+html.app-dark .p-dialog .p-dialog-footer {
+  background: #1e1e1e;
+  color: rgba(255, 255, 255, 0.87);
+  border-color: #383838;
 }
 </style>

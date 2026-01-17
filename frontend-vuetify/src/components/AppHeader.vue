@@ -1,5 +1,5 @@
 <template>
-  <v-app-bar class="app-header" color="white" elevation="0" height="64">
+  <v-app-bar class="app-header" color="surface" elevation="0" height="64">
     <!-- Menu Toggle Button -->
     <v-app-bar-nav-icon
       class="ml-1"
@@ -28,6 +28,31 @@
 
     <!-- Action Buttons -->
     <div class="d-flex align-center mr-2">
+      <!-- Theme Toggle -->
+      <v-menu offset-y>
+        <template #activator="{ props }">
+          <v-btn
+            v-bind="props"
+            icon
+            variant="text"
+            size="small"
+          >
+            <v-icon>{{ themeIcon }}</v-icon>
+          </v-btn>
+        </template>
+        <v-list density="compact" nav min-width="160">
+          <v-list-item
+            v-for="option in themeOptions"
+            :key="option.value"
+            :prepend-icon="option.icon"
+            :active="themeStore.themeMode === option.value"
+            @click="themeStore.setTheme(option.value)"
+          >
+            <v-list-item-title>{{ option.label }}</v-list-item-title>
+          </v-list-item>
+        </v-list>
+      </v-menu>
+
       <!-- Notifications -->
       <NotificationMenu />
 
@@ -95,6 +120,7 @@
   import NotificationMenu from '@/components/common/NotificationMenu.vue'
   import { useConfirmDialog } from '@/composables/useConfirmDialog'
   import { useAuthStore } from '@/stores/auth'
+  import { useThemeStore } from '@/stores/theme'
 
   defineEmits(['toggle-sidebar'])
 
@@ -102,7 +128,23 @@
   const display = useDisplay()
   const confirmDialog = useConfirmDialog()
   const authStore = useAuthStore()
+  const themeStore = useThemeStore()
   const { user } = storeToRefs(authStore)
+
+  const themeOptions = [
+    { value: 'light', label: 'Light', icon: 'mdi-white-balance-sunny' },
+    { value: 'dark', label: 'Dark', icon: 'mdi-weather-night' },
+    { value: 'system', label: 'System', icon: 'mdi-laptop' },
+  ]
+
+  const themeIcon = computed(() => {
+    const icons = {
+      light: 'mdi-white-balance-sunny',
+      dark: 'mdi-weather-night',
+      system: 'mdi-laptop',
+    }
+    return icons[themeStore.themeMode] || 'mdi-laptop'
+  })
 
   const pageTitle = computed(() => {
     // Get title from route meta or generate from route name

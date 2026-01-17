@@ -1,11 +1,13 @@
 package apptemplate.infrastructure.persistence.entities;
 
+import apptemplate.infrastructure.persistence.listeners.AuditEntityListener;
 import jakarta.persistence.*;
 import lombok.*;
 import java.time.LocalDateTime;
 
 @Entity
 @Table(name = "departments")
+@EntityListeners(AuditEntityListener.class)
 @Getter
 @Setter
 @NoArgsConstructor
