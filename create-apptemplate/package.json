@@ -1,6 +1,6 @@
 {
   "name": "@abuhannaa/create-apptemplate",
-  "version": "1.0.7",
+  "version": "1.0.8",
   "description": "Create fullstack apps with .NET/Spring/NestJS + Vue (Vuetify/PrimeVue)",
   "author": "abuhanna",
   "license": "MIT",
