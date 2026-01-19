@@ -1,30 +1,11 @@
-import { ref, computed, watch, onMounted } from 'vue'
+import { ref, computed, watch } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
-import type { LocationQueryValue } from 'vue-router'
 import {
-  type SortDirection,
-  type PaginationParams,
-  type PaginationMeta,
   DEFAULT_PAGE,
   DEFAULT_PAGE_SIZE,
   DEFAULT_SORT_DIR,
   PAGE_SIZE_OPTIONS
 } from '@/types/pagination'
-
-export interface UsePaginationOptions {
-  /** Default page number (default: 1) */
-  defaultPage?: number
-  /** Default page size (default: 10) */
-  defaultPageSize?: number
-  /** Default sort field */
-  defaultSortBy?: string
-  /** Default sort direction (default: 'asc') */
-  defaultSortDir?: SortDirection
-  /** Sync pagination state with URL query params (default: true) */
-  syncWithUrl?: boolean
-  /** Query param prefix for URL sync (useful when multiple paginated lists on same page) */
-  urlPrefix?: string
-}
 
 /**
  * Pagination composable
@@ -32,11 +13,16 @@ export interface UsePaginationOptions {
  * Manages pagination state with optional URL query parameter synchronization
  * for bookmarkable pages.
  *
- * @param options - Configuration options
- * @returns Pagination state and control functions
+ * @param {Object} options - Configuration options
+ * @param {number} options.defaultPage - Default page number (default: 1)
+ * @param {number} options.defaultPageSize - Default page size (default: 10)
+ * @param {string} options.defaultSortBy - Default sort field
+ * @param {'asc'|'desc'} options.defaultSortDir - Default sort direction (default: 'asc')
+ * @param {boolean} options.syncWithUrl - Sync pagination state with URL query params (default: true)
+ * @param {string} options.urlPrefix - Query param prefix for URL sync
+ * @returns {Object} Pagination state and control functions
  *
  * @example
- * ```ts
  * const {
  *   page,
  *   pageSize,
@@ -57,19 +43,8 @@ export interface UsePaginationOptions {
  *   defaultSortBy: 'createdAt',
  *   defaultSortDir: 'desc'
  * })
- *
- * // Fetch data with pagination params
- * const fetchData = async () => {
- *   const result = await api.getUsers(paginationParams.value)
- *   users.value = result.items
- *   setTotalItems(result.pagination.totalItems)
- * }
- *
- * // Watch for pagination changes
- * watch([page, pageSize, sortBy, sortDir], fetchData)
- * ```
  */
-export function usePagination(options: UsePaginationOptions = {}) {
+export function usePagination(options = {}) {
   const {
     defaultPage = DEFAULT_PAGE,
     defaultPageSize = DEFAULT_PAGE_SIZE,
@@ -83,15 +58,12 @@ export function usePagination(options: UsePaginationOptions = {}) {
   const router = useRouter()
 
   // Helper to get prefixed param name
-  const getParamName = (name: string): string => {
+  const getParamName = (name) => {
     return urlPrefix ? `${urlPrefix}_${name}` : name
   }
 
   // Helper to parse query param as number
-  const parseQueryNumber = (
-    value: LocationQueryValue | LocationQueryValue[],
-    defaultValue: number
-  ): number => {
+  const parseQueryNumber = (value, defaultValue) => {
     if (Array.isArray(value)) {
       value = value[0]
     }
@@ -101,10 +73,7 @@ export function usePagination(options: UsePaginationOptions = {}) {
   }
 
   // Helper to parse query param as string
-  const parseQueryString = (
-    value: LocationQueryValue | LocationQueryValue[],
-    defaultValue: string
-  ): string => {
+  const parseQueryString = (value, defaultValue) => {
     if (Array.isArray(value)) {
       value = value[0]
     }
@@ -112,10 +81,7 @@ export function usePagination(options: UsePaginationOptions = {}) {
   }
 
   // Helper to parse sort direction
-  const parseQuerySortDir = (
-    value: LocationQueryValue | LocationQueryValue[],
-    defaultValue: SortDirection
-  ): SortDirection => {
+  const parseQuerySortDir = (value, defaultValue) => {
     if (Array.isArray(value)) {
       value = value[0]
     }
@@ -126,14 +92,14 @@ export function usePagination(options: UsePaginationOptions = {}) {
   }
 
   // Initialize state from URL if syncWithUrl is enabled
-  const getInitialPage = (): number => {
+  const getInitialPage = () => {
     if (syncWithUrl) {
       return parseQueryNumber(route.query[getParamName('page')], defaultPage)
     }
     return defaultPage
   }
 
-  const getInitialPageSize = (): number => {
+  const getInitialPageSize = () => {
     if (syncWithUrl) {
       const size = parseQueryNumber(route.query[getParamName('pageSize')], defaultPageSize)
       // Validate page size is in allowed options
@@ -142,14 +108,14 @@ export function usePagination(options: UsePaginationOptions = {}) {
     return defaultPageSize
   }
 
-  const getInitialSortBy = (): string => {
+  const getInitialSortBy = () => {
     if (syncWithUrl) {
       return parseQueryString(route.query[getParamName('sortBy')], defaultSortBy)
     }
     return defaultSortBy
   }
 
-  const getInitialSortDir = (): SortDirection => {
+  const getInitialSortDir = () => {
     if (syncWithUrl) {
       return parseQuerySortDir(route.query[getParamName('sortDir')], defaultSortDir)
     }
@@ -160,7 +126,7 @@ export function usePagination(options: UsePaginationOptions = {}) {
   const page = ref(getInitialPage())
   const pageSize = ref(getInitialPageSize())
   const sortBy = ref(getInitialSortBy())
-  const sortDir = ref<SortDirection>(getInitialSortDir())
+  const sortDir = ref(getInitialSortDir())
   const totalItems = ref(0)
 
   // Computed properties
@@ -172,14 +138,14 @@ export function usePagination(options: UsePaginationOptions = {}) {
   const hasNext = computed(() => page.value < totalPages.value)
   const hasPrevious = computed(() => page.value > 1)
 
-  const paginationParams = computed<PaginationParams>(() => ({
+  const paginationParams = computed(() => ({
     page: page.value,
     pageSize: pageSize.value,
     ...(sortBy.value && { sortBy: sortBy.value }),
     ...(sortBy.value && { sortDir: sortDir.value })
   }))
 
-  const paginationMeta = computed<PaginationMeta>(() => ({
+  const paginationMeta = computed(() => ({
     page: page.value,
     pageSize: pageSize.value,
     totalItems: totalItems.value,
@@ -223,7 +189,7 @@ export function usePagination(options: UsePaginationOptions = {}) {
   }
 
   // Control functions
-  const setPage = (newPage: number) => {
+  const setPage = (newPage) => {
     if (newPage < 1) {
       page.value = 1
     } else if (totalPages.value > 0 && newPage > totalPages.value) {
@@ -233,7 +199,7 @@ export function usePagination(options: UsePaginationOptions = {}) {
     }
   }
 
-  const setPageSize = (newPageSize: number) => {
+  const setPageSize = (newPageSize) => {
     if (!PAGE_SIZE_OPTIONS.includes(newPageSize)) {
       console.warn(`Invalid page size: ${newPageSize}. Using default.`)
       pageSize.value = defaultPageSize
@@ -244,7 +210,7 @@ export function usePagination(options: UsePaginationOptions = {}) {
     page.value = 1
   }
 
-  const setSort = (newSortBy: string, newSortDir?: SortDirection) => {
+  const setSort = (newSortBy, newSortDir) => {
     // If clicking the same column, toggle direction
     if (sortBy.value === newSortBy && newSortDir === undefined) {
       sortDir.value = sortDir.value === 'asc' ? 'desc' : 'asc'
@@ -256,7 +222,7 @@ export function usePagination(options: UsePaginationOptions = {}) {
     page.value = 1
   }
 
-  const setTotalItems = (total: number) => {
+  const setTotalItems = (total) => {
     totalItems.value = total
     // Adjust page if current page exceeds total pages
     if (totalPages.value > 0 && page.value > totalPages.value) {

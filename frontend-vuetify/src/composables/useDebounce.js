@@ -1,4 +1,4 @@
-import { ref, watch, type Ref } from 'vue'
+import { ref, watch } from 'vue'
 
 /**
  * Debounce composable
@@ -6,12 +6,11 @@ import { ref, watch, type Ref } from 'vue'
  * Creates a debounced version of a reactive value that only updates
  * after the specified delay has passed without changes.
  *
- * @param value - The reactive value to debounce
- * @param delay - Debounce delay in milliseconds (default: 300ms)
- * @returns A ref containing the debounced value
+ * @param {import('vue').Ref} value - The reactive value to debounce
+ * @param {number} delay - Debounce delay in milliseconds (default: 300ms)
+ * @returns {import('vue').Ref} A ref containing the debounced value
  *
  * @example
- * ```ts
  * const searchQuery = ref('')
  * const debouncedSearch = useDebounce(searchQuery, 500)
  *
@@ -20,11 +19,10 @@ import { ref, watch, type Ref } from 'vue'
  * watch(debouncedSearch, (value) => {
  *   fetchResults(value)
  * })
- * ```
  */
-export function useDebounce<T>(value: Ref<T>, delay: number = 300): Ref<T> {
-  const debouncedValue = ref(value.value) as Ref<T>
-  let timeoutId: ReturnType<typeof setTimeout> | null = null
+export function useDebounce(value, delay = 300) {
+  const debouncedValue = ref(value.value)
+  let timeoutId = null
 
   watch(value, (newValue) => {
     if (timeoutId) {
@@ -46,27 +44,22 @@ export function useDebounce<T>(value: Ref<T>, delay: number = 300): Ref<T> {
  * Creates a debounced version of a function that only executes
  * after the specified delay has passed without being called again.
  *
- * @param fn - The function to debounce
- * @param delay - Debounce delay in milliseconds (default: 300ms)
- * @returns A debounced version of the function
+ * @param {Function} fn - The function to debounce
+ * @param {number} delay - Debounce delay in milliseconds (default: 300ms)
+ * @returns {Function} A debounced version of the function
  *
  * @example
- * ```ts
- * const handleSearch = useDebounceFn((query: string) => {
+ * const handleSearch = useDebounceFn((query) => {
  *   fetchResults(query)
  * }, 500)
  *
  * // Call normally - will be debounced
  * handleSearch('test')
- * ```
  */
-export function useDebounceFn<T extends (...args: unknown[]) => unknown>(
-  fn: T,
-  delay: number = 300
-): (...args: Parameters<T>) => void {
-  let timeoutId: ReturnType<typeof setTimeout> | null = null
+export function useDebounceFn(fn, delay = 300) {
+  let timeoutId = null
 
-  return (...args: Parameters<T>) => {
+  return (...args) => {
     if (timeoutId) {
       clearTimeout(timeoutId)
     }
