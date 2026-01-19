@@ -1,38 +1,47 @@
 <template>
   <div class="files-page">
-    <div class="card">
-      <div class="flex justify-content-between align-items-center mb-4">
-        <h2 class="m-0">File Management</h2>
-        <Button label="Upload File" icon="pi pi-upload" @click="showUploadDialog = true" />
-      </div>
-
-      <DataTable :value="files" :loading="loading" responsiveLayout="scroll" stripedRows>
-        <Column field="originalFileName" header="Name" />
-        <Column field="contentType" header="Type" />
-        <Column header="Size">
-          <template #body="{ data }">
-            {{ formatFileSize(data.fileSize) }}
+    <Card>
+      <template #content>
+        <DataTable :value="files" :loading="loading" responsiveLayout="scroll" stripedRows>
+          <template #header>
+            <div class="flex flex-wrap align-items-center justify-content-between gap-2">
+              <span class="text-xl font-bold">Files</span>
+              <Button label="Upload File" icon="pi pi-upload" @click="showUploadDialog = true" />
+            </div>
           </template>
-        </Column>
-        <Column field="category" header="Category" />
-        <Column header="Public">
-          <template #body="{ data }">
-            <Tag :value="data.isPublic ? 'Public' : 'Private'" :severity="data.isPublic ? 'success' : 'secondary'" />
+          <Column field="originalFileName" header="Name" />
+          <Column field="contentType" header="Type" />
+          <Column header="Size">
+            <template #body="{ data }">
+              {{ formatFileSize(data.fileSize) }}
+            </template>
+          </Column>
+          <Column field="category" header="Category" />
+          <Column header="Public">
+            <template #body="{ data }">
+              <Tag :value="data.isPublic ? 'Public' : 'Private'" :severity="data.isPublic ? 'success' : 'secondary'" />
+            </template>
+          </Column>
+          <Column header="Created">
+            <template #body="{ data }">
+              {{ formatDate(data.createdAt) }}
+            </template>
+          </Column>
+          <Column header="Actions">
+            <template #body="{ data }">
+              <Button icon="pi pi-download" text rounded @click="downloadFile(data)" />
+              <Button icon="pi pi-trash" text rounded severity="danger" @click="confirmDelete(data)" />
+            </template>
+          </Column>
+          <template #empty>
+            <div class="flex flex-column align-items-center py-5 text-color-secondary">
+              <i class="pi pi-file text-5xl mb-3"></i>
+              <span>No files found</span>
+            </div>
           </template>
-        </Column>
-        <Column header="Created">
-          <template #body="{ data }">
-            {{ formatDate(data.createdAt) }}
-          </template>
-        </Column>
-        <Column header="Actions">
-          <template #body="{ data }">
-            <Button icon="pi pi-download" text rounded @click="downloadFile(data)" />
-            <Button icon="pi pi-trash" text rounded severity="danger" @click="confirmDelete(data)" />
-          </template>
-        </Column>
-      </DataTable>
-    </div>
+        </DataTable>
+      </template>
+    </Card>
 
     <!-- Upload Dialog -->
     <Dialog v-model:visible="showUploadDialog" header="Upload File" :modal="true" :style="{ width: '450px' }">
@@ -72,6 +81,7 @@ import { useConfirm } from 'primevue/useconfirm'
 import { useNotificationStore } from '@/stores/notification'
 import DataTable from 'primevue/datatable'
 import Column from 'primevue/column'
+import Card from 'primevue/card'
 import Button from 'primevue/button'
 import Dialog from 'primevue/dialog'
 import InputText from 'primevue/inputtext'
@@ -93,7 +103,8 @@ const uploadForm = ref({ description: '', category: '', isPublic: false })
 async function loadFiles() {
   loading.value = true
   try {
-    files.value = await fileService.getFiles()
+    const response = await fileService.getFiles()
+    files.value = response.data || []
   } catch (error) {
     notificationStore.showError('Failed to load files')
   } finally {

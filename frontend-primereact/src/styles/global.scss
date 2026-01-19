@@ -34,7 +34,7 @@ body {
 .layout-main {
   flex: 1;
   padding: 1.5rem;
-  background-color: #f8f9fa;
+  background-color: var(--surface-ground);
 }
 
 .card {
@@ -186,16 +186,7 @@ body {
 
 // Dark mode overrides
 html.app-dark {
-  --surface-ground: #121212;
-  --surface-section: #1e1e1e;
-  --surface-card: #1e1e1e;
-  --surface-overlay: #1e1e1e;
-  --surface-border: #383838;
-  --surface-hover: rgba(255, 255, 255, 0.04);
-  --text-color: rgba(255, 255, 255, 0.87);
-  --text-color-secondary: rgba(255, 255, 255, 0.6);
-  --primary-color: #90caf9;
-  --primary-color-text: #121212;
+  // PrimeReact themes handle variables, overrides removed to prevent conflicts
 
   .layout-main {
     background-color: #121212;

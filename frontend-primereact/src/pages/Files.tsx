@@ -33,8 +33,8 @@ export default function Files() {
   const loadFiles = useCallback(async () => {
     setLoading(true)
     try {
-      const data = await fileService.getFiles()
-      setFiles(data || [])
+      const response: any = await fileService.getFiles()
+      setFiles(response.data || [])
     } catch {
       showError('Failed to load files')
     } finally {

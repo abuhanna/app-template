@@ -70,7 +70,7 @@ export function DefaultLayout({ children }: DefaultLayoutProps) {
           sx={{
             flexGrow: 1,
             p: 3,
-            backgroundColor: 'grey.100',
+            backgroundColor: 'background.default',
           }}
         >
           <Breadcrumbs />

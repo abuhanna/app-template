@@ -36,6 +36,11 @@ export const useThemeStore = create<ThemeState>()(
 
       applyTheme: () => {
         const isDark = get().isDark()
+        const themeLink = document.getElementById('theme-link') as HTMLLinkElement
+        if (themeLink) {
+          themeLink.href = isDark ? '/themes/lara-dark-blue/theme.css' : '/themes/lara-light-blue/theme.css'
+        }
+
         if (isDark) {
           document.documentElement.classList.add('app-dark')
         } else {

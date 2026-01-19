@@ -25,7 +25,8 @@ async function loadAuditLogs() {
     const params = {}
     if (entityFilter.value) params.entityName = entityFilter.value
     if (actionFilter.value) params.action = actionFilter.value
-    auditLogs.value = await getAuditLogs(params)
+    const response = await getAuditLogs(params)
+    auditLogs.value = response.items || []
   } catch {
     toast.add({ severity: 'error', summary: 'Error', detail: 'Failed to load audit logs', life: 3000 })
   } finally {
@@ -83,41 +84,7 @@ onMounted(() => {
 <template>
   <div class="p-4">
     <Card>
-      <template #title>
-        <div class="flex align-items-center justify-content-between">
-          <div class="flex align-items-center gap-2">
-            <i class="pi pi-history text-xl"></i>
-            <span>Audit Logs</span>
-          </div>
-          <Button icon="pi pi-refresh" text rounded @click="loadAuditLogs" :loading="loading" />
-        </div>
-      </template>
-
       <template #content>
-        <!-- Filters -->
-        <div class="flex flex-wrap gap-3 mb-4">
-          <Dropdown
-            v-model="entityFilter"
-            :options="entityOptions"
-            placeholder="Filter by Entity"
-            showClear
-            class="w-12rem"
-          />
-          <Dropdown
-            v-model="actionFilter"
-            :options="actionOptions"
-            placeholder="Filter by Action"
-            showClear
-            class="w-12rem"
-          />
-          <IconField>
-            <InputIcon class="pi pi-search" />
-            <InputText v-model="filters['global'].value" placeholder="Search..." />
-          </IconField>
-          <Button label="Apply" icon="pi pi-filter" @click="loadAuditLogs" />
-        </div>
-
-        <!-- Data Table -->
         <DataTable
           :value="auditLogs"
           :loading="loading"
@@ -129,6 +96,34 @@ onMounted(() => {
           stripedRows
           dataKey="id"
         >
+          <template #header>
+            <div class="flex flex-wrap align-items-center justify-content-between gap-3 mb-4">
+              <span class="text-xl font-bold">Audit Logs</span>
+              <div class="flex flex-wrap gap-2">
+                 <Select
+                  v-model="entityFilter"
+                  :options="entityOptions"
+                  placeholder="Filter by Entity"
+                  showClear
+                  class="w-12rem"
+                />
+                <Select
+                  v-model="actionFilter"
+                  :options="actionOptions"
+                  placeholder="Filter by Action"
+                  showClear
+                  class="w-12rem"
+                />
+                <IconField>
+                  <InputIcon class="pi pi-search" />
+                  <InputText v-model="filters['global'].value" placeholder="Search..." />
+                </IconField>
+                <Button label="Apply" icon="pi pi-filter" @click="loadAuditLogs" text />
+                 <Button icon="pi pi-refresh" text rounded @click="loadAuditLogs" :loading="loading" />
+              </div>
+            </div>
+          </template>
+
           <Column field="entityName" header="Entity" sortable style="min-width: 120px" />
           <Column field="entityId" header="Entity ID" sortable style="min-width: 100px" />
           <Column field="action" header="Action" sortable style="min-width: 100px">

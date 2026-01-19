@@ -1,4 +1,5 @@
 import axios, { AxiosError, InternalAxiosRequestConfig } from 'axios'
+import { router } from '@/router'
 import { useAuthStore } from '@/stores/authStore'
 import { useNotificationStore } from '@/stores/notificationStore'
 
@@ -108,13 +109,19 @@ api.interceptors.response.use(
         } else {
           processQueue(error, null)
           useAuthStore.getState().clearAuth()
-          window.location.href = '/login'
+          router.navigate('/login', {
+            state: { from: { pathname: window.location.pathname + window.location.search } },
+            replace: true,
+          })
           return Promise.reject(error)
         }
       } catch (refreshError) {
         processQueue(refreshError, null)
         useAuthStore.getState().clearAuth()
-        window.location.href = '/login'
+        router.navigate('/login', {
+          state: { from: { pathname: window.location.pathname + window.location.search } },
+          replace: true,
+        })
         return Promise.reject(refreshError)
       } finally {
         isRefreshing = false

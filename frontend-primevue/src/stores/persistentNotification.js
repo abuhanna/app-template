@@ -97,7 +97,7 @@ export const usePersistentNotificationStore = defineStore('persistentNotificatio
         ...filters,
       }
       const response = await notificationApi.getMyNotifications(params)
-      notifications.value = response.data
+      notifications.value = response.data.items || []
     } catch (error) {
       // Silent fail for notifications
       console.error('Failed to fetch notifications', error)
