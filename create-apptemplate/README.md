@@ -1,164 +1,272 @@
 # @abuhannaa/create-apptemplate
 
-Create fullstack applications with .NET/Spring/NestJS backends and Vue (Vuetify/PrimeVue) frontends.
+A CLI tool to scaffold production-ready fullstack applications with your choice of backend and frontend frameworks.
 
 ## Quick Start
 
 ```bash
-# Using npm
 npm create @abuhannaa/apptemplate@latest
-
-# Using npx
-npx @abuhannaa/create-apptemplate my-app
-
-# Using pnpm
-pnpm create @abuhannaa/apptemplate
-
-# Using yarn
-yarn create @abuhannaa/apptemplate
-
-# Using bun
-bun create @abuhannaa/apptemplate
 ```
 
-## Features
+That's it! The interactive wizard will guide you through the setup.
 
-- **Multiple Backend Options**
-  - .NET 8 (Clean Architecture, CQRS, Entity Framework)
-  - Spring Boot 3 (Clean Architecture, Java 21)
-  - NestJS (Clean Architecture, TypeScript)
+## Stack Options
 
-- **Multiple Frontend Options**
-  - Vuetify (Material Design 3)
-  - PrimeVue (Aura Theme)
+| Backend | Frontend | UI Libraries |
+|---------|----------|--------------|
+| .NET 8 | Vue 3 | Vuetify (Material Design 3) |
+| Spring Boot 3 | React 18 | PrimeVue |
+| NestJS | | MUI (Material UI) |
+| | | PrimeReact |
 
-- **Project Types**
-  - Fullstack (Backend + Frontend + Docker)
-  - Backend only (API service)
-  - Frontend only (SPA)
+Mix and match any backend with any frontend to create your ideal stack.
 
-- **Production Ready**
-  - Docker & Docker Compose setup
-  - CI/CD with GitHub Actions
-  - Environment configuration
-  - JWT Authentication
-  - Real-time notifications (SignalR/WebSocket)
+## Installation Methods
+
+```bash
+# npm
+npm create @abuhannaa/apptemplate@latest
+
+# npx
+npx @abuhannaa/create-apptemplate my-app
+
+# pnpm
+pnpm create @abuhannaa/apptemplate
+
+# yarn
+yarn create @abuhannaa/apptemplate
+
+# bun
+bun create @abuhannaa/apptemplate
+```
 
 ## Usage
 
 ### Interactive Mode (Recommended)
 
-Simply run the command without arguments:
-
 ```bash
 npm create @abuhannaa/apptemplate@latest
 ```
 
-The wizard will guide you through:
+The wizard will prompt you for:
 
-1. **Project location** - Where to create your project
+1. **Project location** - Directory name for your project
 2. **Project type** - Fullstack, Backend only, or Frontend only
 3. **Backend framework** - .NET 8, Spring Boot 3, or NestJS
-4. **UI library** - Vuetify or PrimeVue
-5. **Project name** - For namespaces (e.g., MyCompany.MyApp)
-6. **Install dependencies** - Whether to install now
+4. **Frontend framework** - Vue 3 or React 18
+5. **UI library** - Vuetify, PrimeVue, MUI, or PrimeReact
+6. **Project name** - Namespace for .NET/Spring (e.g., `MyCompany.MyApp`)
+7. **Install dependencies** - Run install automatically
 
-### Non-Interactive Mode
+### Command Line Mode
 
-Specify all options via command line:
+Skip the prompts by providing options directly:
 
 ```bash
-# Fullstack project with .NET backend and Vuetify frontend
-npx @abuhannaa/create-apptemplate my-app -b dotnet -u vuetify -n "MyCompany.MyApp" -i
+# Fullstack with .NET + Vuetify
+npm create @abuhannaa/apptemplate@latest my-app -b dotnet -u vuetify -n "MyCompany.MyApp" -i
 
-# Backend-only project with Spring Boot
-npx @abuhannaa/create-apptemplate my-api -t backend -b spring -n "MyCompany.MyApi"
+# Fullstack with Spring Boot + React MUI
+npm create @abuhannaa/apptemplate@latest my-app -b spring -f react -u mui -n "com.mycompany.myapp" -i
 
-# Frontend-only project with PrimeVue
-npx @abuhannaa/create-apptemplate my-spa -t frontend -u primevue
+# Fullstack with NestJS + PrimeVue
+npm create @abuhannaa/apptemplate@latest my-app -b nestjs -u primevue -i
+
+# Backend only (NestJS)
+npm create @abuhannaa/apptemplate@latest my-api -t backend -b nestjs -i
+
+# Frontend only (React + PrimeReact)
+npm create @abuhannaa/apptemplate@latest my-spa -t frontend -f react -u primereact -i
+
+# Place files in root (no subfolder)
+npm create @abuhannaa/apptemplate@latest my-api -t backend -b nestjs --root
 ```
 
-## Options
+## CLI Options
 
-| Option | Alias | Description | Values |
-|--------|-------|-------------|--------|
-| `--type` | `-t` | Project type | `fullstack`, `backend`, `frontend` |
-| `--backend` | `-b` | Backend framework | `dotnet`, `spring`, `nestjs` |
-| `--ui` | `-u` | UI library | `vuetify`, `primevue` |
-| `--name` | `-n` | Project name (namespaces) | `Company.Project` format |
-| `--install` | `-i` | Install dependencies | - |
-| `--help` | `-h` | Show help | - |
-| `--version` | `-v` | Show version | - |
+| Option | Alias | Description | Values | Default |
+|--------|-------|-------------|--------|---------|
+| `--type` | `-t` | Project type | `fullstack`, `backend`, `frontend` | `fullstack` |
+| `--backend` | `-b` | Backend framework | `dotnet`, `spring`, `nestjs` | - |
+| `--framework` | `-f` | Frontend framework | `vue`, `react` | `vue` |
+| `--ui` | `-u` | UI library | `vuetify`, `primevue`, `mui`, `primereact` | Based on framework |
+| `--name` | `-n` | Project namespace | `Company.Project` format | - |
+| `--root` | `-r` | Place files in project root | - | `false` |
+| `--install` | `-i` | Install dependencies | - | `false` |
+| `--help` | `-h` | Show help | - | - |
+| `--version` | `-v` | Show version | - | - |
 
-## After Creation
+### UI Library Compatibility
+
+| Frontend | Compatible UI Libraries |
+|----------|------------------------|
+| Vue | `vuetify`, `primevue` |
+| React | `mui`, `primereact` |
+
+## After Project Creation
+
+### Using Docker (Recommended)
 
 ```bash
-# Navigate to project
 cd my-app
-
-# Setup environment
 cp .env.example .env
-
-# Start with Docker (recommended)
 docker compose up -d --build
+```
 
-# Or run manually:
-# Backend (.NET)
-cd backend-dotnet/src/Presentation/App.Template.WebAPI && dotnet run
+### Running Manually
 
-# Frontend
-cd frontend-vuetify && npm run dev
+**Backend:**
+```bash
+# .NET
+cd backend/src/Presentation/*.WebAPI && dotnet run
+
+# Spring Boot
+cd backend && ./mvnw spring-boot:run
+
+# NestJS
+cd backend && npm run start:dev
+```
+
+**Frontend:**
+```bash
+cd frontend && npm run dev
 ```
 
 ### Access Points
 
-- **Frontend**: http://localhost
-- **Backend API**: http://localhost:5100
-- **Swagger UI**: http://localhost:5100/swagger
+| Service | URL |
+|---------|-----|
+| Frontend | http://localhost:3000 (dev) / http://localhost (Docker) |
+| Backend API | http://localhost:5100 |
+| Swagger UI | http://localhost:5100/swagger |
 
-### Default Login
+### Default Credentials
 
-- **Username**: `admin`
-- **Password**: `Admin@123`
+```
+Username: admin
+Password: Admin@123
+```
 
 ## Project Structure
 
+### Fullstack Project
+
 ```
 my-app/
-├── backend-dotnet/          # .NET 8 API (if selected)
+├── backend/                 # Backend API
 │   ├── src/
 │   │   ├── Core/            # Domain & Application layers
-│   │   ├── Infrastructure/  # EF Core, Services
-│   │   └── Presentation/    # Controllers, Middleware
+│   │   ├── Infrastructure/  # Database, External services
+│   │   └── Presentation/    # Controllers, API endpoints
 │   └── tests/
-├── frontend-vuetify/        # Vue 3 + Vuetify (if selected)
+├── frontend/                # Frontend SPA
 │   ├── src/
-│   │   ├── components/      # Vue components
-│   │   ├── pages/           # File-based routing
-│   │   ├── stores/          # Pinia state
+│   │   ├── components/      # Reusable components
+│   │   ├── pages/           # Route pages
+│   │   ├── stores/          # State management
 │   │   └── services/        # API services
 │   └── ...
 ├── docker/                  # Docker configurations
-├── scripts/                 # Utility scripts
-├── Dockerfile               # Unified container build
-├── docker-compose.yml       # Development setup
+├── docker-compose.yml       # Development environment
 └── .env.example             # Environment template
 ```
 
+### Backend Only (`-t backend`)
+
+```
+my-api/
+├── backend/                 # Or root with --root flag
+│   ├── src/
+│   └── tests/
+└── ...
+```
+
+### Frontend Only (`-t frontend`)
+
+```
+my-spa/
+├── frontend/                # Or root with --root flag
+│   ├── src/
+│   └── ...
+└── ...
+```
+
+## Features Included
+
+### Backend Features
+
+- **Clean Architecture** - Domain, Application, Infrastructure, Presentation layers
+- **Authentication** - JWT with refresh token rotation
+- **Authorization** - Role-based access control
+- **Database** - PostgreSQL with migrations
+- **Real-time** - SignalR (.NET) / WebSocket notifications
+- **File Upload** - Multi-file upload with validation
+- **Audit Logging** - Track all data changes
+- **Health Checks** - Liveness and readiness endpoints
+- **API Documentation** - Swagger/OpenAPI with auth support
+- **Data Export** - CSV, Excel, PDF export
+- **Pagination** - Server-side pagination with sorting and filtering
+
+### Frontend Features
+
+- **Authentication** - Login, logout, token refresh
+- **Responsive Layout** - Sidebar, header, breadcrumbs
+- **Dark Mode** - Theme switching support
+- **Data Tables** - Server-side pagination, sorting, filtering
+- **Form Validation** - Client-side validation
+- **Toast Notifications** - Success, error, info messages
+- **Confirmation Dialogs** - For destructive actions
+- **File Management** - Upload, download, preview
+- **Internationalization** - i18n ready
+- **State Management** - Pinia (Vue) / Zustand (React)
+
+### DevOps Features
+
+- **Docker** - Multi-stage builds, docker-compose
+- **CI/CD** - GitHub Actions workflows
+- **Environment Config** - Validated environment variables
+- **Scripts** - Project renaming, database setup
+
 ## Requirements
 
-- **Node.js** 18.0.0 or higher
-- **Docker** (recommended for running the app)
-- **.NET 8 SDK** (for .NET backend development)
-- **Java 21** (for Spring backend development)
+| Tool | Version | Required For |
+|------|---------|--------------|
+| Node.js | 18+ | All projects |
+| Docker | Latest | Running with containers |
+| .NET SDK | 8.0+ | .NET backend development |
+| Java | 21+ | Spring Boot development |
 
-## Documentation
+## Example Stacks
 
-For detailed documentation, see:
+### Enterprise .NET Stack
+```bash
+npm create @abuhannaa/apptemplate@latest enterprise-app \
+  -b dotnet -f react -u mui -n "Contoso.Enterprise" -i
+```
 
-- [Backend Guide](https://github.com/abuhanna/app-template/blob/main/backend-dotnet/README.md)
-- [Frontend Guide](https://github.com/abuhanna/app-template/blob/main/frontend-vuetify/README.md)
-- [Deployment Guide](https://github.com/abuhanna/app-template/blob/main/DEPLOYMENT.md)
+### Startup Vue Stack
+```bash
+npm create @abuhannaa/apptemplate@latest startup-app \
+  -b nestjs -f vue -u primevue -i
+```
+
+### Microservice Backend
+```bash
+npm create @abuhannaa/apptemplate@latest user-service \
+  -t backend -b spring -n "com.mycompany.userservice" --root -i
+```
+
+### Admin Dashboard
+```bash
+npm create @abuhannaa/apptemplate@latest admin-dashboard \
+  -t frontend -f react -u primereact -i
+```
+
+## Links
+
+- [GitHub Repository](https://github.com/abuhanna/app-template)
+- [Report Issues](https://github.com/abuhanna/app-template/issues)
+- [NPM Package](https://www.npmjs.com/package/@abuhannaa/create-apptemplate)
 
 ## License
 
