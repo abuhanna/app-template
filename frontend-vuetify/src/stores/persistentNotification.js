@@ -12,6 +12,23 @@ export const usePersistentNotificationStore = defineStore('persistentNotificatio
   const connection = ref(null)
 
   const unreadCount = computed(() => notifications.value.filter(n => !n.isRead).length)
+  const notificationPermission = ref(Notification.permission)
+
+  const checkPermission = () => {
+    notificationPermission.value = Notification.permission
+    return notificationPermission.value
+  }
+
+  const requestPermission = async () => {
+    try {
+      const permission = await Notification.requestPermission()
+      notificationPermission.value = permission
+      return permission
+    } catch (error) {
+      console.error('Error requesting notification permission:', error)
+      return 'denied'
+    }
+  }
 
   const handleNotification = (notification) => {
     // Add to list immediately
@@ -143,6 +160,9 @@ export const usePersistentNotificationStore = defineStore('persistentNotificatio
     notifications,
     loading,
     unreadCount,
+    notificationPermission,
+    checkPermission,
+    requestPermission,
     fetchNotifications,
     markAsRead,
     markAllAsRead,

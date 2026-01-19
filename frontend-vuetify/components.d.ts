@@ -15,9 +15,14 @@ declare module 'vue' {
     AppHeader: typeof import('./src/components/AppHeader.vue')['default']
     AppNotification: typeof import('./src/components/AppNotification.vue')['default']
     AppSidebar: typeof import('./src/components/AppSidebar.vue')['default']
+    Breadcrumbs: typeof import('./src/components/layout/Breadcrumbs.vue')['default']
     ConfirmDialog: typeof import('./src/components/ConfirmDialog.vue')['default']
+    DateRangePicker: typeof import('./src/components/common/DateRangePicker.vue')['default']
+    ExportButton: typeof import('./src/components/common/ExportButton.vue')['default']
     NotificationMenu: typeof import('./src/components/common/NotificationMenu.vue')['default']
+    PasswordStrength: typeof import('./src/components/common/PasswordStrength.vue')['default']
     RouterLink: typeof import('vue-router')['RouterLink']
     RouterView: typeof import('vue-router')['RouterView']
+    SearchFilterBar: typeof import('./src/components/common/SearchFilterBar.vue')['default']
   }
 }

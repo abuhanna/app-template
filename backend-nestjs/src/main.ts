@@ -8,6 +8,11 @@ import { validateEnvironment } from './common/validators/environment.validator';
 
 import { Logger } from 'nestjs-pino';
 
+import * as dotenv from 'dotenv';
+
+// Load environment variables before any validation
+dotenv.config();
+
 // Validate environment configuration early (fail-fast)
 validateEnvironment();
 

@@ -2,13 +2,13 @@ import { Module } from '@nestjs/common';
 import { TypeOrmModule } from '@nestjs/typeorm';
 import { ExportController } from './export.controller';
 import { ExportService } from './export.service';
-import { UserEntity } from '../user-management/infrastructure/entities/user.entity';
-import { DepartmentEntity } from '../department-management/infrastructure/entities/department.entity';
-import { AuditLogEntity } from '../audit-log/infrastructure/entities/audit-log.entity';
+import { UserOrmEntity } from '../user-management/infrastructure/persistence/user.orm-entity';
+import { DepartmentOrmEntity } from '../department-management/infrastructure/persistence/department.orm-entity';
+import { AuditLogOrmEntity } from '../audit-log/infrastructure/persistence/audit-log.orm-entity';
 
 @Module({
   imports: [
-    TypeOrmModule.forFeature([UserEntity, DepartmentEntity, AuditLogEntity]),
+    TypeOrmModule.forFeature([UserOrmEntity, DepartmentOrmEntity, AuditLogOrmEntity]),
   ],
   controllers: [ExportController],
   providers: [ExportService],

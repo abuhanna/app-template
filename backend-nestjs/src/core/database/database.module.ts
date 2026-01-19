@@ -5,6 +5,8 @@ import { UserOrmEntity } from '../../modules/user-management/infrastructure/pers
 import { DepartmentOrmEntity } from '../../modules/department-management/infrastructure/persistence/department.orm-entity';
 import { NotificationOrmEntity } from '../../modules/notification/infrastructure/persistence/notification.orm-entity';
 import { RefreshTokenOrmEntity } from '../../modules/auth/infrastructure/persistence/refresh-token.orm-entity';
+import { UploadedFileOrmEntity } from '../../modules/file-management/infrastructure/persistence/uploaded-file.orm-entity';
+import { AuditLogOrmEntity } from '../../modules/audit-log/infrastructure/persistence/audit-log.orm-entity';
 
 @Module({
   imports: [
@@ -23,6 +25,8 @@ import { RefreshTokenOrmEntity } from '../../modules/auth/infrastructure/persist
           DepartmentOrmEntity,
           NotificationOrmEntity,
           RefreshTokenOrmEntity,
+          UploadedFileOrmEntity,
+          AuditLogOrmEntity,
         ],
         migrations: [__dirname + '/migrations/*{.ts,.js}'],
         synchronize: configService.get<boolean>('DB_SYNCHRONIZE', false),

@@ -24,7 +24,7 @@ export class UploadedFileOrmEntity {
   description: string | null;
 
   @Index()
-  @Column({ nullable: true })
+  @Column({ type: 'varchar', nullable: true })
   category: string | null;
 
   @Column({ name: 'is_public', default: false })

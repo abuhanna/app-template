@@ -18,7 +18,17 @@ export const useThemeStore = defineStore('theme', () => {
 
   // Apply theme to Vuetify
   const applyTheme = () => {
-    vuetifyTheme.global.name.value = isDark.value ? 'dark' : 'light'
+    const mode = isDark.value ? 'dark' : 'light'
+    /*
+      [Vuetify UPGRADE] 'theme.global.name.value = ...' is deprecated.
+      The warning suggests using 'theme.change(...)'.
+      We try to use the new API if available, falling back to the old one.
+    */
+    if (vuetifyTheme.change) {
+      vuetifyTheme.change(mode)
+    } else if (vuetifyTheme.global && vuetifyTheme.global.name) {
+      vuetifyTheme.global.name.value = mode
+    }
   }
 
   // Set theme mode

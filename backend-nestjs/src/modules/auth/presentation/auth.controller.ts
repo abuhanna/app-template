@@ -45,7 +45,11 @@ export class AuthController {
   @ApiResponse({ status: 200, type: LoginResponseDto })
   @ApiResponse({ status: 401, description: 'Invalid credentials' })
   async login(@Body() dto: LoginDto): Promise<LoginResponseDto> {
-    return this.commandBus.execute(new LoginCommand(dto.username, dto.password));
+    const identifier = dto.username || dto.email;
+    if (!identifier) {
+      throw new Error('Username or email is required');
+    }
+    return this.commandBus.execute(new LoginCommand(identifier, dto.password));
   }
 
   @Post('refresh')

@@ -7,13 +7,13 @@ import {
 } from '@nestjs/common';
 import { Response } from 'express';
 import { ApiBearerAuth, ApiOperation, ApiQuery, ApiTags } from '@nestjs/swagger';
-import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
+import { JwtAuthGuard } from '../../common/guards/jwt-auth.guard';
 import { ExportService, PdfReportOptions } from './export.service';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
-import { UserEntity } from '../user-management/infrastructure/entities/user.entity';
-import { DepartmentEntity } from '../department-management/infrastructure/entities/department.entity';
-import { AuditLogEntity } from '../audit-log/infrastructure/entities/audit-log.entity';
+import { UserOrmEntity } from '../user-management/infrastructure/persistence/user.orm-entity';
+import { DepartmentOrmEntity } from '../department-management/infrastructure/persistence/department.orm-entity';
+import { AuditLogOrmEntity } from '../audit-log/infrastructure/persistence/audit-log.orm-entity';
 import { CurrentUser } from '../../common/decorators/current-user.decorator';
 
 @ApiTags('Export')
@@ -23,12 +23,12 @@ import { CurrentUser } from '../../common/decorators/current-user.decorator';
 export class ExportController {
   constructor(
     private readonly exportService: ExportService,
-    @InjectRepository(UserEntity)
-    private readonly userRepository: Repository<UserEntity>,
-    @InjectRepository(DepartmentEntity)
-    private readonly departmentRepository: Repository<DepartmentEntity>,
-    @InjectRepository(AuditLogEntity)
-    private readonly auditLogRepository: Repository<AuditLogEntity>,
+    @InjectRepository(UserOrmEntity)
+    private readonly userRepository: Repository<UserOrmEntity>,
+    @InjectRepository(DepartmentOrmEntity)
+    private readonly departmentRepository: Repository<DepartmentOrmEntity>,
+    @InjectRepository(AuditLogOrmEntity)
+    private readonly auditLogRepository: Repository<AuditLogOrmEntity>,
   ) {}
 
   @Get('users')
@@ -38,12 +38,12 @@ export class ExportController {
   @ApiQuery({ name: 'departmentId', required: false })
   @ApiQuery({ name: 'isActive', required: false })
   async exportUsers(
+    @Res() res: Response,
     @Query('format') format: string = 'xlsx',
     @Query('search') search?: string,
     @Query('departmentId') departmentId?: number,
     @Query('isActive') isActive?: string,
     @CurrentUser() currentUser?: any,
-    @Res() res?: Response,
   ) {
     const query = this.userRepository
       .createQueryBuilder('user')
@@ -100,11 +100,11 @@ export class ExportController {
   @ApiQuery({ name: 'search', required: false })
   @ApiQuery({ name: 'isActive', required: false })
   async exportDepartments(
+    @Res() res: Response,
     @Query('format') format: string = 'xlsx',
     @Query('search') search?: string,
     @Query('isActive') isActive?: string,
     @CurrentUser() currentUser?: any,
-    @Res() res?: Response,
   ) {
     const query = this.departmentRepository.createQueryBuilder('department');
 
@@ -152,6 +152,7 @@ export class ExportController {
   @ApiQuery({ name: 'toDate', required: false })
   @ApiQuery({ name: 'limit', required: false })
   async exportAuditLogs(
+    @Res() res: Response,
     @Query('format') format: string = 'xlsx',
     @Query('entityName') entityName?: string,
     @Query('action') action?: string,
@@ -159,7 +160,6 @@ export class ExportController {
     @Query('toDate') toDate?: string,
     @Query('limit') limit: number = 1000,
     @CurrentUser() currentUser?: any,
-    @Res() res?: Response,
   ) {
     const query = this.auditLogRepository
       .createQueryBuilder('auditLog')

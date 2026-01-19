@@ -30,9 +30,18 @@ public class LoginUseCase {
 
     @Transactional
     public LoginResponse execute(LoginRequest request) {
+        String identifier = request.getUsername();
+        if (identifier == null || identifier.isEmpty()) {
+            identifier = request.getEmail();
+        }
+        
+        if (identifier == null || identifier.isEmpty()) {
+            throw new AuthenticationException("Username or email is required");
+        }
+
         // Find user by username or email
-        User user = userRepository.findByUsername(request.getUsername())
-                .or(() -> userRepository.findByEmail(request.getUsername()))
+        User user = userRepository.findByUsername(identifier)
+                .or(() -> userRepository.findByEmail(identifier))
                 .orElseThrow(() -> new AuthenticationException("Invalid username or password"));
 
         // Verify password

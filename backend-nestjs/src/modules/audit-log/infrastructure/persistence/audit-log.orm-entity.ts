@@ -33,7 +33,7 @@ export class AuditLogOrmEntity {
   @Column({ name: 'affected_columns', type: 'text', nullable: true })
   affectedColumns: string | null;
 
-  @Column({ name: 'user_id', nullable: true })
+  @Column({ name: 'user_id', type: 'bigint', nullable: true })
   userId: number | null;
 
   @CreateDateColumn({ name: 'timestamp' })

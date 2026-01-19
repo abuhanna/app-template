@@ -1,12 +1,12 @@
 <script setup>
 import { ref, onMounted, computed, watch } from 'vue'
 import { getAuditLogs } from '@/services/auditLogService'
-import { useToastStore } from '@/stores/toast'
+import { useNotificationStore } from '@/stores/notification'
 import { useDebounce } from '@/composables/useDebounce'
-import { DateRangePicker } from '@/components/common'
+import { DateRangePicker } from '@/components'
 import { DEFAULT_PAGE_SIZE, PAGE_SIZE_OPTIONS } from '@/types'
 
-const toastStore = useToastStore()
+const toastStore = useNotificationStore()
 
 const loading = ref(false)
 const auditLogs = ref([])

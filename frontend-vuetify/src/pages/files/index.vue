@@ -104,7 +104,8 @@ const headers = [
 async function loadFiles() {
   loading.value = true
   try {
-    files.value = await fileService.getFiles()
+    const response = await fileService.getFiles()
+    files.value = response.items || []
   } catch (error) {
     notificationStore.showError('Failed to load files')
   } finally {

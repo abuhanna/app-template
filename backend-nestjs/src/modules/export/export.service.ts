@@ -1,7 +1,7 @@
 import { Injectable } from '@nestjs/common';
 import * as ExcelJS from 'exceljs';
 import { Parser } from 'json2csv';
-import * as PDFDocument from 'pdfkit';
+import PDFDocument from 'pdfkit';
 
 export interface ExportResult {
   buffer: Buffer;
@@ -109,7 +109,7 @@ export class ExportService {
       });
 
       const chunks: Buffer[] = [];
-      doc.on('data', (chunk) => chunks.push(chunk));
+      doc.on('data', (chunk: Buffer) => chunks.push(chunk));
       doc.on('end', () => {
         const buffer = Buffer.concat(chunks);
         const timestamp = this.getTimestamp();
@@ -142,7 +142,7 @@ export class ExportService {
   }
 
   private addPdfHeader(
-    doc: PDFKit.PDFDocument,
+    doc: InstanceType<typeof PDFDocument>,
     title: string,
     options: PdfReportOptions,
   ): void {
@@ -188,7 +188,7 @@ export class ExportService {
   }
 
   private addPdfTable<T extends Record<string, any>>(
-    doc: PDFKit.PDFDocument,
+    doc: InstanceType<typeof PDFDocument>,
     data: T[],
   ): void {
     const headers = Object.keys(data[0]);

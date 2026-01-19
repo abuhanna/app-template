@@ -6,7 +6,14 @@ export function validateEnvironment(): void {
   const errors: string[] = [];
 
   // Required environment variables
-  const required = ['DATABASE_URL', 'JWT_SECRET'];
+  const required = [
+    'DB_HOST',
+    'DB_PORT',
+    'DB_NAME',
+    'DB_USERNAME',
+    'DB_PASSWORD',
+    'JWT_SECRET',
+  ];
 
   for (const key of required) {
     if (!process.env[key]) {

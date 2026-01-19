@@ -38,7 +38,8 @@ public class LoginCommandHandler : IRequestHandler<LoginCommand, LoginResponseDt
 
     public async Task<LoginResponseDto> Handle(LoginCommand request, CancellationToken cancellationToken)
     {
-        _logger.LogInformation("Processing login request for user: {Username}", request.Username);
+        var identifier = !string.IsNullOrEmpty(request.Username) ? request.Username : request.Email;
+        _logger.LogInformation("Processing login request for user: {Username}", identifier);
 
         var useLocalAuth = _configuration.GetValue<bool>("Auth:UseLocalAuth", true);
         var ssoEnabled = _configuration.GetValue<bool>("Sso:Enabled", false);
@@ -54,10 +55,10 @@ public class LoginCommandHandler : IRequestHandler<LoginCommand, LoginResponseDt
         }
 
         // Fall back to SSO if enabled and local auth failed or not enabled
-        if (ssoEnabled && _ssoAuthService != null)
+        if (ssoEnabled && _ssoAuthService != null && identifier != null)
         {
-            _logger.LogInformation("Attempting SSO authentication for user: {Username}", request.Username);
-            return await _ssoAuthService.LoginAsync(request.Username, request.Password, cancellationToken);
+            _logger.LogInformation("Attempting SSO authentication for user: {Username}", identifier);
+            return await _ssoAuthService.LoginAsync(identifier, request.Password, cancellationToken);
         }
 
         throw new InvalidOperationException("Invalid username or password");
@@ -65,12 +66,19 @@ public class LoginCommandHandler : IRequestHandler<LoginCommand, LoginResponseDt
 
     private async Task<LoginResponseDto?> TryLocalAuthAsync(LoginCommand request, CancellationToken cancellationToken)
     {
+        var identifier = !string.IsNullOrEmpty(request.Username) ? request.Username : request.Email;
+
+        if (string.IsNullOrEmpty(identifier))
+        {
+            throw new InvalidOperationException("Username or email is required");
+        }
+
         // Find user by username or email
         var user = await _context.Users
             .Include(u => u.Department)
             .FirstOrDefaultAsync(u =>
-                u.Username == request.Username ||
-                u.Email == request.Username,
+                u.Username == identifier ||
+                u.Email == identifier,
                 cancellationToken);
 
         if (user == null)

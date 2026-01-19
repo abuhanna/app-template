@@ -19,8 +19,10 @@ declare module 'vue-router/auto-routes' {
    */
   export interface RouteNamedMap {
     '/': RouteRecordInfo<'/', '/', Record<never, never>, Record<never, never>>,
+    '/audit-logs/': RouteRecordInfo<'/audit-logs/', '/audit-logs', Record<never, never>, Record<never, never>>,
     '/dashboard': RouteRecordInfo<'/dashboard', '/dashboard', Record<never, never>, Record<never, never>>,
     '/departments/': RouteRecordInfo<'/departments/', '/departments', Record<never, never>, Record<never, never>>,
+    '/files/': RouteRecordInfo<'/files/', '/files', Record<never, never>, Record<never, never>>,
     '/forgot-password': RouteRecordInfo<'/forgot-password', '/forgot-password', Record<never, never>, Record<never, never>>,
     '/login': RouteRecordInfo<'/login', '/login', Record<never, never>, Record<never, never>>,
     '/notifications/': RouteRecordInfo<'/notifications/', '/notifications', Record<never, never>, Record<never, never>>,
@@ -44,12 +46,20 @@ declare module 'vue-router/auto-routes' {
       routes: '/'
       views: never
     }
+    'src/pages/audit-logs/index.vue': {
+      routes: '/audit-logs/'
+      views: never
+    }
     'src/pages/dashboard.vue': {
       routes: '/dashboard'
       views: never
     }
     'src/pages/departments/index.vue': {
       routes: '/departments/'
+      views: never
+    }
+    'src/pages/files/index.vue': {
+      routes: '/files/'
       views: never
     }
     'src/pages/forgot-password.vue': {

@@ -8,7 +8,12 @@ public record LoginRequestDto
     /// <summary>
     /// Username or email
     /// </summary>
-    public string Username { get; init; } = string.Empty;
+    public string? Username { get; init; }
+
+    /// <summary>
+    /// User email
+    /// </summary>
+    public string? Email { get; init; }
 
     /// <summary>
     /// User password
