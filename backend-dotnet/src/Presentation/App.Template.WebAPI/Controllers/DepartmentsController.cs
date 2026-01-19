@@ -1,3 +1,4 @@
+using AppTemplate.Application.Common.Models;
 using AppTemplate.Application.DTOs;
 using AppTemplate.Application.Features.DepartmentManagement.Commands.CreateDepartment;
 using AppTemplate.Application.Features.DepartmentManagement.Commands.DeleteDepartment;
@@ -26,16 +27,24 @@ public class DepartmentsController : ControllerBase
     }
 
     /// <summary>
-    /// Get list of departments
+    /// Get list of departments with pagination
     /// </summary>
     [HttpGet]
-    [ProducesResponseType(typeof(List<DepartmentDto>), StatusCodes.Status200OK)]
+    [ProducesResponseType(typeof(PagedResult<DepartmentDto>), StatusCodes.Status200OK)]
     public async Task<IActionResult> GetDepartments(
-        [FromQuery] bool? isActive,
-        [FromQuery] string? search)
+        [FromQuery] int page = 1,
+        [FromQuery] int pageSize = 10,
+        [FromQuery] string? sortBy = null,
+        [FromQuery] string? sortDir = "asc",
+        [FromQuery] bool? isActive = null,
+        [FromQuery] string? search = null)
     {
         var query = new GetDepartmentsQuery
         {
+            Page = Math.Max(1, page),
+            PageSize = Math.Clamp(pageSize, 1, 100),
+            SortBy = sortBy,
+            SortDir = sortDir,
             IsActive = isActive,
             Search = search
         };

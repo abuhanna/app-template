@@ -6,6 +6,7 @@ import {
   Delete,
   Body,
   Param,
+  Query,
   ParseIntPipe,
   HttpCode,
   HttpStatus,
@@ -16,6 +17,8 @@ import { ApiTags, ApiOperation, ApiResponse, ApiBearerAuth } from '@nestjs/swagg
 import { JwtAuthGuard } from '@/common/guards/jwt-auth.guard';
 import { RolesGuard } from '@/common/guards/roles.guard';
 import { Roles } from '@/common/decorators/roles.decorator';
+import { PaginationQueryDto } from '@/common/dto';
+import { PagedResult } from '@/common/types/paginated';
 import { UserRole } from '@/modules/user-management/domain/value-objects/user-role';
 import { DepartmentDto, CreateDepartmentDto, UpdateDepartmentDto } from '../application/dto';
 import {
@@ -36,10 +39,18 @@ export class DepartmentsController {
   ) {}
 
   @Get()
-  @ApiOperation({ summary: 'Get all departments' })
-  @ApiResponse({ status: 200, type: [DepartmentDto] })
-  async findAll(): Promise<DepartmentDto[]> {
-    return this.queryBus.execute(new GetDepartmentsQuery());
+  @ApiOperation({ summary: 'Get all departments with pagination' })
+  @ApiResponse({ status: 200, description: 'Paginated list of departments' })
+  async findAll(@Query() queryDto: PaginationQueryDto): Promise<PagedResult<DepartmentDto>> {
+    return this.queryBus.execute(
+      new GetDepartmentsQuery(
+        queryDto.page,
+        queryDto.pageSize,
+        queryDto.sortBy,
+        queryDto.sortDir,
+        queryDto.search,
+      ),
+    );
   }
 
   @Get(':id')

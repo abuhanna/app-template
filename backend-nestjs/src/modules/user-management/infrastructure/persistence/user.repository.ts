@@ -1,9 +1,13 @@
 import { Injectable } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
-import { Repository } from 'typeorm';
+import { Repository, ILike } from 'typeorm';
 import { UserOrmEntity } from './user.orm-entity';
 import { User } from '../../domain/entities/user.entity';
-import { IUserRepository } from '../../domain/interfaces/user.repository.interface';
+import {
+  IUserRepository,
+  UserPaginationOptions,
+  UserPaginatedResult,
+} from '../../domain/interfaces/user.repository.interface';
 import { UserRole } from '../../domain/value-objects/user-role';
 
 @Injectable()
@@ -40,6 +44,53 @@ export class UserRepository implements IUserRepository {
     return entities.map((entity) => this.toDomain(entity));
   }
 
+  async findAllPaginated(options: UserPaginationOptions): Promise<UserPaginatedResult> {
+    const { page, pageSize, sortBy, sortDir = 'asc', search } = options;
+
+    const queryBuilder = this.repository.createQueryBuilder('user');
+
+    // Apply search filter
+    if (search) {
+      queryBuilder.where(
+        '(user.email ILIKE :search OR user.username ILIKE :search OR user.first_name ILIKE :search OR user.last_name ILIKE :search)',
+        { search: `%${search}%` },
+      );
+    }
+
+    // Apply sorting
+    const validSortFields = ['id', 'email', 'username', 'firstName', 'lastName', 'role', 'isActive', 'createdAt', 'updatedAt'];
+    const sortFieldMap: Record<string, string> = {
+      id: 'user.id',
+      email: 'user.email',
+      username: 'user.username',
+      firstName: 'user.first_name',
+      lastName: 'user.last_name',
+      role: 'user.role',
+      isActive: 'user.is_active',
+      createdAt: 'user.created_at',
+      updatedAt: 'user.updated_at',
+    };
+
+    if (sortBy && validSortFields.includes(sortBy)) {
+      queryBuilder.orderBy(sortFieldMap[sortBy], sortDir.toUpperCase() as 'ASC' | 'DESC');
+    } else {
+      queryBuilder.orderBy('user.created_at', 'DESC');
+    }
+
+    // Get total count
+    const totalItems = await queryBuilder.getCount();
+
+    // Apply pagination
+    queryBuilder.skip((page - 1) * pageSize).take(pageSize);
+
+    const entities = await queryBuilder.getMany();
+
+    return {
+      items: entities.map((entity) => this.toDomain(entity)),
+      totalItems,
+    };
+  }
+
   async countByDepartmentId(departmentId: number): Promise<number> {
     return this.repository.count({ where: { departmentId: departmentId.toString() } });
   }
@@ -68,6 +119,7 @@ export class UserRepository implements IUserRepository {
       entity.lastLoginAt,
       entity.passwordResetToken,
       entity.passwordResetTokenExpiresAt,
+      entity.passwordHistory || [],
       entity.createdAt,
       entity.updatedAt,
       entity.createdBy ? parseInt(entity.createdBy, 10) : null,
@@ -91,6 +143,7 @@ export class UserRepository implements IUserRepository {
     entity.lastLoginAt = user.lastLoginAt;
     entity.passwordResetToken = user.passwordResetToken;
     entity.passwordResetTokenExpiresAt = user.passwordResetTokenExpiresAt;
+    entity.passwordHistory = user.passwordHistory;
     entity.createdAt = user.createdAt;
     entity.updatedAt = user.updatedAt;
     entity.createdBy = user.createdBy ? user.createdBy.toString() : null;

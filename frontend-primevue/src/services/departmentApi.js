@@ -2,9 +2,25 @@
 import api from './api'
 
 /**
- * Get all departments
- * @param {Object} params - Query parameters
- * @returns {Promise} Promise with departments list
+ * @typedef {import('@/types').PagedResult} PagedResult
+ * @typedef {import('@/types').SortDirection} SortDirection
+ */
+
+/**
+ * Parameters for fetching departments with pagination
+ * @typedef {Object} GetDepartmentsParams
+ * @property {number} [page] - Page number (1-indexed)
+ * @property {number} [pageSize] - Number of items per page
+ * @property {string} [sortBy] - Field to sort by
+ * @property {SortDirection} [sortDir] - Sort direction ('asc' or 'desc')
+ * @property {string} [search] - Search term
+ * @property {boolean} [isActive] - Filter by active status
+ */
+
+/**
+ * Get departments with pagination support
+ * @param {GetDepartmentsParams} params - Query parameters
+ * @returns {Promise<PagedResult>} Promise with paginated departments result
  */
 export async function fetchDepartments(params = {}) {
   const response = await api.get('/departments', { params })

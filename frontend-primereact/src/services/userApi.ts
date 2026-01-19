@@ -1,12 +1,24 @@
 import api from './api'
-import type { User, CreateUserRequest, UpdateUserRequest } from '@/types'
+import type {
+  User,
+  CreateUserRequest,
+  UpdateUserRequest,
+  PagedResult,
+  SortDirection,
+} from '@/types'
 
-export async function getUsers(params?: {
+export interface GetUsersParams {
   page?: number
   pageSize?: number
+  sortBy?: string
+  sortDir?: SortDirection
   search?: string
-}): Promise<User[]> {
-  const response = await api.get<User[]>('/users', { params })
+  isActive?: boolean
+  departmentId?: string
+}
+
+export async function getUsers(params: GetUsersParams = {}): Promise<PagedResult<User>> {
+  const response = await api.get<PagedResult<User>>('/users', { params })
   return response.data
 }
 

@@ -1,13 +1,17 @@
 <template>
   <v-container fluid>
     <v-row>
-      <v-col cols="12" class="d-flex justify-end">
+      <v-col cols="12" class="d-flex justify-space-between align-center">
+        <div class="text-body-2 text-medium-emphasis">
+          {{ pagination.totalItems > 0 ? `Showing ${(pagination.page - 1) * pagination.pageSize + 1} - ${Math.min(pagination.page * pagination.pageSize, pagination.totalItems)} of ${pagination.totalItems} users` : 'No users found' }}
+        </div>
         <v-btn color="primary" prepend-icon="mdi-plus" @click="openCreateDialog">
           Add User
         </v-btn>
       </v-col>
     </v-row>
 
+    <!-- Search and Filter Bar -->
     <v-row>
       <v-col cols="12" md="4">
         <v-text-field
@@ -19,7 +23,7 @@
           density="compact"
         />
       </v-col>
-      <v-col cols="12" md="4">
+      <v-col cols="12" md="3">
         <v-select
           v-model="departmentFilter"
           :items="departmentOptions"
@@ -27,9 +31,10 @@
           clearable
           hide-details
           density="compact"
+          @update:model-value="loadUsers"
         />
       </v-col>
-      <v-col cols="12" md="4">
+      <v-col cols="12" md="3">
         <v-select
           v-model="statusFilter"
           :items="statusOptions"
@@ -37,17 +42,33 @@
           clearable
           hide-details
           density="compact"
+          @update:model-value="loadUsers"
         />
+      </v-col>
+      <v-col cols="12" md="2" class="d-flex align-center">
+        <v-btn
+          v-if="hasActiveFilters"
+          variant="text"
+          size="small"
+          @click="clearFilters"
+        >
+          Clear Filters
+        </v-btn>
       </v-col>
     </v-row>
 
     <v-row>
       <v-col cols="12">
-        <v-data-table
+        <v-data-table-server
+          v-model:items-per-page="pagination.pageSize"
+          v-model:page="pagination.page"
+          v-model:sort-by="sortBy"
           :headers="headers"
-          :items="filteredUsers"
+          :items="userStore.items"
+          :items-length="pagination.totalItems"
           :loading="userStore.loading"
           hover
+          @update:options="handleTableOptions"
         >
           <template #item.isActive="{ item }">
             <v-chip :color="item.isActive ? 'success' : 'error'" size="small">
@@ -58,7 +79,27 @@
             <v-btn icon="mdi-pencil" variant="text" size="small" @click="openEditDialog(item)" />
             <v-btn icon="mdi-delete" variant="text" size="small" color="error" @click="confirmDelete(item)" />
           </template>
-        </v-data-table>
+          <template #bottom>
+            <div class="d-flex align-center justify-space-between pa-4">
+              <v-select
+                v-model="pagination.pageSize"
+                :items="pageSizeOptions"
+                label="Items per page"
+                density="compact"
+                hide-details
+                style="max-width: 120px"
+                @update:model-value="loadUsers"
+              />
+              <v-pagination
+                v-model="pagination.page"
+                :length="pagination.totalPages"
+                :total-visible="5"
+                density="compact"
+                @update:model-value="loadUsers"
+              />
+            </div>
+          </template>
+        </v-data-table-server>
       </v-col>
     </v-row>
 
@@ -131,15 +172,33 @@ import { useUserStore } from '@/stores/user'
 import { useDepartmentStore } from '@/stores/department'
 import { useNotificationStore } from '@/stores/notification'
 import { useConfirmDialog } from '@/composables/useConfirmDialog'
+import { useDebounce } from '@/composables/useDebounce'
+import { DEFAULT_PAGE_SIZE, PAGE_SIZE_OPTIONS } from '@/types'
 
 const userStore = useUserStore()
 const departmentStore = useDepartmentStore()
 const notificationStore = useNotificationStore()
 const { confirm } = useConfirmDialog()
 
+// Pagination state
+const pagination = ref({
+  page: 1,
+  pageSize: DEFAULT_PAGE_SIZE,
+  totalItems: 0,
+  totalPages: 0
+})
+const pageSizeOptions = PAGE_SIZE_OPTIONS
+
+// Sort state
+const sortBy = ref([{ key: 'createdAt', order: 'desc' }])
+
+// Filter state
 const search = ref('')
+const debouncedSearch = useDebounce(search, 300)
 const departmentFilter = ref(null)
 const statusFilter = ref(null)
+
+// Dialog state
 const dialog = ref(false)
 const isEditing = ref(false)
 const saving = ref(false)
@@ -157,13 +216,12 @@ const form = ref({
 })
 
 const headers = [
-  { title: 'Username', key: 'username' },
-  { title: 'Username', key: 'username' },
-  { title: 'Name', key: 'fullName' },
-  { title: 'Email', key: 'email' },
-  { title: 'Role', key: 'role' },
-  { title: 'Department', key: 'departmentName' },
-  { title: 'Status', key: 'isActive' },
+  { title: 'Username', key: 'username', sortable: true },
+  { title: 'Name', key: 'fullName', sortable: false },
+  { title: 'Email', key: 'email', sortable: true },
+  { title: 'Role', key: 'role', sortable: true },
+  { title: 'Department', key: 'departmentName', sortable: false },
+  { title: 'Status', key: 'isActive', sortable: true },
   { title: 'Actions', key: 'actions', sortable: false, align: 'end' }
 ]
 
@@ -176,30 +234,45 @@ const departmentOptions = computed(() =>
   departmentStore.items.map(d => ({ title: d.name, value: d.id }))
 )
 
-const filteredUsers = computed(() => {
-  let result = userStore.items
+const hasActiveFilters = computed(() =>
+  search.value || departmentFilter.value !== null || statusFilter.value !== null
+)
 
-  if (search.value) {
-    const s = search.value.toLowerCase()
-    result = result.filter(u =>
-      u.username?.toLowerCase().includes(s) ||
-      u.firstName?.toLowerCase().includes(s) ||
-      u.lastName?.toLowerCase().includes(s) ||
-      u.fullName?.toLowerCase().includes(s) ||
-      u.email?.toLowerCase().includes(s)
-    )
+// Load users with current pagination and filters
+const loadUsers = async () => {
+  const sort = sortBy.value[0]
+  await userStore.fetchUsers({
+    page: pagination.value.page,
+    pageSize: pagination.value.pageSize,
+    sortBy: sort?.key || 'createdAt',
+    sortDir: sort?.order || 'desc',
+    search: debouncedSearch.value || undefined,
+    departmentId: departmentFilter.value || undefined,
+    isActive: statusFilter.value
+  })
+
+  // Update pagination from store
+  if (userStore.pagination) {
+    pagination.value.totalItems = userStore.pagination.totalItems
+    pagination.value.totalPages = userStore.pagination.totalPages
   }
+}
 
-  if (departmentFilter.value) {
-    result = result.filter(u => u.departmentId === departmentFilter.value)
+// Handle table options change (sort, page, etc.)
+const handleTableOptions = (options) => {
+  if (options.sortBy && options.sortBy.length > 0) {
+    sortBy.value = options.sortBy
   }
+  loadUsers()
+}
 
-  if (statusFilter.value !== null) {
-    result = result.filter(u => u.isActive === statusFilter.value)
-  }
-
-  return result
-})
+const clearFilters = () => {
+  search.value = ''
+  departmentFilter.value = null
+  statusFilter.value = null
+  pagination.value.page = 1
+  loadUsers()
+}
 
 const openCreateDialog = () => {
   isEditing.value = false
@@ -254,7 +327,7 @@ const saveUser = async () => {
       notificationStore.showSuccess('User created successfully')
     }
     dialog.value = false
-    await userStore.fetchUsers()
+    await loadUsers()
   } catch (error) {
     notificationStore.showError(error.message || 'Failed to save user')
   } finally {
@@ -274,16 +347,22 @@ const confirmDelete = async (user) => {
     try {
       await userStore.deleteUser(user.id)
       notificationStore.showSuccess('User deactivated successfully')
-      await userStore.fetchUsers()
+      await loadUsers()
     } catch (error) {
       notificationStore.showError(error.message || 'Failed to deactivate user')
     }
   }
 }
 
+// Watch for debounced search changes
+watch(debouncedSearch, () => {
+  pagination.value.page = 1
+  loadUsers()
+})
+
 onMounted(async () => {
   await Promise.all([
-    userStore.fetchUsers(),
+    loadUsers(),
     departmentStore.fetchDepartments()
   ])
 })

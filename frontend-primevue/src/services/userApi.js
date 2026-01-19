@@ -2,9 +2,26 @@
 import api from './api'
 
 /**
- * Get all users
- * @param {Object} params - Query parameters
- * @returns {Promise} Promise with users list
+ * @typedef {import('@/types').PagedResult} PagedResult
+ * @typedef {import('@/types').SortDirection} SortDirection
+ */
+
+/**
+ * Parameters for fetching users with pagination
+ * @typedef {Object} GetUsersParams
+ * @property {number} [page] - Page number (1-indexed)
+ * @property {number} [pageSize] - Number of items per page
+ * @property {string} [sortBy] - Field to sort by
+ * @property {SortDirection} [sortDir] - Sort direction ('asc' or 'desc')
+ * @property {string} [search] - Search term
+ * @property {boolean} [isActive] - Filter by active status
+ * @property {number} [departmentId] - Filter by department ID
+ */
+
+/**
+ * Get users with pagination support
+ * @param {GetUsersParams} params - Query parameters
+ * @returns {Promise<PagedResult>} Promise with paginated users result
  */
 export async function getUsers(params = {}) {
   const response = await api.get('/users', { params })

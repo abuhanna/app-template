@@ -3,7 +3,11 @@ import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 import { DepartmentOrmEntity } from './department.orm-entity';
 import { Department } from '../../domain/entities/department.entity';
-import { IDepartmentRepository } from '../../domain/interfaces/department.repository.interface';
+import {
+  IDepartmentRepository,
+  DepartmentPaginationOptions,
+  DepartmentPaginatedResult,
+} from '../../domain/interfaces/department.repository.interface';
 
 @Injectable()
 export class DepartmentRepository implements IDepartmentRepository {
@@ -25,6 +29,50 @@ export class DepartmentRepository implements IDepartmentRepository {
   async findAll(): Promise<Department[]> {
     const entities = await this.repository.find({ order: { name: 'ASC' } });
     return entities.map((entity) => this.toDomain(entity));
+  }
+
+  async findAllPaginated(options: DepartmentPaginationOptions): Promise<DepartmentPaginatedResult> {
+    const { page, pageSize, sortBy, sortDir = 'asc', search } = options;
+
+    const queryBuilder = this.repository.createQueryBuilder('department');
+
+    // Apply search filter
+    if (search) {
+      queryBuilder.where(
+        '(department.name ILIKE :search OR department.code ILIKE :search OR department.description ILIKE :search)',
+        { search: `%${search}%` },
+      );
+    }
+
+    // Apply sorting
+    const validSortFields = ['id', 'name', 'code', 'isActive', 'createdAt', 'updatedAt'];
+    const sortFieldMap: Record<string, string> = {
+      id: 'department.id',
+      name: 'department.name',
+      code: 'department.code',
+      isActive: 'department.is_active',
+      createdAt: 'department.created_at',
+      updatedAt: 'department.updated_at',
+    };
+
+    if (sortBy && validSortFields.includes(sortBy)) {
+      queryBuilder.orderBy(sortFieldMap[sortBy], sortDir.toUpperCase() as 'ASC' | 'DESC');
+    } else {
+      queryBuilder.orderBy('department.name', 'ASC');
+    }
+
+    // Get total count
+    const totalItems = await queryBuilder.getCount();
+
+    // Apply pagination
+    queryBuilder.skip((page - 1) * pageSize).take(pageSize);
+
+    const entities = await queryBuilder.getMany();
+
+    return {
+      items: entities.map((entity) => this.toDomain(entity)),
+      totalItems,
+    };
   }
 
   async save(department: Department): Promise<Department> {

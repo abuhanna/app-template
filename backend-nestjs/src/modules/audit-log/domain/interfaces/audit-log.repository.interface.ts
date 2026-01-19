@@ -9,9 +9,18 @@ export interface GetAuditLogsFilters {
   toDate?: Date;
   page?: number;
   pageSize?: number;
+  sortBy?: string;
+  sortDir?: 'asc' | 'desc';
+  search?: string;
+}
+
+export interface AuditLogPaginatedResult {
+  items: AuditLog[];
+  totalItems: number;
 }
 
 export abstract class IAuditLogRepository {
   abstract findByFilters(filters: GetAuditLogsFilters): Promise<AuditLog[]>;
+  abstract findByFiltersPaginated(filters: GetAuditLogsFilters): Promise<AuditLogPaginatedResult>;
   abstract save(auditLog: AuditLog): Promise<AuditLog>;
 }

@@ -6,6 +6,7 @@ import {
   Delete,
   Body,
   Param,
+  Query,
   ParseIntPipe,
   HttpCode,
   HttpStatus,
@@ -18,6 +19,8 @@ import { JwtAuthGuard } from '@/common/guards/jwt-auth.guard';
 import { RolesGuard } from '@/common/guards/roles.guard';
 import { Roles } from '@/common/decorators/roles.decorator';
 import { CurrentUser, CurrentUserPayload } from '@/common/decorators/current-user.decorator';
+import { PaginationQueryDto } from '@/common/dto';
+import { PagedResult } from '@/common/types/paginated';
 import { UserRole } from '../domain/value-objects/user-role';
 import { UserDto, CreateUserDto, UpdateUserDto, ChangePasswordDto } from '../application/dto';
 import {
@@ -40,10 +43,18 @@ export class UsersController {
 
   @Get()
   @Roles(UserRole.Admin)
-  @ApiOperation({ summary: 'Get all users (Admin only)' })
-  @ApiResponse({ status: 200, type: [UserDto] })
-  async findAll(): Promise<UserDto[]> {
-    return this.queryBus.execute(new GetUsersQuery());
+  @ApiOperation({ summary: 'Get all users with pagination (Admin only)' })
+  @ApiResponse({ status: 200, description: 'Paginated list of users' })
+  async findAll(@Query() queryDto: PaginationQueryDto): Promise<PagedResult<UserDto>> {
+    return this.queryBus.execute(
+      new GetUsersQuery(
+        queryDto.page,
+        queryDto.pageSize,
+        queryDto.sortBy,
+        queryDto.sortDir,
+        queryDto.search,
+      ),
+    );
   }
 
   @Get(':id')

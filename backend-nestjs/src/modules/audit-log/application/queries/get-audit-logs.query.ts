@@ -10,5 +10,8 @@ export class GetAuditLogsQuery implements IQuery {
     public readonly toDate?: Date,
     public readonly page: number = 1,
     public readonly pageSize: number = 20,
+    public readonly sortBy?: string,
+    public readonly sortDir?: 'asc' | 'desc',
+    public readonly search?: string,
   ) {}
 }

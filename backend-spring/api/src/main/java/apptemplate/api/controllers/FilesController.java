@@ -5,14 +5,13 @@ import apptemplate.api.dto.PagedResponse;
 import apptemplate.application.dto.file.UploadedFileDto;
 import apptemplate.application.usecases.file.*;
 import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.core.io.InputStreamResource;
 import org.springframework.core.io.Resource;
 import org.springframework.data.domain.Page;
-import org.springframework.data.domain.Pageable;
-import org.springframework.data.web.PageableDefault;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
@@ -36,11 +35,19 @@ public class FilesController {
     @GetMapping
     @Operation(summary = "Get all files", description = "Get paginated list of files with optional filters")
     public ResponseEntity<ApiResponse<PagedResponse<UploadedFileDto>>> getFiles(
-            @RequestParam(required = false) String category,
-            @RequestParam(required = false) Boolean isPublic,
-            @PageableDefault(size = 20) Pageable pageable
+            @Parameter(description = "Page number (1-based)") @RequestParam(defaultValue = "1") int page,
+            @Parameter(description = "Number of items per page") @RequestParam(defaultValue = "20") int pageSize,
+            @Parameter(description = "Column to sort by (e.g., fileName, createdAt)") @RequestParam(required = false) String sortBy,
+            @Parameter(description = "Sort direction: asc or desc") @RequestParam(defaultValue = "desc") String sortDir,
+            @Parameter(description = "Search by file name or description") @RequestParam(required = false) String search,
+            @Parameter(description = "Filter by category") @RequestParam(required = false) String category,
+            @Parameter(description = "Filter by public status") @RequestParam(required = false) Boolean isPublic
     ) {
-        Page<UploadedFileDto> files = getFilesUseCase.execute(category, isPublic, pageable);
+        // Ensure page is at least 1 and cap pageSize at 100
+        page = Math.max(1, page);
+        pageSize = Math.min(Math.max(1, pageSize), 100);
+
+        Page<UploadedFileDto> files = getFilesUseCase.execute(search, category, isPublic, page, pageSize, sortBy, sortDir);
         return ResponseEntity.ok(ApiResponse.success(PagedResponse.from(files)));
     }
 

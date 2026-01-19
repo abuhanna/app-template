@@ -1,5 +1,5 @@
 using AppTemplate.Application.DTOs;
-using AppTemplate.Application.Features.AuditLogging.Queries.GetAuditLogs;
+using AppTemplate.Application.Features.AuditLogManagement.Queries.GetAuditLogs;
 using AppTemplate.Application.Features.DepartmentManagement.Queries.GetDepartments;
 using AppTemplate.Application.Features.UserManagement.Queries.GetUsers;
 using AppTemplate.Application.Interfaces;
@@ -42,13 +42,15 @@ public class ExportController : ControllerBase
     {
         var query = new GetUsersQuery
         {
+            Page = 1,
+            PageSize = 10000, // Large page size for export
             IsActive = isActive,
             DepartmentId = departmentId,
             Search = search
         };
-        var users = await _mediator.Send(query, cancellationToken);
+        var usersResult = await _mediator.Send(query, cancellationToken);
 
-        var exportData = users.Select(u => new
+        var exportData = usersResult.Items.Select(u => new
         {
             u.Id,
             u.Username,
@@ -59,22 +61,22 @@ public class ExportController : ControllerBase
             u.Role,
             u.DepartmentName,
             IsActive = u.IsActive ? "Yes" : "No",
-            CreatedAt = u.CreatedAt?.ToString("yyyy-MM-dd HH:mm:ss") ?? "-",
+            CreatedAt = u.CreatedAt.ToString("yyyy-MM-dd HH:mm:ss"),
             LastLoginAt = u.LastLoginAt?.ToString("yyyy-MM-dd HH:mm:ss") ?? "-"
         }).ToList();
 
-        var result = format.ToLower() switch
+        var exportResult = format.ToLower() switch
         {
             "csv" => await _exportService.ExportToCsvAsync(exportData, "users", cancellationToken),
             "pdf" => await _exportService.ExportToPdfAsync(exportData, "users", "Users Report", new PdfReportOptions
             {
                 Subtitle = BuildFilterDescription(isActive, departmentId, search),
-                GeneratedBy = _currentUserService.UserName ?? "System"
+                GeneratedBy = _currentUserService.UserId ?? "System"
             }, cancellationToken),
             _ => await _exportService.ExportToExcelAsync(exportData, "users", "Users", cancellationToken)
         };
 
-        return File(result.FileStream, result.ContentType, result.FileName);
+        return File(exportResult.FileStream, exportResult.ContentType, exportResult.FileName);
     }
 
     /// <summary>
@@ -90,32 +92,34 @@ public class ExportController : ControllerBase
     {
         var query = new GetDepartmentsQuery
         {
+            Page = 1,
+            PageSize = 10000, // Large page size for export
             IsActive = isActive,
             Search = search
         };
-        var departments = await _mediator.Send(query, cancellationToken);
+        var deptResult = await _mediator.Send(query, cancellationToken);
 
-        var exportData = departments.Select(d => new
+        var exportData = deptResult.Items.Select(d => new
         {
             d.Id,
             d.Code,
             d.Name,
             d.Description,
             IsActive = d.IsActive ? "Yes" : "No",
-            CreatedAt = d.CreatedAt?.ToString("yyyy-MM-dd HH:mm:ss") ?? "-"
+            CreatedAt = d.CreatedAt.ToString("yyyy-MM-dd HH:mm:ss")
         }).ToList();
 
-        var result = format.ToLower() switch
+        var exportResult = format.ToLower() switch
         {
             "csv" => await _exportService.ExportToCsvAsync(exportData, "departments", cancellationToken),
             "pdf" => await _exportService.ExportToPdfAsync(exportData, "departments", "Departments Report", new PdfReportOptions
             {
-                GeneratedBy = _currentUserService.UserName ?? "System"
+                GeneratedBy = _currentUserService.UserId ?? "System"
             }, cancellationToken),
             _ => await _exportService.ExportToExcelAsync(exportData, "departments", "Departments", cancellationToken)
         };
 
-        return File(result.FileStream, result.ContentType, result.FileName);
+        return File(exportResult.FileStream, exportResult.ContentType, exportResult.FileName);
     }
 
     /// <summary>
@@ -140,11 +144,11 @@ public class ExportController : ControllerBase
             FromDate = fromDate,
             ToDate = toDate,
             Page = page,
-            PageSize = pageSize
+            PageSize = Math.Min(pageSize, 10000) // Limit for export
         };
-        var auditLogs = await _mediator.Send(query, cancellationToken);
+        var auditResult = await _mediator.Send(query, cancellationToken);
 
-        var exportData = auditLogs.Select(a => new
+        var exportData = auditResult.Items.Select(a => new
         {
             a.Id,
             a.EntityName,
@@ -155,7 +159,7 @@ public class ExportController : ControllerBase
             AffectedColumns = a.AffectedColumns ?? "-"
         }).ToList();
 
-        var result = format.ToLower() switch
+        var exportResult = format.ToLower() switch
         {
             "csv" => await _exportService.ExportToCsvAsync(exportData, "audit_logs", cancellationToken),
             "pdf" => await _exportService.ExportToPdfAsync(exportData, "audit_logs", "Audit Log Report", new PdfReportOptions
@@ -163,12 +167,12 @@ public class ExportController : ControllerBase
                 Subtitle = $"Entity: {entityName ?? "All"}, Action: {action ?? "All"}",
                 FromDate = fromDate,
                 ToDate = toDate,
-                GeneratedBy = _currentUserService.UserName ?? "System"
+                GeneratedBy = _currentUserService.UserId ?? "System"
             }, cancellationToken),
             _ => await _exportService.ExportToExcelAsync(exportData, "audit_logs", "Audit Logs", cancellationToken)
         };
 
-        return File(result.FileStream, result.ContentType, result.FileName);
+        return File(exportResult.FileStream, exportResult.ContentType, exportResult.FileName);
     }
 
     private static string BuildFilterDescription(bool? isActive, long? departmentId, string? search)

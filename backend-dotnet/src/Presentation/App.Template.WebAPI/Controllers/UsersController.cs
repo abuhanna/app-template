@@ -1,3 +1,4 @@
+using AppTemplate.Application.Common.Models;
 using AppTemplate.Application.DTOs;
 using AppTemplate.Application.Features.UserManagement.Commands.ChangePassword;
 using AppTemplate.Application.Features.UserManagement.Commands.CreateUser;
@@ -27,17 +28,25 @@ public class UsersController : ControllerBase
     }
 
     /// <summary>
-    /// Get list of users
+    /// Get list of users with pagination
     /// </summary>
     [HttpGet]
-    [ProducesResponseType(typeof(List<UserDto>), StatusCodes.Status200OK)]
+    [ProducesResponseType(typeof(PagedResult<UserDto>), StatusCodes.Status200OK)]
     public async Task<IActionResult> GetUsers(
-        [FromQuery] bool? isActive,
-        [FromQuery] long? departmentId,
-        [FromQuery] string? search)
+        [FromQuery] int page = 1,
+        [FromQuery] int pageSize = 10,
+        [FromQuery] string? sortBy = null,
+        [FromQuery] string? sortDir = "asc",
+        [FromQuery] bool? isActive = null,
+        [FromQuery] long? departmentId = null,
+        [FromQuery] string? search = null)
     {
         var query = new GetUsersQuery
         {
+            Page = page,
+            PageSize = Math.Min(pageSize, 100), // Cap at 100
+            SortBy = sortBy,
+            SortDir = sortDir,
             IsActive = isActive,
             DepartmentId = departmentId,
             Search = search
@@ -78,7 +87,8 @@ public class UsersController : ControllerBase
             Username = request.Username,
             Email = request.Email,
             Password = request.Password,
-            Name = request.Name,
+            FirstName = request.FirstName,
+            LastName = request.LastName,
             Role = request.Role,
             DepartmentId = request.DepartmentId
         };
@@ -100,7 +110,8 @@ public class UsersController : ControllerBase
         {
             Id = id,
             Email = request.Email,
-            Name = request.Name,
+            FirstName = request.FirstName,
+            LastName = request.LastName,
             Role = request.Role,
             DepartmentId = request.DepartmentId,
             IsActive = request.IsActive

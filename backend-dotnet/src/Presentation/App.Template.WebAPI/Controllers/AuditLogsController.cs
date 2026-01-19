@@ -1,3 +1,4 @@
+using AppTemplate.Application.Common.Models;
 using AppTemplate.Application.DTOs;
 using AppTemplate.Application.Features.AuditLogManagement.Queries.GetAuditLogs;
 using MediatR;
@@ -22,30 +23,36 @@ public class AuditLogsController : ControllerBase
     }
 
     /// <summary>
-    /// Get list of audit logs with optional filters
+    /// Get list of audit logs with pagination and filtering
     /// </summary>
     [HttpGet]
-    [ProducesResponseType(typeof(List<AuditLogDto>), StatusCodes.Status200OK)]
+    [ProducesResponseType(typeof(PagedResult<AuditLogDto>), StatusCodes.Status200OK)]
     public async Task<IActionResult> GetAuditLogs(
-        [FromQuery] string? entityName,
-        [FromQuery] string? entityId,
-        [FromQuery] string? userId,
-        [FromQuery] string? action,
-        [FromQuery] DateTime? fromDate,
-        [FromQuery] DateTime? toDate,
         [FromQuery] int page = 1,
-        [FromQuery] int pageSize = 20)
+        [FromQuery] int pageSize = 20,
+        [FromQuery] string? sortBy = null,
+        [FromQuery] string? sortDir = "desc",
+        [FromQuery] string? search = null,
+        [FromQuery] string? entityName = null,
+        [FromQuery] string? entityId = null,
+        [FromQuery] string? userId = null,
+        [FromQuery] string? action = null,
+        [FromQuery] DateTime? fromDate = null,
+        [FromQuery] DateTime? toDate = null)
     {
         var query = new GetAuditLogsQuery
         {
+            Page = Math.Max(1, page),
+            PageSize = Math.Clamp(pageSize, 1, 100),
+            SortBy = sortBy,
+            SortDir = sortDir,
+            Search = search,
             EntityName = entityName,
             EntityId = entityId,
             UserId = userId,
             Action = action,
             FromDate = fromDate,
-            ToDate = toDate,
-            Page = page,
-            PageSize = pageSize
+            ToDate = toDate
         };
         var result = await _mediator.Send(query);
         return Ok(result);

@@ -21,6 +21,7 @@ public class AuditLogRepositoryAdapter implements AuditLogRepository {
 
     @Override
     public Page<AuditLog> findByFilters(
+            String search,
             String entityName,
             String entityId,
             Long userId,
@@ -28,7 +29,7 @@ public class AuditLogRepositoryAdapter implements AuditLogRepository {
             LocalDateTime fromDate,
             LocalDateTime toDate,
             Pageable pageable) {
-        return jpaRepository.findByFilters(entityName, entityId, userId, action, fromDate, toDate, pageable)
+        return jpaRepository.findByFilters(search, entityName, entityId, userId, action, fromDate, toDate, pageable)
             .map(mapper::toDomain);
     }
 

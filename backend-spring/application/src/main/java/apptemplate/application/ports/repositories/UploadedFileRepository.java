@@ -13,7 +13,7 @@ public interface UploadedFileRepository {
 
     Optional<UploadedFile> findById(Long id);
 
-    Page<UploadedFile> findByFilters(String category, Boolean isPublic, Pageable pageable);
+    Page<UploadedFile> findByFilters(String search, String category, Boolean isPublic, Pageable pageable);
 
     UploadedFile save(UploadedFile file);
 

@@ -1,5 +1,6 @@
 import { create } from 'zustand'
-import type { User, CreateUserRequest, UpdateUserRequest } from '@/types'
+import type { User, CreateUserRequest, UpdateUserRequest, PaginationMeta } from '@/types'
+import type { GetUsersParams } from '@/services/userApi'
 import * as userApi from '@/services/userApi'
 import { useNotificationStore } from './notificationStore'
 
@@ -7,9 +8,10 @@ interface UserState {
   users: User[]
   selectedUser: User | null
   loading: boolean
+  pagination: PaginationMeta | null
 
   // Actions
-  fetchUsers: (params?: { page?: number; pageSize?: number; search?: string }) => Promise<void>
+  fetchUsers: (params?: GetUsersParams) => Promise<void>
   fetchUser: (id: string) => Promise<void>
   createUser: (data: CreateUserRequest) => Promise<User>
   updateUser: (id: string, data: UpdateUserRequest) => Promise<void>
@@ -22,12 +24,17 @@ export const useUserStore = create<UserState>((set) => ({
   users: [],
   selectedUser: null,
   loading: false,
+  pagination: null,
 
   fetchUsers: async (params) => {
     set({ loading: true })
     try {
-      const users = await userApi.getUsers(params)
-      set({ users, loading: false })
+      const result = await userApi.getUsers(params)
+      set({
+        users: result.items,
+        pagination: result.pagination,
+        loading: false,
+      })
     } catch (error) {
       set({ loading: false })
       throw error
@@ -101,6 +108,6 @@ export const useUserStore = create<UserState>((set) => ({
   },
 
   clearUsers: () => {
-    set({ users: [], selectedUser: null })
+    set({ users: [], selectedUser: null, pagination: null })
   },
 }))

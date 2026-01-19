@@ -47,8 +47,7 @@ public class CreateDepartmentCommandHandler : IRequestHandler<CreateDepartmentCo
             Name = department.Name,
             Description = department.Description,
             IsActive = department.IsActive,
-            CreatedAt = department.CreatedAt,
-            UserCount = 0
+            CreatedAt = department.CreatedAt
         };
     }
 }

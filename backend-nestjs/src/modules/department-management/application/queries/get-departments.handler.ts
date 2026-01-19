@@ -4,6 +4,7 @@ import { GetDepartmentsQuery } from './get-departments.query';
 import { DepartmentDto } from '../dto/department.dto';
 import { DepartmentMapper } from '../mappers/department.mapper';
 import { IDepartmentRepository } from '../../domain/interfaces/department.repository.interface';
+import { PagedResult, createPagedResult } from '@/common/types/paginated';
 
 @QueryHandler(GetDepartmentsQuery)
 export class GetDepartmentsHandler implements IQueryHandler<GetDepartmentsQuery> {
@@ -12,8 +13,19 @@ export class GetDepartmentsHandler implements IQueryHandler<GetDepartmentsQuery>
     private readonly departmentRepository: IDepartmentRepository,
   ) {}
 
-  async execute(_query: GetDepartmentsQuery): Promise<DepartmentDto[]> {
-    const departments = await this.departmentRepository.findAll();
-    return DepartmentMapper.toDtoList(departments);
+  async execute(query: GetDepartmentsQuery): Promise<PagedResult<DepartmentDto>> {
+    const { page, pageSize, sortBy, sortDir, search } = query;
+
+    const result = await this.departmentRepository.findAllPaginated({
+      page,
+      pageSize,
+      sortBy,
+      sortDir,
+      search,
+    });
+
+    const departmentDtos = DepartmentMapper.toDtoList(result.items);
+
+    return createPagedResult(departmentDtos, result.totalItems, page, pageSize);
   }
 }

@@ -1,21 +1,38 @@
 <script setup>
-import { ref, onMounted, computed } from 'vue'
+import { ref, onMounted, computed, watch } from 'vue'
 import { getAuditLogs } from '@/services/auditLogService'
 import { useToastStore } from '@/stores/toast'
+import { useDebounce } from '@/composables/useDebounce'
+import { DateRangePicker } from '@/components/common'
+import { DEFAULT_PAGE_SIZE, PAGE_SIZE_OPTIONS } from '@/types'
 
 const toastStore = useToastStore()
 
 const loading = ref(false)
 const auditLogs = ref([])
-const search = ref('')
-const itemsPerPage = ref(10)
 
-// Filters
+// Pagination state
+const pagination = ref({
+  page: 1,
+  pageSize: DEFAULT_PAGE_SIZE,
+  totalItems: 0,
+  totalPages: 0
+})
+const pageSizeOptions = PAGE_SIZE_OPTIONS
+
+// Sort state
+const sortBy = ref([{ key: 'timestamp', order: 'desc' }])
+
+// Search and filters
+const search = ref('')
+const debouncedSearch = useDebounce(search, 300)
 const filters = ref({
-  entityName: '',
-  action: '',
-  fromDate: null,
-  toDate: null,
+  entityName: null,
+  action: null
+})
+const dateRange = ref({
+  from: '',
+  to: ''
 })
 
 const entityNames = ['User', 'Department', 'UploadedFile']
@@ -27,35 +44,66 @@ const headers = [
   { title: 'Action', key: 'action', sortable: true },
   { title: 'User ID', key: 'userId', sortable: true },
   { title: 'Timestamp', key: 'timestamp', sortable: true },
-  { title: 'Details', key: 'actions', sortable: false, align: 'center' },
+  { title: 'Details', key: 'actions', sortable: false, align: 'center' }
 ]
 
-const filteredLogs = computed(() => {
-  if (!search.value) return auditLogs.value
-  const searchLower = search.value.toLowerCase()
-  return auditLogs.value.filter(
-    (log) =>
-      log.entityName.toLowerCase().includes(searchLower) ||
-      log.entityId.toLowerCase().includes(searchLower) ||
-      log.action.toLowerCase().includes(searchLower)
-  )
-})
+const hasActiveFilters = computed(() =>
+  search.value ||
+  filters.value.entityName ||
+  filters.value.action ||
+  dateRange.value.from ||
+  dateRange.value.to
+)
 
 async function loadAuditLogs() {
   loading.value = true
   try {
-    const params = {}
+    const sort = sortBy.value[0]
+    const params = {
+      page: pagination.value.page,
+      pageSize: pagination.value.pageSize,
+      sortBy: sort?.key || 'timestamp',
+      sortDir: sort?.order || 'desc'
+    }
+
+    if (debouncedSearch.value) params.search = debouncedSearch.value
     if (filters.value.entityName) params.entityName = filters.value.entityName
     if (filters.value.action) params.action = filters.value.action
-    if (filters.value.fromDate) params.fromDate = filters.value.fromDate
-    if (filters.value.toDate) params.toDate = filters.value.toDate
+    if (dateRange.value.from) params.fromDate = dateRange.value.from
+    if (dateRange.value.to) params.toDate = dateRange.value.to
 
-    auditLogs.value = await getAuditLogs(params)
+    const result = await getAuditLogs(params)
+
+    // Handle paginated response
+    if (result.items && result.pagination) {
+      auditLogs.value = result.items
+      pagination.value.totalItems = result.pagination.totalItems
+      pagination.value.totalPages = result.pagination.totalPages
+    } else {
+      // Fallback for non-paginated response
+      auditLogs.value = Array.isArray(result) ? result : []
+    }
   } catch {
     toastStore.showError('Failed to load audit logs')
   } finally {
     loading.value = false
   }
+}
+
+function handleTableOptions(options) {
+  if (options.sortBy && options.sortBy.length > 0) {
+    sortBy.value = options.sortBy
+  }
+  loadAuditLogs()
+}
+
+function clearFilters() {
+  search.value = ''
+  filters.value.entityName = null
+  filters.value.action = null
+  dateRange.value = { from: '', to: '' }
+  pagination.value.page = 1
+  loadAuditLogs()
 }
 
 function formatDate(dateString) {
@@ -65,7 +113,7 @@ function formatDate(dateString) {
     month: 'short',
     day: 'numeric',
     hour: '2-digit',
-    minute: '2-digit',
+    minute: '2-digit'
   })
 }
 
@@ -100,6 +148,18 @@ function showDetails(log) {
   detailsDialog.value = true
 }
 
+// Watch for debounced search changes
+watch(debouncedSearch, () => {
+  pagination.value.page = 1
+  loadAuditLogs()
+})
+
+// Watch for date range changes
+watch(dateRange, () => {
+  pagination.value.page = 1
+  loadAuditLogs()
+}, { deep: true })
+
 onMounted(() => {
   loadAuditLogs()
 })
@@ -112,6 +172,9 @@ onMounted(() => {
         <v-icon class="mr-2">mdi-history</v-icon>
         Audit Logs
         <v-spacer />
+        <div class="text-body-2 text-medium-emphasis mr-4">
+          {{ pagination.totalItems > 0 ? `${pagination.totalItems} records` : '' }}
+        </div>
         <v-btn icon="mdi-refresh" variant="text" @click="loadAuditLogs" :loading="loading" />
       </v-card-title>
 
@@ -119,6 +182,16 @@ onMounted(() => {
         <!-- Filters -->
         <v-row class="mb-4">
           <v-col cols="12" md="3">
+            <v-text-field
+              v-model="search"
+              prepend-inner-icon="mdi-magnify"
+              label="Search..."
+              density="compact"
+              hide-details
+              clearable
+            />
+          </v-col>
+          <v-col cols="12" md="2">
             <v-select
               v-model="filters.entityName"
               :items="entityNames"
@@ -126,9 +199,10 @@ onMounted(() => {
               clearable
               density="compact"
               hide-details
+              @update:model-value="() => { pagination.page = 1; loadAuditLogs() }"
             />
           </v-col>
-          <v-col cols="12" md="3">
+          <v-col cols="12" md="2">
             <v-select
               v-model="filters.action"
               :items="actions"
@@ -136,33 +210,35 @@ onMounted(() => {
               clearable
               density="compact"
               hide-details
+              @update:model-value="() => { pagination.page = 1; loadAuditLogs() }"
             />
           </v-col>
           <v-col cols="12" md="4">
-            <v-text-field
-              v-model="search"
-              prepend-inner-icon="mdi-magnify"
-              label="Search"
-              density="compact"
-              hide-details
-              clearable
-            />
+            <DateRangePicker v-model="dateRange" />
           </v-col>
-          <v-col cols="12" md="2">
-            <v-btn color="primary" @click="loadAuditLogs" block>
-              <v-icon left>mdi-filter</v-icon>
-              Apply
+          <v-col cols="12" md="1" class="d-flex align-center">
+            <v-btn
+              v-if="hasActiveFilters"
+              variant="text"
+              size="small"
+              @click="clearFilters"
+            >
+              Clear
             </v-btn>
           </v-col>
         </v-row>
 
         <!-- Data Table -->
-        <v-data-table
+        <v-data-table-server
+          v-model:items-per-page="pagination.pageSize"
+          v-model:page="pagination.page"
+          v-model:sort-by="sortBy"
           :headers="headers"
-          :items="filteredLogs"
+          :items="auditLogs"
+          :items-length="pagination.totalItems"
           :loading="loading"
-          :items-per-page="itemsPerPage"
           class="elevation-1"
+          @update:options="handleTableOptions"
         >
           <template #item.action="{ item }">
             <v-chip :color="getActionColor(item.action)" size="small">
@@ -193,7 +269,28 @@ onMounted(() => {
               <p class="text-grey mt-4">No audit logs found</p>
             </div>
           </template>
-        </v-data-table>
+
+          <template #bottom>
+            <div class="d-flex align-center justify-space-between pa-4">
+              <v-select
+                v-model="pagination.pageSize"
+                :items="pageSizeOptions"
+                label="Items per page"
+                density="compact"
+                hide-details
+                style="max-width: 120px"
+                @update:model-value="loadAuditLogs"
+              />
+              <v-pagination
+                v-model="pagination.page"
+                :length="pagination.totalPages"
+                :total-visible="5"
+                density="compact"
+                @update:model-value="loadAuditLogs"
+              />
+            </div>
+          </template>
+        </v-data-table-server>
       </v-card-text>
     </v-card>
 

@@ -1,5 +1,6 @@
 import { create } from 'zustand'
-import type { Department, CreateDepartmentRequest, UpdateDepartmentRequest } from '@/types'
+import type { Department, CreateDepartmentRequest, UpdateDepartmentRequest, PaginationMeta } from '@/types'
+import type { GetDepartmentsParams } from '@/services/departmentApi'
 import * as departmentApi from '@/services/departmentApi'
 import { useNotificationStore } from './notificationStore'
 
@@ -7,9 +8,10 @@ interface DepartmentState {
   departments: Department[]
   selectedDepartment: Department | null
   loading: boolean
+  pagination: PaginationMeta | null
 
   // Actions
-  fetchDepartments: (params?: { page?: number; pageSize?: number; search?: string }) => Promise<void>
+  fetchDepartments: (params?: GetDepartmentsParams) => Promise<void>
   fetchDepartment: (id: string) => Promise<void>
   createDepartment: (data: CreateDepartmentRequest) => Promise<Department>
   updateDepartment: (id: string, data: UpdateDepartmentRequest) => Promise<void>
@@ -22,12 +24,17 @@ export const useDepartmentStore = create<DepartmentState>((set) => ({
   departments: [],
   selectedDepartment: null,
   loading: false,
+  pagination: null,
 
   fetchDepartments: async (params) => {
     set({ loading: true })
     try {
-      const departments = await departmentApi.getDepartments(params)
-      set({ departments, loading: false })
+      const result = await departmentApi.getDepartments(params)
+      set({
+        departments: result.items,
+        pagination: result.pagination,
+        loading: false,
+      })
     } catch (error) {
       set({ loading: false })
       throw error
@@ -103,6 +110,6 @@ export const useDepartmentStore = create<DepartmentState>((set) => ({
   },
 
   clearDepartments: () => {
-    set({ departments: [], selectedDepartment: null })
+    set({ departments: [], selectedDepartment: null, pagination: null })
   },
 }))

@@ -12,10 +12,14 @@ import org.springframework.stereotype.Repository;
 public interface UploadedFileJpaRepository extends JpaRepository<UploadedFileJpaEntity, Long> {
 
     @Query("SELECT f FROM UploadedFileJpaEntity f WHERE " +
+           "(:search IS NULL OR " +
+           "    LOWER(f.fileName) LIKE LOWER(CONCAT('%', :search, '%')) OR " +
+           "    LOWER(f.originalFileName) LIKE LOWER(CONCAT('%', :search, '%')) OR " +
+           "    LOWER(f.description) LIKE LOWER(CONCAT('%', :search, '%'))) AND " +
            "(:category IS NULL OR f.category = :category) AND " +
-           "(:isPublic IS NULL OR f.isPublic = :isPublic) " +
-           "ORDER BY f.createdAt DESC")
+           "(:isPublic IS NULL OR f.isPublic = :isPublic)")
     Page<UploadedFileJpaEntity> findByFilters(
+        @Param("search") String search,
         @Param("category") String category,
         @Param("isPublic") Boolean isPublic,
         Pageable pageable

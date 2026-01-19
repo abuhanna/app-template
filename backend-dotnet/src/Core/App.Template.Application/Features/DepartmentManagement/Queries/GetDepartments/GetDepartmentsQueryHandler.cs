@@ -1,3 +1,4 @@
+using AppTemplate.Application.Common.Models;
 using AppTemplate.Application.DTOs;
 using AppTemplate.Application.Interfaces;
 using MediatR;
@@ -9,7 +10,7 @@ namespace AppTemplate.Application.Features.DepartmentManagement.Queries.GetDepar
 /// <summary>
 /// Handler for GetDepartmentsQuery
 /// </summary>
-public class GetDepartmentsQueryHandler : IRequestHandler<GetDepartmentsQuery, List<DepartmentDto>>
+public class GetDepartmentsQueryHandler : IRequestHandler<GetDepartmentsQuery, PagedResult<DepartmentDto>>
 {
     private readonly IApplicationDbContext _context;
     private readonly ILogger<GetDepartmentsQueryHandler> _logger;
@@ -22,9 +23,9 @@ public class GetDepartmentsQueryHandler : IRequestHandler<GetDepartmentsQuery, L
         _logger = logger;
     }
 
-    public async Task<List<DepartmentDto>> Handle(GetDepartmentsQuery request, CancellationToken cancellationToken)
+    public async Task<PagedResult<DepartmentDto>> Handle(GetDepartmentsQuery request, CancellationToken cancellationToken)
     {
-        _logger.LogInformation("Fetching departments from database");
+        _logger.LogInformation("Fetching departments from database with pagination");
 
         var query = _context.Departments.AsQueryable();
 
@@ -42,8 +43,25 @@ public class GetDepartmentsQueryHandler : IRequestHandler<GetDepartmentsQuery, L
                 d.Name.ToLower().Contains(search));
         }
 
+        // Get total count before pagination
+        var totalItems = await query.CountAsync(cancellationToken);
+
+        // Apply sorting
+        var isDescending = request.SortDir?.Equals("desc", StringComparison.OrdinalIgnoreCase) ?? false;
+        query = request.SortBy?.ToLower() switch
+        {
+            "code" => isDescending ? query.OrderByDescending(d => d.Code) : query.OrderBy(d => d.Code),
+            "name" => isDescending ? query.OrderByDescending(d => d.Name) : query.OrderBy(d => d.Name),
+            "createdat" => isDescending ? query.OrderByDescending(d => d.CreatedAt) : query.OrderBy(d => d.CreatedAt),
+            "updatedat" => isDescending ? query.OrderByDescending(d => d.UpdatedAt) : query.OrderBy(d => d.UpdatedAt),
+            "isactive" => isDescending ? query.OrderByDescending(d => d.IsActive) : query.OrderBy(d => d.IsActive),
+            _ => query.OrderBy(d => d.Name)
+        };
+
+        // Apply pagination
         var departments = await query
-            .OrderBy(d => d.Name)
+            .Skip((request.Page - 1) * request.PageSize)
+            .Take(request.PageSize)
             .Select(d => new DepartmentDto
             {
                 Id = d.Id,
@@ -56,8 +74,9 @@ public class GetDepartmentsQueryHandler : IRequestHandler<GetDepartmentsQuery, L
             })
             .ToListAsync(cancellationToken);
 
-        _logger.LogInformation("Successfully fetched {Count} departments", departments.Count);
+        _logger.LogInformation("Successfully fetched {Count} departments (page {Page} of {TotalPages})",
+            departments.Count, request.Page, (int)Math.Ceiling(totalItems / (double)request.PageSize));
 
-        return departments;
+        return PagedResult<DepartmentDto>.Create(departments, request.Page, request.PageSize, totalItems);
     }
 }

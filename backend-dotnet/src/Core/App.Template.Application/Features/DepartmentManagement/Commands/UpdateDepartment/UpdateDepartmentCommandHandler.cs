@@ -71,7 +71,7 @@ public class UpdateDepartmentCommandHandler : IRequestHandler<UpdateDepartmentCo
             Description = department.Description,
             IsActive = department.IsActive,
             CreatedAt = department.CreatedAt,
-            UserCount = department.Users.Count(u => u.IsActive)
+            UpdatedAt = department.UpdatedAt
         };
     }
 }

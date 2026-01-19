@@ -25,8 +25,8 @@ public class UploadedFileRepositoryAdapter implements UploadedFileRepository {
     }
 
     @Override
-    public Page<UploadedFile> findByFilters(String category, Boolean isPublic, Pageable pageable) {
-        return jpaRepository.findByFilters(category, isPublic, pageable)
+    public Page<UploadedFile> findByFilters(String search, String category, Boolean isPublic, Pageable pageable) {
+        return jpaRepository.findByFilters(search, category, isPublic, pageable)
             .map(mapper::toDomain);
     }
 

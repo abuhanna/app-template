@@ -12,6 +12,7 @@ import java.time.LocalDateTime;
 public interface AuditLogRepository {
 
     Page<AuditLog> findByFilters(
+        String search,
         String entityName,
         String entityId,
         Long userId,

@@ -1,3 +1,5 @@
+using AppTemplate.Application.Common.Extensions;
+using AppTemplate.Application.Common.Models;
 using AppTemplate.Application.DTOs;
 using AppTemplate.Application.Interfaces;
 using MediatR;
@@ -7,9 +9,9 @@ using Microsoft.Extensions.Logging;
 namespace AppTemplate.Application.Features.UserManagement.Queries.GetUsers;
 
 /// <summary>
-/// Handler for GetUsersQuery
+/// Handler for GetUsersQuery with pagination support
 /// </summary>
-public class GetUsersQueryHandler : IRequestHandler<GetUsersQuery, List<UserDto>>
+public class GetUsersQueryHandler : IRequestHandler<GetUsersQuery, PagedResult<UserDto>>
 {
     private readonly IApplicationDbContext _context;
     private readonly ILogger<GetUsersQueryHandler> _logger;
@@ -22,9 +24,9 @@ public class GetUsersQueryHandler : IRequestHandler<GetUsersQuery, List<UserDto>
         _logger = logger;
     }
 
-    public async Task<List<UserDto>> Handle(GetUsersQuery request, CancellationToken cancellationToken)
+    public async Task<PagedResult<UserDto>> Handle(GetUsersQuery request, CancellationToken cancellationToken)
     {
-        _logger.LogInformation("Fetching users from database");
+        _logger.LogInformation("Fetching users from database with pagination");
 
         var query = _context.Users
             .Include(u => u.Department)
@@ -50,13 +52,39 @@ public class GetUsersQueryHandler : IRequestHandler<GetUsersQuery, List<UserDto>
                 (u.Name != null && u.Name.ToLower().Contains(search)));
         }
 
+        // Get total count before pagination
+        var totalItems = await query.CountAsync(cancellationToken);
+
+        // Apply sorting
+        if (!string.IsNullOrWhiteSpace(request.SortBy))
+        {
+            query = request.SortBy.ToLower() switch
+            {
+                "username" => request.SortDir == "desc" ? query.OrderByDescending(u => u.Username) : query.OrderBy(u => u.Username),
+                "email" => request.SortDir == "desc" ? query.OrderByDescending(u => u.Email) : query.OrderBy(u => u.Email),
+                "name" or "fullname" => request.SortDir == "desc" ? query.OrderByDescending(u => u.Name) : query.OrderBy(u => u.Name),
+                "createdat" => request.SortDir == "desc" ? query.OrderByDescending(u => u.CreatedAt) : query.OrderBy(u => u.CreatedAt),
+                "lastloginat" => request.SortDir == "desc" ? query.OrderByDescending(u => u.LastLoginAt) : query.OrderBy(u => u.LastLoginAt),
+                "isactive" => request.SortDir == "desc" ? query.OrderByDescending(u => u.IsActive) : query.OrderBy(u => u.IsActive),
+                "departmentname" => request.SortDir == "desc"
+                    ? query.OrderByDescending(u => u.Department != null ? u.Department.Name : "")
+                    : query.OrderBy(u => u.Department != null ? u.Department.Name : ""),
+                _ => query.OrderBy(u => u.Username)
+            };
+        }
+        else
+        {
+            query = query.OrderBy(u => u.Username);
+        }
+
+        // Apply pagination
         var users = await query
-            .OrderBy(u => u.Username)
+            .Skip((request.Page - 1) * request.PageSize)
+            .Take(request.PageSize)
             .Select(u => new UserDto
             {
                 Id = u.Id,
                 Username = u.Username,
-                Email = u.Email,
                 Email = u.Email,
                 FullName = u.Name,
                 Role = u.Role,
@@ -76,8 +104,9 @@ public class GetUsersQueryHandler : IRequestHandler<GetUsersQuery, List<UserDto>
             user.LastName = nameParts.Length > 1 ? nameParts[1] : "";
         }
 
-        _logger.LogInformation("Successfully fetched {Count} users", users.Count);
+        _logger.LogInformation("Successfully fetched {Count} users (page {Page} of {TotalPages})",
+            users.Count, request.Page, (int)Math.Ceiling(totalItems / (double)request.PageSize));
 
-        return users;
+        return PagedResult<UserDto>.Create(users, request.Page, request.PageSize, totalItems);
     }
 }

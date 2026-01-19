@@ -7,12 +7,11 @@ import apptemplate.application.dto.user.UpdateUserRequest;
 import apptemplate.application.dto.user.UserDto;
 import apptemplate.application.usecases.user.*;
 import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
-import org.springframework.data.domain.Pageable;
-import org.springframework.data.web.PageableDefault;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
@@ -35,12 +34,19 @@ public class UsersController {
     @GetMapping
     @Operation(summary = "Get all users", description = "Get paginated list of users with optional filters")
     public ResponseEntity<ApiResponse<PagedResponse<UserDto>>> getUsers(
-            @RequestParam(required = false) String search,
-            @RequestParam(required = false) Long departmentId,
-            @RequestParam(required = false) Boolean isActive,
-            @PageableDefault(size = 10) Pageable pageable
+            @Parameter(description = "Page number (1-based)") @RequestParam(defaultValue = "1") int page,
+            @Parameter(description = "Number of items per page") @RequestParam(defaultValue = "10") int pageSize,
+            @Parameter(description = "Column to sort by (e.g., username, email, createdAt)") @RequestParam(required = false) String sortBy,
+            @Parameter(description = "Sort direction: asc or desc") @RequestParam(defaultValue = "asc") String sortDir,
+            @Parameter(description = "Search by username, email, or name") @RequestParam(required = false) String search,
+            @Parameter(description = "Filter by department ID") @RequestParam(required = false) Long departmentId,
+            @Parameter(description = "Filter by active status") @RequestParam(required = false) Boolean isActive
     ) {
-        Page<UserDto> users = getUsersUseCase.execute(search, departmentId, isActive, pageable);
+        // Ensure page is at least 1 and cap pageSize at 100
+        page = Math.max(1, page);
+        pageSize = Math.min(Math.max(1, pageSize), 100);
+
+        Page<UserDto> users = getUsersUseCase.execute(search, departmentId, isActive, page, pageSize, sortBy, sortDir);
         return ResponseEntity.ok(ApiResponse.success(PagedResponse.from(users)));
     }
 

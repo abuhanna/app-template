@@ -1,4 +1,5 @@
 import api from './api'
+import type { PagedResult, SortDirection } from '@/types'
 
 export interface AuditLog {
   id: number
@@ -13,18 +14,23 @@ export interface AuditLog {
 }
 
 export interface GetAuditLogsParams {
+  page?: number
+  pageSize?: number
+  sortBy?: string
+  sortDir?: SortDirection
+  search?: string
   entityName?: string
   entityId?: string
   userId?: number
   action?: string
   fromDate?: string
   toDate?: string
-  page?: number
-  pageSize?: number
 }
 
-export async function getAuditLogs(params: GetAuditLogsParams = {}): Promise<AuditLog[]> {
-  const { data } = await api.get('/audit-logs', { params })
+export async function getAuditLogs(
+  params: GetAuditLogsParams = {}
+): Promise<PagedResult<AuditLog>> {
+  const { data } = await api.get<PagedResult<AuditLog>>('/audit-logs', { params })
   return data
 }
 

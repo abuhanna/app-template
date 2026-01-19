@@ -21,7 +21,8 @@ public class CreateUserCommandValidatorTests
             Username = "testuser",
             Email = "test@example.com",
             Password = "Password123",
-            Name = "Test User",
+            FirstName = "Test",
+            LastName = "User",
             Role = "User",
             DepartmentId = 1
         };
@@ -214,7 +215,8 @@ public class CreateUserCommandValidatorTests
             Username = "testuser",
             Email = "test@example.com",
             Password = "Password123",
-            Name = null,
+            FirstName = null,
+            LastName = null,
             Role = null,
             DepartmentId = null
         };

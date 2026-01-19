@@ -59,8 +59,8 @@ export default function AuditLogsPage() {
       const params: Record<string, string> = {}
       if (entityFilter) params.entityName = entityFilter
       if (actionFilter) params.action = actionFilter
-      const data = await getAuditLogs(params)
-      setAuditLogs(data || [])
+      const result = await getAuditLogs(params)
+      setAuditLogs(result.items || [])
     } catch {
       showError('Failed to load audit logs')
     } finally {

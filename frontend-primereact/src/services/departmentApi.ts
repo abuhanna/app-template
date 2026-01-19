@@ -1,12 +1,25 @@
 import api from './api'
-import type { Department, CreateDepartmentRequest, UpdateDepartmentRequest } from '@/types'
+import type {
+  Department,
+  CreateDepartmentRequest,
+  UpdateDepartmentRequest,
+  PagedResult,
+  SortDirection,
+} from '@/types'
 
-export async function getDepartments(params?: {
+export interface GetDepartmentsParams {
   page?: number
   pageSize?: number
+  sortBy?: string
+  sortDir?: SortDirection
   search?: string
-}): Promise<Department[]> {
-  const response = await api.get<Department[]>('/departments', { params })
+  isActive?: boolean
+}
+
+export async function getDepartments(
+  params: GetDepartmentsParams = {}
+): Promise<PagedResult<Department>> {
+  const response = await api.get<PagedResult<Department>>('/departments', { params })
   return response.data
 }
 

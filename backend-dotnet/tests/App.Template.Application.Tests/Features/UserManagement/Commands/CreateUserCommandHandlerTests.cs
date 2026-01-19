@@ -36,7 +36,8 @@ public class CreateUserCommandHandlerTests
             Username = "newuser",
             Email = "newuser@example.com",
             Password = "Password123",
-            Name = "New User",
+            FirstName = "New",
+            LastName = "User",
             Role = "User"
         };
 
@@ -63,7 +64,7 @@ public class CreateUserCommandHandlerTests
         Assert.NotNull(result);
         Assert.Equal(command.Username, result.Username);
         Assert.Equal(command.Email, result.Email);
-        Assert.Equal(command.Name, result.Name);
+        Assert.Equal($"{command.FirstName} {command.LastName}", result.FullName);
         Assert.Equal(command.Role, result.Role);
 
         _mockPasswordHashService.Verify(x => x.HashPassword(command.Password), Times.Once);
