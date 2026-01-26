@@ -19,7 +19,26 @@ src/
 2. Configure database in `app.module.ts` or via environment variables
 3. Run the API: `npm run start:dev`
 
-## Environment Variables
+### Running with Docker
+
+```bash
+docker compose up -d --build
+```
+API: `http://localhost:5100`
+
+### Running Tests
+
+```bash
+npm test
+```
+
+## Features
+
+- **N-Layer Architecture**: Controller -> Service -> Repository
+- **Global Exception Filter**: Standardized error responses
+- **Logging Interceptor**: Request logging
+- **Docker Support**: Ready to deploy
+- **Unit Tests**: Jest setup included
 
 ```
 DB_HOST=localhost

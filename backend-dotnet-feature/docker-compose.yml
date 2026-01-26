@@ -1,0 +1,33 @@
+version: '3.8'
+
+services:
+  db:
+    image: mcr.microsoft.com/mssql/server:2022-latest
+    container_name: apptemplate-feature-db
+    environment:
+      ACCEPT_EULA: "Y"
+      MSSQL_SA_PASSWORD: "YourPassword123"
+    ports:
+      - "1433:1433"
+    networks:
+      - backend-network
+
+  api:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: apptemplate-feature-api
+    environment:
+      ASPNETCORE_ENVIRONMENT: Development
+      ASPNETCORE_URLS: http://+:8080
+      ConnectionStrings__DefaultConnection: "Server=db;Database=AppTemplate;User Id=sa;Password=YourPassword123;TrustServerCertificate=true"
+    ports:
+      - "5100:8080"
+    depends_on:
+      - db
+    networks:
+      - backend-network
+
+networks:
+  backend-network:
+    driver: bridge

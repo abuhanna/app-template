@@ -19,12 +19,49 @@ src/App.Template.Api/
 
 ## Getting Started
 
-1. Update connection string in `appsettings.json`
-2. Run migrations: `dotnet ef migrations add InitialCreate`
-3. Update database: `dotnet ef database update`
-4. Run the API: `dotnet run`
+### Prerequisites
+- .NET 8 SDK
+- SQL Server (local or via Docker) or Docker Desktop for containerized run
 
-## When to Use N-Layer
+### Running Locally
+
+1. Update connection string in `src/App.Template.Api/appsettings.json`
+2. Run migrations:
+   ```bash
+   dotnet ef migrations add InitialCreate --project src/App.Template.Api/App.Template.Api.csproj
+   dotnet ef database update --project src/App.Template.Api/App.Template.Api.csproj
+   ```
+3. Run the API:
+   ```bash
+   dotnet run --project src/App.Template.Api/App.Template.Api.csproj
+   ```
+   Or navigate to project folder:
+   ```bash
+   cd src/App.Template.Api
+   dotnet run
+   ```
+
+### Running with Docker
+
+```bash
+docker compose up -d --build
+```
+API will be available at `http://localhost:5100`.
+
+### Running Tests
+
+```bash
+dotnet test
+```
+
+## Features
+
+- **N-Layer Architecture**: Separation of concerns (Presentation, Business, Data)
+- **Global Exception Handling**: Centralized error handling middleware
+- **Structured Logging**: Pre-configured logging
+- **CORS Configured**: Ready for frontend integration
+- **Docker Support**: Containerized for easy deployment
+- **Unit Tests**: xUnit test project included
 
 - Simple CRUD applications
 - Admin panels and dashboards

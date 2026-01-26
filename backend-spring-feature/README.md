@@ -25,8 +25,28 @@ src/main/java/com/apptemplate/api/
 
 ## Getting Started
 
-1. Run the API: `./mvnw spring-boot:run` (or run `Application.java` in IDE)
+1. Run the API: `./mvnw spring-boot:run`
 2. API Docs: `http://localhost:8080/swagger-ui.html`
+
+### Running with Docker
+
+```bash
+docker compose up -d --build
+```
+API: `http://localhost:8080`
+
+### Running Tests
+
+```bash
+./mvnw test
+```
+
+## Features
+
+- **Package by Feature**: Modular architecture
+- **Global Exception Handling**: `@ControllerAdvice`
+- **Docker Support**: Containerized for easy deployment
+- **Unit Tests**: JUnit 5 & Mockito setup included
 
 ## Adding a New Feature
 

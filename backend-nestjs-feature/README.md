@@ -30,6 +30,27 @@ src/
 2. Configure database via environment variables
 3. Run the API: `npm run start:dev`
 
+### Running with Docker
+
+```bash
+docker compose up -d --build
+```
+API: `http://localhost:5100`
+
+### Running Tests
+
+```bash
+npm test
+```
+
+## Features
+
+- **Package by Feature**: Modular architecture
+- **Global Exception Filter**: Standardized error responses
+- **Logging Interceptor**: Request logging
+- **Docker Support**: Ready to deploy
+- **Unit Tests**: Jest setup included
+
 ## Adding a New Feature
 
 1. Create folder: `src/features/your-feature/`
