@@ -34,10 +34,10 @@ public interface UserJpaRepository extends JpaRepository<UserJpaEntity, Long> {
     long countByDepartmentId(Long departmentId);
 
     @Query("SELECT u FROM UserJpaEntity u WHERE " +
-           "(:search IS NULL OR LOWER(u.username) LIKE LOWER(CONCAT('%', :search, '%')) " +
-           "OR LOWER(u.email) LIKE LOWER(CONCAT('%', :search, '%')) " +
-           "OR LOWER(u.firstName) LIKE LOWER(CONCAT('%', :search, '%')) " +
-           "OR LOWER(u.lastName) LIKE LOWER(CONCAT('%', :search, '%'))) " +
+           "(:search IS NULL OR LOWER(u.username) LIKE LOWER(CAST(:search AS string)) " +
+           "OR LOWER(u.email) LIKE LOWER(CAST(:search AS string)) " +
+           "OR LOWER(u.firstName) LIKE LOWER(CAST(:search AS string)) " +
+           "OR LOWER(u.lastName) LIKE LOWER(CAST(:search AS string))) " +
            "AND (:departmentId IS NULL OR u.departmentId = :departmentId) " +
            "AND (:isActive IS NULL OR u.isActive = :isActive)")
     Page<UserJpaEntity> findByFilters(

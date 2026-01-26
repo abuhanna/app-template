@@ -13,9 +13,9 @@ public interface UploadedFileJpaRepository extends JpaRepository<UploadedFileJpa
 
     @Query("SELECT f FROM UploadedFileJpaEntity f WHERE " +
            "(:search IS NULL OR " +
-           "    LOWER(f.fileName) LIKE LOWER(CONCAT('%', :search, '%')) OR " +
-           "    LOWER(f.originalFileName) LIKE LOWER(CONCAT('%', :search, '%')) OR " +
-           "    LOWER(f.description) LIKE LOWER(CONCAT('%', :search, '%'))) AND " +
+           "    LOWER(f.fileName) LIKE LOWER(CAST(:search AS string)) OR " +
+           "    LOWER(f.originalFileName) LIKE LOWER(CAST(:search AS string)) OR " +
+           "    LOWER(f.description) LIKE LOWER(CAST(:search AS string))) AND " +
            "(:category IS NULL OR f.category = :category) AND " +
            "(:isPublic IS NULL OR f.isPublic = :isPublic)")
     Page<UploadedFileJpaEntity> findByFilters(

@@ -55,6 +55,13 @@ public class GetAuditLogsUseCase {
         // Create pageable
         Pageable pageable = PageRequest.of(zeroBasedPage, pageSize, sort);
 
+        // Format search string with wildcards if present
+        if (search != null && !search.isBlank()) {
+            search = "%" + search + "%";
+        } else {
+            search = null;
+        }
+
         return auditLogRepository.findByFilters(
             search, entityName, entityId, userId, action, fromDate, toDate, pageable
         ).map(auditLogMapper::toDto);

@@ -34,7 +34,7 @@ public class FilesController {
 
     @GetMapping
     @Operation(summary = "Get all files", description = "Get paginated list of files with optional filters")
-    public ResponseEntity<ApiResponse<PagedResponse<UploadedFileDto>>> getFiles(
+    public ResponseEntity<PagedResponse<UploadedFileDto>> getFiles(
             @Parameter(description = "Page number (1-based)") @RequestParam(defaultValue = "1") int page,
             @Parameter(description = "Number of items per page") @RequestParam(defaultValue = "20") int pageSize,
             @Parameter(description = "Column to sort by (e.g., fileName, createdAt)") @RequestParam(required = false) String sortBy,
@@ -48,19 +48,19 @@ public class FilesController {
         pageSize = Math.min(Math.max(1, pageSize), 100);
 
         Page<UploadedFileDto> files = getFilesUseCase.execute(search, category, isPublic, page, pageSize, sortBy, sortDir);
-        return ResponseEntity.ok(ApiResponse.success(PagedResponse.from(files)));
+        return ResponseEntity.ok(PagedResponse.from(files));
     }
 
     @GetMapping("/{id}")
     @Operation(summary = "Get file by ID", description = "Get file metadata by its ID")
-    public ResponseEntity<ApiResponse<UploadedFileDto>> getFileById(@PathVariable Long id) {
+    public ResponseEntity<UploadedFileDto> getFileById(@PathVariable Long id) {
         UploadedFileDto file = getFileByIdUseCase.execute(id);
-        return ResponseEntity.ok(ApiResponse.success(file));
+        return ResponseEntity.ok(file);
     }
 
     @PostMapping(consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
     @Operation(summary = "Upload file", description = "Upload a new file")
-    public ResponseEntity<ApiResponse<UploadedFileDto>> uploadFile(
+    public ResponseEntity<UploadedFileDto> uploadFile(
             @RequestParam("file") MultipartFile file,
             @RequestParam(required = false) String description,
             @RequestParam(required = false) String category,
@@ -69,7 +69,7 @@ public class FilesController {
         log.info("Uploading file: {}, Size: {}", file.getOriginalFilename(), file.getSize());
         UploadedFileDto uploadedFile = uploadFileUseCase.execute(file, description, category, isPublic);
         return ResponseEntity.status(HttpStatus.CREATED)
-                .body(ApiResponse.success(uploadedFile, "File uploaded successfully"));
+                .body(uploadedFile);
     }
 
     @GetMapping("/{id}/download")
@@ -86,8 +86,8 @@ public class FilesController {
 
     @DeleteMapping("/{id}")
     @Operation(summary = "Delete file", description = "Delete a file by its ID")
-    public ResponseEntity<ApiResponse<Void>> deleteFile(@PathVariable Long id) {
+    public ResponseEntity<Void> deleteFile(@PathVariable Long id) {
         deleteFileUseCase.execute(id);
-        return ResponseEntity.ok(ApiResponse.success(null, "File deleted successfully"));
+        return ResponseEntity.ok().build();
     }
 }

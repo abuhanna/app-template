@@ -26,7 +26,8 @@ public class GetDepartmentsUseCase {
             "createdAt", "createdAt",
             "createdat", "createdAt",
             "isActive", "isActive",
-            "isactive", "isActive"
+            "isactive", "isActive",
+            "active", "isActive"
     );
 
     @Transactional(readOnly = true)
@@ -40,6 +41,13 @@ public class GetDepartmentsUseCase {
 
         // Create pageable
         Pageable pageable = PageRequest.of(zeroBasedPage, pageSize, sort);
+
+        // Format search string with wildcards if present
+        if (search != null && !search.isBlank()) {
+            search = "%" + search + "%";
+        } else {
+            search = null; // Ensure empty string becomes null for query optimization
+        }
 
         Page<Department> departments = departmentRepository.findByFilters(search, isActive, pageable);
         return departments.map(departmentMapper::toDto);

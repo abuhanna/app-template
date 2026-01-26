@@ -1,13 +1,13 @@
 package apptemplate.infrastructure.persistence.entities;
 
-import apptemplate.infrastructure.persistence.listeners.AuditEntityListener;
+
 import jakarta.persistence.*;
 import lombok.*;
 import java.time.LocalDateTime;
 
 @Entity
 @Table(name = "uploaded_files")
-@EntityListeners(AuditEntityListener.class)
+// @EntityListeners(AuditEntityListener.class) removed in favor of HibernateAuditListener
 @Getter
 @Setter
 @NoArgsConstructor

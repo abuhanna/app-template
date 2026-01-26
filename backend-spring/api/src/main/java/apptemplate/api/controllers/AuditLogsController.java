@@ -27,7 +27,7 @@ public class AuditLogsController {
 
     @GetMapping
     @Operation(summary = "Get audit logs", description = "Get paginated list of audit logs with optional filters")
-    public ResponseEntity<ApiResponse<PagedResponse<AuditLogDto>>> getAuditLogs(
+    public ResponseEntity<PagedResponse<AuditLogDto>> getAuditLogs(
             @Parameter(description = "Page number (1-based)") @RequestParam(defaultValue = "1") int page,
             @Parameter(description = "Number of items per page") @RequestParam(defaultValue = "20") int pageSize,
             @Parameter(description = "Column to sort by (e.g., timestamp, entityName, action)") @RequestParam(required = false) String sortBy,
@@ -47,6 +47,6 @@ public class AuditLogsController {
         Page<AuditLogDto> auditLogs = getAuditLogsUseCase.execute(
             search, entityName, entityId, userId, action, fromDate, toDate, page, pageSize, sortBy, sortDir
         );
-        return ResponseEntity.ok(ApiResponse.success(PagedResponse.from(auditLogs)));
+        return ResponseEntity.ok(PagedResponse.from(auditLogs));
     }
 }

@@ -43,6 +43,13 @@ public class GetFilesUseCase {
         // Create pageable
         Pageable pageable = PageRequest.of(zeroBasedPage, pageSize, sort);
 
+        // Format search string with wildcards if present
+        if (search != null && !search.isBlank()) {
+            search = "%" + search + "%";
+        } else {
+            search = null;
+        }
+
         return fileRepository.findByFilters(search, category, isPublic, pageable)
             .map(fileMapper::toDto);
     }

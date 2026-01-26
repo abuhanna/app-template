@@ -31,66 +31,66 @@ public class AuthController {
 
     @PostMapping("/login")
     @Operation(summary = "Login", description = "Authenticate user and receive JWT tokens")
-    public ResponseEntity<ApiResponse<LoginResponse>> login(@Valid @RequestBody LoginRequest request) {
+    public ResponseEntity<LoginResponse> login(@Valid @RequestBody LoginRequest request) {
         LoginResponse response = loginUseCase.execute(request);
-        return ResponseEntity.ok(ApiResponse.success(response));
+        return ResponseEntity.ok(response);
     }
 
     @PostMapping("/refresh")
     @Operation(summary = "Refresh token", description = "Get a new access token using refresh token")
-    public ResponseEntity<ApiResponse<LoginResponse>> refresh(@Valid @RequestBody RefreshTokenRequest request) {
+    public ResponseEntity<LoginResponse> refresh(@Valid @RequestBody RefreshTokenRequest request) {
         LoginResponse response = refreshTokenUseCase.execute(request);
-        return ResponseEntity.ok(ApiResponse.success(response));
+        return ResponseEntity.ok(response);
     }
 
     @PostMapping("/logout")
     @Operation(summary = "Logout", description = "Invalidate refresh token")
-    public ResponseEntity<ApiResponse<Void>> logout(@RequestBody(required = false) RefreshTokenRequest request) {
+    public ResponseEntity<Void> logout(@RequestBody(required = false) RefreshTokenRequest request) {
         if (request != null) {
             logoutUseCase.execute(request.getRefreshToken());
         }
-        return ResponseEntity.ok(ApiResponse.success(null, "Logged out successfully"));
+        return ResponseEntity.ok().build();
     }
 
     @PostMapping("/forgot-password")
     @Operation(summary = "Request password reset", description = "Send password reset email")
-    public ResponseEntity<ApiResponse<Void>> forgotPassword(@Valid @RequestBody ForgotPasswordRequest request) {
+    public ResponseEntity<Void> forgotPassword(@Valid @RequestBody ForgotPasswordRequest request) {
         requestPasswordResetUseCase.execute(request);
-        return ResponseEntity.ok(ApiResponse.success(null, "If the email exists, a password reset link has been sent"));
+        return ResponseEntity.ok().build();
     }
 
     @PostMapping("/reset-password")
     @Operation(summary = "Reset password", description = "Reset password using token")
-    public ResponseEntity<ApiResponse<Void>> resetPassword(@Valid @RequestBody ResetPasswordRequest request) {
+    public ResponseEntity<Void> resetPassword(@Valid @RequestBody ResetPasswordRequest request) {
         resetPasswordUseCase.execute(request);
-        return ResponseEntity.ok(ApiResponse.success(null, "Password reset successfully"));
+        return ResponseEntity.ok().build();
     }
 
     @GetMapping("/me")
     @Operation(summary = "Get current user", description = "Get basic info of authenticated user")
-    public ResponseEntity<ApiResponse<UserInfoResponse>> getCurrentUser() {
+    public ResponseEntity<UserInfoResponse> getCurrentUser() {
         UserInfoResponse response = getCurrentUserUseCase.execute();
-        return ResponseEntity.ok(ApiResponse.success(response));
+        return ResponseEntity.ok(response);
     }
 
     @GetMapping("/profile")
     @Operation(summary = "Get my profile", description = "Get full profile of authenticated user")
-    public ResponseEntity<ApiResponse<UserDto>> getMyProfile() {
+    public ResponseEntity<UserDto> getMyProfile() {
         UserDto profile = getMyProfileUseCase.execute();
-        return ResponseEntity.ok(ApiResponse.success(profile));
+        return ResponseEntity.ok(profile);
     }
 
     @PutMapping("/profile")
     @Operation(summary = "Update my profile", description = "Update profile of authenticated user")
-    public ResponseEntity<ApiResponse<UserDto>> updateMyProfile(@Valid @RequestBody UpdateProfileRequest request) {
+    public ResponseEntity<UserDto> updateMyProfile(@Valid @RequestBody UpdateProfileRequest request) {
         UserDto profile = updateMyProfileUseCase.execute(request);
-        return ResponseEntity.ok(ApiResponse.success(profile, "Profile updated successfully"));
+        return ResponseEntity.ok(profile);
     }
 
     @PostMapping("/change-password")
     @Operation(summary = "Change password", description = "Change password of authenticated user")
-    public ResponseEntity<ApiResponse<Void>> changePassword(@Valid @RequestBody ChangePasswordRequest request) {
+    public ResponseEntity<Void> changePassword(@Valid @RequestBody ChangePasswordRequest request) {
         changeUserPasswordUseCase.execute(request);
-        return ResponseEntity.ok(ApiResponse.success(null, "Password changed successfully"));
+        return ResponseEntity.ok().build();
     }
 }

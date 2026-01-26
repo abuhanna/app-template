@@ -27,25 +27,25 @@ public class NotificationsController {
 
     @GetMapping
     @Operation(summary = "Get my notifications", description = "Get paginated list of notifications for authenticated user")
-    public ResponseEntity<ApiResponse<PagedResponse<NotificationDto>>> getNotifications(
+    public ResponseEntity<PagedResponse<NotificationDto>> getNotifications(
             @RequestParam(required = false, defaultValue = "false") Boolean unreadOnly,
             @PageableDefault(size = 20) Pageable pageable
     ) {
         Page<NotificationDto> notifications = getUserNotificationsUseCase.execute(unreadOnly, pageable);
-        return ResponseEntity.ok(ApiResponse.success(PagedResponse.from(notifications)));
+        return ResponseEntity.ok(PagedResponse.from(notifications));
     }
 
-    @PostMapping("/{id}/read")
+    @PutMapping("/{id}/read")
     @Operation(summary = "Mark notification as read", description = "Mark a specific notification as read")
-    public ResponseEntity<ApiResponse<Void>> markAsRead(@PathVariable Long id) {
+    public ResponseEntity<Void> markAsRead(@PathVariable Long id) {
         markNotificationAsReadUseCase.execute(id);
-        return ResponseEntity.ok(ApiResponse.success(null, "Notification marked as read"));
+        return ResponseEntity.ok().build();
     }
 
-    @PostMapping("/read-all")
+    @PutMapping("/read-all")
     @Operation(summary = "Mark all as read", description = "Mark all notifications as read")
-    public ResponseEntity<ApiResponse<Void>> markAllAsRead() {
+    public ResponseEntity<Void> markAllAsRead() {
         markAllNotificationsAsReadUseCase.execute();
-        return ResponseEntity.ok(ApiResponse.success(null, "All notifications marked as read"));
+        return ResponseEntity.ok().build();
     }
 }

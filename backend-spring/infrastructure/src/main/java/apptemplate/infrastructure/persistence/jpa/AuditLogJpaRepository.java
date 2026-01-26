@@ -15,15 +15,15 @@ public interface AuditLogJpaRepository extends JpaRepository<AuditLogJpaEntity, 
 
     @Query("SELECT a FROM AuditLogJpaEntity a WHERE " +
            "(:search IS NULL OR " +
-           "    LOWER(a.entityName) LIKE LOWER(CONCAT('%', :search, '%')) OR " +
-           "    LOWER(a.entityId) LIKE LOWER(CONCAT('%', :search, '%')) OR " +
-           "    LOWER(a.action) LIKE LOWER(CONCAT('%', :search, '%'))) AND " +
+           "    LOWER(a.entityName) LIKE LOWER(CAST(:search AS string)) OR " +
+           "    LOWER(a.entityId) LIKE LOWER(CAST(:search AS string)) OR " +
+           "    LOWER(a.action) LIKE LOWER(CAST(:search AS string))) AND " +
            "(:entityName IS NULL OR a.entityName = :entityName) AND " +
            "(:entityId IS NULL OR a.entityId = :entityId) AND " +
            "(:userId IS NULL OR a.userId = :userId) AND " +
            "(:action IS NULL OR a.action = :action) AND " +
-           "(:fromDate IS NULL OR a.timestamp >= :fromDate) AND " +
-           "(:toDate IS NULL OR a.timestamp <= :toDate)")
+           "(CAST(:fromDate AS timestamp) IS NULL OR a.timestamp >= :fromDate) AND " +
+           "(CAST(:toDate AS timestamp) IS NULL OR a.timestamp <= :toDate)")
     Page<AuditLogJpaEntity> findByFilters(
         @Param("search") String search,
         @Param("entityName") String entityName,

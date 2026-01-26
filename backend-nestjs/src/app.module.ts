@@ -1,7 +1,10 @@
 import { Module } from '@nestjs/common';
+import { APP_INTERCEPTOR } from '@nestjs/core';
+import { UserContextInterceptor } from './core/interceptors/user-context.interceptor';
 import { LoggerModule } from 'nestjs-pino';
 import * as crypto from 'crypto';
 import { ConfigModule } from '@nestjs/config';
+import { ClsModule } from 'nestjs-cls';
 import { CoreModule } from './core/core.module';
 import { AuthModule } from './modules/auth/auth.module';
 import { UserManagementModule } from './modules/user-management/user-management.module';
@@ -30,6 +33,10 @@ import { SeederModule } from './core/database/seed.module';
         autoLogging: true,
       },
     }),
+    ClsModule.forRoot({
+      global: true,
+      middleware: { mount: true },
+    }),
     CoreModule,
     SeederModule,
     HealthModule,
@@ -40,6 +47,12 @@ import { SeederModule } from './core/database/seed.module';
     FileManagementModule,
     AuditLogModule,
     ExportModule,
+  ],
+  providers: [
+    {
+      provide: APP_INTERCEPTOR,
+      useClass: UserContextInterceptor,
+    },
   ],
 })
 export class AppModule {}

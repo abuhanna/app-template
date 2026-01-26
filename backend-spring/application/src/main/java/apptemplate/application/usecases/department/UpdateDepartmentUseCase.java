@@ -26,20 +26,24 @@ public class UpdateDepartmentUseCase {
                 .orElseThrow(() -> new NotFoundException("Department", id));
 
         // Check code uniqueness if changed
-        if (!department.getCode().equalsIgnoreCase(request.getCode())) {
+        if (request.getCode() != null && !department.getCode().equalsIgnoreCase(request.getCode())) {
             departmentRepository.findByCode(request.getCode())
                     .ifPresent(existing -> {
                         throw new ConflictException("Department code already exists");
                     });
+            department.updateCode(request.getCode().toUpperCase());
         }
 
-        // Update department
-        department.updateCode(request.getCode().toUpperCase());
+        // Update department information
         department.update(
-                request.getName(),
-                request.getDescription()
+            request.getName() != null ? request.getName() : department.getName(),
+            request.getDescription() != null ? request.getDescription() : department.getDescription()
         );
-        department.setActiveStatus(request.getIsActive());
+
+        // Update active status
+        if (request.getIsActive() != null) {
+            department.setActiveStatus(request.getIsActive());
+        }
 
         departmentRepository.save(department);
 

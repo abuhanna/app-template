@@ -18,64 +18,61 @@ import java.util.Map;
 @Slf4j
 public class GlobalExceptionHandler {
 
+    private ResponseEntity<StandardErrorResponse> buildResponse(HttpStatus status, String message, String error, Map<String, String> details) {
+        StandardErrorResponse response = StandardErrorResponse.builder()
+                .statusCode(status.value())
+                .message(message)
+                .error(error)
+                .timestamp(java.time.LocalDateTime.now().toString())
+                .details(details)
+                .build();
+        return new ResponseEntity<>(response, status);
+    }
+
     @ExceptionHandler(NotFoundException.class)
-    public ResponseEntity<ApiResponse<Void>> handleNotFoundException(NotFoundException ex) {
+    public ResponseEntity<StandardErrorResponse> handleNotFoundException(NotFoundException ex) {
         log.warn("Resource not found: {}", ex.getMessage());
-        return ResponseEntity
-                .status(HttpStatus.NOT_FOUND)
-                .body(ApiResponse.error(ex.getMessage()));
+        return buildResponse(HttpStatus.NOT_FOUND, ex.getMessage(), "Not Found", null);
     }
 
     @ExceptionHandler(ConflictException.class)
-    public ResponseEntity<ApiResponse<Void>> handleConflictException(ConflictException ex) {
+    public ResponseEntity<StandardErrorResponse> handleConflictException(ConflictException ex) {
         log.warn("Conflict: {}", ex.getMessage());
-        return ResponseEntity
-                .status(HttpStatus.CONFLICT)
-                .body(ApiResponse.error(ex.getMessage()));
+        return buildResponse(HttpStatus.CONFLICT, ex.getMessage(), "Conflict", null);
     }
 
     @ExceptionHandler(ValidationException.class)
-    public ResponseEntity<ApiResponse<Void>> handleValidationException(ValidationException ex) {
+    public ResponseEntity<StandardErrorResponse> handleValidationException(ValidationException ex) {
         log.warn("Validation error: {}", ex.getMessage());
-        return ResponseEntity
-                .status(HttpStatus.BAD_REQUEST)
-                .body(ApiResponse.error(ex.getMessage(), ex.getErrors()));
+        return buildResponse(HttpStatus.BAD_REQUEST, ex.getMessage(), "Bad Request", ex.getErrors());
     }
 
     @ExceptionHandler(AuthenticationException.class)
-    public ResponseEntity<ApiResponse<Void>> handleAuthenticationException(AuthenticationException ex) {
+    public ResponseEntity<StandardErrorResponse> handleAuthenticationException(AuthenticationException ex) {
         log.warn("Authentication error: {}", ex.getMessage());
-        return ResponseEntity
-                .status(HttpStatus.UNAUTHORIZED)
-                .body(ApiResponse.error(ex.getMessage()));
+        return buildResponse(HttpStatus.UNAUTHORIZED, ex.getMessage(), "Unauthorized", null);
     }
 
     @ExceptionHandler(BusinessException.class)
-    public ResponseEntity<ApiResponse<Void>> handleBusinessException(BusinessException ex) {
+    public ResponseEntity<StandardErrorResponse> handleBusinessException(BusinessException ex) {
         log.warn("Business error: {}", ex.getMessage());
-        return ResponseEntity
-                .status(HttpStatus.BAD_REQUEST)
-                .body(ApiResponse.error(ex.getMessage()));
+        return buildResponse(HttpStatus.BAD_REQUEST, ex.getMessage(), "Bad Request", null);
     }
 
     @ExceptionHandler(AccessDeniedException.class)
-    public ResponseEntity<ApiResponse<Void>> handleAccessDeniedException(AccessDeniedException ex) {
+    public ResponseEntity<StandardErrorResponse> handleAccessDeniedException(AccessDeniedException ex) {
         log.warn("Access denied: {}", ex.getMessage());
-        return ResponseEntity
-                .status(HttpStatus.FORBIDDEN)
-                .body(ApiResponse.error("Access denied"));
+        return buildResponse(HttpStatus.FORBIDDEN, "Access denied", "Forbidden", null);
     }
 
     @ExceptionHandler(org.springframework.http.converter.HttpMessageNotReadableException.class)
-    public ResponseEntity<ApiResponse<Void>> handleHttpMessageNotReadableException(org.springframework.http.converter.HttpMessageNotReadableException ex) {
+    public ResponseEntity<StandardErrorResponse> handleHttpMessageNotReadableException(org.springframework.http.converter.HttpMessageNotReadableException ex) {
         log.warn("Malformed JSON request: {}", ex.getMessage());
-        return ResponseEntity
-                .status(HttpStatus.BAD_REQUEST)
-                .body(ApiResponse.error("Malformed JSON request"));
+        return buildResponse(HttpStatus.BAD_REQUEST, "Malformed JSON request", "Bad Request", null);
     }
 
     @ExceptionHandler(MethodArgumentNotValidException.class)
-    public ResponseEntity<ApiResponse<Void>> handleValidationErrors(MethodArgumentNotValidException ex) {
+    public ResponseEntity<StandardErrorResponse> handleValidationErrors(MethodArgumentNotValidException ex) {
         Map<String, String> errors = new HashMap<>();
         ex.getBindingResult().getAllErrors().forEach(error -> {
             String fieldName = ((FieldError) error).getField();
@@ -84,16 +81,12 @@ public class GlobalExceptionHandler {
         });
 
         log.warn("Validation errors: {}", errors);
-        return ResponseEntity
-                .status(HttpStatus.BAD_REQUEST)
-                .body(ApiResponse.error("Validation failed", errors));
+        return buildResponse(HttpStatus.BAD_REQUEST, "Validation failed", "Bad Request", errors);
     }
 
     @ExceptionHandler(Exception.class)
-    public ResponseEntity<ApiResponse<Void>> handleGenericException(Exception ex) {
+    public ResponseEntity<StandardErrorResponse> handleGenericException(Exception ex) {
         log.error("Unexpected error", ex);
-        return ResponseEntity
-                .status(HttpStatus.INTERNAL_SERVER_ERROR)
-                .body(ApiResponse.error("An unexpected error occurred"));
+        return buildResponse(HttpStatus.INTERNAL_SERVER_ERROR, "An unexpected error occurred", "Internal Server Error", null);
     }
 }

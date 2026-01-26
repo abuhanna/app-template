@@ -21,8 +21,8 @@ public interface DepartmentJpaRepository extends JpaRepository<DepartmentJpaEnti
     boolean existsByCodeAndIdNot(String code, Long id);
 
     @Query("SELECT d FROM DepartmentJpaEntity d WHERE " +
-           "(:search IS NULL OR LOWER(d.code) LIKE LOWER(CONCAT('%', :search, '%')) " +
-           "OR LOWER(d.name) LIKE LOWER(CONCAT('%', :search, '%'))) " +
+           "(:search IS NULL OR LOWER(d.code) LIKE LOWER(CAST(:search AS string)) " +
+           "OR LOWER(d.name) LIKE LOWER(CAST(:search AS string))) " +
            "AND (:isActive IS NULL OR d.isActive = :isActive)")
     Page<DepartmentJpaEntity> findByFilters(
             @Param("search") String search,

@@ -12,7 +12,8 @@ public interface UserMapper {
 
     UserMapper INSTANCE = Mappers.getMapper(UserMapper.class);
 
-    @Mapping(target = "role", expression = "java(user.getRole().name())")
+    // Capitalize role name (e.g., ADMIN -> Admin) to match frontend expectations
+    @Mapping(target = "role", expression = "java(user.getRole().name().charAt(0) + user.getRole().name().substring(1).toLowerCase())")
     @Mapping(target = "departmentName", ignore = true)
     @Mapping(target = "fullName", source = "name")
     @Mapping(target = "isActive", source = "active")
@@ -20,7 +21,7 @@ public interface UserMapper {
     @Mapping(target = "lastName", expression = "java(user.getName() != null && user.getName().contains(\" \") ? user.getName().substring(user.getName().indexOf(\" \") + 1) : \"\")")
     UserDto toDto(User user);
 
-    @Mapping(target = "role", expression = "java(user.getRole().name())")
+    @Mapping(target = "role", expression = "java(user.getRole().name().charAt(0) + user.getRole().name().substring(1).toLowerCase())")
     @Mapping(target = "departmentName", ignore = true)
     @Mapping(target = "fullName", source = "name")
     @Mapping(target = "isActive", source = "active")

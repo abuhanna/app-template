@@ -3,6 +3,7 @@ package apptemplate.infrastructure.persistence.mappers;
 import apptemplate.domain.entities.Department;
 import apptemplate.infrastructure.persistence.entities.DepartmentJpaEntity;
 import org.mapstruct.Mapper;
+
 import org.mapstruct.MappingTarget;
 
 @Mapper(componentModel = "spring")
