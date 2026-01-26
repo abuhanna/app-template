@@ -29,6 +29,8 @@ builder.Services.AddDbContext<AppDbContext>(options =>
     options.UseSqlServer(builder.Configuration.GetConnectionString("DefaultConnection")));
 
 // Register feature services
+builder.Services.AddHttpContextAccessor();
+builder.Services.AddScoped<App.Template.Api.Common.Services.ICurrentUserService, App.Template.Api.Common.Services.CurrentUserService>();
 builder.Services.AddFeatureServices();
 
 // Add AutoMapper

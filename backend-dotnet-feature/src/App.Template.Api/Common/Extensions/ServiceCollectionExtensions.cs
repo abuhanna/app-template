@@ -10,9 +10,15 @@ public static class ServiceCollectionExtensions
         services.AddScoped<IUserRepository, UserRepository>();
         services.AddScoped<IUserService, UserService>();
 
-        // Add more features here as they are created
-        // services.AddScoped<IProductRepository, ProductRepository>();
-        // services.AddScoped<IProductService, ProductService>();
+        // Auth Feature
+        services.AddScoped<App.Template.Api.Features.Auth.IAuthService, App.Template.Api.Features.Auth.AuthService>();
+        services.AddScoped<App.Template.Api.Common.Services.IJwtTokenGenerator, App.Template.Api.Common.Services.JwtTokenGenerator>();
+
+        // Departments Feature
+        services.AddScoped<App.Template.Api.Features.Departments.IDepartmentService, App.Template.Api.Features.Departments.DepartmentService>();
+
+        // Files Feature
+        services.AddScoped<App.Template.Api.Features.Files.IFileService, App.Template.Api.Features.Files.FileService>();
 
         return services;
     }

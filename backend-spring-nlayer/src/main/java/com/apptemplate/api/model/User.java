@@ -10,6 +10,7 @@ import java.time.LocalDateTime;
 @Data
 @Entity
 @Table(name = "users")
+@EntityListeners(com.apptemplate.api.audit.AuditEntityListener.class)
 public class User {
 
     @Id

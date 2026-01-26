@@ -4,7 +4,7 @@ using System.ComponentModel.DataAnnotations.Schema;
 namespace App.Template.Api.Models.Entities;
 
 [Table("Users")]
-public class User
+public class User : AuditableEntity
 {
     [Key]
     public int Id { get; set; }
@@ -22,8 +22,4 @@ public class User
     public string? PasswordHash { get; set; }
 
     public bool IsActive { get; set; } = true;
-
-    public DateTime CreatedAt { get; set; } = DateTime.UtcNow;
-
-    public DateTime? UpdatedAt { get; set; }
 }

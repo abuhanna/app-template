@@ -7,12 +7,23 @@ public static class ServiceCollectionExtensions
 {
     public static IServiceCollection AddApplicationServices(this IServiceCollection services)
     {
-        // Register Repositories
-        services.AddScoped<IUserRepository, UserRepository>();
-
-        // Register Services
-        services.AddScoped<IUserService, UserService>();
-
+        services.AddScoped<Services.IUserService, Services.UserService>();
+        services.AddScoped<Services.IDepartmentService, Services.DepartmentService>();
+        services.AddScoped<Services.IFileService, Services.FileService>();
+        services.AddScoped<Services.IAuthService, Services.AuthService>();
+        services.AddScoped<Services.IJwtTokenGenerator, Services.JwtTokenGenerator>();
+        services.AddScoped<Repositories.IUserRepository, Repositories.UserRepository>();
+        
         return services;
+    }
+
+    public static void AddAutoMapper(this IServiceCollection services, Type assemblyMarkerType)
+    {
+        services.AddAutoMapper(config =>
+        {
+            config.CreateMap<Models.Entities.User, Models.Dtos.UserDto>();
+            config.CreateMap<Models.Entities.Department, Models.Dtos.DepartmentDto>();
+            config.CreateMap<Models.Dtos.CreateDepartmentDto, Models.Entities.Department>();
+        }, assemblyMarkerType.Assembly);
     }
 }
