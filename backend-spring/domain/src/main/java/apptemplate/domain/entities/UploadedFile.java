@@ -25,21 +25,7 @@ public class UploadedFile extends AuditableEntity {
     private String category;
     private boolean isPublic;
 
-    /**
-     * Creates a new uploaded file.
-     */
-    public UploadedFile(String fileName, String originalFileName, String contentType,
-                       Long fileSize, String storagePath, String description,
-                       String category, boolean isPublic) {
-        this.fileName = fileName;
-        this.originalFileName = originalFileName;
-        this.contentType = contentType;
-        this.fileSize = fileSize;
-        this.storagePath = storagePath;
-        this.description = description;
-        this.category = category;
-        this.isPublic = isPublic;
-    }
+
 
     /**
      * Updates file metadata.

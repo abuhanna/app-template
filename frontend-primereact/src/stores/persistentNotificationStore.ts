@@ -63,6 +63,43 @@ export const usePersistentNotificationStore = create<PersistentNotificationState
       })
 
       set({ connection: socket as ConnectionType })
+    } else if (backendType === 'spring') {
+      // STOMP over WebSocket for Spring Boot
+      const { Client } = await import('@stomp/stompjs')
+      
+      const wsProtocol = window.location.protocol === 'https:' ? 'wss:' : 'ws:'
+      const host = baseUrl.replace(/^https?:\/\//, '').replace(/\/api\/?$/, '')
+      const brokerUrl = `${wsProtocol}//${host}/ws`
+
+      const client = new Client({
+        brokerURL: brokerUrl,
+        connectHeaders: {
+          Authorization: `Bearer ${token}`
+        },
+        reconnectDelay: 5000,
+        heartbeatIncoming: 4000,
+        heartbeatOutgoing: 4000,
+      })
+
+      client.onConnect = () => {
+        console.log('STOMP (Spring) connected')
+        
+        client.subscribe('/user/queue/notifications', message => {
+             const notification = JSON.parse(message.body)
+             handleNotification(notification)
+        })
+        
+        get().fetchNotifications()
+      }
+      
+      client.onStompError = (frame) => {
+        console.error('Broker reported error: ' + frame.headers['message'])
+        console.error('Additional details: ' + frame.body)
+      }
+
+      client.activate()
+      set({ connection: client as any })
+
     } else {
       // SignalR for .NET and Spring
       const hubConnection = new HubConnectionBuilder()

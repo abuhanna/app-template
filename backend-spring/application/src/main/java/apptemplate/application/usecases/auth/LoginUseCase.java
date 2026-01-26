@@ -39,9 +39,11 @@ public class LoginUseCase {
             throw new AuthenticationException("Username or email is required");
         }
 
+        String finalIdentifier = identifier;
+
         // Find user by username or email
-        User user = userRepository.findByUsername(identifier)
-                .or(() -> userRepository.findByEmail(identifier))
+        User user = userRepository.findByUsername(finalIdentifier)
+                .or(() -> userRepository.findByEmail(finalIdentifier))
                 .orElseThrow(() -> new AuthenticationException("Invalid username or password"));
 
         // Verify password

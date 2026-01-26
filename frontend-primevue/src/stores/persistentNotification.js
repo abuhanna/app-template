@@ -60,6 +60,50 @@ export const usePersistentNotificationStore = defineStore('persistentNotificatio
         console.error('Socket.io Connection Error:', error)
       })
 
+    } else if (backendType === 'spring') {
+      // STOMP over WebSocket for Spring Boot
+      const { Client } = await import('@stomp/stompjs')
+      
+      // Determine WebSocket URL from API URL
+      const apiBase = import.meta.env.VITE_API_BASE_URL
+      const wsProtocol = window.location.protocol === 'https:' ? 'wss:' : 'ws:'
+      // Remove protocol and /api suffix to get host
+      const host = apiBase.replace(/^https?:\/\//, '').replace(/\/api\/?$/, '')
+      const brokerUrl = `${wsProtocol}//${host}/ws`
+
+      connection.value = new Client({
+        brokerURL: brokerUrl,
+        connectHeaders: {
+          Authorization: `Bearer ${token}`
+        },
+        debug: function (str) {
+          if (import.meta.env.DEV) console.log(str)
+        },
+        reconnectDelay: 5000,
+        heartbeatIncoming: 4000,
+        heartbeatOutgoing: 4000,
+      })
+
+      connection.value.onConnect = frame => {
+        if (import.meta.env.DEV) console.log('STOMP (Spring) connected successfully')
+        
+        // Subscribe to user-specific notifications
+        // Spring UserDestinationMessageHandler maps /user/queue/notifications to specific session
+        connection.value.subscribe('/user/queue/notifications', message => {
+             const notification = JSON.parse(message.body)
+             handleNotification(notification)
+        })
+        
+        fetchNotifications()
+      }
+
+      connection.value.onStompError = frame => {
+        console.error('Broker reported error: ' + frame.headers['message'])
+        console.error('Additional details: ' + frame.body)
+      }
+
+      connection.value.activate()
+
     } else {
       // SignalR for .NET (default)
       const hubUrl = `${import.meta.env.VITE_API_BASE_URL.replace('/api', '')}/hubs/notifications`

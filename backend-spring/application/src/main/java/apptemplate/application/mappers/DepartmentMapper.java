@@ -3,6 +3,7 @@ package apptemplate.application.mappers;
 import apptemplate.application.dto.department.DepartmentDto;
 import apptemplate.domain.entities.Department;
 import org.mapstruct.Mapper;
+import org.mapstruct.Mapping;
 import org.mapstruct.factory.Mappers;
 
 @Mapper(componentModel = "spring")

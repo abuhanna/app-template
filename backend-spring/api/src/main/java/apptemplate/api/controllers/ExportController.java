@@ -1,19 +1,18 @@
 package apptemplate.api.controllers;
 
-import apptemplate.application.dto.auditlog.AuditLogDto;
+import apptemplate.application.dto.audit.AuditLogDto;
 import apptemplate.application.dto.department.DepartmentDto;
 import apptemplate.application.dto.user.UserDto;
 import apptemplate.application.ports.services.CurrentUserService;
 import apptemplate.application.ports.services.ExportService;
 import apptemplate.application.ports.services.ExportService.ExportResult;
 import apptemplate.application.ports.services.ExportService.PdfReportOptions;
-import apptemplate.application.usecases.auditlog.GetAuditLogsUseCase;
+import apptemplate.application.usecases.audit.GetAuditLogsUseCase;
 import apptemplate.application.usecases.department.GetDepartmentsUseCase;
 import apptemplate.application.usecases.user.GetUsersUseCase;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import lombok.RequiredArgsConstructor;
-import org.springframework.data.domain.PageRequest;
 import org.springframework.format.annotation.DateTimeFormat;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.MediaType;
@@ -22,7 +21,6 @@ import org.springframework.web.bind.annotation.*;
 
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
-import java.util.List;
 import java.util.stream.Collectors;
 
 @RestController
@@ -47,7 +45,11 @@ public class ExportController {
             @RequestParam(required = false) Long departmentId,
             @RequestParam(required = false) Boolean isActive
     ) {
-        var users = getUsersUseCase.execute(search, departmentId, isActive, PageRequest.of(0, 10000));
+        // Default sort
+        String sortBy = "createdAt";
+        String sortDir = "desc";
+
+        var users = getUsersUseCase.execute(search, departmentId, isActive, 1, 10000, sortBy, sortDir);
         var exportData = users.getContent().stream()
                 .map(this::toUserExportDto)
                 .collect(Collectors.toList());
@@ -57,7 +59,7 @@ public class ExportController {
             case "pdf" -> exportService.exportToPdf(exportData, "users", "Users Report",
                     PdfReportOptions.builder()
                             .subtitle(buildUserFilterDescription(search, departmentId, isActive))
-                            .generatedBy(currentUserService.getCurrentUsername())
+                            .generatedBy(currentUserService.getCurrentUsername().orElse("-"))
                             .build(),
                     UserExportDto.class);
             default -> exportService.exportToExcel(exportData, "users", "Users", UserExportDto.class);
@@ -73,7 +75,11 @@ public class ExportController {
             @RequestParam(required = false) String search,
             @RequestParam(required = false) Boolean isActive
     ) {
-        var departments = getDepartmentsUseCase.execute(search, isActive, PageRequest.of(0, 10000));
+        // Default sort
+        String sortBy = "name";
+        String sortDir = "asc";
+
+        var departments = getDepartmentsUseCase.execute(search, isActive, 1, 10000, sortBy, sortDir);
         var exportData = departments.getContent().stream()
                 .map(this::toDepartmentExportDto)
                 .collect(Collectors.toList());
@@ -82,7 +88,7 @@ public class ExportController {
             case "csv" -> exportService.exportToCsv(exportData, "departments", DepartmentExportDto.class);
             case "pdf" -> exportService.exportToPdf(exportData, "departments", "Departments Report",
                     PdfReportOptions.builder()
-                            .generatedBy(currentUserService.getCurrentUsername())
+                            .generatedBy(currentUserService.getCurrentUsername().orElse("-"))
                             .build(),
                     DepartmentExportDto.class);
             default -> exportService.exportToExcel(exportData, "departments", "Departments", DepartmentExportDto.class);
@@ -95,13 +101,22 @@ public class ExportController {
     @Operation(summary = "Export audit logs", description = "Export audit logs to CSV, Excel, or PDF format")
     public ResponseEntity<byte[]> exportAuditLogs(
             @RequestParam(defaultValue = "xlsx") String format,
+            @RequestParam(required = false) String search,
             @RequestParam(required = false) String entityName,
+            @RequestParam(required = false) String entityId,
             @RequestParam(required = false) String action,
             @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE_TIME) LocalDateTime fromDate,
             @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE_TIME) LocalDateTime toDate,
             @RequestParam(defaultValue = "1000") int limit
     ) {
-        var auditLogs = getAuditLogsUseCase.execute(entityName, action, fromDate, toDate, PageRequest.of(0, limit));
+        // Default sort
+        String sortBy = "timestamp";
+        String sortDir = "desc";
+        
+        var auditLogs = getAuditLogsUseCase.execute(
+            search, entityName, entityId, null, action, fromDate, toDate, 
+            1, limit, sortBy, sortDir
+        );
         var exportData = auditLogs.getContent().stream()
                 .map(this::toAuditLogExportDto)
                 .collect(Collectors.toList());
@@ -115,7 +130,7 @@ public class ExportController {
                                     action != null ? action : "All"))
                             .fromDate(fromDate)
                             .toDate(toDate)
-                            .generatedBy(currentUserService.getCurrentUsername())
+                            .generatedBy(currentUserService.getCurrentUsername().orElse("-"))
                             .build(),
                     AuditLogExportDto.class);
             default -> exportService.exportToExcel(exportData, "audit_logs", "Audit Logs", AuditLogExportDto.class);
