@@ -26,7 +26,10 @@ export async function generateProject(config: ProjectConfig): Promise<void> {
   try {
     // Download backend (if not frontend-only)
     if (config.projectType !== 'frontend') {
-      const sourceFolder = `backend-${config.backend}`;
+      // Architecture suffix: clean uses existing folders (backwards compatible)
+      // nlayer and feature use suffixed folders (e.g., backend-dotnet-nlayer)
+      const archSuffix = config.architecture === 'clean' ? '' : `-${config.architecture}`;
+      const sourceFolder = `backend-${config.backend}${archSuffix}`;
       // For fullstack: use 'backend', for backend-only: use subfolder or root
       let destFolder: string;
       if (config.projectType === 'fullstack') {

@@ -36,10 +36,12 @@ async function main(): Promise<void> {
     if (cliArgs.projectPath && cliArgs.backend && (!needsNamespace || cliArgs.projectName)) {
       // Non-interactive mode - all required options provided
       const frontendFramework = cliArgs.framework || 'vue';
+      const architecture = cliArgs.architecture || 'clean';
       config = {
         projectPath: cliArgs.projectPath,
         projectType,
         backend,
+        architecture,
         frontendFramework,
         ui: cliArgs.ui || (frontendFramework === 'vue' ? 'vuetify' : 'mui'),
         projectName: cliArgs.projectName,
@@ -81,15 +83,16 @@ ${pc.bold('Usage:')}
   ${pc.cyan('npm create apptemplate@latest')} ${pc.gray('[project-directory]')} ${pc.gray('[options]')}
 
 ${pc.bold('Options:')}
-  ${pc.yellow('-t, --type')}       Project type: fullstack, backend, frontend ${pc.gray('(default: fullstack)')}
-  ${pc.yellow('-b, --backend')}    Backend framework: dotnet, spring, nestjs
-  ${pc.yellow('-f, --framework')}  Frontend framework: vue, react ${pc.gray('(default: vue)')}
-  ${pc.yellow('-u, --ui')}         UI library: vuetify, primevue (Vue) | mui, primereact (React)
-  ${pc.yellow('-n, --name')}       Project namespace (Company.Project format, .NET/Spring only)
-  ${pc.yellow('-r, --root')}       Place files in project root ${pc.gray('(backend/frontend-only)')}
-  ${pc.yellow('-i, --install')}    Install dependencies after creation
-  ${pc.yellow('-h, --help')}       Show this help message
-  ${pc.yellow('-v, --version')}    Show version number
+  ${pc.yellow('-t, --type')}         Project type: fullstack, backend, frontend ${pc.gray('(default: fullstack)')}
+  ${pc.yellow('-b, --backend')}      Backend framework: dotnet, spring, nestjs
+  ${pc.yellow('-a, --architecture')} Architecture: clean, nlayer, feature ${pc.gray('(default: clean)')}
+  ${pc.yellow('-f, --framework')}    Frontend framework: vue, react ${pc.gray('(default: vue)')}
+  ${pc.yellow('-u, --ui')}           UI library: vuetify, primevue (Vue) | mui, primereact (React)
+  ${pc.yellow('-n, --name')}         Project namespace (Company.Project format, .NET/Spring only)
+  ${pc.yellow('-r, --root')}         Place files in project root ${pc.gray('(backend/frontend-only)')}
+  ${pc.yellow('-i, --install')}      Install dependencies after creation
+  ${pc.yellow('-h, --help')}         Show this help message
+  ${pc.yellow('-v, --version')}      Show version number
 
 ${pc.bold('Examples:')}
   ${pc.gray('# Interactive mode')}

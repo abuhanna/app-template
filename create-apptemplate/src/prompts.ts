@@ -2,7 +2,7 @@ import * as p from '@clack/prompts';
 import pc from 'picocolors';
 import path from 'path';
 import fs from 'fs';
-import type { CLIArgs, ProjectConfig, ProjectType, BackendFramework, FrontendFramework, UILibrary } from './types.js';
+import type { CLIArgs, ProjectConfig, ProjectType, BackendFramework, BackendArchitecture, FrontendFramework, UILibrary } from './types.js';
 
 export async function runInteractivePrompts(cliArgs: CLIArgs): Promise<ProjectConfig | symbol> {
   // Project path
@@ -77,6 +77,33 @@ export async function runInteractivePrompts(cliArgs: CLIArgs): Promise<ProjectCo
     });
     if (p.isCancel(result)) return result;
     backend = result;
+  }
+
+  // Architecture pattern (skip for frontend-only)
+  let architecture: BackendArchitecture = cliArgs.architecture || 'clean';
+  if (projectType !== 'frontend' && !cliArgs.architecture) {
+    const result = await p.select({
+      message: 'Which architecture pattern would you like to use?',
+      options: [
+        {
+          value: 'nlayer' as BackendArchitecture,
+          label: 'N-Layer (3-Tier)',
+          hint: 'Simple, traditional. Best for CRUD apps & prototypes',
+        },
+        {
+          value: 'clean' as BackendArchitecture,
+          label: 'Clean Architecture',
+          hint: 'Enterprise-grade. Best for complex business domains',
+        },
+        {
+          value: 'feature' as BackendArchitecture,
+          label: 'Package by Feature',
+          hint: 'Modular. Best for medium-large apps & team scalability',
+        },
+      ],
+    });
+    if (p.isCancel(result)) return result;
+    architecture = result;
   }
 
   // Frontend framework (skip for backend-only)
@@ -195,6 +222,7 @@ export async function runInteractivePrompts(cliArgs: CLIArgs): Promise<ProjectCo
 
   if (projectType !== 'frontend') {
     summaryLines.push(`${pc.cyan('Backend:')}          ${getBackendLabel(backend)}`);
+    summaryLines.push(`${pc.cyan('Architecture:')}     ${getArchitectureLabel(architecture)}`);
   }
   if (projectType !== 'backend') {
     summaryLines.push(`${pc.cyan('Frontend:')}         ${getFrontendLabel(frontendFramework)}`);
@@ -222,6 +250,7 @@ export async function runInteractivePrompts(cliArgs: CLIArgs): Promise<ProjectCo
     projectPath,
     projectType,
     backend,
+    architecture,
     frontendFramework,
     ui,
     projectName,
@@ -243,6 +272,15 @@ function getBackendLabel(backend: BackendFramework): string {
     nestjs: 'NestJS',
   };
   return labels[backend];
+}
+
+function getArchitectureLabel(architecture: BackendArchitecture): string {
+  const labels: Record<BackendArchitecture, string> = {
+    clean: 'Clean Architecture',
+    nlayer: 'N-Layer (3-Tier)',
+    feature: 'Package by Feature',
+  };
+  return labels[architecture];
 }
 
 function getFrontendLabel(framework: FrontendFramework): string {
