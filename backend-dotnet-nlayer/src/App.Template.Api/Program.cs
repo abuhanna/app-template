@@ -57,6 +57,9 @@ builder.Services.AddApplicationServices();
 // Add AutoMapper
 builder.Services.AddAutoMapper(typeof(Program));
 
+builder.Services.AddScoped<IExportService, ExportService>();
+builder.Services.AddSignalR();
+
 var app = builder.Build();
 
 // Configure the HTTP request pipeline
@@ -72,5 +75,6 @@ app.UseHttpsRedirection();
 app.UseCors("AllowAll");
 app.UseAuthorization();
 app.MapControllers();
+app.MapHub<NotificationHub>("/hubs/notifications");
 
 app.Run();

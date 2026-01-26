@@ -12,6 +12,9 @@ import { AuditLog } from './features/audit/audit-log.entity';
 import { AuthModule } from './features/auth/auth.module';
 import { DepartmentsModule } from './features/departments/departments.module';
 import { FilesModule } from './features/files/files.module';
+import { HealthModule } from './features/health/health.module';
+import { ExportModule } from './features/export/export.module';
+import { NotificationsModule } from './features/notifications/notifications.module';
 import { Department } from './features/departments/department.entity';
 import { UploadedFile } from './features/files/uploaded-file.entity';
 import { AuditLog } from './common/audit/audit-log.entity';
@@ -26,6 +29,9 @@ import { AuditSubscriber } from './features/audit/audit.subscriber';
     AuthModule,
     DepartmentsModule,
     FilesModule,
+    HealthModule,
+    ExportModule,
+    NotificationsModule,
     ConfigModule.forRoot({ isGlobal: true }),
     TypeOrmModule.forRoot({
       type: 'postgres',
