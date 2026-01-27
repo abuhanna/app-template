@@ -5,7 +5,7 @@
         <DataTable :value="files" :loading="loading" responsiveLayout="scroll" stripedRows>
           <template #header>
             <div class="flex flex-wrap align-items-center justify-content-between gap-2">
-              <span class="text-xl font-bold">Files</span>
+
               <Button label="Upload File" icon="pi pi-upload" @click="showUploadDialog = true" />
             </div>
           </template>
@@ -104,7 +104,7 @@ async function loadFiles() {
   loading.value = true
   try {
     const response = await fileService.getFiles()
-    files.value = response.data || []
+    files.value = response.items || []
   } catch (error) {
     notificationStore.showError('Failed to load files')
   } finally {
@@ -134,8 +134,12 @@ async function handleUpload() {
   }
 }
 
-function downloadFile(file) {
-  window.open(fileService.getDownloadUrl(file.id), '_blank')
+async function downloadFile(file) {
+  try {
+    await fileService.downloadFile(file.id, file.originalFileName)
+  } catch (error) {
+    notificationStore.showError('Failed to download file')
+  }
 }
 
 function confirmDelete(file) {

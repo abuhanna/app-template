@@ -98,7 +98,7 @@ onMounted(() => {
         >
           <template #header>
             <div class="flex flex-wrap align-items-center justify-content-between gap-3 mb-4">
-              <span class="text-xl font-bold">Audit Logs</span>
+
               <div class="flex flex-wrap gap-2">
                  <Select
                   v-model="entityFilter"

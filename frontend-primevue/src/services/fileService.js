@@ -28,8 +28,22 @@ export const fileService = {
     await api.delete(`/files/${id}`)
   },
 
-  getDownloadUrl(id) {
-    return `${api.defaults.baseURL}/files/${id}/download`
+  async downloadFile(id, fileName) {
+    const response = await api.get(`/files/${id}/download`, {
+      responseType: 'blob',
+    })
+    
+    // Create blob link to download
+    const url = window.URL.createObjectURL(new Blob([response.data]))
+    const link = document.createElement('a')
+    link.href = url
+    link.setAttribute('download', fileName) // Set the file name
+    document.body.appendChild(link)
+    link.click()
+    
+    // Clean up
+    link.parentNode.removeChild(link)
+    window.URL.revokeObjectURL(url)
   },
 }
 
