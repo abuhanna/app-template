@@ -4,10 +4,15 @@ import apptemplate.domain.enums.UserRole;
 
 import jakarta.persistence.*;
 import lombok.*;
+import org.springframework.data.annotation.CreatedBy;
+import org.springframework.data.annotation.LastModifiedBy;
+import org.springframework.data.jpa.domain.support.AuditingEntityListener;
+
 import java.time.LocalDateTime;
 
 @Entity
 @Table(name = "users")
+@EntityListeners(AuditingEntityListener.class)
 // @EntityListeners(AuditEntityListener.class) removed in favor of HibernateAuditListener
 @Getter
 @Setter
@@ -72,9 +77,11 @@ public class UserJpaEntity {
     @Column(name = "updated_at")
     private LocalDateTime updatedAt;
 
+    @CreatedBy
     @Column(name = "created_by")
     private Long createdBy;
 
+    @LastModifiedBy
     @Column(name = "updated_by")
     private Long updatedBy;
 

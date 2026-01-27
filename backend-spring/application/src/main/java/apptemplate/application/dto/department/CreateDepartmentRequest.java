@@ -1,5 +1,6 @@
 package apptemplate.application.dto.department;
 
+import com.fasterxml.jackson.annotation.JsonProperty;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.Pattern;
 import jakarta.validation.constraints.Size;
@@ -25,5 +26,6 @@ public class CreateDepartmentRequest {
     @Size(max = 500, message = "Description must not exceed 500 characters")
     private String description;
 
+    @JsonProperty("isActive")
     private Boolean isActive;
 }

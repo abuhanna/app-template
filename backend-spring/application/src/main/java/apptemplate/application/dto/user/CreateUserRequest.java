@@ -1,6 +1,7 @@
 package apptemplate.application.dto.user;
 
 import apptemplate.domain.enums.UserRole;
+import com.fasterxml.jackson.annotation.JsonProperty;
 import jakarta.validation.constraints.Email;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
@@ -46,5 +47,6 @@ public class CreateUserRequest {
 
     private Long departmentId;
 
+    @JsonProperty("isActive")
     private Boolean isActive;
 }

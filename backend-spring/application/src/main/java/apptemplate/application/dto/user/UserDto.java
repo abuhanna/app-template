@@ -1,5 +1,6 @@
 package apptemplate.application.dto.user;
 
+import com.fasterxml.jackson.annotation.JsonProperty;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
@@ -22,6 +23,7 @@ public class UserDto {
     private String role;
     private Long departmentId;
     private String departmentName;
+    @JsonProperty("isActive")
     private boolean isActive;
     private LocalDateTime lastLoginAt;
     private LocalDateTime createdAt;

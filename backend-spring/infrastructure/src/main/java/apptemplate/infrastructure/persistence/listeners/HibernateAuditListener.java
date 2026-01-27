@@ -35,6 +35,7 @@ public class HibernateAuditListener implements PostInsertEventListener, PostUpda
 
     @Override
     public void onPostInsert(PostInsertEvent event) {
+        log.debug("onPostInsert triggered for entity: {}", event.getEntity() != null ? event.getEntity().getClass().getSimpleName() : "null");
         if (shouldSkip(event.getEntity())) return;
 
         try {
@@ -51,6 +52,7 @@ public class HibernateAuditListener implements PostInsertEventListener, PostUpda
 
     @Override
     public void onPostUpdate(PostUpdateEvent event) {
+        log.debug("onPostUpdate triggered for entity: {}", event.getEntity() != null ? event.getEntity().getClass().getSimpleName() : "null");
         if (shouldSkip(event.getEntity())) return;
 
         try {
@@ -84,6 +86,7 @@ public class HibernateAuditListener implements PostInsertEventListener, PostUpda
 
     @Override
     public void onPostDelete(PostDeleteEvent event) {
+        log.debug("onPostDelete triggered for entity: {}", event.getEntity() != null ? event.getEntity().getClass().getSimpleName() : "null");
         if (shouldSkip(event.getEntity())) return;
 
         try {

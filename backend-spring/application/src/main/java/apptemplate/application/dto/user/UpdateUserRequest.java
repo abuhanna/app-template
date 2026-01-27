@@ -1,6 +1,7 @@
 package apptemplate.application.dto.user;
 
 import apptemplate.domain.enums.UserRole;
+import com.fasterxml.jackson.annotation.JsonProperty;
 import jakarta.validation.constraints.Email;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
@@ -41,5 +42,6 @@ public class UpdateUserRequest {
     private Long departmentId;
 
     @NotNull(message = "Active status is required")
+    @JsonProperty("isActive")
     private Boolean isActive;
 }

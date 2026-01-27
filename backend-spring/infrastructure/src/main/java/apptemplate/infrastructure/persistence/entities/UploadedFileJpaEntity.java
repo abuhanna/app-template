@@ -3,10 +3,15 @@ package apptemplate.infrastructure.persistence.entities;
 
 import jakarta.persistence.*;
 import lombok.*;
+import org.springframework.data.annotation.CreatedBy;
+import org.springframework.data.annotation.LastModifiedBy;
+import org.springframework.data.jpa.domain.support.AuditingEntityListener;
+
 import java.time.LocalDateTime;
 
 @Entity
 @Table(name = "uploaded_files")
+@EntityListeners(AuditingEntityListener.class)
 // @EntityListeners(AuditEntityListener.class) removed in favor of HibernateAuditListener
 @Getter
 @Setter
@@ -50,9 +55,11 @@ public class UploadedFileJpaEntity {
     @Column(name = "updated_at")
     private LocalDateTime updatedAt;
 
+    @CreatedBy
     @Column(name = "created_by")
     private Long createdBy;
 
+    @LastModifiedBy
     @Column(name = "updated_by")
     private Long updatedBy;
 
