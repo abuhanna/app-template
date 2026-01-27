@@ -9,7 +9,7 @@
         @click="$emit('toggle-sidebar')"
         class="menu-button"
       />
-      <span class="page-title">{{ pageTitle }}</span>
+      <Breadcrumbs />
     </div>
 
     <div class="header-right">
@@ -71,6 +71,7 @@ import Button from 'primevue/button'
 import Avatar from 'primevue/avatar'
 import Menu from 'primevue/menu'
 import NotificationMenu from '@/components/common/NotificationMenu.vue'
+import Breadcrumbs from '@/components/layout/Breadcrumbs.vue'
 
 defineEmits(['toggle-sidebar'])
 
@@ -126,17 +127,6 @@ const toggleLangMenu = (event) => {
   langMenu.value.toggle(event)
 }
 
-// Dynamic page title based on route
-const pageTitle = computed(() => {
-  // Check for meta title first
-  if (route.meta?.title) {
-    return route.meta.title
-  }
-  
-  // Derive from route path
-  const path = route.path.split('/').filter(Boolean)[0] || 'dashboard'
-  return path.charAt(0).toUpperCase() + path.slice(1).replace(/-/g, ' ')
-})
 
 const userName = computed(() => authStore.user?.name || authStore.user?.username || 'User')
 const userInitials = computed(() => {
@@ -185,7 +175,7 @@ const handleLogout = async () => {
   border-bottom: 1px solid var(--p-surface-border);
   position: sticky;
   top: 0;
-  z-index: 100;
+  z-index: 1000;
 }
 
 .header-left {

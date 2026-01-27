@@ -8,9 +8,8 @@
       <!-- Header -->
       <AppHeader @toggle-sidebar="sidebarVisible = !sidebarVisible" />
 
-      <!-- Page Content -->
+      <!-- Page Content (Scrollable) -->
       <main class="layout-main">
-        <Breadcrumbs />
         <router-view />
       </main>
 
@@ -31,7 +30,6 @@ import { usePersistentNotificationStore } from '@/stores/persistentNotification'
 import AppSidebar from '@/components/AppSidebar.vue'
 import AppHeader from '@/components/AppHeader.vue'
 import AppFooter from '@/components/AppFooter.vue'
-import Breadcrumbs from '@/components/layout/Breadcrumbs.vue'
 import ConfirmDialog from 'primevue/confirmdialog'
 
 const router = useRouter()
@@ -68,7 +66,8 @@ onUnmounted(() => {
   margin-left: 260px;
   display: flex;
   flex-direction: column;
-  min-height: 100vh;
+  height: 100vh;
+  overflow: hidden; /* Prevent container scroll */
   transition: margin-left 0.3s ease;
 }
 
@@ -79,7 +78,7 @@ onUnmounted(() => {
 .layout-main {
   flex: 1;
   padding: 1.5rem;
-  overflow-y: auto;
+  overflow-y: auto; /* Scrollable content */
 }
 
 @media (max-width: 991px) {

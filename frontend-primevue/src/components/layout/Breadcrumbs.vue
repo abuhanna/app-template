@@ -1,5 +1,5 @@
 <template>
-  <Breadcrumb :home="home" :model="breadcrumbs" class="mb-3 surface-card border-round">
+  <Breadcrumb :home="home" :model="breadcrumbs" class="p-0 bg-transparent border-none">
     <template #item="{ item }">
       <router-link v-if="item.route" :to="item.route" class="text-color no-underline">
         <span :class="item.icon" class="mr-1" />
@@ -49,7 +49,7 @@ const breadcrumbs = computed(() => {
 
 <style scoped>
 :deep(.p-breadcrumb) {
-  padding: 0.75rem 1rem;
+  padding: 0;
   background: transparent;
   border: none;
 }
