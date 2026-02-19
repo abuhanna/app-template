@@ -2,10 +2,12 @@ import * as p from '@clack/prompts';
 import pc from 'picocolors';
 import path from 'path';
 import fs from 'fs';
-import type { ProjectConfig } from './types.js';
+import type { ProjectConfig, Feature } from './types.js';
+import { ALL_FEATURES } from './types.js';
 import { downloadTemplate, copyRootFiles } from './utils/download.js';
 import { renameProject } from './utils/rename.js';
 import { installDependencies } from './utils/package-manager.js';
+import { getBackendFileMap, getFrontendFileMap } from './features.js';
 
 // GitHub repository for templates
 const REPO = 'abuhanna/app-template';
@@ -67,7 +69,20 @@ export async function generateProject(config: ProjectConfig): Promise<void> {
     throw error;
   }
 
-  // Step 2: Update folder references in common files
+  // Step 2: Remove deselected feature files
+  const deselectedFeatures = ALL_FEATURES.filter(f => !config.features.includes(f));
+  if (deselectedFeatures.length > 0) {
+    spinner.start('Removing deselected feature files...');
+    try {
+      await removeDeselectedFeatures(absolutePath, config, deselectedFeatures);
+      spinner.stop(`Removed ${deselectedFeatures.length} deselected feature(s)`);
+    } catch (error) {
+      spinner.stop('Feature removal had warnings');
+      // Non-fatal: continue even if some files couldn't be removed
+    }
+  }
+
+  // Step 3: Update folder references in common files
   spinner.start('Updating configuration files...');
   try {
     await updateFolderReferences(absolutePath, config);
@@ -77,7 +92,7 @@ export async function generateProject(config: ProjectConfig): Promise<void> {
     throw error;
   }
 
-  // Step 3: Rename project namespaces (only for dotnet/spring)
+  // Step 4: Rename project namespaces (only for dotnet/spring)
   if (config.projectName && config.projectName !== 'App.Template') {
     spinner.start('Renaming project namespaces...');
 
@@ -90,7 +105,7 @@ export async function generateProject(config: ProjectConfig): Promise<void> {
     }
   }
 
-  // Step 4: Install dependencies (if requested)
+  // Step 5: Install dependencies (if requested)
   if (config.installDeps) {
     spinner.start('Installing dependencies (this may take a while)...');
 
@@ -105,10 +120,10 @@ export async function generateProject(config: ProjectConfig): Promise<void> {
     }
   }
 
-  // Step 5: Setup environment files
+  // Step 6: Setup environment files
   await setupEnvironmentFiles(absolutePath, config);
 
-  // Step 6: Cleanup Docker files for Fullstack projects
+  // Step 7: Cleanup Docker files for Fullstack projects
   // (Fullstack uses root Dockerfile, so we remove the individual ones)
   if (config.projectType === 'fullstack') {
     spinner.start('Cleaning up Docker configuration...');
@@ -121,9 +136,64 @@ export async function generateProject(config: ProjectConfig): Promise<void> {
     }
   }
 
-  // Step 7: Create appsettings.Development.json from example (for .NET projects)
+  // Step 8: Create appsettings.Development.json from example (for .NET projects)
   if (config.projectType !== 'frontend' && config.backend === 'dotnet') {
     await createAppSettingsFromExample(absolutePath, config);
+  }
+}
+
+/**
+ * Remove files/folders for features that were deselected
+ */
+async function removeDeselectedFeatures(
+  projectPath: string,
+  config: ProjectConfig,
+  deselectedFeatures: Feature[]
+): Promise<void> {
+  // Remove backend feature files
+  if (config.projectType !== 'frontend') {
+    const backendMap = getBackendFileMap(config.backend, config.architecture);
+    let backendDir: string;
+    if (config.projectType === 'fullstack') {
+      backendDir = path.join(projectPath, 'backend');
+    } else {
+      backendDir = config.placeInRoot ? projectPath : path.join(projectPath, 'backend');
+    }
+
+    for (const feature of deselectedFeatures) {
+      const featureMap = backendMap[feature];
+      if (featureMap) {
+        for (const filePath of featureMap.backend) {
+          const fullPath = path.join(backendDir, filePath);
+          if (fs.existsSync(fullPath)) {
+            fs.rmSync(fullPath, { recursive: true, force: true });
+          }
+        }
+      }
+    }
+  }
+
+  // Remove frontend feature files
+  if (config.projectType !== 'backend') {
+    const frontendMap = getFrontendFileMap(config.frontendFramework);
+    let frontendDir: string;
+    if (config.projectType === 'fullstack') {
+      frontendDir = path.join(projectPath, 'frontend');
+    } else {
+      frontendDir = config.placeInRoot ? projectPath : path.join(projectPath, 'frontend');
+    }
+
+    for (const feature of deselectedFeatures) {
+      const featurePaths = frontendMap[feature];
+      if (featurePaths) {
+        for (const filePath of featurePaths) {
+          const fullPath = path.join(frontendDir, filePath);
+          if (fs.existsSync(fullPath)) {
+            fs.rmSync(fullPath, { recursive: true, force: true });
+          }
+        }
+      }
+    }
   }
 }
 

@@ -4,6 +4,7 @@ import { parseArgs } from './cli.js';
 import { runInteractivePrompts } from './prompts.js';
 import { generateProject } from './generator.js';
 import type { ProjectConfig } from './types.js';
+import { ALL_FEATURES } from './types.js';
 
 async function main(): Promise<void> {
   console.log();
@@ -47,6 +48,7 @@ async function main(): Promise<void> {
         projectName: cliArgs.projectName,
         installDeps: cliArgs.install || false,
         placeInRoot: cliArgs.root || false,
+        features: cliArgs.features || [...ALL_FEATURES],
       };
     } else {
       // Interactive mode
@@ -90,6 +92,8 @@ ${pc.bold('Options:')}
   ${pc.yellow('-u, --ui')}           UI library: vuetify, primevue (Vue) | mui, primereact (React)
   ${pc.yellow('-n, --name')}         Project namespace (Company.Project format, .NET/Spring only)
   ${pc.yellow('-r, --root')}         Place files in project root ${pc.gray('(backend/frontend-only)')}
+  ${pc.yellow('--features')}         Features to include (comma-separated or "all")
+                       Options: auth,userManagement,departments,fileUpload,auditLogs,notifications,dataExport,dashboard
   ${pc.yellow('-i, --install')}      Install dependencies after creation
   ${pc.yellow('-h, --help')}         Show this help message
   ${pc.yellow('-v, --version')}      Show version number

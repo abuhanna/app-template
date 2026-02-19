@@ -1,10 +1,13 @@
-import type { CLIArgs, ProjectType, BackendFramework, BackendArchitecture, FrontendFramework, UILibrary } from './types.js';
+import type { CLIArgs, ProjectType, BackendFramework, BackendArchitecture, FrontendFramework, UILibrary, Feature } from './types.js';
+import { ALL_FEATURES } from './types.js';
+import { applyFeatureDependencies } from './features.js';
 
 const validProjectTypes: ProjectType[] = ['fullstack', 'backend', 'frontend'];
 const validBackends: BackendFramework[] = ['dotnet', 'spring', 'nestjs'];
 const validArchitectures: BackendArchitecture[] = ['clean', 'nlayer', 'feature'];
 const validFrontendFrameworks: FrontendFramework[] = ['vue', 'react'];
 const validUILibraries: UILibrary[] = ['vuetify', 'primevue', 'primereact', 'mui'];
+const validFeatures: Feature[] = [...ALL_FEATURES];
 
 export function parseArgs(): CLIArgs {
   const args = process.argv.slice(2);
@@ -101,6 +104,25 @@ export function parseArgs(): CLIArgs {
         result.projectName = value;
       } else {
         console.warn(`Warning: Project name should be in "Company.Project" format`);
+      }
+      i++;
+      continue;
+    }
+
+    if (arg === '--features' || arg === '--feat') {
+      const value = args[++i];
+      if (value) {
+        if (value === 'all') {
+          result.features = [...ALL_FEATURES];
+        } else {
+          const requested = value.split(',').map(s => s.trim()) as Feature[];
+          const valid = requested.filter(f => validFeatures.includes(f));
+          const invalid = requested.filter(f => !validFeatures.includes(f as Feature));
+          if (invalid.length > 0) {
+            console.warn(`Warning: Invalid features "${invalid.join(', ')}". Valid options: ${validFeatures.join(', ')}`);
+          }
+          result.features = applyFeatureDependencies(valid);
+        }
       }
       i++;
       continue;
