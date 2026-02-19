@@ -81,6 +81,14 @@ export function applyFeatureDependencies(selected: Feature[]): Feature[] {
     result = result.filter(f => f !== 'dashboard');
   }
 
+  // Data Export depends on User Management and Departments (for ExportController)
+  if (
+    !result.includes('userManagement') ||
+    !result.includes('departments')
+  ) {
+    result = result.filter(f => f !== 'dataExport');
+  }
+
   return result;
 }
 
