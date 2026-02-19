@@ -115,13 +115,14 @@ const DOTNET_CLEAN_MAP: Record<string, FeatureFilePaths> = {
       'src/Infrastructure/App.Template.Infrastructure/Services/EmailService.cs',
       // Presentation layer
       'src/Presentation/App.Template.WebAPI/Controllers/AuthController.cs',
+      'src/Core/App.Template.Application/DTOs/UserDto.cs', // Required by Auth
     ],
     frontend: [], // Frontend auth files handled by pattern below
   },
   userManagement: {
     backend: [
       'src/Core/App.Template.Application/Features/UserManagement',
-      'src/Core/App.Template.Application/DTOs/UserDto.cs',
+      // 'src/Core/App.Template.Application/DTOs/UserDto.cs', // Moved to auth
       'src/Presentation/App.Template.WebAPI/Controllers/UsersController.cs',
     ],
     frontend: [],
@@ -191,6 +192,7 @@ const DOTNET_NLAYER_MAP: Record<string, FeatureFilePaths> = {
       'src/App.Template.Api/Services/AuthService.cs',
       'src/App.Template.Api/Services/JwtTokenGenerator.cs',
       'src/App.Template.Api/Models/Dtos/AuthDtos.cs',
+      'src/App.Template.Api/Models/Dtos/UserDtos.cs', // Required by Auth
     ],
     frontend: [],
   },
@@ -201,7 +203,7 @@ const DOTNET_NLAYER_MAP: Record<string, FeatureFilePaths> = {
       'src/App.Template.Api/Services/IUserService.cs',
       'src/App.Template.Api/Repositories/UserRepository.cs',
       'src/App.Template.Api/Repositories/IUserRepository.cs',
-      'src/App.Template.Api/Models/Dtos/UserDtos.cs',
+      // 'src/App.Template.Api/Models/Dtos/UserDtos.cs', // Moved to auth
     ],
     frontend: [],
   },
@@ -253,7 +255,10 @@ const DOTNET_FEATURE_MAP: Record<string, FeatureFilePaths> = {
   },
   userManagement: {
     backend: [
-      'src/App.Template.Api/Features/Users',
+      // 'src/App.Template.Api/Features/Users', // Don't remove whole folder, Auth needs Entity/Repo/DTOs
+      'src/App.Template.Api/Features/Users/UsersController.cs',
+      'src/App.Template.Api/Features/Users/UserService.cs',
+      'src/App.Template.Api/Features/Users/IUserService.cs',
     ],
     frontend: [],
   },
