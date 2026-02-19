@@ -1,0 +1,1 @@
+import{Q as o,d as a,Z as r,c as s,o as c}from"./index-D462s2qb.js";const l={__name:"index",setup(n){const e=o(),t=a();return r(()=>{t.isAuthenticated?e.replace("/dashboard"):e.replace("/login")}),(u,d)=>(c(),s("div"))}};export{l as default};

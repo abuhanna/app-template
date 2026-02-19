@@ -1,0 +1,167 @@
+package apptemplate.domain.entities;
+
+import apptemplate.domain.enums.UserRole;
+import lombok.AllArgsConstructor;
+import lombok.experimental.SuperBuilder;
+import lombok.Getter;
+import lombok.NoArgsConstructor;
+import lombok.Setter;
+
+import java.time.LocalDateTime;
+import java.util.UUID;
+
+/**
+ * User entity with business logic.
+ */
+@Getter
+@Setter
+@SuperBuilder
+@NoArgsConstructor
+@AllArgsConstructor
+public class User extends AuditableEntity {
+
+    private String username;
+    private String email;
+    private String passwordHash;
+    private String name;
+    private UserRole role;
+    private Long departmentId;
+    private boolean active;
+    private LocalDateTime lastLoginAt;
+
+    // Password reset fields
+    private String passwordResetToken;
+    private LocalDateTime passwordResetTokenExpiry;
+
+    // Password history (stores last 5 password hashes as JSON array)
+    private String passwordHistory;
+
+    /**
+     * Creates a new user.
+     */
+    public User(String username, String email, String passwordHash, String name, UserRole role, Long departmentId) {
+        this.username = username;
+        this.email = email;
+        this.passwordHash = passwordHash;
+        this.name = name;
+        this.role = role;
+        this.departmentId = departmentId;
+        this.active = true;
+    }
+
+    /**
+     * Updates user information.
+     */
+    public void update(String username, String name, String email, UserRole role, Long departmentId, boolean active) {
+        this.username = username;
+        this.name = name;
+        this.email = email;
+        this.role = role;
+        this.departmentId = departmentId;
+        this.active = active;
+    }
+
+    /**
+     * Updates user password and adds current password to history.
+     */
+    public void updatePassword(String passwordHash) {
+        // Add current password to history before updating
+        addToPasswordHistory(this.passwordHash);
+        this.passwordHash = passwordHash;
+        clearPasswordResetToken();
+    }
+
+    /**
+     * Adds a password hash to history, keeping only last 5.
+     */
+    private void addToPasswordHistory(String hash) {
+        if (hash == null || hash.isEmpty()) return;
+
+        java.util.List<String> history = getPasswordHistoryList();
+        history.add(hash);
+        // Keep only last 5
+        while (history.size() > 5) {
+            history.remove(0);
+        }
+        this.passwordHistory = String.join(",", history);
+    }
+
+    /**
+     * Gets password history as a list.
+     */
+    public java.util.List<String> getPasswordHistoryList() {
+        if (passwordHistory == null || passwordHistory.isEmpty()) {
+            return new java.util.ArrayList<>();
+        }
+        return new java.util.ArrayList<>(java.util.Arrays.asList(passwordHistory.split(",")));
+    }
+
+    /**
+     * Checks if a password hash exists in history.
+     */
+    public boolean isPasswordInHistory(String hash) {
+        return getPasswordHistoryList().contains(hash);
+    }
+
+    /**
+     * Sets user active status.
+     */
+    public void setActiveStatus(boolean active) {
+        this.active = active;
+    }
+
+    /**
+     * Records user login.
+     */
+    public void recordLogin() {
+        this.lastLoginAt = LocalDateTime.now();
+    }
+
+    public void recordLogin(String ipAddress) {
+        this.lastLoginAt = LocalDateTime.now();
+    }
+
+    /**
+     * Sets password reset token with expiry.
+     */
+    public void setPasswordResetToken(String token, LocalDateTime expiry) {
+        this.passwordResetToken = token;
+        this.passwordResetTokenExpiry = expiry;
+    }
+
+    /**
+     * Generates a password reset token valid for specified hours.
+     */
+    public String generatePasswordResetToken(int validHours) {
+        String token = UUID.randomUUID().toString();
+        this.passwordResetToken = token;
+        this.passwordResetTokenExpiry = LocalDateTime.now().plusHours(validHours);
+        return token;
+    }
+
+    /**
+     * Clears password reset token.
+     */
+    public void clearPasswordResetToken() {
+        this.passwordResetToken = null;
+        this.passwordResetTokenExpiry = null;
+    }
+
+    /**
+     * Validates password reset token.
+     */
+    public boolean isPasswordResetTokenValid(String token) {
+        if (this.passwordResetToken == null || this.passwordResetTokenExpiry == null) {
+            return false;
+        }
+        return this.passwordResetToken.equals(token) &&
+               LocalDateTime.now().isBefore(this.passwordResetTokenExpiry);
+    }
+
+    /**
+     * Checks if user is admin.
+     */
+    public boolean isAdmin() {
+        return this.role == UserRole.ADMIN;
+    }
+}

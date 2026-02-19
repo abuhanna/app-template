@@ -1,0 +1,103 @@
+{
+  "common": {
+    "save": "حفظ",
+    "cancel": "إلغاء",
+    "delete": "حذف",
+    "edit": "تعديل",
+    "add": "إضافة",
+    "search": "بحث",
+    "loading": "جاري التحميل...",
+    "noData": "لا توجد بيانات",
+    "confirm": "تأكيد",
+    "yes": "نعم",
+    "no": "لا",
+    "actions": "الإجراءات",
+    "status": "الحالة",
+    "active": "نشط",
+    "inactive": "غير نشط",
+    "all": "الكل",
+    "submit": "إرسال",
+    "reset": "إعادة تعيين",
+    "close": "إغلاق",
+    "back": "رجوع",
+    "next": "التالي",
+    "previous": "السابق"
+  },
+  "auth": {
+    "login": "تسجيل الدخول",
+    "logout": "تسجيل الخروج",
+    "register": "تسجيل",
+    "email": "البريد الإلكتروني",
+    "password": "كلمة المرور",
+    "username": "اسم المستخدم",
+    "rememberMe": "تذكرني",
+    "forgotPassword": "نسيت كلمة المرور؟",
+    "resetPassword": "إعادة تعيين كلمة المرور",
+    "currentPassword": "كلمة المرور الحالية",
+    "newPassword": "كلمة المرور الجديدة",
+    "confirmPassword": "تأكيد كلمة المرور",
+    "loginSuccess": "تم تسجيل الدخول بنجاح",
+    "logoutSuccess": "تم تسجيل الخروج بنجاح",
+    "sessionExpired": "انتهت الجلسة. يرجى تسجيل الدخول مرة أخرى."
+  },
+  "nav": {
+    "dashboard": "لوحة التحكم",
+    "users": "المستخدمين",
+    "departments": "الأقسام",
+    "profile": "الملف الشخصي",
+    "settings": "الإعدادات",
+    "notifications": "الإشعارات",
+    "files": "الملفات",
+    "auditLogs": "سجلات التدقيق"
+  },
+  "user": {
+    "title": "المستخدمين",
+    "addUser": "إضافة مستخدم",
+    "editUser": "تعديل مستخدم",
+    "deleteUser": "حذف مستخدم",
+    "firstName": "الاسم الأول",
+    "lastName": "اسم العائلة",
+    "role": "الدور",
+    "department": "القسم",
+    "createdAt": "تاريخ الإنشاء",
+    "lastLogin": "آخر تسجيل دخول",
+    "deleteConfirm": "هل أنت متأكد من حذف هذا المستخدم؟"
+  },
+  "department": {
+    "title": "الأقسام",
+    "addDepartment": "إضافة قسم",
+    "editDepartment": "تعديل قسم",
+    "deleteDepartment": "حذف قسم",
+    "name": "الاسم",
+    "description": "الوصف",
+    "deleteConfirm": "هل أنت متأكد من حذف هذا القسم؟"
+  },
+  "profile": {
+    "title": "الملف الشخصي",
+    "updateProfile": "تحديث الملف الشخصي",
+    "changePassword": "تغيير كلمة المرور",
+    "profileUpdated": "تم تحديث الملف الشخصي بنجاح",
+    "passwordChanged": "تم تغيير كلمة المرور بنجاح"
+  },
+  "notification": {
+    "title": "الإشعارات",
+    "markAsRead": "تحديد كمقروء",
+    "markAllAsRead": "تحديد الكل كمقروء",
+    "noNotifications": "لا توجد إشعارات"
+  },
+  "validation": {
+    "required": "هذا الحقل مطلوب",
+    "invalidEmail": "البريد الإلكتروني غير صالح",
+    "minLength": "يجب أن يكون على الأقل {min} أحرف",
+    "maxLength": "يجب أن يكون على الأكثر {max} أحرف",
+    "passwordMismatch": "كلمات المرور غير متطابقة",
+    "invalidFormat": "تنسيق غير صالح"
+  },
+  "error": {
+    "generic": "حدث خطأ. يرجى المحاولة مرة أخرى.",
+    "networkError": "خطأ في الشبكة. يرجى التحقق من الاتصال.",
+    "unauthorized": "غير مصرح. يرجى تسجيل الدخول.",
+    "forbidden": "ليس لديك صلاحية للقيام بهذا الإجراء.",
+    "notFound": "المورد غير موجود."
+  }
+}

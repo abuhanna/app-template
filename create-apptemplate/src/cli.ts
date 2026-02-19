@@ -1,13 +1,11 @@
-import type { CLIArgs, ProjectType, BackendFramework, BackendArchitecture, FrontendFramework, UILibrary, Feature } from './types.js';
-import { ALL_FEATURES } from './types.js';
-import { applyFeatureDependencies } from './features.js';
+import type { CLIArgs, ProjectType, BackendFramework, BackendArchitecture, FrontendFramework, UILibrary, TemplateVariant } from './types.js';
 
 const validProjectTypes: ProjectType[] = ['fullstack', 'backend', 'frontend'];
 const validBackends: BackendFramework[] = ['dotnet', 'spring', 'nestjs'];
 const validArchitectures: BackendArchitecture[] = ['clean', 'nlayer', 'feature'];
 const validFrontendFrameworks: FrontendFramework[] = ['vue', 'react'];
 const validUILibraries: UILibrary[] = ['vuetify', 'primevue', 'primereact', 'mui'];
-const validFeatures: Feature[] = [...ALL_FEATURES];
+const validVariants: TemplateVariant[] = ['minimal', 'full'];
 
 export function parseArgs(): CLIArgs {
   const args = process.argv.slice(2);
@@ -109,20 +107,12 @@ export function parseArgs(): CLIArgs {
       continue;
     }
 
-    if (arg === '--features' || arg === '--feat') {
+    if (arg === '-V' || arg === '--variant') {
       const value = args[++i];
-      if (value) {
-        if (value === 'all') {
-          result.features = [...ALL_FEATURES];
-        } else {
-          const requested = value.split(',').map(s => s.trim()) as Feature[];
-          const valid = requested.filter(f => validFeatures.includes(f));
-          const invalid = requested.filter(f => !validFeatures.includes(f as Feature));
-          if (invalid.length > 0) {
-            console.warn(`Warning: Invalid features "${invalid.join(', ')}". Valid options: ${validFeatures.join(', ')}`);
-          }
-          result.features = applyFeatureDependencies(valid);
-        }
+      if (isValidVariant(value)) {
+        result.variant = value;
+      } else {
+        console.warn(`Warning: Invalid variant "${value}". Valid options: ${validVariants.join(', ')}`);
       }
       i++;
       continue;
@@ -157,6 +147,10 @@ function isValidFrontendFramework(value: string | undefined): value is FrontendF
 
 function isValidUI(value: string | undefined): value is UILibrary {
   return value !== undefined && validUILibraries.includes(value as UILibrary);
+}
+
+function isValidVariant(value: string | undefined): value is TemplateVariant {
+  return value !== undefined && validVariants.includes(value as TemplateVariant);
 }
 
 function isValidProjectName(value: string | undefined): boolean {

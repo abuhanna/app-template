@@ -2,9 +2,7 @@ import * as p from '@clack/prompts';
 import pc from 'picocolors';
 import path from 'path';
 import fs from 'fs';
-import type { CLIArgs, ProjectConfig, ProjectType, BackendFramework, BackendArchitecture, FrontendFramework, UILibrary, Feature } from './types.js';
-import { ALL_FEATURES } from './types.js';
-import { FEATURE_OPTIONS, applyFeatureDependencies, getFeaturesLabel } from './features.js';
+import type { CLIArgs, ProjectConfig, ProjectType, BackendFramework, BackendArchitecture, FrontendFramework, UILibrary, TemplateVariant } from './types.js';
 
 export async function runInteractivePrompts(cliArgs: CLIArgs): Promise<ProjectConfig | symbol> {
   // Project path
@@ -167,28 +165,26 @@ export async function runInteractivePrompts(cliArgs: CLIArgs): Promise<ProjectCo
     ui = result;
   }
 
-  // Features selection
-  let features: Feature[] = cliArgs.features || [...ALL_FEATURES];
-  if (!cliArgs.features) {
-    const result = await p.multiselect({
-      message: 'Which features would you like to include?',
-      options: FEATURE_OPTIONS.map(opt => ({
-        value: opt.value,
-        label: opt.label,
-        hint: opt.hint,
-      })),
-      initialValues: [...ALL_FEATURES],
-      required: false,
+  // Template variant selection (replaces feature multiselect)
+  let variant: TemplateVariant = cliArgs.variant || 'full';
+  if (!cliArgs.variant) {
+    const result = await p.select({
+      message: 'Which template variant would you like?',
+      options: [
+        {
+          value: 'full' as TemplateVariant,
+          label: 'Full',
+          hint: 'User management, departments, dashboard, all features',
+        },
+        {
+          value: 'minimal' as TemplateVariant,
+          label: 'Minimal',
+          hint: 'Auth, files, audit logs, notifications (no user/dept management)',
+        },
+      ],
     });
     if (p.isCancel(result)) return result;
-    features = applyFeatureDependencies(result);
-
-    // Inform user about auto-deselected features
-    if (features.length < result.length) {
-      const removed = result.filter((f: Feature) => !features.includes(f));
-      const removedLabels = removed.map((f: Feature) => FEATURE_OPTIONS.find(o => o.value === f)?.label || f);
-      console.log(pc.yellow(`  ⚠ Auto-removed due to dependencies: ${removedLabels.join(', ')}`));
-    }
+    variant = result;
   }
 
   // Project name (for namespaces) - only for dotnet/spring backends
@@ -254,7 +250,7 @@ export async function runInteractivePrompts(cliArgs: CLIArgs): Promise<ProjectCo
     summaryLines.push(`${pc.cyan('Frontend:')}         ${getFrontendLabel(frontendFramework)}`);
     summaryLines.push(`${pc.cyan('UI Library:')}       ${getUILabel(ui)}`);
   }
-  summaryLines.push(`${pc.cyan('Features:')}         ${getFeaturesLabel(features, ALL_FEATURES)}`);
+  summaryLines.push(`${pc.cyan('Template:')}         ${getVariantLabel(variant)}`);
   if (needsNamespace && projectName) {
     summaryLines.push(`${pc.cyan('Namespace:')}        ${projectName}`);
   }
@@ -283,7 +279,7 @@ export async function runInteractivePrompts(cliArgs: CLIArgs): Promise<ProjectCo
     projectName,
     installDeps,
     placeInRoot,
-    features,
+    variant,
   };
 }
 
@@ -327,4 +323,12 @@ function getUILabel(ui: UILibrary): string {
     primereact: 'PrimeReact',
   };
   return labels[ui];
+}
+
+function getVariantLabel(variant: TemplateVariant): string {
+  const labels: Record<TemplateVariant, string> = {
+    full: 'Full (all features)',
+    minimal: 'Minimal (no user/dept management)',
+  };
+  return labels[variant];
 }

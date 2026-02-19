@@ -1,0 +1,55 @@
+package apptemplate.infrastructure.persistence.entities;
+
+import apptemplate.domain.enums.NotificationType;
+import jakarta.persistence.*;
+import lombok.*;
+import java.time.LocalDateTime;
+
+@Entity
+@Table(name = "notifications")
+@Getter
+@Setter
+@NoArgsConstructor
+@AllArgsConstructor
+@Builder
+public class NotificationJpaEntity {
+
+    @Id
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
+    @Column(name = "id", updatable = false, nullable = false)
+    private Long id;
+
+    @Column(name = "user_id", nullable = false)
+    private Long userId;
+
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "user_id", insertable = false, updatable = false)
+    private UserJpaEntity user;
+
+    @Column(name = "title", nullable = false, length = 200)
+    private String title;
+
+    @Column(name = "message", nullable = false, length = 1000)
+    private String message;
+
+    @Enumerated(EnumType.STRING)
+    @Column(name = "type", nullable = false, length = 20)
+    private NotificationType type;
+
+    @Column(name = "is_read", nullable = false)
+    private boolean isRead;
+
+    @Column(name = "read_at")
+    private LocalDateTime readAt;
+
+    @Column(name = "link", length = 500)
+    private String link;
+
+    @Column(name = "created_at", nullable = false, updatable = false)
+    private LocalDateTime createdAt;
+
+    @PrePersist
+    protected void onCreate() {
+        createdAt = LocalDateTime.now();
+    }
+}

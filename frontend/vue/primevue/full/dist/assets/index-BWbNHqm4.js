@@ -1,0 +1,1 @@
+import{$ as o,y as a,A as r,c as s,o as c}from"./index-ClbwuvgW.js";const p={__name:"index",setup(n){const e=o(),t=a();return r(()=>{t.isAuthenticated?e.replace("/dashboard"):e.replace("/login")}),(u,i)=>(c(),s("div"))}};export{p as default};

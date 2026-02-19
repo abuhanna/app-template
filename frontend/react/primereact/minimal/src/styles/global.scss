@@ -1,0 +1,290 @@
+*,
+*::before,
+*::after {
+  box-sizing: border-box;
+}
+
+html {
+  font-size: 14px;
+}
+
+body {
+  margin: 0;
+  padding: 0;
+  font-family: 'Inter', var(--font-family), -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  background-color: var(--surface-ground);
+  color: var(--text-color);
+}
+
+.layout-wrapper {
+  display: flex;
+  min-height: 100vh;
+}
+
+.layout-main-container {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  min-height: 100vh;
+  transition: margin-left 0.3s ease;
+}
+
+.layout-main {
+  flex: 1;
+  padding: 1.5rem;
+  background-color: var(--surface-ground);
+}
+
+.card {
+  background: white;
+  border-radius: 8px;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+  padding: 1.5rem;
+}
+
+// Sidebar Styles
+.app-sidebar {
+  position: fixed;
+  left: 0;
+  top: 0;
+  height: 100vh;
+  width: 260px;
+  background: var(--surface-card);
+  border-right: 1px solid var(--surface-border);
+  display: flex;
+  flex-direction: column;
+  transition: width 0.3s ease;
+  z-index: 1000;
+  overflow: hidden;
+
+  &.collapsed {
+    width: 64px;
+
+    .sidebar-header {
+      padding: 1rem 0;
+      justify-content: center;
+    }
+
+    .logo-container {
+      justify-content: center;
+    }
+
+    .logo-text {
+      display: none;
+    }
+
+    .nav-item {
+      justify-content: center;
+      padding: 0.75rem;
+
+      span {
+        display: none;
+      }
+
+      i {
+        margin-right: 0;
+      }
+    }
+
+    .nav-section-title {
+      display: none;
+    }
+  }
+}
+
+.sidebar-header {
+  padding: 1rem 1.5rem;
+  border-bottom: 1px solid var(--surface-border);
+  display: flex;
+  align-items: center;
+}
+
+.logo-container {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+}
+
+.logo-icon {
+  font-size: 1.5rem;
+  color: var(--primary-color);
+}
+
+.logo-text {
+  font-size: 1.25rem;
+  font-weight: 600;
+  color: var(--text-color);
+  white-space: nowrap;
+}
+
+.sidebar-nav {
+  flex: 1;
+  padding: 1rem 0;
+  overflow-y: auto;
+  overflow-x: hidden;
+}
+
+.nav-list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
+
+.nav-item {
+  display: flex;
+  align-items: center;
+  padding: 0.75rem 1.5rem;
+  color: var(--text-color-secondary);
+  cursor: pointer;
+  transition: all 0.2s ease;
+  text-decoration: none;
+  white-space: nowrap;
+
+  i {
+    font-size: 1.125rem;
+    margin-right: 0.75rem;
+    transition: margin 0.3s ease;
+  }
+
+  span {
+    font-size: 0.9rem;
+  }
+
+  &:hover {
+    background: var(--surface-hover);
+    color: var(--text-color);
+  }
+
+  &.active {
+    background: var(--primary-color);
+    color: white;
+
+    &:hover {
+      background: var(--primary-color);
+    }
+  }
+}
+
+.nav-section {
+  margin-top: 1rem;
+  padding-top: 1rem;
+  border-top: 1px solid var(--surface-border);
+}
+
+.nav-section-title {
+  display: block;
+  padding: 0.5rem 1.5rem;
+  font-size: 0.75rem;
+  font-weight: 600;
+  color: var(--text-color-secondary);
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  white-space: nowrap;
+}
+
+// Dark mode overrides
+html.app-dark {
+  // PrimeReact themes handle variables, overrides removed to prevent conflicts
+
+  .layout-main {
+    background-color: #121212;
+  }
+
+  .card {
+    background: #1e1e1e;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.3);
+  }
+
+  // Override PrimeReact component styles for dark mode
+  .p-component {
+    color: var(--text-color);
+  }
+
+  .p-inputtext {
+    background: #2d2d2d;
+    border-color: var(--surface-border);
+    color: var(--text-color);
+
+    &:enabled:hover {
+      border-color: var(--primary-color);
+    }
+
+    &:enabled:focus {
+      border-color: var(--primary-color);
+      box-shadow: 0 0 0 0.2rem rgba(144, 202, 249, 0.2);
+    }
+  }
+
+  .p-button {
+    &.p-button-text {
+      color: var(--text-color);
+    }
+  }
+
+  .p-menu {
+    background: #1e1e1e;
+    border-color: var(--surface-border);
+
+    .p-menuitem-link {
+      color: var(--text-color);
+
+      &:hover {
+        background: var(--surface-hover);
+      }
+    }
+  }
+
+  .p-datatable {
+    .p-datatable-header,
+    .p-datatable-thead > tr > th {
+      background: #1e1e1e;
+      border-color: var(--surface-border);
+      color: var(--text-color);
+    }
+
+    .p-datatable-tbody > tr {
+      background: #1e1e1e;
+      color: var(--text-color);
+
+      > td {
+        border-color: var(--surface-border);
+      }
+
+      &:nth-child(even) {
+        background: #252525;
+      }
+
+      &:hover {
+        background: var(--surface-hover);
+      }
+    }
+  }
+
+  .p-dialog {
+    .p-dialog-header {
+      background: #1e1e1e;
+      border-color: var(--surface-border);
+      color: var(--text-color);
+    }
+
+    .p-dialog-content {
+      background: #1e1e1e;
+      color: var(--text-color);
+    }
+
+    .p-dialog-footer {
+      background: #1e1e1e;
+      border-color: var(--surface-border);
+    }
+  }
+
+  .p-toast {
+    .p-toast-message {
+      background: #2d2d2d;
+      border-color: var(--surface-border);
+      color: var(--text-color);
+    }
+  }
+}

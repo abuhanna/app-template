@@ -1,0 +1,7 @@
+export { default as Login } from './Login'
+export { default as Profile } from './Profile'
+export { default as Notifications } from './Notifications'
+export { default as ForgotPassword } from './ForgotPassword'
+export { default as ResetPassword } from './ResetPassword'
+export { default as FilesPage } from './FilesPage'
+export { default as AuditLogsPage } from './AuditLogsPage'

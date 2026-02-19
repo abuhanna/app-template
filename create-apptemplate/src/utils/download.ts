@@ -1,10 +1,54 @@
 import degit from 'degit';
 import path from 'path';
 import fs from 'fs';
-import type { ProjectConfig } from '../types.js';
+import type { ProjectConfig, BackendFramework, BackendArchitecture, FrontendFramework, UILibrary, TemplateVariant } from '../types.js';
 
 /**
- * Download a specific folder from the GitHub repository
+ * Download a backend template from the new directory structure
+ * Path format: backend/{framework}/{architecture}-architecture/{variant}
+ */
+export async function downloadBackendTemplate(
+  repo: string,
+  backend: BackendFramework,
+  architecture: BackendArchitecture,
+  variant: TemplateVariant,
+  destPath: string
+): Promise<void> {
+  const folder = `backend/${backend}/${architecture}-architecture/${variant}`;
+  const source = `${repo}/${folder}`;
+  const emitter = degit(source, {
+    cache: false,
+    force: true,
+    verbose: false,
+  });
+
+  await emitter.clone(destPath);
+}
+
+/**
+ * Download a frontend template from the new directory structure
+ * Path format: frontend/{framework}/{ui}/{variant}
+ */
+export async function downloadFrontendTemplate(
+  repo: string,
+  framework: FrontendFramework,
+  ui: UILibrary,
+  variant: TemplateVariant,
+  destPath: string
+): Promise<void> {
+  const folder = `frontend/${framework}/${ui}/${variant}`;
+  const source = `${repo}/${folder}`;
+  const emitter = degit(source, {
+    cache: false,
+    force: true,
+    verbose: false,
+  });
+
+  await emitter.clone(destPath);
+}
+
+/**
+ * Download a specific folder from the GitHub repository (legacy function for compatibility)
  */
 export async function downloadTemplate(repo: string, folder: string, destPath: string): Promise<void> {
   const source = `${repo}/${folder}`;
@@ -57,7 +101,7 @@ export async function copyRootFiles(repo: string, destPath: string, config: Proj
       // Split project (subdirectory) - generic README
       const readmeTemplate = `docker/templates/root/README.multirepo.md`;
       copyFileFromTemp(tempDir, readmeTemplate, destPath, 'README.md');
-    } 
+    }
     // If placeInRoot is true (Backend/Frontend Only in root), we do NOTHING.
     // The component's own README.md has already been downloaded to the root by downloadTemplate logic.
     // We effectively preserve it.
@@ -65,8 +109,8 @@ export async function copyRootFiles(repo: string, destPath: string, config: Proj
     // 3. Fullstack Specific Logic
     if (config.projectType === 'fullstack') {
       // Copy root docker folder (nginx, supervisor, etc.)
-      // We exclude templates from the final copy implicitly by not copying the 'templates' subfolder if we iterate, 
-      // or we just copy 'docker' and then delete 'templates' later. 
+      // We exclude templates from the final copy implicitly by not copying the 'templates' subfolder if we iterate,
+      // or we just copy 'docker' and then delete 'templates' later.
       // For simplicity, let's copy 'docker/nginx' and 'docker/supervisor' explicitly.
       copyDirectoryFromTemp(tempDir, 'docker/nginx', path.join(destPath, 'docker/nginx'));
       copyDirectoryFromTemp(tempDir, 'docker/supervisor', path.join(destPath, 'docker/supervisor'));
@@ -82,7 +126,7 @@ export async function copyRootFiles(repo: string, destPath: string, config: Proj
       // Select and copy root supervisord.conf
       const supervisorTemplate = `docker/templates/root/supervisord.${config.backend}.conf`;
       copyFileFromTemp(tempDir, supervisorTemplate, destPath, 'docker/supervisor/supervisord.conf');
-      
+
       // Copy Makefile if it exists
       copyFileFromTemp(tempDir, 'Makefile', destPath, 'Makefile');
       copyFileFromTemp(tempDir, 'docker-compose.staging.yml', destPath, 'docker-compose.staging.yml');

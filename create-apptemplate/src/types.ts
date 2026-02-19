@@ -3,18 +3,7 @@ export type BackendFramework = 'dotnet' | 'spring' | 'nestjs';
 export type BackendArchitecture = 'clean' | 'nlayer' | 'feature';
 export type FrontendFramework = 'vue' | 'react';
 export type UILibrary = 'vuetify' | 'primevue' | 'primereact' | 'mui';
-export type Feature = 'auth' | 'userManagement' | 'departments' | 'fileUpload' | 'auditLogs' | 'notifications' | 'dataExport' | 'dashboard';
-
-export const ALL_FEATURES: Feature[] = [
-  'auth',
-  'userManagement',
-  'departments',
-  'fileUpload',
-  'auditLogs',
-  'notifications',
-  'dataExport',
-  'dashboard',
-];
+export type TemplateVariant = 'minimal' | 'full';
 
 export interface ProjectConfig {
   projectPath: string;
@@ -26,7 +15,7 @@ export interface ProjectConfig {
   projectName?: string; // Only required for dotnet/spring (namespace)
   installDeps: boolean;
   placeInRoot: boolean; // For backend-only/frontend-only: place files in root instead of subfolder
-  features: Feature[];
+  variant: TemplateVariant;
 }
 
 export interface CLIArgs {
@@ -39,7 +28,7 @@ export interface CLIArgs {
   projectName?: string;
   install?: boolean;
   root?: boolean; // Place files in root (for backend-only/frontend-only)
-  features?: Feature[];
+  variant?: TemplateVariant;
   help?: boolean;
   version?: boolean;
 }

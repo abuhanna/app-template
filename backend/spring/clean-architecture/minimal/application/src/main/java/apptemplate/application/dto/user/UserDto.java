@@ -1,0 +1,33 @@
+package apptemplate.application.dto.user;
+
+import com.fasterxml.jackson.annotation.JsonProperty;
+import lombok.AllArgsConstructor;
+import lombok.Builder;
+import lombok.Data;
+import lombok.NoArgsConstructor;
+
+import java.time.LocalDateTime;
+
+@Data
+@Builder
+@NoArgsConstructor
+@AllArgsConstructor
+public class UserDto {
+
+    private Long id;
+    private String username;
+    private String email;
+    private String firstName;
+    private String lastName;
+    private String fullName;
+    private String role;
+    private Long departmentId;
+    private String departmentName;
+    @JsonProperty("isActive")
+    private boolean isActive;
+    private LocalDateTime lastLoginAt;
+    private LocalDateTime createdAt;
+    private LocalDateTime updatedAt;
+    private Long createdBy;
+    private Long updatedBy;
+}

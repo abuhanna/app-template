@@ -4,7 +4,6 @@ import { parseArgs } from './cli.js';
 import { runInteractivePrompts } from './prompts.js';
 import { generateProject } from './generator.js';
 import type { ProjectConfig } from './types.js';
-import { ALL_FEATURES } from './types.js';
 
 async function main(): Promise<void> {
   console.log();
@@ -48,7 +47,7 @@ async function main(): Promise<void> {
         projectName: cliArgs.projectName,
         installDeps: cliArgs.install || false,
         placeInRoot: cliArgs.root || false,
-        features: cliArgs.features || [...ALL_FEATURES],
+        variant: cliArgs.variant || 'full',
       };
     } else {
       // Interactive mode
@@ -92,8 +91,9 @@ ${pc.bold('Options:')}
   ${pc.yellow('-u, --ui')}           UI library: vuetify, primevue (Vue) | mui, primereact (React)
   ${pc.yellow('-n, --name')}         Project namespace (Company.Project format, .NET/Spring only)
   ${pc.yellow('-r, --root')}         Place files in project root ${pc.gray('(backend/frontend-only)')}
-  ${pc.yellow('--features')}         Features to include (comma-separated or "all")
-                       Options: auth,userManagement,departments,fileUpload,auditLogs,notifications,dataExport,dashboard
+  ${pc.yellow('-V, --variant')}      Template variant: full, minimal ${pc.gray('(default: full)')}
+                       full: All features (user management, departments, dashboard)
+                       minimal: Auth, files, audit logs, notifications only
   ${pc.yellow('-i, --install')}      Install dependencies after creation
   ${pc.yellow('-h, --help')}         Show this help message
   ${pc.yellow('-v, --version')}      Show version number
@@ -105,8 +105,8 @@ ${pc.bold('Examples:')}
   ${pc.gray('# Create fullstack project with .NET backend')}
   npm create apptemplate@latest my-app -b dotnet -n "MyCompany.MyApp" -i
 
-  ${pc.gray('# Create backend-only project with Spring Boot')}
-  npm create apptemplate@latest my-api -t backend -b spring -n "MyCompany.MyApi"
+  ${pc.gray('# Create minimal backend-only project (no user management)')}
+  npm create apptemplate@latest my-api -t backend -b spring -n "MyCompany.MyApi" -V minimal
 
   ${pc.gray('# Create frontend-only project with PrimeVue')}
   npm create apptemplate@latest my-spa -t frontend -u primevue

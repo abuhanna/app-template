@@ -1,0 +1,1 @@
+{"version":3,"file":"create-department.command.js","sourceRoot":"","sources":["../../../../../src/modules/department-management/application/commands/create-department.command.ts"],"names":[],"mappings":";;;AAAA,MAAa,uBAAuB;IAClC,YACkB,IAAY,EACZ,IAAY,EACZ,WAAoB;QAFpB,SAAI,GAAJ,IAAI,CAAQ;QACZ,SAAI,GAAJ,IAAI,CAAQ;QACZ,gBAAW,GAAX,WAAW,CAAS;IACnC,CAAC;CACL;AAND,0DAMC"}

@@ -1,0 +1,1 @@
+import{_ as o}from"./_plugin-vue_export-helper-DlAUqK2U.js";import{r as t,c as a,o as r,a as s}from"./index-D462s2qb.js";const c={class:"blank-layout"},_={__name:"blank",setup(n){return(p,l)=>{const e=t("router-view");return r(),a("div",c,[s(e)])}}},i=o(_,[["__scopeId","data-v-2ee32c4d"]]);export{i as default};

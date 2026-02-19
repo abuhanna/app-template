@@ -1,0 +1,21 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project xmlns="http://maven.apache.org/POM/4.0.0"
+         xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+         xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 https://maven.apache.org/xsd/maven-4.0.0.xsd">
+    <modelVersion>4.0.0</modelVersion>
+
+    <parent>
+        <groupId>com.apptemplate</groupId>
+        <artifactId>app-template</artifactId>
+        <version>1.0.0</version>
+    </parent>
+
+    <artifactId>domain</artifactId>
+    <name>AppTemplate Domain</name>
+    <description>Domain layer - Entities, Enums, and Business Logic (no Spring dependencies)</description>
+
+    <dependencies>
+        <!-- No Spring dependencies in Domain layer -->
+        <!-- Only Lombok for reducing boilerplate -->
+    </dependencies>
+</project>

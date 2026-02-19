@@ -5,7 +5,7 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 ## Project Overview
 
 AppTemplate is a fullstack application scaffolding template monorepo containing:
-- **Backend**: .NET 8.0 RESTful API with Clean Architecture (also includes Spring Boot and NestJS alternatives)
+- **Backend**: .NET 8.0, Spring Boot 3, or NestJS with multiple architecture options
 - **Frontend (Vue)**: Vue 3 + Vuetify 3 or PrimeVue SPA with Vite
 - **Frontend (React)**: React 18 + MUI or PrimeReact SPA with Vite
 - **CLI Tool**: `@abuhannaa/create-apptemplate` - scaffolding generator published to NPM
@@ -19,7 +19,7 @@ This is the **source repository** for the NPM package. End users scaffold projec
 ### Backend (.NET)
 
 ```bash
-cd backend-dotnet
+cd backend/dotnet/clean-architecture/full
 
 # Build
 dotnet build
@@ -51,7 +51,7 @@ Backend runs at `http://localhost:5100` with Swagger at `/swagger`.
 ### Frontend (Vue - Vuetify/PrimeVue)
 
 ```bash
-cd frontend-vuetify  # or frontend-primevue
+cd frontend/vue/vuetify/full  # or frontend/vue/primevue/full
 
 npm install        # Install dependencies
 npm run dev        # Development server (http://localhost:3000)
@@ -72,7 +72,7 @@ npm run format:check      # Check formatting
 ### Frontend (React - MUI/PrimeReact)
 
 ```bash
-cd frontend-mui  # or frontend-primereact
+cd frontend/react/mui/full  # or frontend/react/primereact/full
 
 npm install        # Install dependencies
 npm run dev        # Development server (http://localhost:3000)
@@ -108,20 +108,40 @@ Access: Frontend at `http://localhost`, API at `http://localhost:5100`, API via 
 ## Monorepo Structure
 
 ```
-├── backend-dotnet/           # .NET 8 API (Clean Architecture)
-│   ├── src/Core/             # Domain + Application layers
-│   ├── src/Infrastructure/   # EF Core, Services
-│   ├── src/Presentation/     # WebAPI Controllers
-│   └── tests/                # xUnit tests with Moq
-├── backend-spring/           # Spring Boot 3 alternative
-├── backend-nestjs/           # NestJS alternative
-├── frontend-vuetify/         # Vue 3 + Vuetify (default)
-├── frontend-primevue/        # Vue 3 + PrimeVue alternative
-├── frontend-mui/             # React 18 + MUI alternative
-├── frontend-primereact/      # React 18 + PrimeReact alternative
+├── backend/
+│   ├── dotnet/
+│   │   ├── clean-architecture/
+│   │   │   ├── full/              # All features (user management, departments, etc.)
+│   │   │   └── minimal/           # Auth, files, audit logs, notifications only
+│   │   ├── feature-architecture/
+│   │   │   ├── full/
+│   │   │   └── minimal/
+│   │   └── nlayer-architecture/
+│   │       ├── full/
+│   │       └── minimal/
+│   ├── spring/
+│   │   ├── clean-architecture/{full,minimal}/
+│   │   ├── feature-architecture/{full,minimal}/
+│   │   └── nlayer-architecture/{full,minimal}/
+│   └── nestjs/
+│       ├── clean-architecture/{full,minimal}/
+│       ├── feature-architecture/{full,minimal}/
+│       └── nlayer-architecture/{full,minimal}/
+├── frontend/
+│   ├── vue/
+│   │   ├── vuetify/{full,minimal}/
+│   │   └── primevue/{full,minimal}/
+│   └── react/
+│       ├── mui/{full,minimal}/
+│       └── primereact/{full,minimal}/
 ├── create-apptemplate/       # NPM CLI scaffolding tool
 └── docker/                   # Docker/Nginx configurations
 ```
+
+### Template Variants
+
+- **full**: All features including user management, departments, dashboard, data export
+- **minimal**: Auth, file upload, audit logs, notifications (no user/department management)
 
 ---
 
