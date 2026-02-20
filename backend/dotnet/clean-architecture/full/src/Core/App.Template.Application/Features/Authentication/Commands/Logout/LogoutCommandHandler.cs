@@ -1,7 +1,5 @@
 using AppTemplate.Application.Interfaces;
-
 using MediatR;
-
 using Microsoft.Extensions.Logging;
 
 namespace AppTemplate.Application.Features.Authentication.Commands.Logout;
@@ -11,27 +9,24 @@ namespace AppTemplate.Application.Features.Authentication.Commands.Logout;
 /// </summary>
 public class LogoutCommandHandler : IRequestHandler<LogoutCommand, bool>
 {
-    private readonly ISsoAuthService _ssoAuthService;
     private readonly ILogger<LogoutCommandHandler> _logger;
 
     public LogoutCommandHandler(
-        ISsoAuthService ssoAuthService,
-        ILogger<LogoutCommandHandler> logger)
+        ILogger<LogoutCommandHandler> _logger)
     {
-        _ssoAuthService = ssoAuthService;
-        _logger = logger;
+        this._logger = _logger;
     }
 
-    public async Task<bool> Handle(LogoutCommand request, CancellationToken cancellationToken)
+    public Task<bool> Handle(LogoutCommand request, CancellationToken cancellationToken)
     {
         _logger.LogInformation("Processing logout request");
+        
+        // For JWT with local auth, the client just discards the token.
+        // Optionally, we could blacklist the token here if we implemented a blacklist service.
+        // For now, we simply return success.
+        
+        _logger.LogInformation("Logout completed successfully");
 
-        var result = await _ssoAuthService.LogoutAsync(
-            request.AuthorizationHeader,
-            cancellationToken);
-
-        _logger.LogInformation("Logout completed: {Success}", result);
-
-        return result;
+        return Task.FromResult(true);
     }
 }

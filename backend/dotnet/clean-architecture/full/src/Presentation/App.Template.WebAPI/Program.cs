@@ -79,28 +79,6 @@ builder.Services.AddAuthentication(options =>
 })
 .AddJwtBearer(options =>
 {
-    // Prefer Base64 secrets; fallback to raw text if not Base64
-    SymmetricSecurityKey BuildSymmetricKey(string secret)
-    {
-        try
-        {
-            var keyBytes = Convert.FromBase64String(secret);
-            return new SymmetricSecurityKey(keyBytes);
-        }
-        catch (FormatException)
-        {
-            try
-            {
-                var keyBytesUrl = Base64UrlEncoder.DecodeBytes(secret);
-                return new SymmetricSecurityKey(keyBytesUrl);
-            }
-            catch
-            {
-                return new SymmetricSecurityKey(Encoding.UTF8.GetBytes(secret));
-            }
-        }
-    }
-
     options.TokenValidationParameters = new TokenValidationParameters
     {
         // For this SSO, only check expiration and signature
@@ -110,7 +88,7 @@ builder.Services.AddAuthentication(options =>
         ValidateIssuerSigningKey = true,
         ValidIssuer = jwtIssuer,
         ValidAudience = jwtAudience,
-        IssuerSigningKey = BuildSymmetricKey(jwtSecret),
+        IssuerSigningKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(jwtSecret)),
         // If token doesn't include 'kid', try the provided key
         TryAllIssuerSigningKeys = true,
         ClockSkew = TimeSpan.Zero // Remove default 5 minute tolerance
@@ -177,7 +155,6 @@ builder.Services.AddTransient(typeof(IPipelineBehavior<,>), typeof(ValidationBeh
 
 // Register Infrastructure Services
 builder.Services.AddScoped<ICurrentUserService, CurrentUserService>();
-builder.Services.AddScoped<ISsoAuthService, SsoAuthService>();
 builder.Services.AddScoped<INotificationService, NotificationService>();
 builder.Services.AddScoped<IPasswordHashService, PasswordHashService>();
 builder.Services.AddScoped<IJwtTokenService, JwtTokenService>();
@@ -188,12 +165,6 @@ builder.Services.AddScoped<AppTemplate.Infrastructure.Persistence.Seeding.DbSeed
 
 // Register Correlation ID accessor for request tracing
 builder.Services.AddScoped<ICorrelationIdAccessor, CorrelationIdAccessor>();
-
-// Add HttpClient for OrganizationService (SSO API calls)
-builder.Services.AddHttpClient<IOrganizationService, OrganizationService>(client =>
-{
-    client.Timeout = TimeSpan.FromSeconds(30);
-});
 
 // Add Swagger/OpenAPI with API Versioning support and JWT
 builder.Services.AddEndpointsApiExplorer();
@@ -251,9 +222,10 @@ builder.Services.AddCors(options =>
 {
     options.AddPolicy("AllowAll", policy =>
     {
-        policy.AllowAnyOrigin()
+        policy.SetIsOriginAllowed(origin => true) // Allow any origin but with credentials support
             .AllowAnyMethod()
-            .AllowAnyHeader();
+            .AllowAnyHeader()
+            .AllowCredentials();
     });
 });
 

@@ -32,13 +32,12 @@ public class AuthController : ControllerBase
     }
 
     /// <summary>
-    /// Login to SSO and obtain JWT token
+    /// Login and obtain JWT token
     /// </summary>
     /// <param name="command">Login credentials</param>
     /// <returns>JWT token and user information</returns>
     /// <response code="200">Login successful, returns JWT token</response>
     /// <response code="401">Invalid credentials</response>
-    /// <response code="500">SSO service unavailable</response>
     /// <remarks>
     /// Sample request:
     ///
@@ -48,7 +47,6 @@ public class AuthController : ControllerBase
     ///         "password": "password123"
     ///     }
     ///
-    /// This endpoint proxies the request to the SSO service and returns the JWT token.
     /// The token should be included in subsequent API requests as: Authorization: Bearer {token}
     /// </remarks>
     [HttpPost("login")]
@@ -108,19 +106,17 @@ public class AuthController : ControllerBase
     }
 
     /// <summary>
-    /// Logout from SSO and invalidate JWT token
+    /// Logout and invalidate JWT token
     /// </summary>
     /// <returns>Logout confirmation</returns>
     /// <response code="200">Logout successful</response>
-    /// <response code="500">SSO service unavailable</response>
     /// <remarks>
     /// Sample request:
     ///
     ///     POST /api/v1/auth/logout
     ///     Authorization: Bearer {your-jwt-token}
     ///
-    /// This endpoint proxies the logout request to the SSO service.
-    /// The JWT token in the Authorization header will be invalidated.
+    /// The JWT token in the Authorization header will be invalidated (client-side).
     /// </remarks>
     [HttpPost("logout")]
     [ProducesResponseType(StatusCodes.Status200OK)]

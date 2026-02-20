@@ -9,14 +9,13 @@ using Microsoft.Extensions.Logging;
 namespace AppTemplate.Application.Features.Authentication.Commands.Login;
 
 /// <summary>
-/// Handler for LoginCommand - supports both local and SSO authentication
+/// Handler for LoginCommand - supports local authentication
 /// </summary>
 public class LoginCommandHandler : IRequestHandler<LoginCommand, LoginResponseDto>
 {
     private readonly IApplicationDbContext _context;
     private readonly IPasswordHashService _passwordHashService;
     private readonly IJwtTokenService _jwtTokenService;
-    private readonly ISsoAuthService? _ssoAuthService;
     private readonly IConfiguration _configuration;
     private readonly ILogger<LoginCommandHandler> _logger;
 
@@ -25,13 +24,11 @@ public class LoginCommandHandler : IRequestHandler<LoginCommand, LoginResponseDt
         IPasswordHashService passwordHashService,
         IJwtTokenService jwtTokenService,
         IConfiguration configuration,
-        ILogger<LoginCommandHandler> logger,
-        ISsoAuthService? ssoAuthService = null)
+        ILogger<LoginCommandHandler> logger)
     {
         _context = context;
         _passwordHashService = passwordHashService;
         _jwtTokenService = jwtTokenService;
-        _ssoAuthService = ssoAuthService;
         _configuration = configuration;
         _logger = logger;
     }
@@ -41,24 +38,10 @@ public class LoginCommandHandler : IRequestHandler<LoginCommand, LoginResponseDt
         var identifier = !string.IsNullOrEmpty(request.Username) ? request.Username : request.Email;
         _logger.LogInformation("Processing login request for user: {Username}", identifier);
 
-        var useLocalAuth = _configuration.GetValue<bool>("Auth:UseLocalAuth", true);
-        var ssoEnabled = _configuration.GetValue<bool>("Sso:Enabled", false);
-
-        // Try local authentication first if enabled
-        if (useLocalAuth)
+        var localResult = await TryLocalAuthAsync(request, cancellationToken);
+        if (localResult != null)
         {
-            var localResult = await TryLocalAuthAsync(request, cancellationToken);
-            if (localResult != null)
-            {
-                return localResult;
-            }
-        }
-
-        // Fall back to SSO if enabled and local auth failed or not enabled
-        if (ssoEnabled && _ssoAuthService != null && identifier != null)
-        {
-            _logger.LogInformation("Attempting SSO authentication for user: {Username}", identifier);
-            return await _ssoAuthService.LoginAsync(identifier, request.Password, cancellationToken);
+            return localResult;
         }
 
         throw new InvalidOperationException("Invalid username or password");
