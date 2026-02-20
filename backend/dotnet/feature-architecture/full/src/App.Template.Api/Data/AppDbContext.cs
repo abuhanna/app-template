@@ -1,34 +1,63 @@
-using Microsoft.EntityFrameworkCore;
-using App.Template.Api.Features.Users;
+using System.Text.Json;
+
 using App.Template.Api.Common.Entities;
+using App.Template.Api.Common.Services;
+using App.Template.Api.Features.Departments;
+using App.Template.Api.Features.Files;
+using App.Template.Api.Features.Notifications;
+using App.Template.Api.Features.Users;
+
+using Microsoft.EntityFrameworkCore;
+using Microsoft.EntityFrameworkCore.ChangeTracking;
+using Microsoft.EntityFrameworkCore.Metadata.Builders;
+using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 
 namespace App.Template.Api.Data;
 
 public class AppDbContext : DbContext
 {
-    // Feature entities
-    public DbSet<User> Users => Set<User>();
-    public DbSet<AuditLog> AuditLogs => Set<AuditLog>();
-    public DbSet<App.Template.Api.Features.Files.UploadedFile> UploadedFiles => Set<App.Template.Api.Features.Files.UploadedFile>();
+    private readonly ICurrentUserService _currentUserService;
 
-    private readonly App.Template.Api.Common.Services.ICurrentUserService _currentUserService;
-
-    public AppDbContext(DbContextOptions<AppDbContext> options, App.Template.Api.Common.Services.ICurrentUserService currentUserService) : base(options)
+    public AppDbContext(DbContextOptions<AppDbContext> options, ICurrentUserService currentUserService) : base(options)
     {
         _currentUserService = currentUserService;
     }
 
-    protected override void OnModelCreating(ModelBuilder modelBuilder)
+    public DbSet<User> Users => Set<User>();
+    public DbSet<Department> Departments => Set<Department>();
+    public DbSet<Notification> Notifications => Set<Notification>();
+    public DbSet<RefreshToken> RefreshTokens => Set<RefreshToken>();
+    public DbSet<UploadedFile> UploadedFiles => Set<UploadedFile>();
+    public DbSet<AuditLog> AuditLogs => Set<AuditLog>();
+
+    private static readonly HashSet<Type> ExcludedFromAudit = new()
     {
-        base.OnModelCreating(modelBuilder);
-        
-        // Apply configurations from all features
-        modelBuilder.ApplyConfigurationsFromAssembly(typeof(AppDbContext).Assembly);
+        typeof(AuditLog),
+        typeof(RefreshToken),
+        typeof(Notification)
+    };
+
+    public override async Task<int> SaveChangesAsync(CancellationToken cancellationToken = default)
+    {
+        ApplyAuditInfo();
+        var auditEntries = OnBeforeSaveChanges();
+        var result = await base.SaveChangesAsync(cancellationToken);
+        await OnAfterSaveChangesAsync(auditEntries);
+        return result;
     }
 
-    public override Task<int> SaveChangesAsync(CancellationToken cancellationToken = default)
+    public override int SaveChanges()
     {
-        var userId = _currentUserService.UserId;
+        ApplyAuditInfo();
+        var auditEntries = OnBeforeSaveChanges();
+        var result = base.SaveChanges();
+        OnAfterSaveChangesAsync(auditEntries).GetAwaiter().GetResult();
+        return result;
+    }
+
+    private void ApplyAuditInfo()
+    {
+        var currentUserId = _currentUserService.UserId;
         var utcNow = DateTime.UtcNow;
 
         foreach (var entry in ChangeTracker.Entries<AuditableEntity>())
@@ -36,50 +65,281 @@ public class AppDbContext : DbContext
             if (entry.State == EntityState.Added)
             {
                 entry.Entity.CreatedAt = utcNow;
-                entry.Entity.CreatedBy = userId;
+                entry.Entity.CreatedBy = currentUserId;
             }
             if (entry.State == EntityState.Modified)
             {
                 entry.Entity.UpdatedAt = utcNow;
-                entry.Entity.UpdatedBy = userId;
+                entry.Entity.UpdatedBy = currentUserId;
             }
         }
-
-        var auditEntries = OnBeforeSaveChanges(userId);
-        var result = base.SaveChangesAsync(cancellationToken);
-        
-        if (auditEntries.Count > 0)
-        {
-             OnAfterSaveChanges(auditEntries);
-             return base.SaveChangesAsync(cancellationToken);
-        }
-
-        return result;
     }
 
-    private List<AuditLog> OnBeforeSaveChanges(string? userId)
+    private List<AuditEntry> OnBeforeSaveChanges()
     {
         ChangeTracker.DetectChanges();
-        var auditEntries = new List<AuditLog>();
+        var auditEntries = new List<AuditEntry>();
+        var currentUserId = _currentUserService.UserId;
+
         foreach (var entry in ChangeTracker.Entries())
         {
-            if (entry.Entity is AuditLog || entry.State == EntityState.Detached || entry.State == EntityState.Unchanged)
-                continue;
-
-            var auditEntry = new AuditLog
+            if (ExcludedFromAudit.Contains(entry.Entity.GetType()) ||
+                entry.State == EntityState.Detached ||
+                entry.State == EntityState.Unchanged)
             {
-                TableName = entry.Entity.GetType().Name,
-                UserId = userId,
-                DateTime = DateTime.UtcNow,
-                Type = entry.State.ToString()
+                continue;
+            }
+
+            var auditEntry = new AuditEntry(entry)
+            {
+                EntityName = entry.Entity.GetType().Name,
+                UserId = currentUserId
             };
+
+            switch (entry.State)
+            {
+                case EntityState.Added:
+                    auditEntry.Action = AuditAction.Created;
+                    foreach (var property in entry.Properties)
+                    {
+                        if (property.IsTemporary)
+                        {
+                            auditEntry.TemporaryProperties.Add(property);
+                            continue;
+                        }
+                        auditEntry.NewValues[property.Metadata.Name] = property.CurrentValue;
+                    }
+                    break;
+
+                case EntityState.Deleted:
+                    auditEntry.Action = AuditAction.Deleted;
+                    foreach (var property in entry.Properties)
+                    {
+                        auditEntry.OldValues[property.Metadata.Name] = property.OriginalValue;
+                    }
+                    break;
+
+                case EntityState.Modified:
+                    auditEntry.Action = AuditAction.Updated;
+                    foreach (var property in entry.Properties)
+                    {
+                        if (property.IsModified)
+                        {
+                            auditEntry.AffectedColumns.Add(property.Metadata.Name);
+                            auditEntry.OldValues[property.Metadata.Name] = property.OriginalValue;
+                            auditEntry.NewValues[property.Metadata.Name] = property.CurrentValue;
+                        }
+                    }
+                    break;
+            }
+
             auditEntries.Add(auditEntry);
         }
-        return auditEntries;
+
+        foreach (var entry in auditEntries.Where(e => !e.HasTemporaryProperties))
+        {
+            AuditLogs.Add(entry.ToAuditLog());
+        }
+
+        return auditEntries.Where(e => e.HasTemporaryProperties).ToList();
     }
 
-    private void OnAfterSaveChanges(List<AuditLog> auditEntries)
+    private async Task OnAfterSaveChangesAsync(List<AuditEntry> auditEntries)
     {
-         AuditLogs.AddRange(auditEntries);
+        if (auditEntries.Count == 0) return;
+
+        foreach (var entry in auditEntries)
+        {
+            foreach (var prop in entry.TemporaryProperties)
+            {
+                entry.NewValues[prop.Metadata.Name] = prop.CurrentValue;
+            }
+            AuditLogs.Add(entry.ToAuditLog());
+        }
+
+        await base.SaveChangesAsync();
+    }
+
+    protected override void OnModelCreating(ModelBuilder modelBuilder)
+    {
+        base.OnModelCreating(modelBuilder);
+
+        // Department
+        modelBuilder.Entity<Department>(entity =>
+        {
+            entity.HasKey(e => e.Id);
+            entity.Property(e => e.Id).ValueGeneratedOnAdd();
+            entity.Property(e => e.Code).IsRequired().HasMaxLength(50);
+            entity.Property(e => e.Name).IsRequired().HasMaxLength(200);
+            entity.Property(e => e.Description).HasMaxLength(500);
+            entity.Property(e => e.IsActive).IsRequired();
+            entity.Property(e => e.CreatedAt).IsRequired();
+            entity.Property(e => e.CreatedBy).HasMaxLength(100);
+            entity.Property(e => e.UpdatedBy).HasMaxLength(100);
+            entity.HasIndex(e => e.Code).IsUnique();
+            entity.HasMany(e => e.Users)
+                  .WithOne(u => u.Department)
+                  .HasForeignKey(u => u.DepartmentId)
+                  .OnDelete(DeleteBehavior.SetNull);
+        });
+
+        // User
+        modelBuilder.Entity<User>(entity =>
+        {
+            entity.HasKey(e => e.Id);
+            entity.Property(e => e.Id).ValueGeneratedOnAdd();
+            entity.Property(e => e.Username).IsRequired().HasMaxLength(100);
+            entity.Property(e => e.Email).IsRequired().HasMaxLength(255);
+            entity.Property(e => e.PasswordHash).IsRequired().HasMaxLength(255);
+            entity.Property(e => e.Name).HasMaxLength(200);
+            entity.Property(e => e.Role).HasMaxLength(50);
+            entity.Property(e => e.IsActive).IsRequired();
+            entity.Property(e => e.CreatedAt).IsRequired();
+            entity.Property(e => e.CreatedBy).HasMaxLength(100);
+            entity.Property(e => e.UpdatedBy).HasMaxLength(100);
+            entity.Property(e => e.PasswordResetToken).HasMaxLength(100);
+            entity.Property(e => e.PasswordHistory).HasJsonConversion<List<string>>();
+            entity.HasIndex(e => e.Username).IsUnique();
+            entity.HasIndex(e => e.Email).IsUnique();
+            entity.HasIndex(e => e.PasswordResetToken);
+        });
+
+        // Notification
+        modelBuilder.Entity<Notification>(entity =>
+        {
+            entity.HasKey(e => e.Id);
+            entity.Property(e => e.Id).ValueGeneratedOnAdd();
+            entity.Property(e => e.UserId).IsRequired().HasMaxLength(100);
+            entity.Property(e => e.Title).IsRequired().HasMaxLength(200);
+            entity.Property(e => e.Message).IsRequired().HasMaxLength(500);
+            entity.Property(e => e.Type).IsRequired().HasConversion<string>();
+            entity.Property(e => e.ReferenceId).HasMaxLength(50);
+            entity.Property(e => e.ReferenceType).HasMaxLength(50);
+            entity.Property(e => e.IsRead).IsRequired();
+            entity.Property(e => e.CreatedAt).IsRequired();
+            entity.HasIndex(e => new { e.UserId, e.IsRead });
+        });
+
+        // RefreshToken
+        modelBuilder.Entity<RefreshToken>(entity =>
+        {
+            entity.HasKey(e => e.Id);
+            entity.Property(e => e.Id).ValueGeneratedOnAdd();
+            entity.Property(e => e.Token).IsRequired().HasMaxLength(255);
+            entity.Property(e => e.UserId).IsRequired();
+            entity.Property(e => e.ExpiresAt).IsRequired();
+            entity.Property(e => e.CreatedAt).IsRequired();
+            entity.Property(e => e.ReplacedByToken).HasMaxLength(255);
+            entity.Property(e => e.CreatedByIp).HasMaxLength(50);
+            entity.Property(e => e.RevokedByIp).HasMaxLength(50);
+            entity.HasIndex(e => e.Token).IsUnique();
+            entity.HasIndex(e => e.UserId);
+            entity.HasOne(e => e.User)
+                  .WithMany()
+                  .HasForeignKey(e => e.UserId)
+                  .OnDelete(DeleteBehavior.Cascade);
+        });
+
+        // UploadedFile
+        modelBuilder.Entity<UploadedFile>(entity =>
+        {
+            entity.HasKey(e => e.Id);
+            entity.Property(e => e.Id).ValueGeneratedOnAdd();
+            entity.Property(e => e.FileName).IsRequired().HasMaxLength(255);
+            entity.Property(e => e.OriginalFileName).IsRequired().HasMaxLength(255);
+            entity.Property(e => e.ContentType).IsRequired().HasMaxLength(100);
+            entity.Property(e => e.FileSize).IsRequired();
+            entity.Property(e => e.StoragePath).IsRequired().HasMaxLength(500);
+            entity.Property(e => e.Description).HasMaxLength(500);
+            entity.Property(e => e.Category).HasMaxLength(100);
+            entity.Property(e => e.IsPublic).IsRequired();
+            entity.Property(e => e.CreatedAt).IsRequired();
+            entity.Property(e => e.CreatedBy).HasMaxLength(100);
+            entity.Property(e => e.UpdatedBy).HasMaxLength(100);
+            entity.HasIndex(e => e.FileName).IsUnique();
+            entity.HasIndex(e => e.Category);
+            entity.HasIndex(e => e.CreatedBy);
+        });
+
+        // AuditLog
+        modelBuilder.Entity<AuditLog>(entity =>
+        {
+            entity.HasKey(e => e.Id);
+            entity.Property(e => e.Id).ValueGeneratedOnAdd();
+            entity.Property(e => e.EntityName).IsRequired().HasMaxLength(100);
+            entity.Property(e => e.EntityId).IsRequired().HasMaxLength(50);
+            entity.Property(e => e.Action).IsRequired().HasConversion<string>();
+            entity.Property(e => e.OldValues).HasColumnType("text");
+            entity.Property(e => e.NewValues).HasColumnType("text");
+            entity.Property(e => e.AffectedColumns).HasColumnType("text");
+            entity.Property(e => e.UserId).HasMaxLength(100);
+            entity.Property(e => e.Timestamp).IsRequired();
+            entity.HasIndex(e => e.EntityName);
+            entity.HasIndex(e => e.EntityId);
+            entity.HasIndex(e => e.UserId);
+            entity.HasIndex(e => e.Timestamp);
+        });
+
+    }
+}
+
+internal class AuditEntry
+{
+    public AuditEntry(EntityEntry entry)
+    {
+        Entry = entry;
+    }
+
+    public EntityEntry Entry { get; }
+    public string EntityName { get; set; } = string.Empty;
+    public string? UserId { get; set; }
+    public AuditAction Action { get; set; }
+    public Dictionary<string, object?> OldValues { get; } = new();
+    public Dictionary<string, object?> NewValues { get; } = new();
+    public List<string> AffectedColumns { get; } = new();
+    public List<PropertyEntry> TemporaryProperties { get; } = new();
+    public bool HasTemporaryProperties => TemporaryProperties.Count > 0;
+
+    public AuditLog ToAuditLog()
+    {
+        var keyValues = Entry.Properties
+            .Where(p => p.Metadata.IsPrimaryKey())
+            .Select(p => p.CurrentValue?.ToString())
+            .ToList();
+
+        return new AuditLog
+        {
+            EntityName = EntityName,
+            EntityId = string.Join(",", keyValues),
+            Action = Action,
+            OldValues = OldValues.Count > 0 ? JsonSerializer.Serialize(OldValues) : null,
+            NewValues = NewValues.Count > 0 ? JsonSerializer.Serialize(NewValues) : null,
+            AffectedColumns = AffectedColumns.Count > 0 ? JsonSerializer.Serialize(AffectedColumns) : null,
+            UserId = UserId,
+            Timestamp = DateTime.UtcNow
+        };
+    }
+}
+
+public static class ValueConversionExtensions
+{
+    public static PropertyBuilder<T> HasJsonConversion<T>(this PropertyBuilder<T> propertyBuilder) where T : class
+    {
+        var converter = new ValueConverter<T, string>(
+            v => JsonSerializer.Serialize(v, (JsonSerializerOptions?)null),
+            v => string.IsNullOrEmpty(v) ? default : JsonSerializer.Deserialize<T>(v, (JsonSerializerOptions?)null)!
+        );
+
+        var comparer = new ValueComparer<T>(
+            (c1, c2) => JsonSerializer.Serialize(c1, (JsonSerializerOptions?)null) == JsonSerializer.Serialize(c2, (JsonSerializerOptions?)null),
+            c => c == null ? 0 : JsonSerializer.Serialize(c, (JsonSerializerOptions?)null).GetHashCode(),
+            c => string.IsNullOrEmpty(JsonSerializer.Serialize(c, (JsonSerializerOptions?)null)) ? default : JsonSerializer.Deserialize<T>(JsonSerializer.Serialize(c, (JsonSerializerOptions?)null), (JsonSerializerOptions?)null)!
+        );
+
+        propertyBuilder.HasConversion(converter);
+        propertyBuilder.Metadata.SetValueConverter(converter);
+        propertyBuilder.Metadata.SetValueComparer(comparer);
+
+        return propertyBuilder;
     }
 }

@@ -7,23 +7,29 @@ public static class ServiceCollectionExtensions
 {
     public static IServiceCollection AddApplicationServices(this IServiceCollection services)
     {
-        services.AddScoped<Services.IUserService, Services.UserService>();
-        services.AddScoped<Services.IDepartmentService, Services.DepartmentService>();
-        services.AddScoped<Services.IFileService, Services.FileService>();
-        services.AddScoped<Services.IAuthService, Services.AuthService>();
-        services.AddScoped<Services.IJwtTokenGenerator, Services.JwtTokenGenerator>();
-        services.AddScoped<Repositories.IUserRepository, Repositories.UserRepository>();
-        
-        return services;
-    }
+        // Common Services
+        services.AddScoped<IJwtTokenGenerator, JwtTokenGenerator>();
+        services.AddScoped<IPasswordHashService, PasswordHashService>();
+        services.AddScoped<IEmailService, EmailService>();
+        services.AddScoped<DbSeeder>();
 
-    public static void AddAutoMapper(this IServiceCollection services, Type assemblyMarkerType)
-    {
-        services.AddAutoMapper(config =>
-        {
-            config.CreateMap<Models.Entities.User, Models.Dtos.UserDto>();
-            config.CreateMap<Models.Entities.Department, Models.Dtos.DepartmentDto>();
-            config.CreateMap<Models.Dtos.CreateDepartmentDto, Models.Entities.Department>();
-        }, assemblyMarkerType.Assembly);
+        // Repositories
+        services.AddScoped<IUserRepository, UserRepository>();
+        services.AddScoped<IRefreshTokenRepository, RefreshTokenRepository>();
+        services.AddScoped<IDepartmentRepository, DepartmentRepository>();
+        services.AddScoped<INotificationRepository, NotificationRepository>();
+        services.AddScoped<IAuditLogRepository, AuditLogRepository>();
+        services.AddScoped<IFileRepository, FileRepository>();
+
+        // Services
+        services.AddScoped<IAuthService, AuthService>();
+        services.AddScoped<IUserService, UserService>();
+        services.AddScoped<IDepartmentService, DepartmentService>();
+        services.AddScoped<IFileService, FileService>();
+        services.AddScoped<INotificationService, NotificationService>();
+        services.AddScoped<IAuditLogService, AuditLogService>();
+        services.AddScoped<IExportService, ExportService>();
+
+        return services;
     }
 }

@@ -85,7 +85,7 @@ namespace AppTemplate.Infrastructure.Migrations
                     b.HasIndex("UserId")
                         .HasDatabaseName("ix_audit_logs_user_id");
 
-                    b.ToTable("audit_logs");
+                    b.ToTable("audit_logs", (string)null);
                 });
 
             modelBuilder.Entity("AppTemplate.Domain.Entities.Department", b =>
@@ -143,7 +143,7 @@ namespace AppTemplate.Infrastructure.Migrations
                         .IsUnique()
                         .HasDatabaseName("ix_departments_code");
 
-                    b.ToTable("departments");
+                    b.ToTable("departments", (string)null);
                 });
 
             modelBuilder.Entity("AppTemplate.Domain.Entities.Notification", b =>
@@ -202,7 +202,7 @@ namespace AppTemplate.Infrastructure.Migrations
                     b.HasIndex("UserId", "IsRead")
                         .HasDatabaseName("ix_notifications_user_id_is_read");
 
-                    b.ToTable("notifications");
+                    b.ToTable("notifications", (string)null);
                 });
 
             modelBuilder.Entity("AppTemplate.Domain.Entities.RefreshToken", b =>
@@ -261,7 +261,7 @@ namespace AppTemplate.Infrastructure.Migrations
                     b.HasIndex("UserId")
                         .HasDatabaseName("ix_refresh_tokens_user_id");
 
-                    b.ToTable("refresh_tokens");
+                    b.ToTable("refresh_tokens", (string)null);
                 });
 
             modelBuilder.Entity("AppTemplate.Domain.Entities.UploadedFile", b =>
@@ -346,7 +346,7 @@ namespace AppTemplate.Infrastructure.Migrations
                         .IsUnique()
                         .HasDatabaseName("ix_uploaded_files_file_name");
 
-                    b.ToTable("uploaded_files");
+                    b.ToTable("uploaded_files", (string)null);
                 });
 
             modelBuilder.Entity("AppTemplate.Domain.Entities.User", b =>
@@ -447,7 +447,7 @@ namespace AppTemplate.Infrastructure.Migrations
                         .IsUnique()
                         .HasDatabaseName("ix_users_username");
 
-                    b.ToTable("users");
+                    b.ToTable("users", (string)null);
                 });
 
             modelBuilder.Entity("AppTemplate.Domain.Entities.RefreshToken", b =>
@@ -457,7 +457,7 @@ namespace AppTemplate.Infrastructure.Migrations
                         .HasForeignKey("UserId")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired()
-                        .HasConstraintName("fk_refresh_tokens_users");
+                        .HasConstraintName("fk_refresh_tokens_users_user_id");
 
                     b.Navigation("User");
                 });
@@ -468,7 +468,7 @@ namespace AppTemplate.Infrastructure.Migrations
                         .WithMany("Users")
                         .HasForeignKey("DepartmentId")
                         .OnDelete(DeleteBehavior.SetNull)
-                        .HasConstraintName("fk_users_departments");
+                        .HasConstraintName("fk_users_departments_department_id");
 
                     b.Navigation("Department");
                 });

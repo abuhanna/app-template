@@ -61,7 +61,8 @@ var connectionString = builder.Configuration.GetConnectionString("DefaultConnect
     ?? throw new InvalidOperationException("Connection string 'DefaultConnection' not found.");
 
 builder.Services.AddDbContext<ApplicationDbContext>(options =>
-    options.UseNpgsql(connectionString));
+    options.UseNpgsql(connectionString)
+           .UseSnakeCaseNamingConvention());
 
 // Register the DbContext interface
 builder.Services.AddScoped<IApplicationDbContext>(provider => provider.GetRequiredService<ApplicationDbContext>());
@@ -245,8 +246,25 @@ using (var scope = app.Services.CreateScope())
     var dbContext = scope.ServiceProvider.GetRequiredService<ApplicationDbContext>();
     try
     {
-        // Apply pending migrations automatically
-        dbContext.Database.Migrate();
+        // Safely apply migrations one by one. If a migration fails because a table/column already exists
+        // (common when sharing a database across architectures), mark it as applied and continue.
+        var pendingMigrations = await dbContext.Database.GetPendingMigrationsAsync();
+        var migrator = ((Microsoft.EntityFrameworkCore.Infrastructure.IInfrastructure<IServiceProvider>)dbContext.Database).Instance.GetRequiredService<Microsoft.EntityFrameworkCore.Migrations.IMigrator>();
+
+        foreach (var migration in pendingMigrations)
+        {
+            try
+            {
+                await migrator.MigrateAsync(migration);
+            }
+            catch (Npgsql.PostgresException ex) when (ex.SqlState == "42P07" || ex.SqlState == "42701" || ex.SqlState == "42710")
+            {
+                app.Logger.LogWarning("Migration {Migration} failed because an object already exists (SqlState: {SqlState}). Marking as applied.", migration, ex.SqlState);
+                var sql = $"INSERT INTO \"__EFMigrationsHistory\" (migration_id, product_version) VALUES ('{migration}', '8.0.0') ON CONFLICT DO NOTHING;";
+                await dbContext.Database.ExecuteSqlRawAsync(sql);
+            }
+        }
+
         app.Logger.LogInformation("Database migrations applied successfully in {Environment} environment.",
             app.Environment.EnvironmentName);
 

@@ -1,25 +1,18 @@
-using System.ComponentModel.DataAnnotations;
-using System.ComponentModel.DataAnnotations.Schema;
-
 namespace App.Template.Api.Models.Entities;
 
-[Table("Users")]
 public class User : AuditableEntity
 {
-    [Key]
-    public int Id { get; set; }
-
-    [Required]
-    [MaxLength(100)]
-    public string Name { get; set; } = string.Empty;
-
-    [Required]
-    [MaxLength(255)]
-    [EmailAddress]
+    public string Username { get; set; } = string.Empty;
     public string Email { get; set; } = string.Empty;
-
-    [MaxLength(500)]
-    public string? PasswordHash { get; set; }
-
+    public string PasswordHash { get; set; } = string.Empty;
+    public string? Name { get; set; }
+    public string? Role { get; set; } = "User";
+    public long? DepartmentId { get; set; }
+    public Department? Department { get; set; }
     public bool IsActive { get; set; } = true;
+    public DateTime? LastLoginAt { get; set; }
+    public string? PasswordResetToken { get; set; }
+    public DateTime? PasswordResetTokenExpiry { get; set; }
+    public List<string> PasswordHistory { get; set; } = new();
+    public ICollection<RefreshToken> RefreshTokens { get; set; } = new List<RefreshToken>();
 }

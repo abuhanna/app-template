@@ -1,9 +1,13 @@
-using Microsoft.AspNetCore.Mvc;
+using System.Security.Claims;
+using App.Template.Api.Models.Common;
 using App.Template.Api.Models.Dtos;
 using App.Template.Api.Services;
+using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Mvc;
 
 namespace App.Template.Api.Controllers;
 
+[Authorize]
 [ApiController]
 [Route("api/[controller]")]
 public class UsersController : ControllerBase
@@ -16,14 +20,13 @@ public class UsersController : ControllerBase
     }
 
     [HttpGet]
-    public async Task<ActionResult<IEnumerable<UserDto>>> GetAll()
+    public async Task<ActionResult<PagedResult<UserDto>>> GetAll([FromQuery] UsersQueryParams queryParams)
     {
-        var users = await _userService.GetAllUsersAsync();
-        return Ok(users);
+        return Ok(await _userService.GetUsersAsync(queryParams));
     }
 
     [HttpGet("{id}")]
-    public async Task<ActionResult<UserDto>> GetById(int id)
+    public async Task<ActionResult<UserDto>> GetById(long id)
     {
         var user = await _userService.GetUserByIdAsync(id);
         if (user == null) return NotFound();
@@ -38,7 +41,7 @@ public class UsersController : ControllerBase
     }
 
     [HttpPut("{id}")]
-    public async Task<ActionResult<UserDto>> Update(int id, [FromBody] UpdateUserRequest request)
+    public async Task<ActionResult<UserDto>> Update(long id, [FromBody] UpdateUserRequest request)
     {
         var user = await _userService.UpdateUserAsync(id, request);
         if (user == null) return NotFound();
@@ -46,10 +49,23 @@ public class UsersController : ControllerBase
     }
 
     [HttpDelete("{id}")]
-    public async Task<IActionResult> Delete(int id)
+    public async Task<IActionResult> Delete(long id)
     {
         var result = await _userService.DeleteUserAsync(id);
         if (!result) return NotFound();
         return NoContent();
+    }
+
+    [HttpPost("{id}/change-password")]
+    public async Task<IActionResult> ChangePassword(long id, [FromBody] ChangePasswordRequest request)
+    {
+        var currentUserId = User.FindFirstValue(ClaimTypes.NameIdentifier);
+        var currentUserRole = User.FindFirstValue(ClaimTypes.Role);
+
+        if (currentUserId != id.ToString() && currentUserRole != "Admin")
+            return Forbid();
+
+        await _userService.ChangePasswordAsync(id, request);
+        return Ok();
     }
 }

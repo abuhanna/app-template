@@ -1,12 +1,14 @@
+using App.Template.Api.Models.Common;
 using App.Template.Api.Models.Dtos;
 
 namespace App.Template.Api.Services;
 
 public interface IUserService
 {
-    Task<IEnumerable<UserDto>> GetAllUsersAsync();
-    Task<UserDto?> GetUserByIdAsync(int id);
+    Task<PagedResult<UserDto>> GetUsersAsync(UsersQueryParams queryParams);
+    Task<UserDto?> GetUserByIdAsync(long id);
     Task<UserDto> CreateUserAsync(CreateUserRequest request);
-    Task<UserDto?> UpdateUserAsync(int id, UpdateUserRequest request);
-    Task<bool> DeleteUserAsync(int id);
+    Task<UserDto?> UpdateUserAsync(long id, UpdateUserRequest request);
+    Task<bool> DeleteUserAsync(long id);
+    Task ChangePasswordAsync(long userId, ChangePasswordRequest request);
 }

@@ -1,27 +1,20 @@
 using App.Template.Api.Common.Entities;
-using System.ComponentModel.DataAnnotations;
-using System.ComponentModel.DataAnnotations.Schema;
+using App.Template.Api.Features.Departments;
 
 namespace App.Template.Api.Features.Users;
 
-/// <summary>
-/// User entity - belongs to the Users feature module
-/// </summary>
-[Table("Users")]
 public class User : AuditableEntity
 {
-    [Key]
-    public int Id { get; set; }
-
-    [Column(nullable: false, TypeName = "nvarchar(100)")]
-    public string Name { get; set; } = string.Empty;
-
-    [Column(nullable: false, TypeName = "nvarchar(255)")]
+    public string Username { get; set; } = string.Empty;
     public string Email { get; set; } = string.Empty;
-
-    [Column(name: "password_hash")]
-    public string? PasswordHash { get; set; }
-
-    [Column(name: "is_active")]
+    public string PasswordHash { get; set; } = string.Empty;
+    public string? Name { get; set; }
+    public string? Role { get; set; } = "User";
+    public long? DepartmentId { get; set; }
+    public Department? Department { get; set; }
     public bool IsActive { get; set; } = true;
+    public DateTime? LastLoginAt { get; set; }
+    public string? PasswordResetToken { get; set; }
+    public DateTime? PasswordResetTokenExpiry { get; set; }
+    public List<string> PasswordHistory { get; set; } = new();
 }

@@ -1,19 +1,21 @@
-using System.ComponentModel.DataAnnotations;
-using System.ComponentModel.DataAnnotations.Schema;
-
 namespace App.Template.Api.Models.Entities;
 
-[Table("AuditLogs")]
+public enum AuditAction
+{
+    Created,
+    Updated,
+    Deleted
+}
+
 public class AuditLog
 {
-    [Key]
-    public int Id { get; set; }
-    public string? UserId { get; set; }
-    public string Type { get; set; } = string.Empty; // Create, Update, Delete
-    public string TableName { get; set; } = string.Empty;
-    public DateTime DateTime { get; set; } = DateTime.UtcNow;
+    public long Id { get; set; }
+    public string EntityName { get; set; } = string.Empty;
+    public string EntityId { get; set; } = string.Empty;
+    public AuditAction Action { get; set; }
     public string? OldValues { get; set; }
     public string? NewValues { get; set; }
     public string? AffectedColumns { get; set; }
-    public string? PrimaryKey { get; set; }
+    public string? UserId { get; set; }
+    public DateTime Timestamp { get; set; } = DateTime.UtcNow;
 }

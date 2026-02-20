@@ -1,8 +1,11 @@
+using App.Template.Api.Common.Models;
 using App.Template.Api.Features.Departments.Dtos;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 
 namespace App.Template.Api.Features.Departments;
 
+[Authorize]
 [ApiController]
 [Route("api/[controller]")]
 public class DepartmentsController : ControllerBase
@@ -15,36 +18,36 @@ public class DepartmentsController : ControllerBase
     }
 
     [HttpGet]
-    public async Task<ActionResult<IEnumerable<DepartmentDto>>> GetAll()
+    public async Task<ActionResult<PagedResult<DepartmentDto>>> GetAll([FromQuery] DeptQueryParams queryParams)
     {
-        return Ok(await _departmentService.GetAllAsync());
+        return Ok(await _departmentService.GetDepartmentsAsync(queryParams));
     }
 
     [HttpGet("{id}")]
-    public async Task<ActionResult<DepartmentDto>> GetById(int id)
+    public async Task<ActionResult<DepartmentDto>> GetById(long id)
     {
-        var department = await _departmentService.GetByIdAsync(id);
-        if (department == null) return NotFound();
-        return Ok(department);
+        var dept = await _departmentService.GetByIdAsync(id);
+        if (dept == null) return NotFound();
+        return Ok(dept);
     }
 
     [HttpPost]
-    public async Task<ActionResult<DepartmentDto>> Create(CreateDepartmentDto dto)
+    public async Task<ActionResult<DepartmentDto>> Create(CreateDepartmentRequest request)
     {
-        var created = await _departmentService.CreateAsync(dto);
+        var created = await _departmentService.CreateAsync(request);
         return CreatedAtAction(nameof(GetById), new { id = created.Id }, created);
     }
 
     [HttpPut("{id}")]
-    public async Task<ActionResult<DepartmentDto>> Update(int id, UpdateDepartmentDto dto)
+    public async Task<ActionResult<DepartmentDto>> Update(long id, UpdateDepartmentRequest request)
     {
-        var updated = await _departmentService.UpdateAsync(id, dto);
+        var updated = await _departmentService.UpdateAsync(id, request);
         if (updated == null) return NotFound();
         return Ok(updated);
     }
 
     [HttpDelete("{id}")]
-    public async Task<ActionResult> Delete(int id)
+    public async Task<ActionResult> Delete(long id)
     {
         var deleted = await _departmentService.DeleteAsync(id);
         if (!deleted) return NotFound();

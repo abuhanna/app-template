@@ -1,4 +1,7 @@
-using App.Template.Api.Models.Entities;
+using System.Security.Claims;
+using App.Template.Api.Models.Common;
+using App.Template.Api.Models.Dtos;
+using App.Template.Api.Services;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 
@@ -9,16 +12,34 @@ namespace App.Template.Api.Controllers;
 [Route("api/[controller]")]
 public class NotificationsController : ControllerBase
 {
-    // Minimal implementation for now, mirroring the feature presence
-    [HttpGet]
-    public IActionResult GetAll()
+    private readonly INotificationService _notificationService;
+
+    public NotificationsController(INotificationService notificationService)
     {
-        return Ok(new List<object>()); 
+        _notificationService = notificationService;
+    }
+
+    [HttpGet]
+    public async Task<ActionResult<PagedResult<NotificationDto>>> GetAll([FromQuery] NotificationsQueryParams queryParams)
+    {
+        var userId = User.FindFirstValue(ClaimTypes.NameIdentifier)!;
+        return Ok(await _notificationService.GetNotificationsAsync(userId, queryParams));
     }
 
     [HttpPut("{id}/read")]
-    public IActionResult MarkAsRead(long id)
+    public async Task<IActionResult> MarkAsRead(long id)
     {
+        var userId = User.FindFirstValue(ClaimTypes.NameIdentifier)!;
+        var result = await _notificationService.MarkAsReadAsync(id, userId);
+        if (!result) return NotFound();
+        return Ok();
+    }
+
+    [HttpPut("read-all")]
+    public async Task<IActionResult> MarkAllAsRead()
+    {
+        var userId = User.FindFirstValue(ClaimTypes.NameIdentifier)!;
+        await _notificationService.MarkAllAsReadAsync(userId);
         return Ok();
     }
 }
