@@ -553,6 +553,9 @@ backend-spring/api/src/main/resources/application.yml
 *.log
 hs_err_pid*.log
 
+# Uploaded files
+uploads/
+
 # Claude Code temporary files
 .claude/
 

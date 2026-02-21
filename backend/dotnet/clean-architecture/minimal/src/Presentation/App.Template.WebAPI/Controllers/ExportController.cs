@@ -1,4 +1,5 @@
 using AppTemplate.Application.Features.AuditLogManagement.Queries.GetAuditLogs;
+using AppTemplate.Application.Features.FileManagement.Queries.GetFiles;
 using AppTemplate.Application.Interfaces;
 using MediatR;
 using Microsoft.AspNetCore.Authorization;
@@ -23,6 +24,53 @@ public class ExportController : ControllerBase
         _mediator = mediator;
         _exportService = exportService;
         _currentUserService = currentUserService;
+    }
+
+    /// <summary>
+    /// Export uploaded files to specified format
+    /// </summary>
+    [HttpGet("files")]
+    [ProducesResponseType(typeof(FileResult), StatusCodes.Status200OK)]
+    public async Task<IActionResult> ExportFiles(
+        [FromQuery] string format = "xlsx",
+        [FromQuery] string? category = null,
+        [FromQuery] bool? isPublic = null,
+        CancellationToken cancellationToken = default)
+    {
+        var query = new GetFilesQuery
+        {
+            Category = category,
+            IsPublic = isPublic,
+            Page = 1,
+            PageSize = 10000 // Large page size for export
+        };
+        var filesResult = await _mediator.Send(query, cancellationToken);
+
+        var exportData = filesResult.Select(f => new
+        {
+            f.Id,
+            f.OriginalFileName,
+            f.ContentType,
+            FileSizeKb = f.FileSize / 1024,
+            f.Category,
+            IsPublic = f.IsPublic ? "Yes" : "No",
+            CreatedBy = f.CreatedBy ?? "-",
+            CreatedAt = f.CreatedAt.ToString("yyyy-MM-dd HH:mm:ss"),
+            UpdatedAt = f.UpdatedAt?.ToString("yyyy-MM-dd HH:mm:ss") ?? "-"
+        }).ToList();
+
+        var exportResult = format.ToLower() switch
+        {
+            "csv" => await _exportService.ExportToCsvAsync(exportData, "files", cancellationToken),
+            "pdf" => await _exportService.ExportToPdfAsync(exportData, "files", "Files Report", new PdfReportOptions
+            {
+                Subtitle = BuildFilterDescription(category, isPublic),
+                GeneratedBy = _currentUserService.UserId ?? "System"
+            }, cancellationToken),
+            _ => await _exportService.ExportToExcelAsync(exportData, "files", "Files", cancellationToken)
+        };
+
+        return File(exportResult.FileStream, exportResult.ContentType, exportResult.FileName);
     }
 
     /// <summary>
@@ -76,5 +124,18 @@ public class ExportController : ControllerBase
         };
 
         return File(exportResult.FileStream, exportResult.ContentType, exportResult.FileName);
+    }
+
+    private static string BuildFilterDescription(string? category, bool? isPublic)
+    {
+        var filters = new List<string>();
+
+        if (!string.IsNullOrWhiteSpace(category))
+            filters.Add($"Category: \"{category}\"");
+
+        if (isPublic.HasValue)
+            filters.Add($"Visibility: {(isPublic.Value ? "Public" : "Private")}");
+
+        return filters.Count > 0 ? string.Join(" | ", filters) : "All Files";
     }
 }

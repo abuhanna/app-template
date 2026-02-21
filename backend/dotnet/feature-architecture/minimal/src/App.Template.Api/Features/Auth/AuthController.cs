@@ -1,41 +1,89 @@
 using App.Template.Api.Features.Auth.Dtos;
+
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 
 namespace App.Template.Api.Features.Auth;
 
+/// <summary>Authentication endpoints</summary>
+[AllowAnonymous]
 [ApiController]
-[Route("api/[controller]")]
+[Route("api/auth")]
 public class AuthController : ControllerBase
 {
-    private readonly IAuthService _authService;
+    private readonly ISsoAuthService _ssoAuthService;
 
-    public AuthController(IAuthService authService)
+    public AuthController(ISsoAuthService ssoAuthService)
     {
-        _authService = authService;
+        _ssoAuthService = ssoAuthService;
     }
 
+    /// <summary>Login via SSO and obtain JWT token</summary>
     [HttpPost("login")]
-    public async Task<ActionResult<AuthResponse>> Login(LoginRequest request)
-    {
-        var response = await _authService.LoginAsync(request);
-        if (response == null)
-        {
-            return Unauthorized("Invalid email or password.");
-        }
-        return Ok(response);
-    }
-
-    [HttpPost("register")]
-    public async Task<ActionResult<AuthResponse>> Register(RegisterRequest request)
+    [ProducesResponseType(typeof(LoginResponseDto), StatusCodes.Status200OK)]
+    [ProducesResponseType(StatusCodes.Status401Unauthorized)]
+    [ProducesResponseType(StatusCodes.Status503ServiceUnavailable)]
+    public async Task<IActionResult> Login([FromBody] LoginRequest request)
     {
         try
         {
-            var response = await _authService.RegisterAsync(request);
-            return Ok(response);
+            var result = await _ssoAuthService.LoginAsync(request.Username ?? string.Empty, request.Password);
+            return Ok(result);
+        }
+        catch (UnauthorizedAccessException ex)
+        {
+            return Unauthorized(new { message = ex.Message });
+        }
+        catch (InvalidOperationException ex)
+        {
+            return StatusCode(StatusCodes.Status503ServiceUnavailable, new { message = ex.Message });
+        }
+    }
+
+    /// <summary>Logout from SSO and invalidate JWT token</summary>
+    [HttpPost("logout")]
+    [ProducesResponseType(StatusCodes.Status200OK)]
+    public async Task<IActionResult> Logout()
+    {
+        try
+        {
+            var authHeader = Request.Headers["Authorization"].ToString();
+            await _ssoAuthService.LogoutAsync(authHeader);
+            return Ok(new { message = "Logout successful" });
         }
         catch (Exception ex)
         {
-            return BadRequest(ex.Message);
+            return StatusCode(StatusCodes.Status500InternalServerError,
+                new { message = "An error occurred during logout", details = ex.Message });
         }
+    }
+
+    /// <summary>Get current user information from JWT token</summary>
+    [Authorize]
+    [HttpGet("me")]
+    [ProducesResponseType(typeof(UserInfoResponseDto), StatusCodes.Status200OK)]
+    [ProducesResponseType(StatusCodes.Status401Unauthorized)]
+    public IActionResult GetCurrentUser()
+    {
+        var userId = User.FindFirst("sub")?.Value
+            ?? User.FindFirst("userId")?.Value
+            ?? User.FindFirst("id")?.Value;
+
+        var username = User.FindFirst("username")?.Value
+            ?? User.FindFirst("name")?.Value;
+
+        var email = User.FindFirst("email")?.Value;
+
+        var role = User.FindFirst("role")?.Value
+            ?? User.FindFirst("group")?.Value;
+
+        return Ok(new UserInfoResponseDto
+        {
+            UserId = userId,
+            Username = username,
+            Email = email,
+            Role = role,
+            Claims = User.Claims.Select(c => new ClaimInfoDto { Type = c.Type, Value = c.Value }).ToList()
+        });
     }
 }

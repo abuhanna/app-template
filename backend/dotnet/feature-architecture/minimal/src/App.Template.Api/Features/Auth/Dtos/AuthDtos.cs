@@ -1,34 +1,49 @@
-using App.Template.Api.Features.Users.Dtos;
 using System.ComponentModel.DataAnnotations;
 
 namespace App.Template.Api.Features.Auth.Dtos;
 
 public class LoginRequest
 {
-    [Required]
-    [EmailAddress]
-    public string Email { get; set; } = string.Empty;
+    public string? Username { get; set; }
+
+    public string? Email { get; set; }
 
     [Required]
     public string Password { get; set; } = string.Empty;
 }
 
-public class RegisterRequest
-{
-    [Required]
-    public string Name { get; set; } = string.Empty;
-
-    [Required]
-    [EmailAddress]
-    public string Email { get; set; } = string.Empty;
-
-    [Required]
-    [MinLength(6)]
-    public string Password { get; set; } = string.Empty;
-}
-
-public class AuthResponse
+public class LoginResponseDto
 {
     public string Token { get; set; } = string.Empty;
-    public UserDto User { get; set; } = new UserDto(0, "", "", true, DateTime.UtcNow);
+    public string TokenType { get; set; } = "Bearer";
+    public int ExpiresIn { get; set; }
+    public string? RefreshToken { get; set; }
+    public DateTime? RefreshTokenExpiresAt { get; set; }
+    public UserInfoDto? User { get; set; }
+}
+
+public class UserInfoDto
+{
+    public string? Id { get; set; }
+    public string? Username { get; set; }
+    public string? Email { get; set; }
+    public string? Name { get; set; }
+    public string? Role { get; set; }
+    public string? DepartmentId { get; set; }
+    public string? DepartmentName { get; set; }
+}
+
+public class UserInfoResponseDto
+{
+    public string? UserId { get; set; }
+    public string? Username { get; set; }
+    public string? Email { get; set; }
+    public string? Role { get; set; }
+    public List<ClaimInfoDto> Claims { get; set; } = new();
+}
+
+public class ClaimInfoDto
+{
+    public string Type { get; set; } = string.Empty;
+    public string Value { get; set; } = string.Empty;
 }

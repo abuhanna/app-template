@@ -1,19 +1,61 @@
-using System.ComponentModel.DataAnnotations;
-using System.ComponentModel.DataAnnotations.Schema;
-
 namespace App.Template.Api.Common.Entities;
 
-[Table("AuditLogs")]
 public class AuditLog
 {
-    [Key]
-    public int Id { get; set; }
-    public string? UserId { get; set; }
-    public string Type { get; set; } = string.Empty; // Create, Update, Delete
-    public string TableName { get; set; } = string.Empty;
-    public DateTime DateTime { get; set; } = DateTime.UtcNow;
-    public string? OldValues { get; set; }
-    public string? NewValues { get; set; }
-    public string? AffectedColumns { get; set; }
-    public string? PrimaryKey { get; set; }
+    public long Id { get; private set; }
+
+    /// <summary>Name of the entity that was modified (e.g., "User", "UploadedFile")</summary>
+    public string EntityName { get; private set; } = string.Empty;
+
+    /// <summary>Primary key of the entity that was modified</summary>
+    public string EntityId { get; private set; } = string.Empty;
+
+    /// <summary>The type of action performed: Created, Updated, Deleted</summary>
+    public AuditAction Action { get; private set; }
+
+    /// <summary>JSON representation of the entity's values before the change (null for Created)</summary>
+    public string? OldValues { get; private set; }
+
+    /// <summary>JSON representation of the entity's values after the change (null for Deleted)</summary>
+    public string? NewValues { get; private set; }
+
+    /// <summary>List of property names that were modified (JSON array)</summary>
+    public string? AffectedColumns { get; private set; }
+
+    /// <summary>User ID of who performed the action</summary>
+    public string? UserId { get; private set; }
+
+    /// <summary>UTC timestamp when the action occurred</summary>
+    public DateTime Timestamp { get; private set; }
+
+    private AuditLog() { }
+
+    public static AuditLog Create(
+        string entityName,
+        string entityId,
+        AuditAction action,
+        string? oldValues,
+        string? newValues,
+        string? affectedColumns,
+        string? userId)
+    {
+        return new AuditLog
+        {
+            EntityName = entityName,
+            EntityId = entityId,
+            Action = action,
+            OldValues = oldValues,
+            NewValues = newValues,
+            AffectedColumns = affectedColumns,
+            UserId = userId,
+            Timestamp = DateTime.UtcNow
+        };
+    }
+}
+
+public enum AuditAction
+{
+    Created,
+    Updated,
+    Deleted
 }

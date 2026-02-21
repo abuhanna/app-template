@@ -89,7 +89,7 @@ builder.Services.AddAuthentication(options =>
         ValidateIssuerSigningKey = true,
         ValidIssuer = jwtIssuer,
         ValidAudience = jwtAudience,
-        IssuerSigningKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(jwtSecret)),
+        IssuerSigningKey = JwtTokenService.ResolveSigningKey(jwtSecret),
         // If token doesn't include 'kid', try the provided key
         TryAllIssuerSigningKeys = true,
         ClockSkew = TimeSpan.Zero // Remove default 5 minute tolerance

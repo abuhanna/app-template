@@ -3,8 +3,6 @@ using System.Text.Json;
 
 using AppTemplate.Application.Interfaces;
 using AppTemplate.Domain.Entities;
-using AppTemplate.Infrastructure.Persistence.Extensions;
-
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.ChangeTracking;
 using Microsoft.EntityFrameworkCore.Metadata.Builders;
@@ -313,10 +311,6 @@ public class ApplicationDbContext : DbContext, IApplicationDbContext
             entity.HasIndex(e => e.UserId);
             entity.HasIndex(e => e.Timestamp);
         });
-
-        // Apply snake_case naming convention to all tables and columns
-        // This MUST be called after all entity configurations
-        modelBuilder.UseSnakeCaseNamingConvention();
 
         base.OnModelCreating(modelBuilder);
     }

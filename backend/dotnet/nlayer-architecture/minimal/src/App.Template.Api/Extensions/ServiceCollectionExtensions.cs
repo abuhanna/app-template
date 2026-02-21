@@ -7,19 +7,20 @@ public static class ServiceCollectionExtensions
 {
     public static IServiceCollection AddApplicationServices(this IServiceCollection services)
     {
-        services.AddScoped<Services.IFileService, Services.FileService>();
-        services.AddScoped<Services.IAuthService, Services.AuthService>();
-        services.AddScoped<Services.IJwtTokenGenerator, Services.JwtTokenGenerator>();
-        services.AddScoped<Repositories.IUserRepository, Repositories.UserRepository>();
+        // Repositories
+        services.AddScoped<IUserRepository, UserRepository>();
+        services.AddScoped<INotificationRepository, NotificationRepository>();
+        services.AddScoped<IAuditLogRepository, AuditLogRepository>();
+        services.AddScoped<IUploadedFileRepository, UploadedFileRepository>();
+
+        // Auth (SSO-only)
+        services.AddScoped<ISsoAuthService, SsoAuthService>();
+
+        // Application services
+        services.AddScoped<IFileService, FileService>();
+        services.AddScoped<INotificationService, NotificationService>();
+        services.AddScoped<IExportService, ExportService>();
 
         return services;
-    }
-
-    public static void AddAutoMapper(this IServiceCollection services, Type assemblyMarkerType)
-    {
-        services.AddAutoMapper(config =>
-        {
-            config.CreateMap<Models.Entities.User, Models.Dtos.UserDto>();
-        }, assemblyMarkerType.Assembly);
     }
 }

@@ -7,11 +7,15 @@ namespace App.Template.Api.Models.Entities;
 public class User : AuditableEntity
 {
     [Key]
-    public int Id { get; set; }
+    public long Id { get; set; }
 
     [Required]
     [MaxLength(100)]
     public string Name { get; set; } = string.Empty;
+
+    [Required]
+    [MaxLength(100)]
+    public string Username { get; set; } = string.Empty;
 
     [Required]
     [MaxLength(255)]
@@ -21,5 +25,10 @@ public class User : AuditableEntity
     [MaxLength(500)]
     public string? PasswordHash { get; set; }
 
+    [MaxLength(50)]
+    public string Role { get; set; } = "User";
+
     public bool IsActive { get; set; } = true;
+
+    public DateTime? LastLoginAt { get; set; }
 }

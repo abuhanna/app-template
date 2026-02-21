@@ -1,29 +1,45 @@
 using App.Template.Api.Common.Entities;
-using System.ComponentModel.DataAnnotations;
-using System.ComponentModel.DataAnnotations.Schema;
 
 namespace App.Template.Api.Features.Files;
 
-[Table("UploadedFiles")]
 public class UploadedFile : AuditableEntity
 {
-    [Key]
-    public int Id { get; set; }
+    public long Id { get; private set; }
+    public string FileName { get; private set; } = null!;         // Unique GUID-based name
+    public string OriginalFileName { get; private set; } = null!; // Original uploaded name
+    public string ContentType { get; private set; } = null!;
+    public long FileSize { get; private set; }
+    public string StoragePath { get; private set; } = null!;      // e.g. "2025/02/guid.ext"
+    public string? Description { get; private set; }
+    public string? Category { get; private set; }
+    public bool IsPublic { get; private set; }
 
-    [Required]
-    [MaxLength(255)]
-    public string FileName { get; set; } = string.Empty;
+    private UploadedFile() { }
 
-    [Required]
-    [MaxLength(255)]
-    public string StoredFileName { get; set; } = string.Empty;
+    public UploadedFile(
+        string fileName,
+        string originalFileName,
+        string contentType,
+        long fileSize,
+        string storagePath,
+        string? description = null,
+        string? category = null,
+        bool isPublic = false)
+    {
+        FileName = fileName;
+        OriginalFileName = originalFileName;
+        ContentType = contentType;
+        FileSize = fileSize;
+        StoragePath = storagePath;
+        Description = description;
+        Category = category;
+        IsPublic = isPublic;
+    }
 
-    [Required]
-    [MaxLength(100)]
-    public string ContentType { get; set; } = string.Empty;
-
-    public long FileSize { get; set; }
-
-    [MaxLength(500)]
-    public string? FilePath { get; set; }
+    public void Update(string? description, string? category, bool? isPublic)
+    {
+        if (description != null) Description = description;
+        if (category != null) Category = category;
+        if (isPublic.HasValue) IsPublic = isPublic.Value;
+    }
 }
