@@ -72,6 +72,7 @@ public class AppDbContext : DbContext
         {
             entity.HasIndex(e => e.EntityName);
             entity.HasIndex(e => e.Timestamp);
+            entity.Property(e => e.Action).HasConversion<string>();
         });
     }
 
@@ -124,6 +125,14 @@ public class AppDbContext : DbContext
                 }
             };
 
+            // Detect soft delete: IsActive changed from true to false
+            if (entry.State == EntityState.Modified)
+            {
+                var isActiveProp = entry.Properties.FirstOrDefault(p => p.Metadata.Name == "IsActive");
+                if (isActiveProp is { IsModified: true } && isActiveProp.OriginalValue is true && isActiveProp.CurrentValue is false)
+                    auditEntry.Action = AuditAction.Deleted;
+            }
+
             foreach (var property in entry.Properties)
             {
                 if (property.IsTemporary)
@@ -137,7 +146,7 @@ public class AppDbContext : DbContext
                 {
                     auditEntry.NewValues[propertyName] = property.CurrentValue;
                 }
-                else if (entry.State == EntityState.Deleted)
+                else if (entry.State == EntityState.Deleted || (entry.State == EntityState.Modified && auditEntry.Action == AuditAction.Deleted))
                 {
                     auditEntry.OldValues[propertyName] = property.OriginalValue;
                 }
