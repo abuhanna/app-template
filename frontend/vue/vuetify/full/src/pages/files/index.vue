@@ -105,7 +105,7 @@ async function loadFiles() {
   loading.value = true
   try {
     const response = await fileService.getFiles()
-    files.value = response.data || []
+    files.value = response.items || []
   } catch (error) {
     notificationStore.showError('Failed to load files')
   } finally {

@@ -209,8 +209,8 @@ const confirmDelete = async (department) => {
       await departmentStore.deleteDepartment(department.id)
       notificationStore.showSuccess('Department deactivated successfully')
       await departmentStore.fetchDepartments()
-    } catch (error) {
-      notificationStore.showError(error.message || 'Failed to deactivate department')
+    } catch {
+      // Error toast handled by store
     }
   }
 }

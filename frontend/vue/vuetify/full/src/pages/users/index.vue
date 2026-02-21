@@ -363,7 +363,7 @@ watch(debouncedSearch, () => {
 onMounted(async () => {
   await Promise.all([
     loadUsers(),
-    departmentStore.fetchDepartments()
+    departmentStore.fetchDepartments({ isActive: true, pageSize: 1000 })
   ])
 })
 </script>

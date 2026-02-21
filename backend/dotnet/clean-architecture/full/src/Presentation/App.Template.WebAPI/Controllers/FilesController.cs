@@ -1,3 +1,4 @@
+using AppTemplate.Application.Common.Models;
 using AppTemplate.Application.DTOs;
 using AppTemplate.Application.Features.FileManagement.Commands.DeleteFile;
 using AppTemplate.Application.Features.FileManagement.Commands.UploadFile;
@@ -31,7 +32,7 @@ public class FilesController : ControllerBase
     /// Get list of uploaded files
     /// </summary>
     [HttpGet]
-    [ProducesResponseType(typeof(List<UploadedFileDto>), StatusCodes.Status200OK)]
+    [ProducesResponseType(typeof(PagedResult<UploadedFileDto>), StatusCodes.Status200OK)]
     public async Task<IActionResult> GetFiles(
         [FromQuery] string? category,
         [FromQuery] bool? isPublic,

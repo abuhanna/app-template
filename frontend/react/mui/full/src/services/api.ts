@@ -33,8 +33,10 @@ const getErrorMessage = (error: AxiosError): string => {
     message?: string
     title?: string
     errors?: Record<string, string[]>
+    error?: { message?: string }
   }
 
+  if (data?.error?.message) return data.error.message
   if (data?.message) return data.message
   if (data?.title) return data.title
   if (data?.errors) {

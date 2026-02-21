@@ -48,10 +48,10 @@ public class UpdateUserCommandHandler : IRequestHandler<UpdateUserCommand, UserD
         if (request.DepartmentId.HasValue && request.DepartmentId != user.DepartmentId)
         {
             var department = await _context.Departments
-                .FirstOrDefaultAsync(d => d.Id == request.DepartmentId.Value, cancellationToken);
+                .FirstOrDefaultAsync(d => d.Id == request.DepartmentId.Value && d.IsActive, cancellationToken);
             if (department == null)
             {
-                throw new InvalidOperationException($"Department with ID {request.DepartmentId} not found");
+                throw new InvalidOperationException($"Department with ID {request.DepartmentId} not found or is inactive");
             }
             departmentName = department.Name;
         }

@@ -37,7 +37,7 @@ public class UserInfoDto
     public string Email { get; set; } = string.Empty;
     public string? Name { get; set; }
     public string? Role { get; set; }
-    public long? DepartmentId { get; set; }
+    public string? DepartmentId { get; set; }
     public string? DepartmentName { get; set; }
 }
 

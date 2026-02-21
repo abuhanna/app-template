@@ -404,7 +404,7 @@ const handleDelete = async (user) => {
 onMounted(async () => {
   loading.value = true
   try {
-    await Promise.all([userStore.fetchUsers(), departmentStore.fetchDepartments()])
+    await Promise.all([userStore.fetchUsers(), departmentStore.fetchDepartments({ isActive: true, pageSize: 1000 })])
   } finally {
     loading.value = false
   }

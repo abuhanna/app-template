@@ -94,6 +94,8 @@ public class FileService : IFileService
             Category = f.Category,
             IsPublic = f.IsPublic,
             CreatedAt = f.CreatedAt,
+            UpdatedAt = f.UpdatedAt,
+            CreatedBy = f.CreatedBy,
             DownloadUrl = $"/api/files/{f.Id}/download"
         });
 
@@ -143,6 +145,8 @@ public class FileService : IFileService
         Category = f.Category,
         IsPublic = f.IsPublic,
         CreatedAt = f.CreatedAt,
+        UpdatedAt = f.UpdatedAt,
+        CreatedBy = f.CreatedBy,
         DownloadUrl = $"/api/files/{f.Id}/download"
     };
 }

@@ -1,11 +1,11 @@
+using AppTemplate.Application.Common.Models;
 using AppTemplate.Application.DTOs;
 using AppTemplate.Application.Interfaces;
 using MediatR;
-using Microsoft.EntityFrameworkCore;
 
 namespace AppTemplate.Application.Features.FileManagement.Queries.GetFiles;
 
-public class GetFilesQueryHandler : IRequestHandler<GetFilesQuery, List<UploadedFileDto>>
+public class GetFilesQueryHandler : IRequestHandler<GetFilesQuery, PagedResult<UploadedFileDto>>
 {
     private readonly IApplicationDbContext _context;
 
@@ -14,7 +14,7 @@ public class GetFilesQueryHandler : IRequestHandler<GetFilesQuery, List<Uploaded
         _context = context;
     }
 
-    public async Task<List<UploadedFileDto>> Handle(GetFilesQuery request, CancellationToken cancellationToken)
+    public async Task<PagedResult<UploadedFileDto>> Handle(GetFilesQuery request, CancellationToken cancellationToken)
     {
         var query = _context.UploadedFiles.AsQueryable();
 
@@ -28,10 +28,8 @@ public class GetFilesQueryHandler : IRequestHandler<GetFilesQuery, List<Uploaded
             query = query.Where(f => f.IsPublic == request.IsPublic.Value);
         }
 
-        var files = await query
+        var dtoQuery = query
             .OrderByDescending(f => f.CreatedAt)
-            .Skip((request.Page - 1) * request.PageSize)
-            .Take(request.PageSize)
             .Select(f => new UploadedFileDto
             {
                 Id = f.Id,
@@ -46,9 +44,8 @@ public class GetFilesQueryHandler : IRequestHandler<GetFilesQuery, List<Uploaded
                 UpdatedAt = f.UpdatedAt,
                 CreatedBy = f.CreatedBy,
                 DownloadUrl = $"/api/files/{f.Id}/download"
-            })
-            .ToListAsync(cancellationToken);
+            });
 
-        return files;
+        return await PagedResult<UploadedFileDto>.CreateAsync(dtoQuery, request.Page, request.PageSize, cancellationToken);
     }
 }

@@ -79,28 +79,6 @@ builder.Services.AddAuthentication(options =>
 })
 .AddJwtBearer(options =>
 {
-    // Prefer Base64 secrets; fallback to raw text if not Base64
-    SymmetricSecurityKey BuildSymmetricKey(string secret)
-    {
-        try
-        {
-            var keyBytes = Convert.FromBase64String(secret);
-            return new SymmetricSecurityKey(keyBytes);
-        }
-        catch (FormatException)
-        {
-            try
-            {
-                var keyBytesUrl = Base64UrlEncoder.DecodeBytes(secret);
-                return new SymmetricSecurityKey(keyBytesUrl);
-            }
-            catch
-            {
-                return new SymmetricSecurityKey(Encoding.UTF8.GetBytes(secret));
-            }
-        }
-    }
-
     options.TokenValidationParameters = new TokenValidationParameters
     {
         // For this SSO, only check expiration and signature
@@ -110,7 +88,7 @@ builder.Services.AddAuthentication(options =>
         ValidateIssuerSigningKey = true,
         ValidIssuer = jwtIssuer,
         ValidAudience = jwtAudience,
-        IssuerSigningKey = BuildSymmetricKey(jwtSecret),
+        IssuerSigningKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(jwtSecret)),
         // If token doesn't include 'kid', try the provided key
         TryAllIssuerSigningKeys = true,
         ClockSkew = TimeSpan.Zero // Remove default 5 minute tolerance
@@ -266,8 +244,25 @@ using (var scope = app.Services.CreateScope())
     var dbContext = scope.ServiceProvider.GetRequiredService<ApplicationDbContext>();
     try
     {
-        // Apply pending migrations automatically
-        dbContext.Database.Migrate();
+        // Safely apply migrations one by one. If a migration fails because a table/column already exists
+        // (common when sharing a database across architectures), mark it as applied and continue.
+        var pendingMigrations = await dbContext.Database.GetPendingMigrationsAsync();
+        var migrator = ((Microsoft.EntityFrameworkCore.Infrastructure.IInfrastructure<IServiceProvider>)dbContext.Database).Instance.GetRequiredService<Microsoft.EntityFrameworkCore.Migrations.IMigrator>();
+
+        foreach (var migration in pendingMigrations)
+        {
+            try
+            {
+                await migrator.MigrateAsync(migration);
+            }
+            catch (Npgsql.PostgresException ex) when (ex.SqlState == "42P07" || ex.SqlState == "42701" || ex.SqlState == "42710")
+            {
+                app.Logger.LogWarning("Migration {Migration} failed because an object already exists (SqlState: {SqlState}). Marking as applied.", migration, ex.SqlState);
+                var sql = $"INSERT INTO \"__EFMigrationsHistory\" (migration_id, product_version) VALUES ('{migration}', '8.0.0') ON CONFLICT DO NOTHING;";
+                await dbContext.Database.ExecuteSqlRawAsync(sql);
+            }
+        }
+
         app.Logger.LogInformation("Database migrations applied successfully in {Environment} environment.",
             app.Environment.EnvironmentName);
 

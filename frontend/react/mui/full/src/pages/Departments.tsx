@@ -78,8 +78,12 @@ export default function Departments() {
 
   const handleDelete = async () => {
     if (selectedDepartment) {
-      await deleteDepartment(selectedDepartment.id)
-      setConfirmOpen(false)
+      try {
+        await deleteDepartment(selectedDepartment.id)
+        setConfirmOpen(false)
+      } catch {
+        // Error toast handled by API interceptor
+      }
     }
   }
 

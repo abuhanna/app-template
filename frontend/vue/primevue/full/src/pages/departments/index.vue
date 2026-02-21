@@ -294,8 +294,8 @@ const handleDelete = async (department) => {
     await departmentStore.deleteDepartment(department.id)
     notificationStore.success('Department deleted successfully')
     await departmentStore.fetchDepartments()
-  } catch (error) {
-    notificationStore.error(error.response?.data?.message || 'Delete failed')
+  } catch {
+    // Error toast handled by store
   }
 }
 

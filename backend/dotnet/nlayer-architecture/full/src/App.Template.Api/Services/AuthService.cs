@@ -234,7 +234,7 @@ public class AuthService : IAuthService
         Email = user.Email,
         Name = user.Name,
         Role = user.Role,
-        DepartmentId = user.DepartmentId,
+        DepartmentId = user.DepartmentId?.ToString(),
         DepartmentName = user.Department?.Name
     };
 
@@ -243,7 +243,7 @@ public class AuthService : IAuthService
         Id = user.Id,
         Username = user.Username,
         Email = user.Email,
-        Name = user.Name,
+        FullName = user.Name,
         Role = user.Role,
         DepartmentId = user.DepartmentId,
         DepartmentName = user.Department?.Name,

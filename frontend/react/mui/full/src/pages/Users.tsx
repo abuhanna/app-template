@@ -47,7 +47,7 @@ export default function Users() {
 
   useEffect(() => {
     fetchUsers()
-    fetchDepartments()
+    fetchDepartments({ isActive: true, pageSize: 1000 })
   }, [fetchUsers, fetchDepartments])
 
   const handleOpenCreate = () => {

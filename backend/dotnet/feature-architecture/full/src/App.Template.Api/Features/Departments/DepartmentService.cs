@@ -116,8 +116,13 @@ public class DepartmentService : IDepartmentService
 
     public async Task<bool> DeleteAsync(long id)
     {
-        var dept = await _context.Departments.FindAsync(id);
+        var dept = await _context.Departments
+            .Include(d => d.Users)
+            .FirstOrDefaultAsync(d => d.Id == id);
         if (dept == null) return false;
+
+        if (dept.Users.Any(u => u.IsActive))
+            throw new InvalidOperationException("Cannot delete department with active users. Reassign or deactivate users first.");
 
         dept.IsActive = false;
         await _context.SaveChangesAsync();

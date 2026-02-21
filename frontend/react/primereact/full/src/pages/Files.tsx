@@ -34,7 +34,7 @@ export default function Files() {
     setLoading(true)
     try {
       const response: any = await fileService.getFiles()
-      setFiles(response.data || [])
+      setFiles(response.items || [])
     } catch {
       showError('Failed to load files')
     } finally {

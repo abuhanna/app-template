@@ -2,7 +2,6 @@ using App.Template.Api.Models.Common;
 using App.Template.Api.Models.Dtos;
 using App.Template.Api.Models.Entities;
 using App.Template.Api.Repositories;
-using Microsoft.EntityFrameworkCore;
 
 namespace App.Template.Api.Services;
 
@@ -10,11 +9,13 @@ public class UserService : IUserService
 {
     private readonly IUserRepository _userRepository;
     private readonly IPasswordHashService _passwordHashService;
+    private readonly IDepartmentRepository _departmentRepository;
 
-    public UserService(IUserRepository userRepository, IPasswordHashService passwordHashService)
+    public UserService(IUserRepository userRepository, IPasswordHashService passwordHashService, IDepartmentRepository departmentRepository)
     {
         _userRepository = userRepository;
         _passwordHashService = passwordHashService;
+        _departmentRepository = departmentRepository;
     }
 
     public async Task<PagedResult<UserDto>> GetUsersAsync(UsersQueryParams queryParams)
@@ -57,7 +58,7 @@ public class UserService : IUserService
             Id = u.Id,
             Username = u.Username,
             Email = u.Email,
-            Name = u.Name,
+            FullName = u.Name,
             Role = u.Role,
             DepartmentId = u.DepartmentId,
             DepartmentName = u.Department != null ? u.Department.Name : null,
@@ -66,7 +67,16 @@ public class UserService : IUserService
             LastLoginAt = u.LastLoginAt
         });
 
-        return await PagedResult<UserDto>.CreateAsync(dtoQuery, page, pageSize);
+        var result = await PagedResult<UserDto>.CreateAsync(dtoQuery, page, pageSize);
+
+        foreach (var u in result.Items)
+        {
+            var p = u.FullName?.Split(' ', 2) ?? Array.Empty<string>();
+            u.FirstName = p.Length > 0 ? p[0] : "";
+            u.LastName  = p.Length > 1 ? p[1] : "";
+        }
+
+        return result;
     }
 
     public async Task<UserDto?> GetUserByIdAsync(long id)
@@ -85,12 +95,19 @@ public class UserService : IUserService
         if (existingByEmail != null)
             throw new InvalidOperationException("Email is already in use");
 
+        if (request.DepartmentId.HasValue)
+        {
+            var department = await _departmentRepository.GetByIdAsync(request.DepartmentId.Value);
+            if (department == null || !department.IsActive)
+                throw new InvalidOperationException($"Department with ID {request.DepartmentId} not found or is inactive");
+        }
+
         var user = new User
         {
             Username = request.Username,
             Email = request.Email,
             PasswordHash = _passwordHashService.HashPassword(request.Password),
-            Name = request.Name,
+            Name = $"{request.FirstName} {request.LastName}".Trim(),
             Role = request.Role ?? "User",
             DepartmentId = request.DepartmentId,
             IsActive = true
@@ -113,9 +130,27 @@ public class UserService : IUserService
             user.Email = request.Email;
         }
 
-        if (request.Name != null) user.Name = request.Name;
+        if (request.FirstName != null || request.LastName != null)
+        {
+            var parts = user.Name?.Split(' ', 2) ?? Array.Empty<string>();
+            var curFirst = parts.Length > 0 ? parts[0] : "";
+            var curLast  = parts.Length > 1 ? parts[1] : "";
+            user.Name = $"{request.FirstName ?? curFirst} {request.LastName ?? curLast}".Trim();
+        }
+
         if (request.Role != null) user.Role = request.Role;
-        if (request.DepartmentId.HasValue) user.DepartmentId = request.DepartmentId;
+
+        if (request.DepartmentId.HasValue)
+        {
+            if (request.DepartmentId != user.DepartmentId)
+            {
+                var department = await _departmentRepository.GetByIdAsync(request.DepartmentId.Value);
+                if (department == null || !department.IsActive)
+                    throw new InvalidOperationException($"Department with ID {request.DepartmentId} not found or is inactive");
+            }
+            user.DepartmentId = request.DepartmentId;
+        }
+
         if (request.IsActive.HasValue) user.IsActive = request.IsActive.Value;
 
         var updated = await _userRepository.UpdateAsync(user);
@@ -126,7 +161,8 @@ public class UserService : IUserService
     {
         var user = await _userRepository.GetByIdAsync(id);
         if (user == null) return false;
-        await _userRepository.DeleteAsync(id);
+        user.IsActive = false;
+        await _userRepository.UpdateAsync(user);
         return true;
     }
 
@@ -152,17 +188,23 @@ public class UserService : IUserService
         await _userRepository.UpdateAsync(user);
     }
 
-    private static UserDto MapToDto(User user) => new()
+    private static UserDto MapToDto(User user)
     {
-        Id = user.Id,
-        Username = user.Username,
-        Email = user.Email,
-        Name = user.Name,
-        Role = user.Role,
-        DepartmentId = user.DepartmentId,
-        DepartmentName = user.Department?.Name,
-        IsActive = user.IsActive,
-        CreatedAt = user.CreatedAt,
-        LastLoginAt = user.LastLoginAt
-    };
+        var nameParts = user.Name?.Split(' ', 2) ?? Array.Empty<string>();
+        return new UserDto
+        {
+            Id = user.Id,
+            Username = user.Username,
+            Email = user.Email,
+            FirstName = nameParts.Length > 0 ? nameParts[0] : "",
+            LastName  = nameParts.Length > 1 ? nameParts[1] : "",
+            FullName  = user.Name,
+            Role = user.Role,
+            DepartmentId = user.DepartmentId,
+            DepartmentName = user.Department?.Name,
+            IsActive = user.IsActive,
+            CreatedAt = user.CreatedAt,
+            LastLoginAt = user.LastLoginAt
+        };
+    }
 }

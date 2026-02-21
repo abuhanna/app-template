@@ -58,7 +58,7 @@ export const useDepartmentStore = defineStore('department', () => {
 
       return result
     } catch (error) {
-      const message = error.response?.data?.message || 'Failed to fetch departments'
+      const message = error.response?.data?.error?.message || error.response?.data?.message || 'Failed to fetch departments'
       notificationStore.showError(message)
       throw error
     } finally {
@@ -74,7 +74,7 @@ export const useDepartmentStore = defineStore('department', () => {
       currentItem.value = await departmentApi.fetchDepartment(id)
       return currentItem.value
     } catch (error) {
-      const message = error.response?.data?.message || 'Failed to fetch department'
+      const message = error.response?.data?.error?.message || error.response?.data?.message || 'Failed to fetch department'
       notificationStore.showError(message)
       throw error
     } finally {
@@ -90,7 +90,7 @@ export const useDepartmentStore = defineStore('department', () => {
       const result = await departmentApi.createDepartment(data)
       return result
     } catch (error) {
-      const message = error.response?.data?.message || 'Failed to create department'
+      const message = error.response?.data?.error?.message || error.response?.data?.message || 'Failed to create department'
       notificationStore.showError(message)
       throw error
     } finally {
@@ -106,7 +106,7 @@ export const useDepartmentStore = defineStore('department', () => {
       const result = await departmentApi.updateDepartment(id, data)
       return result
     } catch (error) {
-      const message = error.response?.data?.message || 'Failed to update department'
+      const message = error.response?.data?.error?.message || error.response?.data?.message || 'Failed to update department'
       notificationStore.showError(message)
       throw error
     } finally {
@@ -121,7 +121,7 @@ export const useDepartmentStore = defineStore('department', () => {
     try {
       await departmentApi.deleteDepartment(id)
     } catch (error) {
-      const message = error.response?.data?.message || 'Failed to delete department'
+      const message = error.response?.data?.error?.message || error.response?.data?.message || 'Failed to delete department'
       notificationStore.showError(message)
       throw error
     } finally {

@@ -1,9 +1,10 @@
+using AppTemplate.Application.Common.Models;
 using AppTemplate.Application.DTOs;
 using MediatR;
 
 namespace AppTemplate.Application.Features.FileManagement.Queries.GetFiles;
 
-public record GetFilesQuery : IRequest<List<UploadedFileDto>>
+public record GetFilesQuery : IRequest<PagedResult<UploadedFileDto>>
 {
     public string? Category { get; init; }
     public bool? IsPublic { get; init; }
