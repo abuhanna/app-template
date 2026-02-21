@@ -31,8 +31,6 @@
     "password": "Password",
     "username": "Username",
     "rememberMe": "Remember me",
-    "forgotPassword": "Forgot Password?",
-    "resetPassword": "Reset Password",
     "currentPassword": "Current Password",
     "newPassword": "New Password",
     "confirmPassword": "Confirm Password",
@@ -44,8 +42,6 @@
     "dashboard": "Dashboard",
     "users": "Users",
     "departments": "Departments",
-    "profile": "Profile",
-    "settings": "Settings",
     "notifications": "Notifications",
     "files": "Files",
     "auditLogs": "Audit Logs"
@@ -71,13 +67,6 @@
     "name": "Name",
     "description": "Description",
     "deleteConfirm": "Are you sure you want to delete this department?"
-  },
-  "profile": {
-    "title": "Profile",
-    "updateProfile": "Update Profile",
-    "changePassword": "Change Password",
-    "profileUpdated": "Profile updated successfully",
-    "passwordChanged": "Password changed successfully"
   },
   "notification": {
     "title": "Notifications",

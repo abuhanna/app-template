@@ -18,7 +18,7 @@ const authStore = useAuthStore()
 
 onMounted(() => {
   if (authStore.isAuthenticated) {
-    router.replace('/dashboard')
+    router.replace('/notifications')
   } else {
     router.replace('/login')
   }

@@ -15,9 +15,7 @@ public class RequestLoggingMiddleware
     private static readonly HashSet<string> SensitivePaths = new(StringComparer.OrdinalIgnoreCase)
     {
         "/api/auth/login",
-        "/api/auth/refresh",
-        "/api/auth/forgot-password",
-        "/api/auth/reset-password"
+        "/api/auth/refresh"
     };
 
     // Paths that should be excluded from logging entirely

@@ -141,14 +141,6 @@ const userInitials = computed(() => {
 
 const userMenuItems = ref([
   {
-    label: 'Profile',
-    icon: 'pi pi-user',
-    command: () => router.push('/profile'),
-  },
-  {
-    separator: true,
-  },
-  {
     label: 'Logout',
     icon: 'pi pi-sign-out',
     command: () => handleLogout(),

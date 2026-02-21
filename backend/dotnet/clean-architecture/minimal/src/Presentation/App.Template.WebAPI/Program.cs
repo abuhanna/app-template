@@ -88,7 +88,7 @@ builder.Services.AddAuthentication(options =>
         ValidateIssuerSigningKey = true,
         ValidIssuer = jwtIssuer,
         ValidAudience = jwtAudience,
-        IssuerSigningKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(jwtSecret)),
+        IssuerSigningKey = JwtTokenService.ResolveSigningKey(jwtSecret),
         // If token doesn't include 'kid', try the provided key
         TryAllIssuerSigningKeys = true,
         ClockSkew = TimeSpan.Zero // Remove default 5 minute tolerance
@@ -155,13 +155,13 @@ builder.Services.AddTransient(typeof(IPipelineBehavior<,>), typeof(ValidationBeh
 
 // Register Infrastructure Services
 builder.Services.AddScoped<ICurrentUserService, CurrentUserService>();
+builder.Services.AddHttpClient();
 builder.Services.AddScoped<ISsoAuthService, SsoAuthService>();
 builder.Services.AddScoped<INotificationService, NotificationService>();
 builder.Services.AddScoped<IPasswordHashService, PasswordHashService>();
 builder.Services.AddScoped<IJwtTokenService, JwtTokenService>();
-builder.Services.AddScoped<IEmailService, EmailService>();
 builder.Services.AddScoped<IFileStorageService, FileStorageService>();
-builder.Services.AddScoped<AppTemplate.Infrastructure.Persistence.Seeding.DbSeeder>();
+builder.Services.AddScoped<IExportService, ExportService>();
 
 // Register Correlation ID accessor for request tracing
 builder.Services.AddScoped<ICorrelationIdAccessor, CorrelationIdAccessor>();
@@ -222,9 +222,10 @@ builder.Services.AddCors(options =>
 {
     options.AddPolicy("AllowAll", policy =>
     {
-        policy.AllowAnyOrigin()
+        policy.SetIsOriginAllowed(origin => true) // Allow any origin but with credentials support
             .AllowAnyMethod()
-            .AllowAnyHeader();
+            .AllowAnyHeader()
+            .AllowCredentials();
     });
 });
 
@@ -266,9 +267,6 @@ using (var scope = app.Services.CreateScope())
         app.Logger.LogInformation("Database migrations applied successfully in {Environment} environment.",
             app.Environment.EnvironmentName);
 
-        // Seed data
-        var seeder = scope.ServiceProvider.GetRequiredService<AppTemplate.Infrastructure.Persistence.Seeding.DbSeeder>();
-        await seeder.SeedAsync();
     }
     catch (Exception ex)
     {

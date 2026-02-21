@@ -52,9 +52,7 @@ api.interceptors.response.use(
       if (error.response.status === 401 && !originalRequest._retry) {
         // Don't try to refresh for auth endpoints
         if (originalRequest.url.includes('/auth/login') ||
-            originalRequest.url.includes('/auth/refresh') ||
-            originalRequest.url.includes('/auth/forgot-password') ||
-            originalRequest.url.includes('/auth/reset-password')) {
+            originalRequest.url.includes('/auth/refresh')) {
           return Promise.reject(error)
         }
 

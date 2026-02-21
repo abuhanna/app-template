@@ -122,14 +122,30 @@ public class ApplicationDbContext : DbContext, IApplicationDbContext
                     break;
 
                 case EntityState.Modified:
-                    auditEntry.Action = AuditAction.Updated;
-                    foreach (var property in entry.Properties)
+                    var isActiveProp = entry.Properties.FirstOrDefault(p => p.Metadata.Name == "IsActive");
+                    bool isSoftDelete = isActiveProp is { IsModified: true }
+                        && isActiveProp.OriginalValue is true
+                        && isActiveProp.CurrentValue is false;
+
+                    if (isSoftDelete)
                     {
-                        if (property.IsModified)
+                        auditEntry.Action = AuditAction.Deleted;
+                        foreach (var property in entry.Properties)
                         {
-                            auditEntry.AffectedColumns.Add(property.Metadata.Name);
                             auditEntry.OldValues[property.Metadata.Name] = property.OriginalValue;
-                            auditEntry.NewValues[property.Metadata.Name] = property.CurrentValue;
+                        }
+                    }
+                    else
+                    {
+                        auditEntry.Action = AuditAction.Updated;
+                        foreach (var property in entry.Properties)
+                        {
+                            if (property.IsModified)
+                            {
+                                auditEntry.AffectedColumns.Add(property.Metadata.Name);
+                                auditEntry.OldValues[property.Metadata.Name] = property.OriginalValue;
+                                auditEntry.NewValues[property.Metadata.Name] = property.CurrentValue;
+                            }
                         }
                     }
                     break;

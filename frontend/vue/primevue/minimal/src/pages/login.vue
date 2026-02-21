@@ -60,11 +60,7 @@
             <small v-if="errors.password" class="p-error">{{ errors.password }}</small>
           </div>
 
-          <div class="form-options">
-            <router-link to="/forgot-password" class="forgot-link">
-              Forgot password?
-            </router-link>
-          </div>
+
 
           <Button
             type="submit"
@@ -116,7 +112,7 @@ const errors = reactive({
 
 onMounted(() => {
   if (authStore.isAuthenticated) {
-    router.push('/dashboard')
+    router.push('/notifications')
   }
 })
 
@@ -149,7 +145,7 @@ const handleLogin = async () => {
       username: form.username,
       password: form.password,
     })
-    router.push('/dashboard')
+    router.push('/notifications')
   } catch (err) {
     error.value = err.response?.data?.message || 'Invalid username or password'
   } finally {
@@ -357,24 +353,7 @@ const handleLogin = async () => {
   color: #6366f1;
 }
 
-.form-options {
-  display: flex;
-  justify-content: flex-end;
-  margin-top: -0.5rem;
-}
 
-.forgot-link {
-  font-size: 0.875rem;
-  font-weight: 500;
-  color: #6366f1;
-  text-decoration: none;
-  transition: color 0.2s;
-}
-
-.forgot-link:hover {
-  color: #4f46e5;
-  text-decoration: underline;
-}
 
 /* Submit Button */
 .submit-button {
