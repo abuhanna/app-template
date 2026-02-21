@@ -83,18 +83,21 @@ public class SsoAuthService : ISsoAuthService
             var expiresAt = token.ValidTo;
             var expiresIn = (int)(expiresAt.ToUniversalTime() - DateTime.UtcNow).TotalSeconds;
 
+            string GetClaim(string type) => token.Claims.FirstOrDefault(c => c.Type == type)?.Value;
+            var roleClaim = GetClaim("role");
+
             var loginResponse = new LoginResponseDto
             {
                 Token = tokenString,
                 ExpiresIn = expiresIn,
                 User = new UserInfoDto
                 {
-                    Id = token.Claims.FirstOrDefault(c => c.Type == "jti")?.Value,
-                    Username = token.Claims.FirstOrDefault(c => c.Type == "username")?.Value,
-                    Email = token.Claims.FirstOrDefault(c => c.Type == "email")?.Value,
-                    Role = token.Claims.FirstOrDefault(c => c.Type == "role")?.Value,
-                    Name = token.Claims.FirstOrDefault(c => c.Type == "sub")?.Value,
-                    DepartmentName = token.Claims.FirstOrDefault(c => c.Type == "department")?.Value,
+                    Id = GetClaim("jti"),
+                    Username = GetClaim("username"),
+                    Email = GetClaim("email"),
+                    Role = string.IsNullOrWhiteSpace(roleClaim) ? "User" : roleClaim,
+                    Name = GetClaim("sub"),
+                    DepartmentName = GetClaim("department")
                 }
             };
 
