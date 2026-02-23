@@ -8,6 +8,7 @@ using AppTemplate.Application.Features.Authentication.Commands.ResetPassword;
 using AppTemplate.Application.Features.Authentication.Commands.UpdateMyProfile;
 using AppTemplate.Application.Features.Authentication.Queries.GetCurrentUser;
 using AppTemplate.Application.Features.Authentication.Queries.GetMyProfile;
+using AppTemplate.Application.Features.UserManagement.Commands.ChangePassword;
 
 using MediatR;
 
@@ -57,7 +58,9 @@ public class AuthController : ControllerBase
     {
         try
         {
-            var result = await _mediator.Send(command);
+            var ipAddress = HttpContext.Connection.RemoteIpAddress?.ToString();
+            var commandWithIp = command with { ClientIpAddress = ipAddress };
+            var result = await _mediator.Send(commandWithIp);
             return Ok(result);
         }
         catch (UnauthorizedAccessException ex)
@@ -254,6 +257,47 @@ public class AuthController : ControllerBase
         {
             await _mediator.Send(command);
             return Ok(new { message = "Password has been reset successfully. You can now login with your new password." });
+        }
+        catch (InvalidOperationException ex)
+        {
+            return BadRequest(new { message = ex.Message });
+        }
+    }
+
+    /// <summary>
+    /// Change password for the authenticated user
+    /// </summary>
+    /// <param name="request">Current and new password</param>
+    /// <returns>Confirmation that password was changed</returns>
+    /// <response code="200">Password changed successfully</response>
+    /// <response code="400">Validation error or incorrect current password</response>
+    /// <response code="401">Not authenticated</response>
+    [Authorize]
+    [HttpPost("change-password")]
+    [ProducesResponseType(StatusCodes.Status200OK)]
+    [ProducesResponseType(StatusCodes.Status400BadRequest)]
+    [ProducesResponseType(StatusCodes.Status401Unauthorized)]
+    public async Task<IActionResult> ChangePassword([FromBody] ChangePasswordRequest request)
+    {
+        try
+        {
+            var userIdStr = User.FindFirst("sub")?.Value
+                ?? User.FindFirst("userId")?.Value
+                ?? User.FindFirst(System.Security.Claims.ClaimTypes.NameIdentifier)?.Value;
+
+            if (!long.TryParse(userIdStr, out var userId))
+                return Unauthorized(new { message = "User not authenticated" });
+
+            var command = new ChangePasswordCommand
+            {
+                UserId = userId,
+                CurrentPassword = request.CurrentPassword,
+                NewPassword = request.NewPassword,
+                ConfirmPassword = request.ConfirmPassword
+            };
+
+            await _mediator.Send(command);
+            return Ok(new { message = "Password changed successfully" });
         }
         catch (InvalidOperationException ex)
         {

@@ -11,6 +11,7 @@ public class User : AuditableEntity
     public Department? Department { get; private set; }
     public bool IsActive { get; private set; }
     public DateTime? LastLoginAt { get; private set; }
+    public string? LastLoginIp { get; private set; }
     public string? PasswordResetToken { get; private set; }
     public DateTime? PasswordResetTokenExpiry { get; private set; }
     public List<string> PasswordHistory { get; private set; } = new();
@@ -65,9 +66,10 @@ public class User : AuditableEntity
         // UpdatedAt and UpdatedBy are set automatically by DbContext
     }
 
-    public void RecordLogin()
+    public void RecordLogin(string? ipAddress = null)
     {
         LastLoginAt = DateTime.UtcNow;
+        if (ipAddress != null) LastLoginIp = ipAddress;
     }
 
     public void SetPasswordResetToken(string token, DateTime expiry)

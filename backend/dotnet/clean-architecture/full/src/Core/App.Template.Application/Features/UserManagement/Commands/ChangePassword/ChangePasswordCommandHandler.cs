@@ -39,9 +39,24 @@ public class ChangePasswordCommandHandler : IRequestHandler<ChangePasswordComman
             throw new InvalidOperationException("Current password is incorrect");
         }
 
+        // Validate password confirmation
+        if (!string.IsNullOrEmpty(request.ConfirmPassword) && request.NewPassword != request.ConfirmPassword)
+        {
+            throw new InvalidOperationException("New password and confirmation password do not match");
+        }
+
         // Hash and set new password
         var newPasswordHash = _passwordHashService.HashPassword(request.NewPassword);
         user.UpdatePassword(newPasswordHash);
+
+        // Revoke all refresh tokens for security (invalidates all existing sessions)
+        var activeTokens = await _context.RefreshTokens
+            .Where(t => t.UserId == user.Id && !t.RevokedAt.HasValue)
+            .ToListAsync(cancellationToken);
+        foreach (var token in activeTokens)
+        {
+            token.Revoke();
+        }
 
         await _context.SaveChangesAsync(cancellationToken);
 

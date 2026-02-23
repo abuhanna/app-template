@@ -1,3 +1,4 @@
+using AppTemplate.Application.Common.Models;
 using AppTemplate.Application.DTOs;
 using AppTemplate.Application.Features.NotificationManagement.Commands.MarkAllAsRead;
 using AppTemplate.Application.Features.NotificationManagement.Commands.MarkAsRead;
@@ -22,16 +23,23 @@ public class NotificationsController : ControllerBase
     }
 
     [HttpGet]
-    public async Task<ActionResult<List<NotificationDto>>> GetMyNotifications(
+    [ProducesResponseType(typeof(PagedResult<NotificationDto>), StatusCodes.Status200OK)]
+    public async Task<ActionResult<PagedResult<NotificationDto>>> GetMyNotifications(
+        [FromQuery] bool? unreadOnly,
         [FromQuery] int? limit,
         [FromQuery] DateTime? startDate,
-        [FromQuery] DateTime? endDate)
+        [FromQuery] DateTime? endDate,
+        [FromQuery] int page = 1,
+        [FromQuery] int pageSize = 20)
     {
         var query = new GetNotificationsQuery
         {
+            UnreadOnly = unreadOnly,
             Limit = limit,
             StartDate = startDate,
-            EndDate = endDate
+            EndDate = endDate,
+            Page = page,
+            PageSize = pageSize
         };
         var result = await _mediator.Send(query);
         return Ok(result);

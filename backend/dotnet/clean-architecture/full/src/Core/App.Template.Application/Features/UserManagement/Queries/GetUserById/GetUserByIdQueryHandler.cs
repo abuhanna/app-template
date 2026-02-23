@@ -49,6 +49,9 @@ public class GetUserByIdQueryHandler : IRequestHandler<GetUserByIdQuery, UserDto
             DepartmentName = user.Department?.Name,
             IsActive = user.IsActive,
             CreatedAt = user.CreatedAt,
+            UpdatedAt = user.UpdatedAt,
+            CreatedBy = user.CreatedBy,
+            UpdatedBy = user.UpdatedBy,
             LastLoginAt = user.LastLoginAt
         };
     }

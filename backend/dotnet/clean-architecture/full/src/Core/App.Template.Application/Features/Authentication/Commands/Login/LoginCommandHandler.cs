@@ -96,10 +96,14 @@ public class LoginCommandHandler : IRequestHandler<LoginCommand, LoginResponseDt
         _context.RefreshTokens.Add(refreshToken);
 
         // Update last login
-        user.RecordLogin();
+        user.RecordLogin(request.ClientIpAddress);
         await _context.SaveChangesAsync(cancellationToken);
 
         _logger.LogInformation("Login successful for user: {Username}", request.Username);
+
+        var nameParts = user.Name?.Split(' ', 2) ?? Array.Empty<string>();
+        var firstName = nameParts.Length > 0 ? nameParts[0] : null;
+        var lastName = nameParts.Length > 1 ? nameParts[1] : null;
 
         return new LoginResponseDto
         {
@@ -114,6 +118,10 @@ public class LoginCommandHandler : IRequestHandler<LoginCommand, LoginResponseDt
                 Username = user.Username,
                 Email = user.Email,
                 Name = user.Name ?? user.Username,
+                FirstName = firstName,
+                LastName = lastName,
+                FullName = user.Name,
+                IsActive = user.IsActive,
                 Role = user.Role,
                 DepartmentId = user.DepartmentId?.ToString(),
                 DepartmentName = user.Department?.Name

@@ -92,6 +92,9 @@ public class GetUsersQueryHandler : IRequestHandler<GetUsersQuery, PagedResult<U
                 DepartmentName = u.Department != null ? u.Department.Name : null,
                 IsActive = u.IsActive,
                 CreatedAt = u.CreatedAt,
+                UpdatedAt = u.UpdatedAt,
+                CreatedBy = u.CreatedBy,
+                UpdatedBy = u.UpdatedBy,
                 LastLoginAt = u.LastLoginAt
             })
             .ToListAsync(cancellationToken);

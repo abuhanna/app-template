@@ -23,4 +23,10 @@ public record LoginCommand : IRequest<LoginResponseDto>
     /// User password
     /// </summary>
     public string Password { get; init; } = string.Empty;
+
+    /// <summary>
+    /// Client IP address (set by controller, not from request body)
+    /// </summary>
+    [System.Text.Json.Serialization.JsonIgnore]
+    public string? ClientIpAddress { get; init; }
 }

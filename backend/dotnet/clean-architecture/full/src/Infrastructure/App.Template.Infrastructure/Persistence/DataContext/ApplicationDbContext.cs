@@ -221,6 +221,7 @@ public class ApplicationDbContext : DbContext, IApplicationDbContext
             entity.Property(e => e.CreatedBy).HasMaxLength(100);
             entity.Property(e => e.UpdatedBy).HasMaxLength(100);
             entity.Property(e => e.LastLoginAt);
+            entity.Property(e => e.LastLoginIp).HasMaxLength(45);
             entity.Property(e => e.PasswordResetToken).HasMaxLength(100);
             entity.Property(e => e.PasswordResetTokenExpiry);
 
