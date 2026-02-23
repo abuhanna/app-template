@@ -27,9 +27,12 @@ public class UpdateUserUseCase {
         User user = userRepository.findById(id)
                 .orElseThrow(() -> new NotFoundException("User", id));
 
+        // Use existing username if not provided (username is immutable on update)
+        String username = request.getUsername() != null ? request.getUsername() : user.getUsername();
+
         // Check username uniqueness if changed
-        if (!user.getUsername().equals(request.getUsername())) {
-            userRepository.findByUsername(request.getUsername())
+        if (!user.getUsername().equals(username)) {
+            userRepository.findByUsername(username)
                     .ifPresent(existing -> {
                         throw new ConflictException("Username already exists");
                     });
@@ -52,7 +55,7 @@ public class UpdateUserUseCase {
         // Update user
         String fullName = (request.getFirstName() + " " + request.getLastName()).trim();
         user.update(
-                request.getUsername(),
+                username,
                 fullName,
                 request.getEmail(),
                 request.getRole(),

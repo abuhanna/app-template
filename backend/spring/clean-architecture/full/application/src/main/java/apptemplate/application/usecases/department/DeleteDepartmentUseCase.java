@@ -31,6 +31,8 @@ public class DeleteDepartmentUseCase {
             );
         }
 
-        departmentRepository.delete(department);
+        // Soft delete department
+        department.setActiveStatus(false);
+        departmentRepository.save(department);
     }
 }

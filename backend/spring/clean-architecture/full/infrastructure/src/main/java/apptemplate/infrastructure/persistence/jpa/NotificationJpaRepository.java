@@ -15,13 +15,23 @@ import java.time.LocalDateTime;
 @Repository
 public interface NotificationJpaRepository extends JpaRepository<NotificationJpaEntity, Long> {
 
-    @Query("SELECT n FROM NotificationJpaEntity n WHERE " +
-           "n.userId = :userId " +
-           "AND (:unreadOnly IS NULL OR :unreadOnly = false OR n.isRead = false) " +
-           "ORDER BY n.createdAt DESC")
+    @Query(value = "SELECT * FROM notifications n WHERE " +
+           "n.user_id = :userId " +
+           "AND (CAST(:unreadOnly AS BOOLEAN) IS NULL OR CAST(:unreadOnly AS BOOLEAN) = false OR n.is_read = false) " +
+           "AND (CAST(:startDate AS TIMESTAMP) IS NULL OR n.created_at >= CAST(:startDate AS TIMESTAMP)) " +
+           "AND (CAST(:endDate AS TIMESTAMP) IS NULL OR n.created_at <= CAST(:endDate AS TIMESTAMP)) " +
+           "ORDER BY n.created_at DESC",
+           countQuery = "SELECT COUNT(*) FROM notifications n WHERE " +
+           "n.user_id = :userId " +
+           "AND (CAST(:unreadOnly AS BOOLEAN) IS NULL OR CAST(:unreadOnly AS BOOLEAN) = false OR n.is_read = false) " +
+           "AND (CAST(:startDate AS TIMESTAMP) IS NULL OR n.created_at >= CAST(:startDate AS TIMESTAMP)) " +
+           "AND (CAST(:endDate AS TIMESTAMP) IS NULL OR n.created_at <= CAST(:endDate AS TIMESTAMP))",
+           nativeQuery = true)
     Page<NotificationJpaEntity> findByUserId(
             @Param("userId") Long userId,
             @Param("unreadOnly") Boolean unreadOnly,
+            @Param("startDate") LocalDateTime startDate,
+            @Param("endDate") LocalDateTime endDate,
             Pageable pageable
     );
 

@@ -1,11 +1,12 @@
 package apptemplate.api.controllers;
 
-import apptemplate.api.dto.ApiResponse;
 import apptemplate.application.dto.auth.*;
 import apptemplate.application.dto.user.ChangePasswordRequest;
 import apptemplate.application.dto.user.UserDto;
+import apptemplate.application.ports.services.CurrentUserService;
 import apptemplate.application.usecases.auth.*;
 import apptemplate.application.usecases.user.ChangeUserPasswordUseCase;
+import apptemplate.domain.exceptions.AuthenticationException;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
@@ -28,6 +29,7 @@ public class AuthController {
     private final GetMyProfileUseCase getMyProfileUseCase;
     private final UpdateMyProfileUseCase updateMyProfileUseCase;
     private final ChangeUserPasswordUseCase changeUserPasswordUseCase;
+    private final CurrentUserService currentUserService;
 
     @PostMapping("/login")
     @Operation(summary = "Login", description = "Authenticate user and receive JWT tokens")
@@ -90,7 +92,9 @@ public class AuthController {
     @PostMapping("/change-password")
     @Operation(summary = "Change password", description = "Change password of authenticated user")
     public ResponseEntity<Void> changePassword(@Valid @RequestBody ChangePasswordRequest request) {
-        changeUserPasswordUseCase.execute(request);
+        Long userId = currentUserService.getCurrentUserId()
+                .orElseThrow(() -> new AuthenticationException("User not authenticated"));
+        changeUserPasswordUseCase.execute(userId, request);
         return ResponseEntity.ok().build();
     }
 }

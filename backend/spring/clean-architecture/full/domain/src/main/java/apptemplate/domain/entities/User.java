@@ -26,6 +26,7 @@ public class User extends AuditableEntity {
     private String name;
     private UserRole role;
     private Long departmentId;
+    private String departmentName; // Transient - populated from JPA relationship, not persisted directly
     private boolean active;
     private LocalDateTime lastLoginAt;
 

@@ -4,6 +4,7 @@ import apptemplate.domain.entities.Notification;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 
+import java.time.LocalDateTime;
 import java.util.Optional;
 
 
@@ -14,7 +15,7 @@ public interface NotificationRepository {
 
     Optional<Notification> findById(Long id);
 
-    Page<Notification> findByUserId(Long userId, Boolean unreadOnly, Pageable pageable);
+    Page<Notification> findByUserId(Long userId, Boolean unreadOnly, LocalDateTime startDate, LocalDateTime endDate, Pageable pageable);
 
     long countUnreadByUserId(Long userId);
 

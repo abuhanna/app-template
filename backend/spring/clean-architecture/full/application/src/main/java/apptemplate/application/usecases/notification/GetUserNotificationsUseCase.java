@@ -12,6 +12,7 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.time.LocalDateTime;
 
 
 @Service
@@ -23,11 +24,11 @@ public class GetUserNotificationsUseCase {
     private final NotificationMapper notificationMapper;
 
     @Transactional(readOnly = true)
-    public Page<NotificationDto> execute(Boolean unreadOnly, Pageable pageable) {
+    public Page<NotificationDto> execute(Boolean unreadOnly, LocalDateTime startDate, LocalDateTime endDate, Pageable pageable) {
         Long userId = currentUserService.getCurrentUserId()
                 .orElseThrow(() -> new AuthenticationException("User not authenticated"));
 
-        Page<Notification> notifications = notificationRepository.findByUserId(userId, unreadOnly, pageable);
+        Page<Notification> notifications = notificationRepository.findByUserId(userId, unreadOnly, startDate, endDate, pageable);
         return notifications.map(notificationMapper::toDto);
     }
 }

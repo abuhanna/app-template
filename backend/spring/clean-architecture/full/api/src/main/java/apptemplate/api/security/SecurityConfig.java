@@ -53,12 +53,16 @@ public class SecurityConfig {
                         .requestMatchers("/health", "/actuator/**").permitAll()
                         .requestMatchers("/swagger-ui/**", "/v3/api-docs/**", "/swagger-ui.html").permitAll()
                         .requestMatchers("/ws/**").permitAll()
+                        // Public file download (access control enforced in use case for private files)
+                        .requestMatchers(HttpMethod.GET, "/api/files/*/download").permitAll()
 
                         // Admin only endpoints
                         .requestMatchers(HttpMethod.POST, "/api/users").hasRole("ADMIN")
                         .requestMatchers(HttpMethod.PUT, "/api/users/**").hasRole("ADMIN")
                         .requestMatchers(HttpMethod.DELETE, "/api/users/**").hasRole("ADMIN")
-                        .requestMatchers("/api/departments/**").hasRole("ADMIN")
+                        .requestMatchers(HttpMethod.POST, "/api/departments").hasRole("ADMIN")
+                        .requestMatchers(HttpMethod.PUT, "/api/departments/**").hasRole("ADMIN")
+                        .requestMatchers(HttpMethod.DELETE, "/api/departments/**").hasRole("ADMIN")
 
                         // All other requests require authentication
                         .anyRequest().authenticated()

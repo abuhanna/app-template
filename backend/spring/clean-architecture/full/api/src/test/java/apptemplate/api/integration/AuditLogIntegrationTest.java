@@ -36,7 +36,7 @@ public class AuditLogIntegrationTest {
         DepartmentJpaEntity department = DepartmentJpaEntity.builder()
             .code("TEST01")
             .name("Test Department")
-            .isActive(true)
+            .active(true)
             .build();
 
         // Save entity (should trigger CREATE audit)
@@ -50,5 +50,37 @@ public class AuditLogIntegrationTest {
         Assertions.assertFalse(logs.isEmpty(), "Audit log should not be empty");
         Assertions.assertEquals("CREATED", logs.get(0).getAction());
         Assertions.assertEquals("Department", logs.get(0).getEntityName());
+    }
+
+    @Test
+    public void testAuditLogCreatedOnSoftDelete() {
+        // Setup mock user
+        SecurityContextHolder.getContext().setAuthentication(
+            new UsernamePasswordAuthenticationToken(1L, "password")
+        );
+
+        // Create entity
+        DepartmentJpaEntity department = DepartmentJpaEntity.builder()
+            .code("TEST02")
+            .name("Test Department 2")
+            .active(true)
+            .build();
+
+        DepartmentJpaEntity savedDepartment = departmentRepository.save(department);
+
+        // Soft delete department
+        savedDepartment.setActive(false);
+        departmentRepository.save(savedDepartment);
+
+        // Verify audit log for delete
+        List<AuditLogJpaEntity> logs = auditLogRepository.findAll();
+        
+        final String deptId = String.valueOf(savedDepartment.getId());
+        long deleteLogsCount = logs.stream()
+            .filter(l -> l.getEntityId().equals(deptId))
+            .filter(l -> l.getAction().equals("DELETED"))
+            .count();
+            
+        Assertions.assertEquals(1, deleteLogsCount, "There should be one DELETED action for this department");
     }
 }

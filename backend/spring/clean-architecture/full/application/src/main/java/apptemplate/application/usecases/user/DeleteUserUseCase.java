@@ -25,7 +25,8 @@ public class DeleteUserUseCase {
         // Revoke all refresh tokens
         refreshTokenRepository.revokeAllByUserId(id);
 
-        // Delete user
-        userRepository.delete(user);
+        // Soft delete user
+        user.setActiveStatus(false);
+        userRepository.save(user);
     }
 }

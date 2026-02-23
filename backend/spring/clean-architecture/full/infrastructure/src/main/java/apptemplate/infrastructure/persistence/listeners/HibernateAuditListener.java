@@ -67,18 +67,32 @@ public class HibernateAuditListener implements PostInsertEventListener, PostUpda
             Object[] oldState = event.getOldState();
             Object[] newState = event.getState();
             int[] dirtyProperties = event.getDirtyProperties();
+            
+            boolean isSoftDelete = false;
 
             // Only capture changed properties
             for (int i : dirtyProperties) {
                 String propertyName = propertyNames[i];
                 oldValues.put(propertyName, oldState[i]);
                 newValues.put(propertyName, newState[i]);
+                
+                // Detect soft delete: active/isActive changed from true to false
+                if (("active".equals(propertyName) || "isActive".equals(propertyName)) && 
+                    Boolean.TRUE.equals(oldState[i]) && Boolean.FALSE.equals(newState[i])) {
+                    isSoftDelete = true;
+                }
             }
             
             // If nothing changed (which shouldn't happen in PostUpdate but good to check), skip
             if (oldValues.isEmpty() && newValues.isEmpty()) return;
 
-            auditService.logUpdate(entityName, entityId, oldValues, newValues, userId);
+            if (isSoftDelete) {
+                // Log as delete instead of update
+                Map<String, Object> allOldValues = getStateMap(event.getOldState(), propertyNames);
+                auditService.logDelete(entityName, entityId, allOldValues, userId);
+            } else {
+                auditService.logUpdate(entityName, entityId, oldValues, newValues, userId);
+            }
         } catch (Exception e) {
             log.warn("Failed to audit update for {}: {}", event.getEntity().getClass().getSimpleName(), e.getMessage());
         }

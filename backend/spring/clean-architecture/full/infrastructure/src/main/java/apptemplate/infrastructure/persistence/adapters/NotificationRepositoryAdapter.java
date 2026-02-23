@@ -28,8 +28,8 @@ public class NotificationRepositoryAdapter implements NotificationRepository {
     }
 
     @Override
-    public Page<Notification> findByUserId(Long userId, Boolean unreadOnly, Pageable pageable) {
-        return jpaRepository.findByUserId(userId, unreadOnly, pageable)
+    public Page<Notification> findByUserId(Long userId, Boolean unreadOnly, LocalDateTime startDate, LocalDateTime endDate, Pageable pageable) {
+        return jpaRepository.findByUserId(userId, unreadOnly, startDate, endDate, pageable)
                 .map(mapper::toDomain);
     }
 

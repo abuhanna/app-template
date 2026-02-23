@@ -1,7 +1,7 @@
 package apptemplate.api.controllers;
 
-import apptemplate.api.dto.ApiResponse;
 import apptemplate.api.dto.PagedResponse;
+import apptemplate.application.dto.user.ChangePasswordRequest;
 import apptemplate.application.dto.user.CreateUserRequest;
 import apptemplate.application.dto.user.UpdateUserRequest;
 import apptemplate.application.dto.user.UserDto;
@@ -17,6 +17,7 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 
+import java.util.Map;
 
 
 @RestController
@@ -30,6 +31,7 @@ public class UsersController {
     private final CreateUserUseCase createUserUseCase;
     private final UpdateUserUseCase updateUserUseCase;
     private final DeleteUserUseCase deleteUserUseCase;
+    private final ChangeUserPasswordUseCase changeUserPasswordUseCase;
 
     @GetMapping
     @Operation(summary = "Get all users", description = "Get paginated list of users with optional filters")
@@ -82,6 +84,16 @@ public class UsersController {
     @Operation(summary = "Delete user", description = "Delete a user (Admin only)")
     public ResponseEntity<Void> deleteUser(@PathVariable Long id) {
         deleteUserUseCase.execute(id);
-        return ResponseEntity.ok().build();
+        return ResponseEntity.noContent().build();
+    }
+
+    @PostMapping("/{id}/change-password")
+    @Operation(summary = "Change user password", description = "Change password of a specific user")
+    public ResponseEntity<Map<String, String>> changePassword(
+            @PathVariable Long id,
+            @Valid @RequestBody ChangePasswordRequest request
+    ) {
+        changeUserPasswordUseCase.execute(id, request);
+        return ResponseEntity.ok(Map.of("message", "Password changed successfully"));
     }
 }

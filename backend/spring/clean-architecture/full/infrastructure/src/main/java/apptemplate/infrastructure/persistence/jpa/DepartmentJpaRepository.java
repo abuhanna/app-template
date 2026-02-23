@@ -23,7 +23,7 @@ public interface DepartmentJpaRepository extends JpaRepository<DepartmentJpaEnti
     @Query("SELECT d FROM DepartmentJpaEntity d WHERE " +
            "(:search IS NULL OR LOWER(d.code) LIKE LOWER(CAST(:search AS string)) " +
            "OR LOWER(d.name) LIKE LOWER(CAST(:search AS string))) " +
-           "AND (:isActive IS NULL OR d.isActive = :isActive)")
+           "AND (:isActive IS NULL OR d.active = :isActive)")
     Page<DepartmentJpaEntity> findByFilters(
             @Param("search") String search,
             @Param("isActive") Boolean isActive,

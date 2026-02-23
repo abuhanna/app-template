@@ -3,7 +3,6 @@ package apptemplate.application.usecases.user;
 import apptemplate.application.dto.user.ChangePasswordRequest;
 import apptemplate.application.ports.repositories.RefreshTokenRepository;
 import apptemplate.application.ports.repositories.UserRepository;
-import apptemplate.application.ports.services.CurrentUserService;
 import apptemplate.application.ports.services.PasswordService;
 import apptemplate.domain.entities.User;
 import apptemplate.domain.exceptions.AuthenticationException;
@@ -21,13 +20,9 @@ public class ChangeUserPasswordUseCase {
     private final UserRepository userRepository;
     private final RefreshTokenRepository refreshTokenRepository;
     private final PasswordService passwordService;
-    private final CurrentUserService currentUserService;
 
     @Transactional
-    public void execute(ChangePasswordRequest request) {
-        Long userId = currentUserService.getCurrentUserId()
-                .orElseThrow(() -> new AuthenticationException("User not authenticated"));
-
+    public void execute(Long userId, ChangePasswordRequest request) {
         User user = userRepository.findById(userId)
                 .orElseThrow(() -> new AuthenticationException("User not found"));
 
@@ -46,8 +41,7 @@ public class ChangeUserPasswordUseCase {
         user.updatePassword(hashedPassword);
         userRepository.save(user);
 
-        // Revoke all refresh tokens except current session (for security)
-        // In a real app, you might want to keep the current session
+        // Revoke all refresh tokens for security (invalidates all existing sessions)
         refreshTokenRepository.revokeAllByUserId(userId);
     }
 }

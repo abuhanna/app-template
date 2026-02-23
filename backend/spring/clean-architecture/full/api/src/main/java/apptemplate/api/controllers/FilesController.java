@@ -88,6 +88,6 @@ public class FilesController {
     @Operation(summary = "Delete file", description = "Delete a file by its ID")
     public ResponseEntity<Void> deleteFile(@PathVariable Long id) {
         deleteFileUseCase.execute(id);
-        return ResponseEntity.ok().build();
+        return ResponseEntity.noContent().build();
     }
 }

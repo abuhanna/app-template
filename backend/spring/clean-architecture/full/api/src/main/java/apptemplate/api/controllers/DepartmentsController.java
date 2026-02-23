@@ -22,8 +22,7 @@ import org.springframework.web.bind.annotation.*;
 @RestController
 @RequestMapping("/api/departments")
 @RequiredArgsConstructor
-@PreAuthorize("hasRole('ADMIN')")
-@Tag(name = "Departments", description = "Department management endpoints (Admin only)")
+@Tag(name = "Departments", description = "Department management endpoints")
 public class DepartmentsController {
 
     private final GetDepartmentsUseCase getDepartmentsUseCase;
@@ -58,7 +57,8 @@ public class DepartmentsController {
     }
 
     @PostMapping
-    @Operation(summary = "Create department", description = "Create a new department")
+    @PreAuthorize("hasRole('ADMIN')")
+    @Operation(summary = "Create department", description = "Create a new department (Admin only)")
     public ResponseEntity<DepartmentDto> createDepartment(@Valid @RequestBody CreateDepartmentRequest request) {
         DepartmentDto department = createDepartmentUseCase.execute(request);
         return ResponseEntity.status(HttpStatus.CREATED)
@@ -66,7 +66,8 @@ public class DepartmentsController {
     }
 
     @PutMapping("/{id}")
-    @Operation(summary = "Update department", description = "Update an existing department")
+    @PreAuthorize("hasRole('ADMIN')")
+    @Operation(summary = "Update department", description = "Update an existing department (Admin only)")
     public ResponseEntity<DepartmentDto> updateDepartment(
             @PathVariable Long id,
             @Valid @RequestBody UpdateDepartmentRequest request
@@ -76,9 +77,10 @@ public class DepartmentsController {
     }
 
     @DeleteMapping("/{id}")
-    @Operation(summary = "Delete department", description = "Delete a department")
+    @PreAuthorize("hasRole('ADMIN')")
+    @Operation(summary = "Delete department", description = "Delete a department (Admin only)")
     public ResponseEntity<Void> deleteDepartment(@PathVariable Long id) {
         deleteDepartmentUseCase.execute(id);
-        return ResponseEntity.ok().build();
+        return ResponseEntity.noContent().build();
     }
 }

@@ -14,7 +14,6 @@ public interface UserMapper {
 
     // Capitalize role name (e.g., ADMIN -> Admin) to match frontend expectations
     @Mapping(target = "role", expression = "java(user.getRole().name().charAt(0) + user.getRole().name().substring(1).toLowerCase())")
-    @Mapping(target = "departmentName", ignore = true)
     @Mapping(target = "fullName", source = "name")
     @Mapping(target = "isActive", source = "active")
     @Mapping(target = "firstName", expression = "java(user.getName() != null ? user.getName().split(\" \")[0] : \"\")")
@@ -22,7 +21,6 @@ public interface UserMapper {
     UserDto toDto(User user);
 
     @Mapping(target = "role", expression = "java(user.getRole().name().charAt(0) + user.getRole().name().substring(1).toLowerCase())")
-    @Mapping(target = "departmentName", ignore = true)
     @Mapping(target = "fullName", source = "name")
     @Mapping(target = "isActive", source = "active")
     @Mapping(target = "firstName", expression = "java(user.getName() != null ? user.getName().split(\" \")[0] : \"\")")

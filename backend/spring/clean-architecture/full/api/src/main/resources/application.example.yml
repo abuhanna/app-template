@@ -5,6 +5,10 @@ spring:
   application:
     name: AppTemplate
 
+  jackson:
+    mapper:
+      accept-case-insensitive-enums: true  
+
   datasource:
     url: jdbc:postgresql://${DB_HOST:localhost}:${DB_PORT:5432}/${DB_NAME:apptemplate_dev}
     username: ${DB_USER:postgres}
