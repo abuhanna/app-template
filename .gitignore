@@ -548,6 +548,7 @@ backend-spring/target/
 backend-spring/.mvn/wrapper/maven-wrapper.jar
 backend-spring/HELP.md
 backend-spring/api/src/main/resources/application.yml
+application.yml
 
 # Temporary and cache files
 *.log
