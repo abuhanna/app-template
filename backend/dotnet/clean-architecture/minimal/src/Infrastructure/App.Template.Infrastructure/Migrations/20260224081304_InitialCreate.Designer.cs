@@ -13,7 +13,7 @@ using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 namespace AppTemplate.Infrastructure.Migrations
 {
     [DbContext(typeof(ApplicationDbContext))]
-    [Migration("20260221221207_InitialCreate")]
+    [Migration("20260224081304_InitialCreate")]
     partial class InitialCreate
     {
         /// <inheritdoc />
@@ -89,64 +89,6 @@ namespace AppTemplate.Infrastructure.Migrations
                         .HasDatabaseName("ix_audit_logs_user_id");
 
                     b.ToTable("audit_logs", (string)null);
-                });
-
-            modelBuilder.Entity("AppTemplate.Domain.Entities.Department", b =>
-                {
-                    b.Property<long>("Id")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("bigint")
-                        .HasColumnName("id");
-
-                    NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<long>("Id"));
-
-                    b.Property<string>("Code")
-                        .IsRequired()
-                        .HasMaxLength(50)
-                        .HasColumnType("character varying(50)")
-                        .HasColumnName("code");
-
-                    b.Property<DateTime>("CreatedAt")
-                        .HasColumnType("timestamp with time zone")
-                        .HasColumnName("created_at");
-
-                    b.Property<string>("CreatedBy")
-                        .HasMaxLength(100)
-                        .HasColumnType("character varying(100)")
-                        .HasColumnName("created_by");
-
-                    b.Property<string>("Description")
-                        .HasMaxLength(500)
-                        .HasColumnType("character varying(500)")
-                        .HasColumnName("description");
-
-                    b.Property<bool>("IsActive")
-                        .HasColumnType("boolean")
-                        .HasColumnName("is_active");
-
-                    b.Property<string>("Name")
-                        .IsRequired()
-                        .HasMaxLength(200)
-                        .HasColumnType("character varying(200)")
-                        .HasColumnName("name");
-
-                    b.Property<DateTime?>("UpdatedAt")
-                        .HasColumnType("timestamp with time zone")
-                        .HasColumnName("updated_at");
-
-                    b.Property<string>("UpdatedBy")
-                        .HasMaxLength(100)
-                        .HasColumnType("character varying(100)")
-                        .HasColumnName("updated_by");
-
-                    b.HasKey("Id")
-                        .HasName("pk_departments");
-
-                    b.HasIndex("Code")
-                        .IsUnique()
-                        .HasDatabaseName("ix_departments_code");
-
-                    b.ToTable("departments", (string)null);
                 });
 
             modelBuilder.Entity("AppTemplate.Domain.Entities.Notification", b =>
@@ -370,10 +312,6 @@ namespace AppTemplate.Infrastructure.Migrations
                         .HasColumnType("character varying(100)")
                         .HasColumnName("created_by");
 
-                    b.Property<long?>("DepartmentId")
-                        .HasColumnType("bigint")
-                        .HasColumnName("department_id");
-
                     b.Property<string>("Email")
                         .IsRequired()
                         .HasMaxLength(255)
@@ -436,9 +374,6 @@ namespace AppTemplate.Infrastructure.Migrations
                     b.HasKey("Id")
                         .HasName("pk_users");
 
-                    b.HasIndex("DepartmentId")
-                        .HasDatabaseName("ix_users_department_id");
-
                     b.HasIndex("Email")
                         .IsUnique()
                         .HasDatabaseName("ix_users_email");
@@ -463,22 +398,6 @@ namespace AppTemplate.Infrastructure.Migrations
                         .HasConstraintName("fk_refresh_tokens_users_user_id");
 
                     b.Navigation("User");
-                });
-
-            modelBuilder.Entity("AppTemplate.Domain.Entities.User", b =>
-                {
-                    b.HasOne("AppTemplate.Domain.Entities.Department", "Department")
-                        .WithMany("Users")
-                        .HasForeignKey("DepartmentId")
-                        .OnDelete(DeleteBehavior.SetNull)
-                        .HasConstraintName("fk_users_departments_department_id");
-
-                    b.Navigation("Department");
-                });
-
-            modelBuilder.Entity("AppTemplate.Domain.Entities.Department", b =>
-                {
-                    b.Navigation("Users");
                 });
 #pragma warning restore 612, 618
         }

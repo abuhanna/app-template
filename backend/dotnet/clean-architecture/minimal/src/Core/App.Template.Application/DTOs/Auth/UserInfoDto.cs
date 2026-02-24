@@ -10,6 +10,4 @@ public record UserInfoDto
     public string? Email { get; init; }
     public string? Name { get; init; }
     public string? Role { get; init; }
-    public string? DepartmentId { get; init; }
-    public string? DepartmentName { get; init; }
 }

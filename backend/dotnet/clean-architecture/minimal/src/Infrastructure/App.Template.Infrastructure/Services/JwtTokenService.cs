@@ -61,11 +61,6 @@ public class JwtTokenService : IJwtTokenService
             new("name", user.Name ?? user.Username)
         };
 
-        if (user.DepartmentId.HasValue)
-        {
-            claims.Add(new Claim("departmentId", user.DepartmentId.Value.ToString()));
-        }
-
         var token = new JwtSecurityToken(
             issuer: issuer,
             audience: audience,

@@ -13,8 +13,7 @@ public class UserTests
             email: "test@example.com",
             passwordHash: "hashedPassword",
             name: "Test User",
-            role: "User",
-            departmentId: 1);
+            role: "User");
 
         // Assert
         Assert.Equal("testuser", user.Username);
@@ -22,7 +21,6 @@ public class UserTests
         Assert.Equal("hashedPassword", user.PasswordHash);
         Assert.Equal("Test User", user.Name);
         Assert.Equal("User", user.Role);
-        Assert.Equal(1, user.DepartmentId);
         Assert.True(user.IsActive);
         Assert.Null(user.LastLoginAt);
     }
@@ -39,23 +37,21 @@ public class UserTests
         // Assert
         Assert.Equal("User", user.Role);
         Assert.Null(user.Name);
-        Assert.Null(user.DepartmentId);
     }
 
     [Fact]
     public void Update_ShouldUpdateProperties()
     {
         // Arrange
-        var user = new User("testuser", "test@example.com", "hash", "Old Name", "User", 1);
+        var user = new User("testuser", "test@example.com", "hash", "Old Name", "User");
 
         // Act
-        user.Update("New Name", "new@example.com", "Admin", 2);
+        user.Update("New Name", "new@example.com", "Admin");
 
         // Assert
         Assert.Equal("New Name", user.Name);
         Assert.Equal("new@example.com", user.Email);
         Assert.Equal("Admin", user.Role);
-        Assert.Equal(2, user.DepartmentId);
         // Note: UpdatedAt is set by DbContext on SaveChanges, not by the entity method
     }
 
@@ -63,16 +59,15 @@ public class UserTests
     public void Update_ShouldAllowNullValues()
     {
         // Arrange
-        var user = new User("testuser", "test@example.com", "hash", "Name", "User", 1);
+        var user = new User("testuser", "test@example.com", "hash", "Name", "User");
 
         // Act - Update with nulls (should keep existing values for email/name/role)
-        user.Update(null, null, null, null);
+        user.Update(null, null, null);
 
-        // Assert - email, name, role should remain unchanged, departmentId becomes null
+        // Assert - email, name, role should remain unchanged
         Assert.Equal("Name", user.Name);
         Assert.Equal("test@example.com", user.Email);
         Assert.Equal("User", user.Role);
-        Assert.Null(user.DepartmentId);
     }
 
     [Fact]

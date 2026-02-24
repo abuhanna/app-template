@@ -34,26 +34,6 @@ namespace AppTemplate.Infrastructure.Migrations
                 });
 
             migrationBuilder.CreateTable(
-                name: "departments",
-                columns: table => new
-                {
-                    id = table.Column<long>(type: "bigint", nullable: false)
-                        .Annotation("Npgsql:ValueGenerationStrategy", NpgsqlValueGenerationStrategy.IdentityByDefaultColumn),
-                    code = table.Column<string>(type: "character varying(50)", maxLength: 50, nullable: false),
-                    name = table.Column<string>(type: "character varying(200)", maxLength: 200, nullable: false),
-                    description = table.Column<string>(type: "character varying(500)", maxLength: 500, nullable: true),
-                    is_active = table.Column<bool>(type: "boolean", nullable: false),
-                    created_at = table.Column<DateTime>(type: "timestamp with time zone", nullable: false),
-                    updated_at = table.Column<DateTime>(type: "timestamp with time zone", nullable: true),
-                    created_by = table.Column<string>(type: "character varying(100)", maxLength: 100, nullable: true),
-                    updated_by = table.Column<string>(type: "character varying(100)", maxLength: 100, nullable: true)
-                },
-                constraints: table =>
-                {
-                    table.PrimaryKey("pk_departments", x => x.id);
-                });
-
-            migrationBuilder.CreateTable(
                 name: "notifications",
                 columns: table => new
                 {
@@ -108,7 +88,6 @@ namespace AppTemplate.Infrastructure.Migrations
                     password_hash = table.Column<string>(type: "character varying(255)", maxLength: 255, nullable: false),
                     name = table.Column<string>(type: "character varying(200)", maxLength: 200, nullable: true),
                     role = table.Column<string>(type: "character varying(50)", maxLength: 50, nullable: true),
-                    department_id = table.Column<long>(type: "bigint", nullable: true),
                     is_active = table.Column<bool>(type: "boolean", nullable: false),
                     last_login_at = table.Column<DateTime>(type: "timestamp with time zone", nullable: true),
                     password_reset_token = table.Column<string>(type: "character varying(100)", maxLength: 100, nullable: true),
@@ -122,12 +101,6 @@ namespace AppTemplate.Infrastructure.Migrations
                 constraints: table =>
                 {
                     table.PrimaryKey("pk_users", x => x.id);
-                    table.ForeignKey(
-                        name: "fk_users_departments_department_id",
-                        column: x => x.department_id,
-                        principalTable: "departments",
-                        principalColumn: "id",
-                        onDelete: ReferentialAction.SetNull);
                 });
 
             migrationBuilder.CreateTable(
@@ -177,12 +150,6 @@ namespace AppTemplate.Infrastructure.Migrations
                 column: "user_id");
 
             migrationBuilder.CreateIndex(
-                name: "ix_departments_code",
-                table: "departments",
-                column: "code",
-                unique: true);
-
-            migrationBuilder.CreateIndex(
                 name: "ix_notifications_user_id_is_read",
                 table: "notifications",
                 columns: new[] { "user_id", "is_read" });
@@ -213,11 +180,6 @@ namespace AppTemplate.Infrastructure.Migrations
                 table: "uploaded_files",
                 column: "file_name",
                 unique: true);
-
-            migrationBuilder.CreateIndex(
-                name: "ix_users_department_id",
-                table: "users",
-                column: "department_id");
 
             migrationBuilder.CreateIndex(
                 name: "ix_users_email",
@@ -254,9 +216,6 @@ namespace AppTemplate.Infrastructure.Migrations
 
             migrationBuilder.DropTable(
                 name: "users");
-
-            migrationBuilder.DropTable(
-                name: "departments");
         }
     }
 }

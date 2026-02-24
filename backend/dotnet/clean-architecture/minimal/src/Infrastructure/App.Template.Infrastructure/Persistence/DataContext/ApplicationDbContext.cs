@@ -23,7 +23,6 @@ public class ApplicationDbContext : DbContext, IApplicationDbContext
     }
 
     public DbSet<User> Users { get; set; }
-    public DbSet<Department> Departments { get; set; }
     public DbSet<Notification> Notifications { get; set; }
     public DbSet<RefreshToken> RefreshTokens { get; set; }
     public DbSet<UploadedFile> UploadedFiles { get; set; }
@@ -182,28 +181,6 @@ public class ApplicationDbContext : DbContext, IApplicationDbContext
     {
         // Apply all configurations from this assembly (e.g., IEntityTypeConfiguration)
         modelBuilder.ApplyConfigurationsFromAssembly(Assembly.GetExecutingAssembly());
-
-        // Department configuration
-        modelBuilder.Entity<Department>(entity =>
-        {
-            entity.HasKey(e => e.Id);
-            entity.Property(e => e.Id).ValueGeneratedOnAdd();
-            entity.Property(e => e.Code).IsRequired().HasMaxLength(50);
-            entity.Property(e => e.Name).IsRequired().HasMaxLength(200);
-            entity.Property(e => e.Description).HasMaxLength(500);
-            entity.Property(e => e.IsActive).IsRequired();
-            entity.Property(e => e.CreatedAt).IsRequired();
-            entity.Property(e => e.UpdatedAt);
-            entity.Property(e => e.CreatedBy).HasMaxLength(100);
-            entity.Property(e => e.UpdatedBy).HasMaxLength(100);
-
-            entity.HasIndex(e => e.Code).IsUnique();
-
-            entity.HasMany(e => e.Users)
-                  .WithOne(u => u.Department)
-                  .HasForeignKey(u => u.DepartmentId)
-                  .OnDelete(DeleteBehavior.SetNull);
-        });
 
         // User configuration
         modelBuilder.Entity<User>(entity =>
