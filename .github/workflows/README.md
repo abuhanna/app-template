@@ -71,13 +71,13 @@ Add these secrets:
 | `SSH_PRIVATE_KEY` | SSH private key for server access | `-----BEGIN OPENSSH...` | All deployments |
 | `SERVER_HOST` | Server IP/hostname (via VPN) | `192.168.1.100` | All deployments |
 | `SERVER_USER` | SSH username | `deployer` | All deployments |
-| `DEPLOY_PATH` | Deployment directory on server | `/opt/gspe-bpm` | All deployments |
-| `DB_USER` | PostgreSQL username | `bpm_user` | All deployments |
+| `DEPLOY_PATH` | Deployment directory on server | `/opt/apptemplate` | All deployments |
+| `DB_USER` | PostgreSQL username | `apptemplate_user` | All deployments |
 | `DB_PASSWORD` | PostgreSQL password | `SecurePass123` | All deployments |
-| `DB_NAME` | Database name | `bpm_production` | All deployments |
+| `DB_NAME` | Database name | `apptemplate_production` | All deployments |
 | `JWT_SECRET` | JWT signing secret | `YourSecretKey` | All deployments |
-| `JWT_ISSUER` | JWT issuer | `GSpe.SSO` | All deployments |
-| `JWT_AUDIENCE` | JWT audience | `GSpe.BPM` | All deployments |
+| `JWT_ISSUER` | JWT issuer | `AppTemplate` | All deployments |
+| `JWT_AUDIENCE` | JWT audience | `AppTemplate` | All deployments |
 | `SSO_API_BASE_URL` | SSO API URL | `http://sso:8083` | All deployments |
 | `FRONTEND_PAT` | GitHub PAT to access frontend repo | `ghp_xxxxx...` | **Fullstack only** |
 
@@ -89,7 +89,7 @@ sudo apt-get update
 sudo apt-get install -y docker.io docker-compose
 
 # Create deployment directory
-mkdir -p /opt/gspe-bpm
+mkdir -p /opt/apptemplate
 
 # Add SSH public key
 echo "your-public-key" >> ~/.ssh/authorized_keys
@@ -124,7 +124,7 @@ git push origin main
 ssh user@server
 
 # Check containers
-cd /opt/gspe-bpm
+cd /opt/apptemplate
 docker-compose ps
 
 # View logs

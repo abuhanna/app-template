@@ -20,11 +20,11 @@
 backend/
 ├── src/
 │   ├── Core/
-│   │   ├── Gspe.Bpm.Domain/              # Entities, Enums (namespace: AppTemplate.Domain)
+│   │   ├── App.Template.Domain/              # Entities, Enums (namespace: AppTemplate.Domain)
 │   │   │   ├── Entities/                 # User, Department, Notification
 │   │   │   └── Enums/                    # NotificationType
 │   │   │
-│   │   └── Gspe.Bpm.Application/         # Use Cases, Interfaces, DTOs (namespace: AppTemplate.Application)
+│   │   └── App.Template.Application/         # Use Cases, Interfaces, DTOs (namespace: AppTemplate.Application)
 │   │       ├── Features/                 # CQRS Commands & Queries
 │   │       │   ├── Authentication/       # Login, Logout, GetCurrentUser
 │   │       │   ├── UserManagement/       # User CRUD, ChangePassword
@@ -34,7 +34,7 @@ backend/
 │   │       └── Interfaces/               # Service interfaces
 │   │
 │   ├── Infrastructure/
-│   │   └── Gspe.Bpm.Infrastructure/      # External Concerns (namespace: AppTemplate.Infrastructure)
+│   │   └── App.Template.Infrastructure/      # External Concerns (namespace: AppTemplate.Infrastructure)
 │   │       ├── Persistence/              # EF Core DbContext
 │   │       │   ├── DataContext/
 │   │       │   └── Migrations/
@@ -46,17 +46,17 @@ backend/
 │   │       └── Hubs/                     # SignalR hubs
 │   │
 │   └── Presentation/
-│       └── Gspe.Bpm.WebAPI/              # ASP.NET Core Web API (namespace: AppTemplate.WebAPI)
+│       └── App.Template.WebAPI/              # ASP.NET Core Web API (namespace: AppTemplate.WebAPI)
 │           ├── Controllers/              # API endpoints
 │           ├── Middleware/               # Custom middleware
 │           └── Program.cs                # Application entry point
 │
 └── tests/
-    ├── Gspe.Bpm.Domain.Tests/
-    └── Gspe.Bpm.Application.Tests/
+    ├── App.Template.Domain.Tests/
+    └── App.Template.Application.Tests/
 ```
 
-**Note**: Folder names use `Gspe.Bpm.*` but namespaces are `AppTemplate.*` (configured via .csproj).
+**Note**: Folder names use `App.Template.*` but namespaces are `AppTemplate.*` (configured via .csproj).
 
 ## Quick Start
 
@@ -68,7 +68,7 @@ backend/
 
 1. **Navigate to WebAPI project**
    ```bash
-   cd backend/src/Presentation/Gspe.Bpm.WebAPI
+   cd backend/src/Presentation/App.Template.WebAPI
    ```
 
 2. **Create appsettings.Development.json**
@@ -124,7 +124,7 @@ dotnet restore
 dotnet build
 
 # Run API
-dotnet run --project src/Presentation/Gspe.Bpm.WebAPI
+dotnet run --project src/Presentation/App.Template.WebAPI
 
 # Clean build artifacts
 dotnet clean
@@ -137,7 +137,7 @@ dotnet clean
 dotnet test
 
 # Run specific test project
-dotnet test tests/Gspe.Bpm.Application.Tests
+dotnet test tests/App.Template.Application.Tests
 
 # Run with coverage
 dotnet test --collect:"XPlat Code Coverage"
@@ -162,7 +162,7 @@ dotnet build /p:TreatWarningsAsErrors=true
 
 Migrations are **automatically applied** when running in Development environment. Just start the app:
 ```bash
-dotnet run --project src/Presentation/Gspe.Bpm.WebAPI
+dotnet run --project src/Presentation/App.Template.WebAPI
 ```
 
 ### Manual Migration Commands
@@ -170,33 +170,33 @@ dotnet run --project src/Presentation/Gspe.Bpm.WebAPI
 **Add New Migration:**
 ```bash
 dotnet ef migrations add MigrationName \
-  --project src/Infrastructure/Gspe.Bpm.Infrastructure \
-  --startup-project src/Presentation/Gspe.Bpm.WebAPI
+  --project src/Infrastructure/App.Template.Infrastructure \
+  --startup-project src/Presentation/App.Template.WebAPI
 ```
 
 **Apply Migrations:**
 ```bash
 dotnet ef database update \
-  --project src/Infrastructure/Gspe.Bpm.Infrastructure \
-  --startup-project src/Presentation/Gspe.Bpm.WebAPI
+  --project src/Infrastructure/App.Template.Infrastructure \
+  --startup-project src/Presentation/App.Template.WebAPI
 ```
 
 **Remove Last Migration:**
 ```bash
 dotnet ef migrations remove \
-  --project src/Infrastructure/Gspe.Bpm.Infrastructure \
-  --startup-project src/Presentation/Gspe.Bpm.WebAPI
+  --project src/Infrastructure/App.Template.Infrastructure \
+  --startup-project src/Presentation/App.Template.WebAPI
 ```
 
 **Reset Database (WARNING: Deletes all data):**
 ```bash
 dotnet ef database drop \
-  --project src/Infrastructure/Gspe.Bpm.Infrastructure \
-  --startup-project src/Presentation/Gspe.Bpm.WebAPI
+  --project src/Infrastructure/App.Template.Infrastructure \
+  --startup-project src/Presentation/App.Template.WebAPI
 
 dotnet ef database update \
-  --project src/Infrastructure/Gspe.Bpm.Infrastructure \
-  --startup-project src/Presentation/Gspe.Bpm.WebAPI
+  --project src/Infrastructure/App.Template.Infrastructure \
+  --startup-project src/Presentation/App.Template.WebAPI
 ```
 
 ### Adding New Entity Fields
@@ -214,8 +214,8 @@ public string NewField { get; set; } = "default_value";
 After modifying entity, create migration:
 ```bash
 dotnet ef migrations add AddNewField \
-  --project src/Infrastructure/Gspe.Bpm.Infrastructure \
-  --startup-project src/Presentation/Gspe.Bpm.WebAPI
+  --project src/Infrastructure/App.Template.Infrastructure \
+  --startup-project src/Presentation/App.Template.WebAPI
 ```
 
 ## Architecture Patterns
@@ -262,7 +262,7 @@ public record CreateUserCommand : IRequest<UserDto>
 // Handler
 public class CreateUserCommandHandler : IRequestHandler<CreateUserCommand, UserDto>
 {
-    private readonly IBpmDbContext _context;
+    private readonly IAppTemplateDbContext _context;
     private readonly IPasswordHashService _passwordHashService;
 
     public async Task<UserDto> Handle(CreateUserCommand request, CancellationToken ct)
@@ -293,7 +293,7 @@ public record GetUserByIdQuery(long Id) : IRequest<UserDto?>;
 // Handler
 public class GetUserByIdQueryHandler : IRequestHandler<GetUserByIdQuery, UserDto?>
 {
-    private readonly IBpmDbContext _context;
+    private readonly IAppTemplateDbContext _context;
 
     public async Task<UserDto?> Handle(GetUserByIdQuery request, CancellationToken ct)
     {
@@ -345,9 +345,9 @@ public class Product
 
 **2. Application Layer**
 
-Add `DbSet<Product>` to `IBpmDbContext.cs`:
+Add `DbSet<Product>` to `IAppTemplateDbContext.cs`:
 ```csharp
-public interface IBpmDbContext
+public interface IAppTemplateDbContext
 {
     DbSet<Product> Products { get; }
     // ... other DbSets
@@ -371,9 +371,9 @@ public record CreateProductCommand : IRequest<ProductDto>
 // CreateProductCommandHandler.cs
 public class CreateProductCommandHandler : IRequestHandler<CreateProductCommand, ProductDto>
 {
-    private readonly IBpmDbContext _context;
+    private readonly IAppTemplateDbContext _context;
 
-    public CreateProductCommandHandler(IBpmDbContext context)
+    public CreateProductCommandHandler(IAppTemplateDbContext context)
     {
         _context = context;
     }
@@ -392,9 +392,9 @@ public class CreateProductCommandHandler : IRequestHandler<CreateProductCommand,
 
 **3. Infrastructure Layer**
 
-Add `DbSet<Product>` to `BpmDbContext.cs`:
+Add `DbSet<Product>` to `AppTemplateDbContext.cs`:
 ```csharp
-public class BpmDbContext : DbContext, IBpmDbContext
+public class AppTemplateDbContext : DbContext, IAppTemplateDbContext
 {
     public DbSet<Product> Products { get; set; }
     // ... other DbSets
@@ -417,8 +417,8 @@ public class BpmDbContext : DbContext, IBpmDbContext
 Create migration:
 ```bash
 dotnet ef migrations add AddProductEntity \
-  --project src/Infrastructure/Gspe.Bpm.Infrastructure \
-  --startup-project src/Presentation/Gspe.Bpm.WebAPI
+  --project src/Infrastructure/App.Template.Infrastructure \
+  --startup-project src/Presentation/App.Template.WebAPI
 ```
 
 **4. Presentation Layer**
@@ -456,7 +456,7 @@ public class ProductsController : ControllerBase
 **5. Run Migration**
 ```bash
 # Auto-applied in Development when you run the app
-dotnet run --project src/Presentation/Gspe.Bpm.WebAPI
+dotnet run --project src/Presentation/App.Template.WebAPI
 ```
 
 Done! New endpoints available:
@@ -562,12 +562,12 @@ public class MyCommandHandler
 
 ```
 tests/
-├── Gspe.Bpm.Domain.Tests/
+├── App.Template.Domain.Tests/
 │   └── Entities/
 │       ├── UserTests.cs
 │       └── DepartmentTests.cs
 │
-└── Gspe.Bpm.Application.Tests/
+└── App.Template.Application.Tests/
     └── Features/
         └── UserManagement/
             └── Commands/

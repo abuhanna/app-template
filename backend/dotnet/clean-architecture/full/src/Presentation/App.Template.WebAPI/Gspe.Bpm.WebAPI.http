@@ -1,6 +1,0 @@
-@Gspe.Bpm.WebAPI_HostAddress = http://localhost:5100
-
-GET {{Gspe.Bpm.WebAPI_HostAddress}}/weatherforecast/
-Accept: application/json
-
-###

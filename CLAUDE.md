@@ -166,7 +166,7 @@ WebAPI → Application → Domain
 - DTOs and interfaces for infrastructure services
 
 ### Infrastructure Layer (`App.Template.Infrastructure`)
-- `BpmDbContext` with EF Core + PostgreSQL (Npgsql)
+- `AppTemplateDbContext` with EF Core + PostgreSQL (Npgsql)
 - Service implementations: `JwtTokenService`, `PasswordHashService`, `EmailService`
 - SignalR Hub for real-time notifications
 
@@ -200,7 +200,7 @@ WebAPI → Application → Domain
 ## Key Patterns
 
 ### Backend
-- **No Repository Pattern**: Use `IBpmDbContext` directly
+- **No Repository Pattern**: Use `IAppTemplateDbContext` directly
 - **CQRS**: Commands mutate, Queries read
 - **Rich Domain Models**: Business logic in entities, not handlers
 
@@ -221,7 +221,7 @@ WebAPI → Application → Domain
 
 ### Backend Feature
 1. Create entity in `Domain/Entities`
-2. Add `DbSet<TEntity>` to `IBpmDbContext` and `BpmDbContext`
+2. Add `DbSet<TEntity>` to `IAppTemplateDbContext` and `AppTemplateDbContext`
 3. Create DTOs in `Application/DTOs`
 4. Create Commands/Queries in `Application/Features/{Area}/`
 5. Add controller endpoints in `WebAPI/Controllers`

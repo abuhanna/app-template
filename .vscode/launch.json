@@ -6,9 +6,9 @@
       "type": "coreclr",
       "request": "launch",
       "preLaunchTask": "build-backend",
-      "program": "${workspaceFolder}/backend/src/Presentation/Gspe.Bpm.WebAPI/bin/Debug/net8.0/AppTemplate.WebAPI.dll",
+      "program": "${workspaceFolder}/backend/src/Presentation/App.Template.WebAPI/bin/Debug/net8.0/AppTemplate.WebAPI.dll",
       "args": [],
-      "cwd": "${workspaceFolder}/backend/src/Presentation/Gspe.Bpm.WebAPI",
+      "cwd": "${workspaceFolder}/backend/src/Presentation/App.Template.WebAPI",
       "stopAtEntry": false,
       "serverReadyAction": {
         "action": "openExternally",

@@ -52,7 +52,7 @@ Follow our [Git Workflow](#git-workflow) for branch naming and management.
 
 **Backend Development:**
 ```bash
-cd backend/src/Presentation/Gspe.Bpm.WebAPI
+cd backend/src/Presentation/App.Template.WebAPI
 dotnet run
 
 # Run tests

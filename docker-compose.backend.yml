@@ -36,7 +36,7 @@ services:
     environment:
       - ASPNETCORE_ENVIRONMENT=${ASPNETCORE_ENVIRONMENT:-Development}
       - ASPNETCORE_URLS=http://+:8080
-      - ConnectionStrings__BpmDb=Host=db;Port=5432;Database=${DB_NAME:-apptemplate_dev};Username=${DB_USER:-postgres};Password=${DB_PASSWORD:-postgres}
+      - ConnectionStrings__AppTemplateDb=Host=db;Port=5432;Database=${DB_NAME:-apptemplate_dev};Username=${DB_USER:-postgres};Password=${DB_PASSWORD:-postgres}
       - Jwt__Secret=${JWT_SECRET:-your-dev-secret-key-minimum-32-characters-long}
       - Jwt__Issuer=${JWT_ISSUER:-AppTemplate}
       - Jwt__Audience=${JWT_AUDIENCE:-AppTemplate}

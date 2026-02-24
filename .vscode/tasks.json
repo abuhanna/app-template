@@ -5,7 +5,7 @@
       "label": "build-backend",
       "command": "dotnet",
       "type": "process",
-      "args": ["build", "${workspaceFolder}/backend/Gspe.Bpm.sln"],
+      "args": ["build", "${workspaceFolder}/backend/App.Template.sln"],
       "problemMatcher": "$msCompile",
       "group": "build"
     },
@@ -20,7 +20,7 @@
       "label": "test-backend",
       "command": "dotnet",
       "type": "process",
-      "args": ["test", "${workspaceFolder}/backend/Gspe.Bpm.sln"],
+      "args": ["test", "${workspaceFolder}/backend/App.Template.sln"],
       "problemMatcher": "$msCompile",
       "group": "test"
     },
