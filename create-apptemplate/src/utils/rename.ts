@@ -49,12 +49,16 @@ async function renameDotNetProject(
 
   // Define folder mappings
   const folderMappings = [
+    // Clean architecture (multi-project layout)
     ['src/Core/App.Template.Domain', `src/Core/${newDotName}.Domain`],
     ['src/Core/App.Template.Application', `src/Core/${newDotName}.Application`],
     ['src/Infrastructure/App.Template.Infrastructure', `src/Infrastructure/${newDotName}.Infrastructure`],
     ['src/Presentation/App.Template.WebAPI', `src/Presentation/${newDotName}.WebAPI`],
     ['tests/App.Template.Domain.Tests', `tests/${newDotName}.Domain.Tests`],
     ['tests/App.Template.Application.Tests', `tests/${newDotName}.Application.Tests`],
+    // Feature and NLayer architectures (single-project layout)
+    ['src/App.Template.Api', `src/${newDotName}.Api`],
+    ['tests/App.Template.Api.Tests', `tests/${newDotName}.Api.Tests`],
   ];
 
   // Rename folders
@@ -89,6 +93,57 @@ async function renameDotNetProject(
 }
 
 /**
+ * Rename a Java package root directory and clean up empty parent directories.
+ *
+ * Edge cases handled:
+ * - oldDir does not exist: no-op
+ * - oldDir === newDir (same resolved path): no-op
+ * - newDir already exists: merge contents entry-by-entry then remove oldDir
+ * - Intermediate parent directories for newDir are created automatically
+ * - Empty ancestor directories of oldDir (up to but not including java/) are removed
+ */
+function renameJavaPackageDir(oldDir: string, newDir: string): void {
+  if (!fs.existsSync(oldDir)) return;
+
+  const resolvedOld = path.resolve(oldDir);
+  const resolvedNew = path.resolve(newDir);
+  if (resolvedOld === resolvedNew) return;
+
+  if (fs.existsSync(resolvedNew)) {
+    // Merge: move every entry from oldDir into existing newDir
+    for (const entry of fs.readdirSync(resolvedOld, { withFileTypes: true })) {
+      fs.renameSync(
+        path.join(resolvedOld, entry.name),
+        path.join(resolvedNew, entry.name)
+      );
+    }
+    fs.rmdirSync(resolvedOld);
+  } else {
+    // Simple rename: ensure parent directory exists first
+    fs.mkdirSync(path.dirname(resolvedNew), { recursive: true });
+    fs.renameSync(resolvedOld, resolvedNew);
+  }
+
+  // Remove now-empty ancestor directories up to but not including the java/ root
+  // (e.g., leftover com/ after moving com/apptemplate/ to mycompany/myapp/)
+  let current = path.dirname(resolvedOld);
+  while (path.basename(current) !== 'java') {
+    if (!fs.existsSync(current)) break;
+    try {
+      const remaining = fs.readdirSync(current);
+      if (remaining.length === 0) {
+        fs.rmdirSync(current);
+        current = path.dirname(current);
+      } else {
+        break;
+      }
+    } catch {
+      break;
+    }
+  }
+}
+
+/**
  * Rename Spring Boot project structure
  */
 async function renameSpringProject(
@@ -108,25 +163,74 @@ async function renameSpringProject(
 
   if (!fs.existsSync(backendDir)) return;
 
-  // Convert project name to Java package format
-  const packageName = newDotName.toLowerCase().replace(/\./g, '.');
-  const artifactId = newDotName.toLowerCase().replace(/\./g, '-');
+  // Derive naming variants from user input (e.g. "MyCompany.MyApp")
+  const packageName = newDotName.toLowerCase().replace(/\./g, '.'); // mycompany.myapp
+  const artifactId  = newDotName.toLowerCase().replace(/\./g, '-'); // mycompany-myapp
+  const pkgPath     = newDotName.toLowerCase().replace(/\./g, '/'); // mycompany/myapp
+  const compactName = newDotName.replace(/\./g, '').toLowerCase();  // mycompanymyapp
+  const displayName = newDotName.replace(/\./g, '');                // MyCompanyMyApp
 
-  // Update pom.xml
-  const pomPath = path.join(backendDir, 'pom.xml');
-  if (fs.existsSync(pomPath)) {
-    let content = fs.readFileSync(pomPath, 'utf-8');
-    content = content
-      .replace(/<groupId>com\.apptemplate<\/groupId>/g, `<groupId>${packageName}<\/groupId>`)
-      .replace(/<artifactId>apptemplate<\/artifactId>/g, `<artifactId>${artifactId}<\/artifactId>`)
-      .replace(/com\.apptemplate/g, packageName);
-    fs.writeFileSync(pomPath, content);
-  }
+  const isClean = config.architecture === 'clean';
 
-  // Update Java files
-  await updateFileContents(backendDir, ['.java'], (content) => {
-    return content.replace(/com\.apptemplate/g, packageName);
+  // Step 1: Update ALL XML files (root pom.xml + all module pom.xml files)
+  // Clean arch has 5 pom.xml files (root + api, application, domain, infrastructure)
+  await updateFileContents(backendDir, ['.xml'], (content) => {
+    return content
+      .replace(/<artifactId>app-template<\/artifactId>/g, `<artifactId>${artifactId}</artifactId>`)
+      .replace(/com\.apptemplate/g, packageName)
+      .replace(/AppTemplate/g, displayName);
   });
+
+  // Step 2: Update YAML and properties config files (application.example.yml etc.)
+  await updateFileContents(backendDir, ['.yml', '.yaml', '.properties'], (content) => {
+    if (isClean) {
+      // Clean arch uses bare "apptemplate" (no com. prefix) in logging keys and config
+      // Order matters: specific patterns first, then word-boundary catch-all
+      return content
+        .replace(/AppTemplate/g, displayName)
+        .replace(/apptemplate\.local/g, `${compactName}.local`)
+        .replace(/apptemplate_(\w+)/g, `${compactName}_$1`)
+        .replace(/\bapptemplate\b/g, packageName);
+    } else {
+      return content
+        .replace(/AppTemplate/g, displayName)
+        .replace(/com\.apptemplate/g, packageName);
+    }
+  });
+
+  // Step 3: Update Java source file contents
+  await updateFileContents(backendDir, ['.java'], (content) => {
+    if (isClean) {
+      // Clean arch packages: apptemplate.api, apptemplate.domain, etc. (no com. prefix)
+      return content
+        .replace(/apptemplate\.local/g, `${compactName}.local`)
+        .replace(/\bapptemplate\b/g, packageName);
+    } else {
+      // Feature/NLayer packages: com.apptemplate.api.*
+      return content.replace(/com\.apptemplate/g, packageName);
+    }
+  });
+
+  // Step 4: Rename Java source directories to match the new package structure
+  // (Must run after content updates so getAllFiles() can walk original paths)
+  if (isClean) {
+    // Clean arch: each module has its own java/apptemplate/ root
+    const modules = ['api', 'application', 'domain', 'infrastructure'];
+    for (const module of modules) {
+      for (const sourceRoot of ['src/main/java', 'src/test/java']) {
+        const oldDir = path.join(backendDir, module, sourceRoot, 'apptemplate');
+        const newDir = path.join(backendDir, module, sourceRoot, pkgPath);
+        renameJavaPackageDir(oldDir, newDir);
+      }
+    }
+  } else {
+    // Feature/NLayer: single project with src/main/java/com/apptemplate/
+    for (const sourceRoot of ['src/main/java', 'src/test/java']) {
+      const oldDir = path.join(backendDir, sourceRoot, 'com', 'apptemplate');
+      const newDir = path.join(backendDir, sourceRoot, ...packageName.split('.'));
+      renameJavaPackageDir(oldDir, newDir);
+    }
+  }
 }
 
 /**
@@ -222,7 +326,7 @@ function getAllFiles(dir: string): string[] {
 
     if (entry.isDirectory()) {
       // Skip node_modules and other common directories
-      if (!['node_modules', '.git', 'bin', 'obj', 'dist', 'build'].includes(entry.name)) {
+      if (!['node_modules', '.git', 'bin', 'obj', 'dist', 'build', 'target'].includes(entry.name)) {
         files.push(...getAllFiles(fullPath));
       }
     } else {
