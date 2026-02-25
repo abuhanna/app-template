@@ -10,7 +10,6 @@ namespace App.Template.Api.Data;
 
 public class AppDbContext : DbContext
 {
-    public DbSet<User> Users => Set<User>();
     public DbSet<AuditLog> AuditLogs => Set<AuditLog>();
     public DbSet<UploadedFile> UploadedFiles => Set<UploadedFile>();
     public DbSet<Notification> Notifications => Set<Notification>();
@@ -25,19 +24,6 @@ public class AppDbContext : DbContext
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
         base.OnModelCreating(modelBuilder);
-
-        // User entity configuration
-        modelBuilder.Entity<User>(entity =>
-        {
-            entity.HasKey(e => e.Id);
-            entity.Property(e => e.Name).IsRequired().HasMaxLength(100);
-            entity.Property(e => e.Username).IsRequired().HasMaxLength(100);
-            entity.Property(e => e.Email).IsRequired().HasMaxLength(255);
-            entity.Property(e => e.Role).HasMaxLength(50).HasDefaultValue("User");
-            entity.Property(e => e.PasswordHash).HasMaxLength(500);
-            entity.HasIndex(e => e.Email).IsUnique();
-            entity.HasIndex(e => e.Username).IsUnique();
-        });
 
         // UploadedFile entity configuration
         modelBuilder.Entity<UploadedFile>(entity =>

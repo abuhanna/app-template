@@ -7,20 +7,20 @@ using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 namespace App.Template.Api.Migrations
 {
     /// <inheritdoc />
-    public partial class AlignWithCleanArch : Migration
+    public partial class InitialCreate : Migration
     {
         /// <inheritdoc />
         protected override void Up(MigrationBuilder migrationBuilder)
         {
             migrationBuilder.CreateTable(
-                name: "audit_logs",
+                name: "AuditLogs",
                 columns: table => new
                 {
                     id = table.Column<long>(type: "bigint", nullable: false)
                         .Annotation("Npgsql:ValueGenerationStrategy", NpgsqlValueGenerationStrategy.IdentityByDefaultColumn),
                     entity_name = table.Column<string>(type: "character varying(100)", maxLength: 100, nullable: false),
                     entity_id = table.Column<string>(type: "character varying(50)", maxLength: 50, nullable: false),
-                    action = table.Column<string>(type: "text", nullable: false),
+                    action = table.Column<string>(type: "character varying(20)", maxLength: 20, nullable: false),
                     old_values = table.Column<string>(type: "text", nullable: true),
                     new_values = table.Column<string>(type: "text", nullable: true),
                     affected_columns = table.Column<string>(type: "text", nullable: true),
@@ -41,9 +41,9 @@ namespace App.Template.Api.Migrations
                     user_id = table.Column<string>(type: "character varying(100)", maxLength: 100, nullable: false),
                     title = table.Column<string>(type: "character varying(200)", maxLength: 200, nullable: false),
                     message = table.Column<string>(type: "character varying(500)", maxLength: 500, nullable: false),
-                    type = table.Column<string>(type: "text", nullable: false),
-                    reference_id = table.Column<string>(type: "character varying(50)", maxLength: 50, nullable: true),
-                    reference_type = table.Column<string>(type: "character varying(50)", maxLength: 50, nullable: true),
+                    type = table.Column<string>(type: "character varying(20)", maxLength: 20, nullable: false),
+                    reference_id = table.Column<string>(type: "character varying(100)", maxLength: 100, nullable: true),
+                    reference_type = table.Column<string>(type: "character varying(100)", maxLength: 100, nullable: true),
                     is_read = table.Column<bool>(type: "boolean", nullable: false),
                     created_at = table.Column<DateTime>(type: "timestamp with time zone", nullable: false)
                 },
@@ -53,70 +53,47 @@ namespace App.Template.Api.Migrations
                 });
 
             migrationBuilder.CreateTable(
-                name: "uploaded_files",
+                name: "UploadedFiles",
                 columns: table => new
                 {
                     id = table.Column<long>(type: "bigint", nullable: false)
                         .Annotation("Npgsql:ValueGenerationStrategy", NpgsqlValueGenerationStrategy.IdentityByDefaultColumn),
                     file_name = table.Column<string>(type: "character varying(255)", maxLength: 255, nullable: false),
-                    original_file_name = table.Column<string>(type: "character varying(255)", maxLength: 255, nullable: false),
+                    original_file_name = table.Column<string>(type: "character varying(500)", maxLength: 500, nullable: false),
                     content_type = table.Column<string>(type: "character varying(100)", maxLength: 100, nullable: false),
                     file_size = table.Column<long>(type: "bigint", nullable: false),
                     storage_path = table.Column<string>(type: "character varying(500)", maxLength: 500, nullable: false),
-                    description = table.Column<string>(type: "character varying(500)", maxLength: 500, nullable: true),
-                    category = table.Column<string>(type: "character varying(100)", maxLength: 100, nullable: true),
                     is_public = table.Column<bool>(type: "boolean", nullable: false),
+                    description = table.Column<string>(type: "character varying(1000)", maxLength: 1000, nullable: true),
+                    category = table.Column<string>(type: "character varying(100)", maxLength: 100, nullable: true),
                     created_at = table.Column<DateTime>(type: "timestamp with time zone", nullable: false),
-                    created_by = table.Column<string>(type: "character varying(100)", maxLength: 100, nullable: true),
+                    created_by = table.Column<string>(type: "text", nullable: true),
                     updated_at = table.Column<DateTime>(type: "timestamp with time zone", nullable: true),
-                    updated_by = table.Column<string>(type: "character varying(100)", maxLength: 100, nullable: true)
+                    updated_by = table.Column<string>(type: "text", nullable: true)
                 },
                 constraints: table =>
                 {
                     table.PrimaryKey("pk_uploaded_files", x => x.id);
                 });
 
-            migrationBuilder.CreateTable(
-                name: "users",
-                columns: table => new
-                {
-                    id = table.Column<long>(type: "bigint", nullable: false)
-                        .Annotation("Npgsql:ValueGenerationStrategy", NpgsqlValueGenerationStrategy.IdentityByDefaultColumn),
-                    username = table.Column<string>(type: "character varying(100)", maxLength: 100, nullable: false),
-                    name = table.Column<string>(type: "character varying(200)", maxLength: 200, nullable: false),
-                    email = table.Column<string>(type: "character varying(255)", maxLength: 255, nullable: false),
-                    password_hash = table.Column<string>(type: "character varying(500)", maxLength: 500, nullable: true),
-                    role = table.Column<string>(type: "character varying(50)", maxLength: 50, nullable: false),
-                    is_active = table.Column<bool>(type: "boolean", nullable: false),
-                    last_login_at = table.Column<DateTime>(type: "timestamp with time zone", nullable: true),
-                    created_at = table.Column<DateTime>(type: "timestamp with time zone", nullable: false),
-                    created_by = table.Column<string>(type: "character varying(100)", maxLength: 100, nullable: true),
-                    updated_at = table.Column<DateTime>(type: "timestamp with time zone", nullable: true),
-                    updated_by = table.Column<string>(type: "character varying(100)", maxLength: 100, nullable: true)
-                },
-                constraints: table =>
-                {
-                    table.PrimaryKey("pk_users", x => x.id);
-                });
-
             migrationBuilder.CreateIndex(
                 name: "ix_audit_logs_entity_id",
-                table: "audit_logs",
+                table: "AuditLogs",
                 column: "entity_id");
 
             migrationBuilder.CreateIndex(
                 name: "ix_audit_logs_entity_name",
-                table: "audit_logs",
+                table: "AuditLogs",
                 column: "entity_name");
 
             migrationBuilder.CreateIndex(
                 name: "ix_audit_logs_timestamp",
-                table: "audit_logs",
+                table: "AuditLogs",
                 column: "timestamp");
 
             migrationBuilder.CreateIndex(
                 name: "ix_audit_logs_user_id",
-                table: "audit_logs",
+                table: "AuditLogs",
                 column: "user_id");
 
             migrationBuilder.CreateIndex(
@@ -126,30 +103,18 @@ namespace App.Template.Api.Migrations
 
             migrationBuilder.CreateIndex(
                 name: "ix_uploaded_files_category",
-                table: "uploaded_files",
+                table: "UploadedFiles",
                 column: "category");
 
             migrationBuilder.CreateIndex(
                 name: "ix_uploaded_files_created_by",
-                table: "uploaded_files",
+                table: "UploadedFiles",
                 column: "created_by");
 
             migrationBuilder.CreateIndex(
                 name: "ix_uploaded_files_file_name",
-                table: "uploaded_files",
+                table: "UploadedFiles",
                 column: "file_name",
-                unique: true);
-
-            migrationBuilder.CreateIndex(
-                name: "ix_users_email",
-                table: "users",
-                column: "email",
-                unique: true);
-
-            migrationBuilder.CreateIndex(
-                name: "ix_users_username",
-                table: "users",
-                column: "username",
                 unique: true);
         }
 
@@ -157,16 +122,13 @@ namespace App.Template.Api.Migrations
         protected override void Down(MigrationBuilder migrationBuilder)
         {
             migrationBuilder.DropTable(
-                name: "audit_logs");
+                name: "AuditLogs");
 
             migrationBuilder.DropTable(
                 name: "notifications");
 
             migrationBuilder.DropTable(
-                name: "uploaded_files");
-
-            migrationBuilder.DropTable(
-                name: "users");
+                name: "UploadedFiles");
         }
     }
 }

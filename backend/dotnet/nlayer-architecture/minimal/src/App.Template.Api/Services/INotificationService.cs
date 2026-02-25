@@ -6,6 +6,4 @@ public interface INotificationService
 {
     Task NotifyUserAsync(string userId, string title, string message, NotificationType type,
         string? referenceId = null, string? referenceType = null, CancellationToken ct = default);
-    Task NotifyAdminAsync(string title, string message, NotificationType type,
-        string? referenceId = null, string? referenceType = null, CancellationToken ct = default);
 }

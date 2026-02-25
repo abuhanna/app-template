@@ -7,7 +7,6 @@ using Serilog;
 using App.Template.Api.Configuration;
 using App.Template.Api.Data;
 using App.Template.Api.Extensions;
-using App.Template.Api.Infrastructure;
 using App.Template.Api.Infrastructure.Hubs;
 using App.Template.Api.Infrastructure.SignalR;
 using App.Template.Api.Middleware;
@@ -82,7 +81,7 @@ builder.Services.AddAuthentication(options =>
         ValidateIssuerSigningKey = true,
         ValidIssuer = jwtIssuer,
         ValidAudience = jwtAudience,
-        IssuerSigningKey = JwtSigningKeyResolver.ResolveSigningKey(jwtSecret),
+        IssuerSigningKey = JwtTokenGenerator.ResolveSigningKey(jwtSecret),
         TryAllIssuerSigningKeys = true,
         ClockSkew = TimeSpan.Zero
     };

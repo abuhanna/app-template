@@ -81,7 +81,7 @@ builder.Services.AddAuthentication(options =>
         ValidateIssuerSigningKey = true,
         ValidIssuer = jwtIssuer,
         ValidAudience = jwtAudience,
-        IssuerSigningKey = JwtSigningKeyResolver.ResolveSigningKey(jwtSecret),
+        IssuerSigningKey = JwtTokenGenerator.ResolveSigningKey(jwtSecret),
         TryAllIssuerSigningKeys = true,
         ClockSkew = TimeSpan.Zero
     };

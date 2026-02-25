@@ -22,9 +22,7 @@ public class ApplicationDbContext : DbContext, IApplicationDbContext
         _currentUserService = currentUserService;
     }
 
-    public DbSet<User> Users { get; set; }
     public DbSet<Notification> Notifications { get; set; }
-    public DbSet<RefreshToken> RefreshTokens { get; set; }
     public DbSet<UploadedFile> UploadedFiles { get; set; }
     public DbSet<AuditLog> AuditLogs { get; set; }
 
@@ -32,7 +30,6 @@ public class ApplicationDbContext : DbContext, IApplicationDbContext
     private static readonly HashSet<Type> ExcludedFromAudit = new()
     {
         typeof(AuditLog),
-        typeof(RefreshToken),
         typeof(Notification)
     };
 
@@ -182,30 +179,6 @@ public class ApplicationDbContext : DbContext, IApplicationDbContext
         // Apply all configurations from this assembly (e.g., IEntityTypeConfiguration)
         modelBuilder.ApplyConfigurationsFromAssembly(Assembly.GetExecutingAssembly());
 
-        // User configuration
-        modelBuilder.Entity<User>(entity =>
-        {
-            entity.HasKey(e => e.Id);
-            entity.Property(e => e.Id).ValueGeneratedOnAdd();
-            entity.Property(e => e.Username).IsRequired().HasMaxLength(100);
-            entity.Property(e => e.Email).IsRequired().HasMaxLength(255);
-            entity.Property(e => e.PasswordHash).IsRequired().HasMaxLength(255);
-            entity.Property(e => e.Name).HasMaxLength(200);
-            entity.Property(e => e.Role).HasMaxLength(50);
-            entity.Property(e => e.IsActive).IsRequired();
-            entity.Property(e => e.CreatedAt).IsRequired();
-            entity.Property(e => e.UpdatedAt);
-            entity.Property(e => e.CreatedBy).HasMaxLength(100);
-            entity.Property(e => e.UpdatedBy).HasMaxLength(100);
-            entity.Property(e => e.LastLoginAt);
-            entity.Property(e => e.PasswordResetToken).HasMaxLength(100);
-            entity.Property(e => e.PasswordResetTokenExpiry);
-
-            entity.HasIndex(e => e.Username).IsUnique();
-            entity.HasIndex(e => e.Email).IsUnique();
-            entity.HasIndex(e => e.PasswordResetToken);
-        });
-
         // Notification configuration
         modelBuilder.Entity<Notification>(entity =>
         {
@@ -221,29 +194,6 @@ public class ApplicationDbContext : DbContext, IApplicationDbContext
             entity.Property(e => e.CreatedAt).IsRequired();
 
             entity.HasIndex(e => new { e.UserId, e.IsRead });
-        });
-
-        // RefreshToken configuration
-        modelBuilder.Entity<RefreshToken>(entity =>
-        {
-            entity.HasKey(e => e.Id);
-            entity.Property(e => e.Id).ValueGeneratedOnAdd();
-            entity.Property(e => e.Token).IsRequired().HasMaxLength(255);
-            entity.Property(e => e.UserId).IsRequired();
-            entity.Property(e => e.ExpiresAt).IsRequired();
-            entity.Property(e => e.CreatedAt).IsRequired();
-            entity.Property(e => e.RevokedAt);
-            entity.Property(e => e.ReplacedByToken).HasMaxLength(255);
-            entity.Property(e => e.CreatedByIp).HasMaxLength(50);
-            entity.Property(e => e.RevokedByIp).HasMaxLength(50);
-
-            entity.HasIndex(e => e.Token).IsUnique();
-            entity.HasIndex(e => e.UserId);
-
-            entity.HasOne(e => e.User)
-                  .WithMany()
-                  .HasForeignKey(e => e.UserId)
-                  .OnDelete(DeleteBehavior.Cascade);
         });
 
         // UploadedFile configuration

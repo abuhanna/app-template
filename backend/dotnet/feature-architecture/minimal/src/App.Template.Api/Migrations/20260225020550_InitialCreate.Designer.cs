@@ -12,8 +12,8 @@ using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 namespace App.Template.Api.Migrations
 {
     [DbContext(typeof(AppDbContext))]
-    [Migration("20260221101104_AlignWithCleanArch")]
-    partial class AlignWithCleanArch
+    [Migration("20260225020550_InitialCreate")]
+    partial class InitialCreate
     {
         /// <inheritdoc />
         protected override void BuildTargetModel(ModelBuilder modelBuilder)
@@ -25,7 +25,7 @@ namespace App.Template.Api.Migrations
 
             NpgsqlModelBuilderExtensions.UseIdentityByDefaultColumns(modelBuilder);
 
-            modelBuilder.Entity("App.Template.Api.Models.Entities.AuditLog", b =>
+            modelBuilder.Entity("App.Template.Api.Common.Entities.AuditLog", b =>
                 {
                     b.Property<long>("Id")
                         .ValueGeneratedOnAdd()
@@ -36,8 +36,7 @@ namespace App.Template.Api.Migrations
 
                     b.Property<string>("Action")
                         .IsRequired()
-                        .HasMaxLength(20)
-                        .HasColumnType("character varying(20)")
+                        .HasColumnType("text")
                         .HasColumnName("action");
 
                     b.Property<string>("AffectedColumns")
@@ -88,70 +87,10 @@ namespace App.Template.Api.Migrations
                     b.HasIndex("UserId")
                         .HasDatabaseName("ix_audit_logs_user_id");
 
-                    b.ToTable("AuditLogs");
+                    b.ToTable("audit_logs", (string)null);
                 });
 
-            modelBuilder.Entity("App.Template.Api.Models.Entities.Notification", b =>
-                {
-                    b.Property<long>("Id")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("bigint")
-                        .HasColumnName("id");
-
-                    NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<long>("Id"));
-
-                    b.Property<DateTime>("CreatedAt")
-                        .HasColumnType("timestamp with time zone")
-                        .HasColumnName("created_at");
-
-                    b.Property<bool>("IsRead")
-                        .HasColumnType("boolean")
-                        .HasColumnName("is_read");
-
-                    b.Property<string>("Message")
-                        .IsRequired()
-                        .HasMaxLength(500)
-                        .HasColumnType("character varying(500)")
-                        .HasColumnName("message");
-
-                    b.Property<string>("ReferenceId")
-                        .HasMaxLength(100)
-                        .HasColumnType("character varying(100)")
-                        .HasColumnName("reference_id");
-
-                    b.Property<string>("ReferenceType")
-                        .HasMaxLength(100)
-                        .HasColumnType("character varying(100)")
-                        .HasColumnName("reference_type");
-
-                    b.Property<string>("Title")
-                        .IsRequired()
-                        .HasMaxLength(200)
-                        .HasColumnType("character varying(200)")
-                        .HasColumnName("title");
-
-                    b.Property<string>("Type")
-                        .IsRequired()
-                        .HasMaxLength(20)
-                        .HasColumnType("character varying(20)")
-                        .HasColumnName("type");
-
-                    b.Property<string>("UserId")
-                        .IsRequired()
-                        .HasMaxLength(100)
-                        .HasColumnType("character varying(100)")
-                        .HasColumnName("user_id");
-
-                    b.HasKey("Id")
-                        .HasName("pk_notifications");
-
-                    b.HasIndex("UserId", "IsRead")
-                        .HasDatabaseName("ix_notifications_user_id_is_read");
-
-                    b.ToTable("notifications", (string)null);
-                });
-
-            modelBuilder.Entity("App.Template.Api.Models.Entities.UploadedFile", b =>
+            modelBuilder.Entity("App.Template.Api.Features.Files.UploadedFile", b =>
                 {
                     b.Property<long>("Id")
                         .ValueGeneratedOnAdd()
@@ -176,12 +115,13 @@ namespace App.Template.Api.Migrations
                         .HasColumnName("created_at");
 
                     b.Property<string>("CreatedBy")
-                        .HasColumnType("text")
+                        .HasMaxLength(100)
+                        .HasColumnType("character varying(100)")
                         .HasColumnName("created_by");
 
                     b.Property<string>("Description")
-                        .HasMaxLength(1000)
-                        .HasColumnType("character varying(1000)")
+                        .HasMaxLength(500)
+                        .HasColumnType("character varying(500)")
                         .HasColumnName("description");
 
                     b.Property<string>("FileName")
@@ -200,8 +140,8 @@ namespace App.Template.Api.Migrations
 
                     b.Property<string>("OriginalFileName")
                         .IsRequired()
-                        .HasMaxLength(500)
-                        .HasColumnType("character varying(500)")
+                        .HasMaxLength(255)
+                        .HasColumnType("character varying(255)")
                         .HasColumnName("original_file_name");
 
                     b.Property<string>("StoragePath")
@@ -215,7 +155,8 @@ namespace App.Template.Api.Migrations
                         .HasColumnName("updated_at");
 
                     b.Property<string>("UpdatedBy")
-                        .HasColumnType("text")
+                        .HasMaxLength(100)
+                        .HasColumnType("character varying(100)")
                         .HasColumnName("updated_by");
 
                     b.HasKey("Id")
@@ -231,10 +172,10 @@ namespace App.Template.Api.Migrations
                         .IsUnique()
                         .HasDatabaseName("ix_uploaded_files_file_name");
 
-                    b.ToTable("UploadedFiles");
+                    b.ToTable("uploaded_files", (string)null);
                 });
 
-            modelBuilder.Entity("App.Template.Api.Models.Entities.User", b =>
+            modelBuilder.Entity("App.Template.Api.Features.Notifications.Notification", b =>
                 {
                     b.Property<long>("Id")
                         .ValueGeneratedOnAdd()
@@ -247,69 +188,50 @@ namespace App.Template.Api.Migrations
                         .HasColumnType("timestamp with time zone")
                         .HasColumnName("created_at");
 
-                    b.Property<string>("CreatedBy")
-                        .HasColumnType("text")
-                        .HasColumnName("created_by");
-
-                    b.Property<string>("Email")
-                        .IsRequired()
-                        .HasMaxLength(255)
-                        .HasColumnType("character varying(255)")
-                        .HasColumnName("email");
-
-                    b.Property<bool>("IsActive")
+                    b.Property<bool>("IsRead")
                         .HasColumnType("boolean")
-                        .HasColumnName("is_active");
+                        .HasColumnName("is_read");
 
-                    b.Property<DateTime?>("LastLoginAt")
-                        .HasColumnType("timestamp with time zone")
-                        .HasColumnName("last_login_at");
-
-                    b.Property<string>("Name")
+                    b.Property<string>("Message")
                         .IsRequired()
-                        .HasMaxLength(100)
-                        .HasColumnType("character varying(100)")
-                        .HasColumnName("name");
-
-                    b.Property<string>("PasswordHash")
                         .HasMaxLength(500)
                         .HasColumnType("character varying(500)")
-                        .HasColumnName("password_hash");
+                        .HasColumnName("message");
 
-                    b.Property<string>("Role")
-                        .IsRequired()
-                        .ValueGeneratedOnAdd()
+                    b.Property<string>("ReferenceId")
                         .HasMaxLength(50)
                         .HasColumnType("character varying(50)")
-                        .HasDefaultValue("User")
-                        .HasColumnName("role");
+                        .HasColumnName("reference_id");
 
-                    b.Property<DateTime?>("UpdatedAt")
-                        .HasColumnType("timestamp with time zone")
-                        .HasColumnName("updated_at");
+                    b.Property<string>("ReferenceType")
+                        .HasMaxLength(50)
+                        .HasColumnType("character varying(50)")
+                        .HasColumnName("reference_type");
 
-                    b.Property<string>("UpdatedBy")
+                    b.Property<string>("Title")
+                        .IsRequired()
+                        .HasMaxLength(200)
+                        .HasColumnType("character varying(200)")
+                        .HasColumnName("title");
+
+                    b.Property<string>("Type")
+                        .IsRequired()
                         .HasColumnType("text")
-                        .HasColumnName("updated_by");
+                        .HasColumnName("type");
 
-                    b.Property<string>("Username")
+                    b.Property<string>("UserId")
                         .IsRequired()
                         .HasMaxLength(100)
                         .HasColumnType("character varying(100)")
-                        .HasColumnName("username");
+                        .HasColumnName("user_id");
 
                     b.HasKey("Id")
-                        .HasName("pk_users");
+                        .HasName("pk_notifications");
 
-                    b.HasIndex("Email")
-                        .IsUnique()
-                        .HasDatabaseName("ix_users_email");
+                    b.HasIndex("UserId", "IsRead")
+                        .HasDatabaseName("ix_notifications_user_id_is_read");
 
-                    b.HasIndex("Username")
-                        .IsUnique()
-                        .HasDatabaseName("ix_users_username");
-
-                    b.ToTable("Users");
+                    b.ToTable("notifications", (string)null);
                 });
 #pragma warning restore 612, 618
         }

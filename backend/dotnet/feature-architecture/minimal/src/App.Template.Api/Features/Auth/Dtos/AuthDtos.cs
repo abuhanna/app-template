@@ -17,8 +17,6 @@ public class LoginResponseDto
     public string Token { get; set; } = string.Empty;
     public string TokenType { get; set; } = "Bearer";
     public int ExpiresIn { get; set; }
-    public string? RefreshToken { get; set; }
-    public DateTime? RefreshTokenExpiresAt { get; set; }
     public UserInfoDto? User { get; set; }
 }
 
@@ -29,8 +27,6 @@ public class UserInfoDto
     public string? Email { get; set; }
     public string? Name { get; set; }
     public string? Role { get; set; }
-    public string? DepartmentId { get; set; }
-    public string? DepartmentName { get; set; }
 }
 
 public class UserInfoResponseDto

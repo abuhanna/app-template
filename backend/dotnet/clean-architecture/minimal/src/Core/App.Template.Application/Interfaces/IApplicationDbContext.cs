@@ -6,9 +6,7 @@ namespace AppTemplate.Application.Interfaces;
 
 public interface IApplicationDbContext
 {
-    DbSet<User> Users { get; }
     DbSet<Notification> Notifications { get; }
-    DbSet<RefreshToken> RefreshTokens { get; }
     DbSet<UploadedFile> UploadedFiles { get; }
     DbSet<AuditLog> AuditLogs { get; }
 

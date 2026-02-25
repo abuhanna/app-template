@@ -63,39 +63,4 @@ public class NotificationService : INotificationService
         }
     }
 
-    public async Task NotifyAdminAsync(
-        string title,
-        string message,
-        NotificationType type,
-        string? referenceId = null,
-        string? referenceType = null,
-        CancellationToken cancellationToken = default)
-    {
-        try
-        {
-            // Get all active admin users
-            var adminUserIds = await _context.Users
-                .Where(u => u.Role == "Admin" && u.IsActive)
-                .Select(u => u.Id.ToString())
-                .ToListAsync(cancellationToken);
-
-            if (adminUserIds.Count == 0)
-            {
-                _logger.LogWarning("No active admin users found to receive notification: {Title}", title);
-                return;
-            }
-
-            // Notify each admin
-            foreach (var adminUserId in adminUserIds)
-            {
-                await NotifyUserAsync(adminUserId, title, message, type, referenceId, referenceType, cancellationToken);
-            }
-
-            _logger.LogInformation("Admin notification sent to {Count} admin(s): {Title}", adminUserIds.Count, title);
-        }
-        catch (Exception ex)
-        {
-            _logger.LogError(ex, "Failed to send admin notification: {Title}", title);
-        }
-    }
 }

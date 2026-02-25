@@ -1,8 +1,8 @@
+using App.Template.Api.Common.Services;
 using App.Template.Api.Features.Auth;
 using App.Template.Api.Features.Export;
 using App.Template.Api.Features.Files;
 using App.Template.Api.Features.Notifications;
-using App.Template.Api.Features.Users;
 
 namespace App.Template.Api.Common.Extensions;
 
@@ -10,8 +10,8 @@ public static class ServiceCollectionExtensions
 {
     public static IServiceCollection AddFeatureServices(this IServiceCollection services)
     {
-        // Users Feature
-        services.AddScoped<IUserRepository, UserRepository>();
+        // JWT Token Validation
+        services.AddScoped<IJwtTokenGenerator, JwtTokenGenerator>();
 
         // Auth Feature (SSO-only)
         services.AddScoped<ISsoAuthService, SsoAuthService>();

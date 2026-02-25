@@ -2,20 +2,22 @@ using System.IdentityModel.Tokens.Jwt;
 using System.Security.Claims;
 using System.Text;
 
-using AppTemplate.Application.Interfaces;
-
-using Microsoft.Extensions.Configuration;
 using Microsoft.IdentityModel.Tokens;
 
-namespace AppTemplate.Infrastructure.Services;
+namespace App.Template.Api.Services;
 
-public class JwtTokenService : IJwtTokenService
+public interface IJwtTokenGenerator
+{
+    (string? userId, string? username) ValidateToken(string token);
+}
+
+public class JwtTokenGenerator : IJwtTokenGenerator
 {
     private readonly SymmetricSecurityKey _signingKey;
     private readonly string _issuer;
     private readonly string _audience;
 
-    public JwtTokenService(IConfiguration configuration)
+    public JwtTokenGenerator(IConfiguration configuration)
     {
         var secret = configuration["Jwt:Secret"]
             ?? throw new InvalidOperationException("JWT Secret not configured");

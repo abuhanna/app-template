@@ -93,9 +93,7 @@ public class SsoAuthService : ISsoAuthService
                     Username = GetClaim("username") ?? username,
                     Email = GetClaim("email"),
                     Role = string.IsNullOrWhiteSpace(roleClaim) ? "User" : roleClaim,
-                    Name = GetClaim("name") ?? GetClaim("sub"),
-                    DepartmentId = GetClaim("departmentId"),
-                    DepartmentName = GetClaim("department")
+                    Name = GetClaim("name") ?? GetClaim("sub")
                 }
             };
         }

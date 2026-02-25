@@ -8,10 +8,12 @@ public static class ServiceCollectionExtensions
     public static IServiceCollection AddApplicationServices(this IServiceCollection services)
     {
         // Repositories
-        services.AddScoped<IUserRepository, UserRepository>();
         services.AddScoped<INotificationRepository, NotificationRepository>();
         services.AddScoped<IAuditLogRepository, AuditLogRepository>();
         services.AddScoped<IUploadedFileRepository, UploadedFileRepository>();
+
+        // JWT Token Validation
+        services.AddScoped<IJwtTokenGenerator, JwtTokenGenerator>();
 
         // Auth (SSO-only)
         services.AddScoped<ISsoAuthService, SsoAuthService>();
