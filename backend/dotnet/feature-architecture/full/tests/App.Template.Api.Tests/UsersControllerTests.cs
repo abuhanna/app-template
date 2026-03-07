@@ -1,5 +1,8 @@
+using System.Security.Claims;
+using App.Template.Api.Common.Models;
 using App.Template.Api.Features.Users;
 using App.Template.Api.Features.Users.Dtos;
+using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using Moq;
 using Xunit;
@@ -15,14 +18,28 @@ public class UsersControllerTests
     {
         _mockUserService = new Mock<IUserService>();
         _controller = new UsersController(_mockUserService.Object);
+        _controller.ControllerContext = new ControllerContext
+        {
+            HttpContext = new DefaultHttpContext()
+        };
+    }
+
+    private void SetUserClaims(string userId = "1", string role = "Admin")
+    {
+        var claims = new[]
+        {
+            new Claim(ClaimTypes.NameIdentifier, userId),
+            new Claim(ClaimTypes.Role, role),
+        };
+        var identity = new ClaimsIdentity(claims, "TestAuth");
+        _controller.ControllerContext.HttpContext.User = new ClaimsPrincipal(identity);
     }
 
     [Fact]
-    public async Task GetAll_ReturnsOkResult_WithListOfUsers()
+    public async Task GetAll_ReturnsOkResult_WithPagedUsers()
     {
-        // Arrange
         var queryParams = new UsersQueryParams();
-        var users = new App.Template.Api.Common.Models.PagedResult<UserDto>
+        var users = new PagedResult<UserDto>
         {
             Items = new List<UserDto>
             {
@@ -32,24 +49,127 @@ public class UsersControllerTests
         };
         _mockUserService.Setup(s => s.GetUsersAsync(queryParams)).ReturnsAsync(users);
 
-        // Act
         var result = await _controller.GetAll(queryParams);
 
-        // Assert
         var okResult = Assert.IsType<OkObjectResult>(result.Result);
         Assert.NotNull(okResult.Value);
     }
 
     [Fact]
-    public async Task GetById_ReturnsNotFound_WhenUserDoesNotExist()
+    public async Task GetById_ReturnsOk_WhenUserExists()
     {
-        // Arrange
-        _mockUserService.Setup(s => s.GetUserByIdAsync(1)).ReturnsAsync((UserDto?)null);
+        var user = new UserDto { Id = 1, Username = "user1", Email = "user1@example.com" };
+        _mockUserService.Setup(s => s.GetUserByIdAsync(1)).ReturnsAsync(user);
 
-        // Act
         var result = await _controller.GetById(1);
 
-        // Assert
+        var okResult = Assert.IsType<OkObjectResult>(result.Result);
+        var value = Assert.IsType<UserDto>(okResult.Value);
+        Assert.Equal("user1", value.Username);
+    }
+
+    [Fact]
+    public async Task GetById_ReturnsNotFound_WhenUserDoesNotExist()
+    {
+        _mockUserService.Setup(s => s.GetUserByIdAsync(1)).ReturnsAsync((UserDto?)null);
+
+        var result = await _controller.GetById(1);
+
         Assert.IsType<NotFoundResult>(result.Result);
+    }
+
+    [Fact]
+    public async Task Create_ReturnsCreatedAtAction_WithUser()
+    {
+        var request = new CreateUserRequest { Username = "newuser", Email = "new@test.com", Password = "Pass@123" };
+        var user = new UserDto { Id = 3, Username = "newuser", Email = "new@test.com" };
+        _mockUserService.Setup(s => s.CreateUserAsync(request)).ReturnsAsync(user);
+
+        var result = await _controller.Create(request);
+
+        var createdResult = Assert.IsType<CreatedAtActionResult>(result.Result);
+        Assert.Equal(nameof(UsersController.GetById), createdResult.ActionName);
+        var value = Assert.IsType<UserDto>(createdResult.Value);
+        Assert.Equal(3, value.Id);
+    }
+
+    [Fact]
+    public async Task Update_ReturnsOk_WhenUserExists()
+    {
+        var request = new UpdateUserRequest { FirstName = "Updated" };
+        var user = new UserDto { Id = 1, Username = "user1", FirstName = "Updated" };
+        _mockUserService.Setup(s => s.UpdateUserAsync(1, request)).ReturnsAsync(user);
+
+        var result = await _controller.Update(1, request);
+
+        var okResult = Assert.IsType<OkObjectResult>(result.Result);
+        Assert.NotNull(okResult.Value);
+    }
+
+    [Fact]
+    public async Task Update_ReturnsNotFound_WhenUserDoesNotExist()
+    {
+        var request = new UpdateUserRequest { FirstName = "Updated" };
+        _mockUserService.Setup(s => s.UpdateUserAsync(1, request)).ReturnsAsync((UserDto?)null);
+
+        var result = await _controller.Update(1, request);
+
+        Assert.IsType<NotFoundResult>(result.Result);
+    }
+
+    [Fact]
+    public async Task Delete_ReturnsNoContent_WhenSuccessful()
+    {
+        _mockUserService.Setup(s => s.DeleteUserAsync(1)).ReturnsAsync(true);
+
+        var result = await _controller.Delete(1);
+
+        Assert.IsType<NoContentResult>(result);
+    }
+
+    [Fact]
+    public async Task Delete_ReturnsNotFound_WhenUserDoesNotExist()
+    {
+        _mockUserService.Setup(s => s.DeleteUserAsync(1)).ReturnsAsync(false);
+
+        var result = await _controller.Delete(1);
+
+        Assert.IsType<NotFoundResult>(result);
+    }
+
+    [Fact]
+    public async Task ChangePassword_ReturnsOk_WhenSameUser()
+    {
+        SetUserClaims("1");
+        var request = new ChangePasswordRequest { CurrentPassword = "Old@123", NewPassword = "New@123" };
+        _mockUserService.Setup(s => s.ChangePasswordAsync(1, request)).Returns(Task.CompletedTask);
+
+        var result = await _controller.ChangePassword(1, request);
+
+        Assert.IsType<OkObjectResult>(result);
+    }
+
+    [Fact]
+    public async Task ChangePassword_ReturnsOk_WhenAdmin()
+    {
+        SetUserClaims("2", "Admin");
+        var request = new ChangePasswordRequest { CurrentPassword = "Old@123", NewPassword = "New@123" };
+        _mockUserService.Setup(s => s.ChangePasswordAsync(1, request)).Returns(Task.CompletedTask);
+
+        var result = await _controller.ChangePassword(1, request);
+
+        Assert.IsType<OkObjectResult>(result);
+    }
+
+    [Fact]
+    public async Task ChangePassword_ReturnsForbid_WhenDifferentNonAdminUser()
+    {
+        SetUserClaims("2", "User");
+
+        var request = new ChangePasswordRequest { CurrentPassword = "Old@123", NewPassword = "New@123" };
+
+        var result = await _controller.ChangePassword(1, request);
+
+        Assert.IsType<ForbidResult>(result);
     }
 }

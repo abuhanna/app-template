@@ -1,9 +1,13 @@
 import { intro, outro, isCancel } from '@clack/prompts';
 import pc from 'picocolors';
-import { parseArgs } from './cli.js';
+import { createRequire } from 'node:module';
+import { parseArgs, validateFrameworkUiPairing } from './cli.js';
 import { runInteractivePrompts } from './prompts.js';
 import { generateProject } from './generator.js';
-import type { ProjectConfig } from './types.js';
+import type { ProjectConfig, FrontendFramework } from './types.js';
+
+const require = createRequire(import.meta.url);
+const { version } = require('../package.json');
 
 async function main(): Promise<void> {
   console.log();
@@ -21,7 +25,7 @@ async function main(): Promise<void> {
 
     // Show version if requested
     if (cliArgs.version) {
-      console.log('create-apptemplate v1.0.0');
+      console.log(`create-apptemplate v${version}`);
       process.exit(0);
     }
 
@@ -37,13 +41,23 @@ async function main(): Promise<void> {
       // Non-interactive mode - all required options provided
       const frontendFramework = cliArgs.framework || 'vue';
       const architecture = cliArgs.architecture || 'clean';
+      const ui = cliArgs.ui || (frontendFramework === 'vue' ? 'vuetify' : 'mui');
+
+      // Validate framework + UI pairing for projects with frontend
+      if (projectType !== 'backend') {
+        const uiError = validateFrameworkUiPairing(frontendFramework as FrontendFramework, ui);
+        if (uiError) {
+          throw new Error(uiError);
+        }
+      }
+
       config = {
         projectPath: cliArgs.projectPath,
         projectType,
         backend,
         architecture,
         frontendFramework,
-        ui: cliArgs.ui || (frontendFramework === 'vue' ? 'vuetify' : 'mui'),
+        ui,
         projectName: cliArgs.projectName,
         installDeps: cliArgs.install || false,
         placeInRoot: cliArgs.root || false,

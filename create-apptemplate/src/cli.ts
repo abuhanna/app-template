@@ -7,6 +7,11 @@ const validFrontendFrameworks: FrontendFramework[] = ['vue', 'react'];
 const validUILibraries: UILibrary[] = ['vuetify', 'primevue', 'primereact', 'mui'];
 const validVariants: TemplateVariant[] = ['minimal', 'full'];
 
+const uiCompatibility: Record<FrontendFramework, UILibrary[]> = {
+  vue: ['vuetify', 'primevue'],
+  react: ['mui', 'primereact'],
+};
+
 export function parseArgs(): CLIArgs {
   const args = process.argv.slice(2);
   const result: CLIArgs = {};
@@ -126,6 +131,13 @@ export function parseArgs(): CLIArgs {
     i++;
   }
 
+  // Cross-validate framework + UI pairing (warn and clear invalid value)
+  const pairingError = validateFrameworkUiPairing(result.framework, result.ui);
+  if (pairingError) {
+    console.warn(`Warning: ${pairingError}`);
+    result.ui = undefined;
+  }
+
   return result;
 }
 
@@ -158,4 +170,16 @@ function isValidProjectName(value: string | undefined): boolean {
   // Validate Company.Project format
   const pattern = /^[A-Za-z][A-Za-z0-9]*(\.[A-Za-z][A-Za-z0-9]*)+$/;
   return pattern.test(value);
+}
+
+export function validateFrameworkUiPairing(
+  framework: FrontendFramework | undefined,
+  ui: UILibrary | undefined
+): string | null {
+  if (!framework || !ui) return null;
+  const allowed = uiCompatibility[framework];
+  if (!allowed.includes(ui)) {
+    return `UI library "${ui}" is not compatible with framework "${framework}". Valid options for ${framework}: ${allowed.join(', ')}`;
+  }
+  return null;
 }

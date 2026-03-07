@@ -14,25 +14,3 @@ public class UserDto {
     private LocalDateTime createdAt;
 }
 
-@Data
-class CreateUserRequest {
-    @NotBlank
-    private String name;
-
-    @NotBlank
-    @Email
-    private String email;
-
-    @NotBlank
-    private String password;
-}
-
-@Data
-class UpdateUserRequest {
-    private String name;
-    
-    @Email
-    private String email;
-    
-    private Boolean isActive;
-}

@@ -13,6 +13,10 @@ export class UserService {
     return users.map(this.mapToDto);
   }
 
+  async findByEmail(email: string): Promise<User | null> {
+    return this.userRepository.findByEmail(email);
+  }
+
   async findById(id: number): Promise<UserResponseDto> {
     const user = await this.userRepository.findById(id);
     if (!user) {

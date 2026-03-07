@@ -47,100 +47,95 @@ export async function downloadFrontendTemplate(
   await emitter.clone(destPath);
 }
 
-/**
- * Download a specific folder from the GitHub repository (legacy function for compatibility)
- */
-export async function downloadTemplate(repo: string, folder: string, destPath: string): Promise<void> {
-  const source = `${repo}/${folder}`;
-  const emitter = degit(source, {
-    cache: false,
-    force: true,
-    verbose: false,
-  });
 
-  await emitter.clone(destPath);
+/**
+ * Parse a GitHub repo string (e.g. 'owner/repo') into components
+ */
+function parseRepo(repo: string): { owner: string; name: string } {
+  const [owner, name] = repo.split('/');
+  return { owner, name };
 }
 
+/**
+ * Download a single file from GitHub raw content API (Node 18+ fetch)
+ * Returns true if the file was downloaded, false if not found or failed
+ */
+async function downloadRawFile(
+  owner: string,
+  repoName: string,
+  filePath: string,
+  destPath: string
+): Promise<boolean> {
+  const url = `https://raw.githubusercontent.com/${owner}/${repoName}/HEAD/${filePath}`;
+  try {
+    const response = await fetch(url);
+    if (!response.ok) return false;
+    const content = await response.text();
+    const parentDir = path.dirname(destPath);
+    if (!fs.existsSync(parentDir)) {
+      fs.mkdirSync(parentDir, { recursive: true });
+    }
+    fs.writeFileSync(destPath, content, 'utf-8');
+    return true;
+  } catch {
+    return false;
+  }
+}
 
 /**
- * Download root configuration files based on project type
+ * Download root configuration files based on project type.
+ * Uses targeted downloads instead of cloning the entire repository:
+ * - Individual root files via GitHub raw API (small files, no tarball needed)
+ * - Docker directory via targeted degit subdirectory download (fullstack only)
  */
 export async function copyRootFiles(repo: string, destPath: string, config: ProjectConfig): Promise<void> {
-  // Common files for all projects
-  // REMOVED 'README.md' from here
-  const commonFiles = [
-    '.env.example',
-    '.gitignore',
-    'CLAUDE.md',
-  ];
+  const { owner, name } = parseRepo(repo);
 
-  // Create a temporary directory for the full repo download
-  const tempDir = path.join(destPath, '.temp-download');
+  // 1. Download common root-level files via GitHub raw API
+  const commonFiles = ['.env.example', '.gitignore', 'CLAUDE.md'];
+  await Promise.all(
+    commonFiles.map(file => downloadRawFile(owner, name, file, path.join(destPath, file)))
+  );
 
-  try {
-    // Download the entire repository to temp dir
-    const emitter = degit(repo, {
-      cache: false,
-      force: true,
-      verbose: false,
-    });
+  // 2. Dynamic README selection via raw API
+  if (config.projectType === 'fullstack') {
+    await downloadRawFile(owner, name, `docker/templates/root/README.fullstack.${config.backend}.md`, path.join(destPath, 'README.md'));
+  } else if (!config.placeInRoot) {
+    // Split project (subdirectory) - generic README
+    await downloadRawFile(owner, name, 'docker/templates/root/README.multirepo.md', path.join(destPath, 'README.md'));
+  }
+  // If placeInRoot is true, preserve the component's own README.md
 
-    await emitter.clone(tempDir);
+  // 3. Fullstack-specific files
+  if (config.projectType === 'fullstack') {
+    // Download additional root files via raw API
+    const fullstackRootFiles = ['Makefile', 'docker-compose.staging.yml', 'docker-compose.production.yml'];
+    await Promise.all(
+      fullstackRootFiles.map(file => downloadRawFile(owner, name, file, path.join(destPath, file)))
+    );
 
-    // 1. Copy Common Files
-    for (const file of commonFiles) {
-      copyFileFromTemp(tempDir, file, destPath, file);
-    }
+    // Download docker/ subdirectory via targeted degit (nginx, supervisor, templates)
+    const tempDockerDir = path.join(destPath, '.temp-docker');
+    try {
+      const emitter = degit(`${repo}/docker`, {
+        cache: false,
+        force: true,
+        verbose: false,
+      });
+      await emitter.clone(tempDockerDir);
 
-    // 2. Dynamic README Selection
-    if (config.projectType === 'fullstack') {
-      // Fullstack README
-      const readmeTemplate = `docker/templates/root/README.fullstack.${config.backend}.md`;
-      copyFileFromTemp(tempDir, readmeTemplate, destPath, 'README.md');
-    } else if (!config.placeInRoot) {
-      // Split project (subdirectory) - generic README
-      const readmeTemplate = `docker/templates/root/README.multirepo.md`;
-      copyFileFromTemp(tempDir, readmeTemplate, destPath, 'README.md');
-    }
-    // If placeInRoot is true (Backend/Frontend Only in root), we do NOTHING.
-    // The component's own README.md has already been downloaded to the root by downloadTemplate logic.
-    // We effectively preserve it.
+      // Copy nginx and supervisor configs
+      copyDirectoryFromTemp(tempDockerDir, 'nginx', path.join(destPath, 'docker/nginx'));
+      copyDirectoryFromTemp(tempDockerDir, 'supervisor', path.join(destPath, 'docker/supervisor'));
 
-    // 3. Fullstack Specific Logic
-    if (config.projectType === 'fullstack') {
-      // Copy root docker folder (nginx, supervisor, etc.)
-      // We exclude templates from the final copy implicitly by not copying the 'templates' subfolder if we iterate,
-      // or we just copy 'docker' and then delete 'templates' later.
-      // For simplicity, let's copy 'docker/nginx' and 'docker/supervisor' explicitly.
-      copyDirectoryFromTemp(tempDir, 'docker/nginx', path.join(destPath, 'docker/nginx'));
-      copyDirectoryFromTemp(tempDir, 'docker/supervisor', path.join(destPath, 'docker/supervisor'));
-
-      // Select and copy root Dockerfile
-      const dockerfileTemplate = `docker/templates/root/Dockerfile.${config.backend}`;
-      copyFileFromTemp(tempDir, dockerfileTemplate, destPath, 'Dockerfile');
-
-      // Select and copy root docker-compose.yml
-      const composeTemplate = `docker/templates/root/docker-compose.${config.backend}.yml`;
-      copyFileFromTemp(tempDir, composeTemplate, destPath, 'docker-compose.yml');
-
-      // Select and copy root supervisord.conf
-      const supervisorTemplate = `docker/templates/root/supervisord.${config.backend}.conf`;
-      copyFileFromTemp(tempDir, supervisorTemplate, destPath, 'docker/supervisor/supervisord.conf');
-
-      // Copy Makefile if it exists
-      copyFileFromTemp(tempDir, 'Makefile', destPath, 'Makefile');
-      copyFileFromTemp(tempDir, 'docker-compose.staging.yml', destPath, 'docker-compose.staging.yml');
-      copyFileFromTemp(tempDir, 'docker-compose.production.yml', destPath, 'docker-compose.production.yml');
-    }
-
-    // 3. Non-Fullstack Logic
-    // We do NOT copy root Dockerfile or docker-compose.yml.
-    // We do NOT copy the 'docker' folder (standalone backends/frontends are self-contained).
-
-  } finally {
-    // Clean up temp directory
-    if (fs.existsSync(tempDir)) {
-      fs.rmSync(tempDir, { recursive: true, force: true });
+      // Select backend-specific files from templates/root/
+      copyFileFromTemp(tempDockerDir, `templates/root/Dockerfile.${config.backend}`, destPath, 'Dockerfile');
+      copyFileFromTemp(tempDockerDir, `templates/root/docker-compose.${config.backend}.yml`, destPath, 'docker-compose.yml');
+      copyFileFromTemp(tempDockerDir, `templates/root/supervisord.${config.backend}.conf`, destPath, 'docker/supervisor/supervisord.conf');
+    } finally {
+      if (fs.existsSync(tempDockerDir)) {
+        fs.rmSync(tempDockerDir, { recursive: true, force: true });
+      }
     }
   }
 }

@@ -5,12 +5,14 @@ import apptemplate.application.dto.auth.*;
 import apptemplate.application.dto.user.ChangePasswordRequest;
 import apptemplate.application.dto.user.UserDto;
 import apptemplate.application.usecases.auth.*;
+import apptemplate.application.ports.services.CurrentUserService;
 import apptemplate.application.usecases.user.ChangeUserPasswordUseCase;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.authentication.AuthenticationCredentialsNotFoundException;
 import org.springframework.web.bind.annotation.*;
 
 @RestController
@@ -28,6 +30,7 @@ public class AuthController {
     private final GetMyProfileUseCase getMyProfileUseCase;
     private final UpdateMyProfileUseCase updateMyProfileUseCase;
     private final ChangeUserPasswordUseCase changeUserPasswordUseCase;
+    private final CurrentUserService currentUserService;
 
     @PostMapping("/login")
     @Operation(summary = "Login", description = "Authenticate user and receive JWT tokens")

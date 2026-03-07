@@ -59,6 +59,9 @@ export async function installDependencies(projectPath: string, config: ProjectCo
   if (config.projectType !== 'backend') {
     const frontendPackageJson = path.join(frontendDir, 'package.json');
     if (fs.existsSync(frontendPackageJson)) {
+      if (!commandExists(pm)) {
+        throw new Error(`Package manager "${pm}" not found. Please install Node.js from https://nodejs.org and ensure "${pm}" is available in your PATH.`);
+      }
       await runInstallCommand(frontendDir, pm);
     }
   }
@@ -67,6 +70,9 @@ export async function installDependencies(projectPath: string, config: ProjectCo
   if (config.projectType !== 'frontend') {
     switch (config.backend) {
       case 'dotnet': {
+        if (!commandExists('dotnet')) {
+          throw new Error('dotnet CLI not found. Please install .NET 8 SDK from https://dot.net/download and ensure it is in your PATH.');
+        }
         const slnFiles = fs.readdirSync(backendDir).filter(f => f.endsWith('.sln'));
         if (slnFiles.length > 0) {
           await runCommand('dotnet', ['restore'], backendDir);
@@ -80,6 +86,9 @@ export async function installDependencies(projectPath: string, config: ProjectCo
           if (fs.existsSync(mvnwPath)) {
             await runCommand(mvnwPath, ['install', '-DskipTests'], backendDir);
           } else {
+            if (!commandExists('mvn')) {
+              throw new Error('Maven (mvn) not found and no mvnw wrapper present. Please install Maven from https://maven.apache.org/download.cgi and ensure it is in your PATH.');
+            }
             await runCommand('mvn', ['install', '-DskipTests'], backendDir);
           }
         }
@@ -88,6 +97,9 @@ export async function installDependencies(projectPath: string, config: ProjectCo
       case 'nestjs': {
         const backendPackageJson = path.join(backendDir, 'package.json');
         if (fs.existsSync(backendPackageJson)) {
+          if (!commandExists(pm)) {
+            throw new Error(`Package manager "${pm}" not found. Please install Node.js from https://nodejs.org and ensure "${pm}" is available in your PATH.`);
+          }
           await runInstallCommand(backendDir, pm);
         }
         break;

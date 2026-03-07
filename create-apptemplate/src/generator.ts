@@ -13,116 +13,129 @@ const REPO = 'abuhanna/app-template';
 export async function generateProject(config: ProjectConfig): Promise<void> {
   const absolutePath = path.resolve(config.projectPath);
 
-  // Create project directory
-  if (!fs.existsSync(absolutePath)) {
+  // Track whether we created the directory (only clean up what we created)
+  const createdDir = !fs.existsSync(absolutePath);
+  if (createdDir) {
     fs.mkdirSync(absolutePath, { recursive: true });
   }
 
   const spinner = p.spinner();
 
-  // Step 1: Download templates (using new path structure with variant)
-  spinner.start('Downloading templates...');
-
   try {
-    // Download backend (if not frontend-only)
-    if (config.projectType !== 'frontend') {
-      // For fullstack: use 'backend', for backend-only: use subfolder or root
-      let destFolder: string;
-      if (config.projectType === 'fullstack') {
-        destFolder = 'backend';
-      } else {
-        destFolder = config.placeInRoot ? '' : 'backend';
-      }
-      const destPath = destFolder ? path.join(absolutePath, destFolder) : absolutePath;
-
-      // Download from new path: backend/{framework}/{architecture}-architecture/{variant}
-      await downloadBackendTemplate(REPO, config.backend, config.architecture, config.variant, destPath);
-      spinner.message(`Downloaded backend-${config.backend}-${config.architecture}-${config.variant}`);
-    }
-
-    // Download frontend (if not backend-only)
-    if (config.projectType !== 'backend') {
-      // For fullstack: use 'frontend', for frontend-only: use subfolder or root
-      let destFolder: string;
-      if (config.projectType === 'fullstack') {
-        destFolder = 'frontend';
-      } else {
-        destFolder = config.placeInRoot ? '' : 'frontend';
-      }
-      const destPath = destFolder ? path.join(absolutePath, destFolder) : absolutePath;
-
-      // Download from new path: frontend/{framework}/{ui}/{variant}
-      await downloadFrontendTemplate(REPO, config.frontendFramework, config.ui, config.variant, destPath);
-      spinner.message(`Downloaded frontend-${config.frontendFramework}-${config.ui}-${config.variant}`);
-    }
-
-    // Download common files (docker, scripts, etc.)
-    await copyRootFiles(REPO, absolutePath, config);
-    spinner.message('Downloaded configuration files');
-
-    spinner.stop('Templates downloaded');
-  } catch (error) {
-    spinner.stop('Download failed');
-    throw error;
-  }
-
-  // Step 2: Update folder references in common files
-  spinner.start('Updating configuration files...');
-  try {
-    await updateFolderReferences(absolutePath, config);
-    spinner.stop('Configuration updated');
-  } catch (error) {
-    spinner.stop('Configuration update failed');
-    throw error;
-  }
-
-  // Step 3: Rename project namespaces (only for dotnet/spring)
-  if (config.projectName && config.projectName !== 'App.Template') {
-    spinner.start('Renaming project namespaces...');
+    // Step 1: Download templates (using new path structure with variant)
+    spinner.start('Downloading templates...');
 
     try {
-      await renameProject(absolutePath, config);
-      spinner.stop('Project namespaces updated');
+      // Download backend (if not frontend-only)
+      if (config.projectType !== 'frontend') {
+        // For fullstack: use 'backend', for backend-only: use subfolder or root
+        let destFolder: string;
+        if (config.projectType === 'fullstack') {
+          destFolder = 'backend';
+        } else {
+          destFolder = config.placeInRoot ? '' : 'backend';
+        }
+        const destPath = destFolder ? path.join(absolutePath, destFolder) : absolutePath;
+
+        // Download from new path: backend/{framework}/{architecture}-architecture/{variant}
+        await downloadBackendTemplate(REPO, config.backend, config.architecture, config.variant, destPath);
+        spinner.message(`Downloaded backend-${config.backend}-${config.architecture}-${config.variant}`);
+      }
+
+      // Download frontend (if not backend-only)
+      if (config.projectType !== 'backend') {
+        // For fullstack: use 'frontend', for frontend-only: use subfolder or root
+        let destFolder: string;
+        if (config.projectType === 'fullstack') {
+          destFolder = 'frontend';
+        } else {
+          destFolder = config.placeInRoot ? '' : 'frontend';
+        }
+        const destPath = destFolder ? path.join(absolutePath, destFolder) : absolutePath;
+
+        // Download from new path: frontend/{framework}/{ui}/{variant}
+        await downloadFrontendTemplate(REPO, config.frontendFramework, config.ui, config.variant, destPath);
+        spinner.message(`Downloaded frontend-${config.frontendFramework}-${config.ui}-${config.variant}`);
+      }
+
+      // Download common files (docker, scripts, etc.)
+      await copyRootFiles(REPO, absolutePath, config);
+      spinner.message('Downloaded configuration files');
+
+      spinner.stop('Templates downloaded');
     } catch (error) {
-      spinner.stop('Namespace rename failed');
+      spinner.stop('Download failed');
       throw error;
     }
-  }
 
-  // Step 4: Install dependencies (if requested)
-  if (config.installDeps) {
-    spinner.start('Installing dependencies (this may take a while)...');
-
+    // Step 2: Update folder references in common files
+    spinner.start('Updating configuration files...');
     try {
-      await installDependencies(absolutePath, config);
-      spinner.stop('Dependencies installed');
+      await updateFolderReferences(absolutePath, config);
+      spinner.stop('Configuration updated');
     } catch (error) {
-      spinner.stop('Installation failed');
-      const errorMessage = error instanceof Error ? error.message : String(error);
-      console.log(pc.yellow(`  Warning: Dependency installation failed: ${errorMessage}`));
-      console.log(pc.gray('  You can install manually by running npm install in the project directory'));
+      spinner.stop('Configuration update failed');
+      throw error;
     }
-  }
 
-  // Step 5: Setup environment files
-  await setupEnvironmentFiles(absolutePath, config);
+    // Step 3: Rename project namespaces (only for dotnet/spring)
+    if (config.projectName && config.projectName !== 'App.Template') {
+      spinner.start('Renaming project namespaces...');
 
-  // Step 6: Cleanup Docker files for Fullstack projects
-  // (Fullstack uses root Dockerfile, so we remove the individual ones)
-  if (config.projectType === 'fullstack') {
-    spinner.start('Cleaning up Docker configuration...');
-    try {
-      cleanupFullstackDockerFiles(absolutePath);
-      spinner.stop('Docker configuration cleaned up');
-    } catch {
-      // Ignore errors if files don't exist
-      spinner.stop('Docker cleanup skipped');
+      try {
+        await renameProject(absolutePath, config);
+        spinner.stop('Project namespaces updated');
+      } catch (error) {
+        spinner.stop('Namespace rename failed');
+        throw error;
+      }
     }
-  }
 
-  // Step 7: Create appsettings.Development.json from example (for .NET projects)
-  if (config.projectType !== 'frontend' && config.backend === 'dotnet') {
-    await createAppSettingsFromExample(absolutePath, config);
+    // Step 4: Install dependencies (if requested)
+    if (config.installDeps) {
+      spinner.start('Installing dependencies (this may take a while)...');
+
+      try {
+        await installDependencies(absolutePath, config);
+        spinner.stop('Dependencies installed');
+      } catch (error) {
+        spinner.stop('Installation failed');
+        const errorMessage = error instanceof Error ? error.message : String(error);
+        console.log(pc.yellow(`  Warning: Dependency installation failed: ${errorMessage}`));
+        console.log(pc.gray('  You can install manually by running npm install in the project directory'));
+      }
+    }
+
+    // Step 5: Setup environment files
+    await setupEnvironmentFiles(absolutePath, config);
+
+    // Step 6: Cleanup Docker files for Fullstack projects
+    // (Fullstack uses root Dockerfile, so we remove the individual ones)
+    if (config.projectType === 'fullstack') {
+      spinner.start('Cleaning up Docker configuration...');
+      try {
+        cleanupFullstackDockerFiles(absolutePath);
+        spinner.stop('Docker configuration cleaned up');
+      } catch {
+        // Ignore errors if files don't exist
+        spinner.stop('Docker cleanup skipped');
+      }
+    }
+
+    // Step 7: Create appsettings.Development.json from example (for .NET projects)
+    if (config.projectType !== 'frontend' && config.backend === 'dotnet') {
+      await createAppSettingsFromExample(absolutePath, config);
+    }
+  } catch (error) {
+    // Clean up the project directory only if we created it
+    if (createdDir && fs.existsSync(absolutePath)) {
+      try {
+        fs.rmSync(absolutePath, { recursive: true, force: true });
+      } catch {
+        // Best-effort cleanup — ignore errors
+      }
+    }
+    throw error;
   }
 }
 
@@ -246,7 +259,7 @@ async function createAppSettingsFromExample(projectPath: string, config: Project
  * Replaces backend-dotnet/backend-spring/backend-nestjs with backend
  * Replaces frontend-vuetify/frontend-primevue with frontend
  */
-async function updateFolderReferences(projectPath: string, config: ProjectConfig): Promise<void> {
+export async function updateFolderReferences(projectPath: string, config: ProjectConfig): Promise<void> {
   const filesToUpdate = [
     'Dockerfile',
     'docker-compose.yml',
