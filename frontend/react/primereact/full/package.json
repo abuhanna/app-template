@@ -19,9 +19,9 @@
   "dependencies": {
     "@microsoft/signalr": "^10.0.0",
     "@stomp/stompjs": "^7.2.1",
-    "axios": "^1.9.0",
+    "axios": "^1.13.2",
     "i18next": "^25.7.4",
-    "primeflex": "^3.3.1",
+    "primeflex": "^4.0.0",
     "primeicons": "^7.0.0",
     "primereact": "^10.9.5",
     "react": "^19.1.0",
@@ -47,7 +47,7 @@
     "sass": "^1.89.1",
     "typescript": "~5.8.3",
     "typescript-eslint": "^8.32.1",
-    "vite": "^6.3.5",
-    "vitest": "^3.1.4"
+    "vite": "^7.1.5",
+    "vitest": "^3.2.3"
   }
 }
