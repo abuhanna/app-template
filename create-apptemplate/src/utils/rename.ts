@@ -249,7 +249,6 @@ async function updateCommonFiles(
     'docker-compose.production.yml',
     'docker-compose.backend.yml',
     'docker-compose.frontend.yml',
-    'Makefile',
     'CLAUDE.md',
     'README.md',
   ];

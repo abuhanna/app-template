@@ -1,4 +1,4 @@
-import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
+import { describe, it, expect, vi, beforeEach } from 'vitest';
 
 // Mock degit before importing the module
 const mockClone = vi.fn().mockResolvedValue(undefined);
@@ -73,22 +73,11 @@ describe('downloadFrontendTemplate', () => {
 });
 
 describe('copyRootFiles', () => {
-  let fetchSpy: ReturnType<typeof vi.fn>;
-
   beforeEach(() => {
     vi.clearAllMocks();
-    fetchSpy = vi.fn().mockResolvedValue({
-      ok: true,
-      text: () => Promise.resolve('mock-content'),
-    });
-    vi.stubGlobal('fetch', fetchSpy);
   });
 
-  afterEach(() => {
-    vi.unstubAllGlobals();
-  });
-
-  it('downloads common files for all project types', async () => {
+  it('downloads shared/common for all project types', async () => {
     const config: ProjectConfig = {
       projectPath: '/tmp/test',
       projectType: 'backend',
@@ -97,20 +86,19 @@ describe('copyRootFiles', () => {
       frontendFramework: 'vue',
       ui: 'vuetify',
       installDeps: false,
-      placeInRoot: false,
+      placeInRoot: true,
       variant: 'full',
     };
 
     await copyRootFiles('abuhanna/app-template', '/tmp/test', config);
 
-    // Should download .env.example, .gitignore, CLAUDE.md
-    const fetchCalls = fetchSpy.mock.calls.map((c: unknown[]) => c[0]);
-    expect(fetchCalls).toContainEqual(expect.stringContaining('.env.example'));
-    expect(fetchCalls).toContainEqual(expect.stringContaining('.gitignore'));
-    expect(fetchCalls).toContainEqual(expect.stringContaining('CLAUDE.md'));
+    expect(degit).toHaveBeenCalledWith(
+      'abuhanna/app-template/shared/common',
+      { cache: false, force: true, verbose: false }
+    );
   });
 
-  it('downloads fullstack-specific files and docker for fullstack projects', async () => {
+  it('downloads docker infra and backend templates for fullstack', async () => {
     const config: ProjectConfig = {
       projectPath: '/tmp/test',
       projectType: 'fullstack',
@@ -125,16 +113,90 @@ describe('copyRootFiles', () => {
 
     await copyRootFiles('abuhanna/app-template', '/tmp/test', config);
 
-    const fetchCalls = fetchSpy.mock.calls.map((c: unknown[]) => c[0]);
-    // Should download fullstack-specific root files
-    expect(fetchCalls).toContainEqual(expect.stringContaining('Makefile'));
-    expect(fetchCalls).toContainEqual(expect.stringContaining('docker-compose.staging.yml'));
-    expect(fetchCalls).toContainEqual(expect.stringContaining('docker-compose.production.yml'));
-    // Should download fullstack README
-    expect(fetchCalls).toContainEqual(expect.stringContaining('README.fullstack.dotnet.md'));
-    // Should call degit for docker directory
+    // Should clone: common, nginx, supervisor, backend templates
     expect(degit).toHaveBeenCalledWith(
-      'abuhanna/app-template/docker',
+      'abuhanna/app-template/shared/common',
+      { cache: false, force: true, verbose: false }
+    );
+    expect(degit).toHaveBeenCalledWith(
+      'abuhanna/app-template/shared/docker/nginx',
+      { cache: false, force: true, verbose: false }
+    );
+    expect(degit).toHaveBeenCalledWith(
+      'abuhanna/app-template/shared/docker/supervisor',
+      { cache: false, force: true, verbose: false }
+    );
+    expect(degit).toHaveBeenCalledWith(
+      'abuhanna/app-template/shared/templates/dotnet',
+      { cache: false, force: true, verbose: false }
+    );
+  });
+
+  it('downloads multirepo README for non-root split projects', async () => {
+    const config: ProjectConfig = {
+      projectPath: '/tmp/test',
+      projectType: 'backend',
+      backend: 'spring',
+      architecture: 'clean',
+      frontendFramework: 'vue',
+      ui: 'vuetify',
+      installDeps: false,
+      placeInRoot: false,
+      variant: 'full',
+    };
+
+    await copyRootFiles('abuhanna/app-template', '/tmp/test', config);
+
+    expect(degit).toHaveBeenCalledWith(
+      'abuhanna/app-template/shared/common',
+      { cache: false, force: true, verbose: false }
+    );
+    expect(degit).toHaveBeenCalledWith(
+      'abuhanna/app-template/shared/templates/spring',
+      { cache: false, force: true, verbose: false }
+    );
+  });
+
+  it('skips templates for placeInRoot projects', async () => {
+    const config: ProjectConfig = {
+      projectPath: '/tmp/test',
+      projectType: 'backend',
+      backend: 'dotnet',
+      architecture: 'clean',
+      frontendFramework: 'vue',
+      ui: 'vuetify',
+      installDeps: false,
+      placeInRoot: true,
+      variant: 'full',
+    };
+
+    await copyRootFiles('abuhanna/app-template', '/tmp/test', config);
+
+    // Should only clone common, not templates
+    expect(degit).toHaveBeenCalledTimes(1);
+    expect(degit).toHaveBeenCalledWith(
+      'abuhanna/app-template/shared/common',
+      { cache: false, force: true, verbose: false }
+    );
+  });
+
+  it('uses dotnet as default backend for frontend-only non-root projects', async () => {
+    const config: ProjectConfig = {
+      projectPath: '/tmp/test',
+      projectType: 'frontend',
+      backend: 'dotnet',
+      architecture: 'clean',
+      frontendFramework: 'vue',
+      ui: 'vuetify',
+      installDeps: false,
+      placeInRoot: false,
+      variant: 'full',
+    };
+
+    await copyRootFiles('abuhanna/app-template', '/tmp/test', config);
+
+    expect(degit).toHaveBeenCalledWith(
+      'abuhanna/app-template/shared/templates/dotnet',
       { cache: false, force: true, verbose: false }
     );
   });

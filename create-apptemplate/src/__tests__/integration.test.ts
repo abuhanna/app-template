@@ -61,14 +61,14 @@ describe('updateFolderReferences (integration)', () => {
 
   it('replaces all backend variants in same file', async () => {
     fs.writeFileSync(
-      path.join(tmpDir, 'Makefile'),
+      path.join(tmpDir, 'CLAUDE.md'),
       'build:\n\tcd backend-dotnet && build\n\tcd backend-spring && build\n\tcd backend-nestjs && build'
     );
 
     const config = createConfig({ projectType: 'fullstack' });
     await updateFolderReferences(tmpDir, config);
 
-    const content = fs.readFileSync(path.join(tmpDir, 'Makefile'), 'utf-8');
+    const content = fs.readFileSync(path.join(tmpDir, 'CLAUDE.md'), 'utf-8');
     expect(content).toBe('build:\n\tcd backend && build\n\tcd backend && build\n\tcd backend && build');
   });
 

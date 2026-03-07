@@ -284,7 +284,6 @@ export async function updateFolderReferences(projectPath: string, config: Projec
     'docker-compose.production.yml',
     'docker-compose.backend.yml',
     'docker-compose.frontend.yml',
-    'Makefile',
     'CLAUDE.md',
     'README.md',
   ];
