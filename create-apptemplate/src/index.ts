@@ -2,7 +2,7 @@ import { intro, outro, isCancel, log, note } from '@clack/prompts';
 import pc from 'picocolors';
 import path from 'path';
 import { createRequire } from 'node:module';
-import { parseArgs, validateFrameworkUiPairing } from './cli.js';
+import { parseArgs, validateFrameworkUiPairing, validateFlagCombinations } from './cli.js';
 import { runInteractivePrompts, getBackendLabel, getArchitectureLabel, getFrontendLabel, getUILabel } from './prompts.js';
 import { generateProject } from './generator.js';
 import { formatUserError } from './utils/errors.js';
@@ -12,23 +12,48 @@ const require = createRequire(import.meta.url);
 const { version } = require('../package.json');
 
 async function main(): Promise<void> {
-  console.log();
-  intro(pc.bgCyan(pc.black(' Create AppTemplate ')));
+  // Parse CLI arguments early (before intro banner)
+  const cliArgs = parseArgs();
+
+  // Show help if requested (no banner needed)
+  if (cliArgs.help) {
+    showHelp();
+    process.exit(0);
+  }
+
+  // Show version if requested (no banner needed)
+  if (cliArgs.version) {
+    console.log(`create-apptemplate v${version}`);
+    process.exit(0);
+  }
+
+  const quiet = cliArgs.quiet || false;
+
+  // Suppress @clack output in quiet mode
+  const originalLog = console.log;
+  const originalWarn = console.warn;
+  if (quiet) {
+    console.log = () => {};
+    console.warn = () => {};
+  }
+
+  if (!quiet) {
+    console.log();
+    intro(pc.bgCyan(pc.black(' Create AppTemplate ')));
+  }
 
   try {
-    // Parse CLI arguments
-    const cliArgs = parseArgs();
-
-    // Show help if requested
-    if (cliArgs.help) {
-      showHelp();
-      process.exit(0);
-    }
-
-    // Show version if requested
-    if (cliArgs.version) {
-      console.log(`create-apptemplate v${version}`);
-      process.exit(0);
+    // Validate flag combinations
+    const flagErrors = validateFlagCombinations(cliArgs);
+    if (flagErrors.length > 0) {
+      for (const err of flagErrors) {
+        if (quiet) {
+          originalLog(pc.red(`Error: ${err}`));
+        } else {
+          log.error(pc.red(err));
+        }
+      }
+      process.exit(1);
     }
 
     // Get project configuration (interactive or from CLI args)
@@ -66,6 +91,12 @@ async function main(): Promise<void> {
         variant: cliArgs.variant || 'full',
       };
     } else {
+      // Quiet mode requires non-interactive (all flags provided)
+      if (quiet) {
+        originalLog(pc.red('Error: --quiet requires all flags for non-interactive mode'));
+        originalLog(pc.gray('Required: <project-path> --backend <framework> [--name <namespace> for dotnet/spring]'));
+        process.exit(1);
+      }
       // Interactive mode
       const result = await runInteractivePrompts(cliArgs);
       if (isCancel(result)) {
@@ -75,19 +106,37 @@ async function main(): Promise<void> {
       config = result;
     }
 
+    // Dry-run mode: show what would be generated, then exit
+    if (cliArgs.dryRun) {
+      // Restore console for dry-run output (even in quiet mode)
+      console.log = originalLog;
+      console.warn = originalWarn;
+      showDryRun(config);
+      process.exit(0);
+    }
+
     // Generate the project
     const genStart = Date.now();
     await generateProject(config);
     const totalTime = ((Date.now() - genStart) / 1000).toFixed(1);
 
-    // Success message + summary
-    console.log();
-    outro(pc.green(`Done! Project created in ${totalTime}s`));
+    if (quiet) {
+      // Restore console for final message
+      console.log = originalLog;
+      console.log(pc.green(`Done! Project created at ${path.resolve(config.projectPath)}`));
+    } else {
+      // Success message + summary
+      console.log();
+      outro(pc.green(`Done! Project created in ${totalTime}s`));
 
-    // Show rich summary and next steps
-    showProjectSummary(config, totalTime);
-    showNextSteps(config);
+      // Show rich summary and next steps
+      showProjectSummary(config, totalTime);
+      showNextSteps(config);
+    }
   } catch (error) {
+    // Restore console for error output
+    console.log = originalLog;
+    console.warn = originalWarn;
     log.error(pc.red(formatUserError(error)));
     process.exit(1);
   }
@@ -99,39 +148,122 @@ ${pc.bold('Usage:')}
   ${pc.cyan('npm create apptemplate@latest')} ${pc.gray('[project-directory]')} ${pc.gray('[options]')}
 
 ${pc.bold('Options:')}
-  ${pc.yellow('-t, --type')}         Project type: fullstack, backend, frontend ${pc.gray('(default: fullstack)')}
-  ${pc.yellow('-b, --backend')}      Backend framework: dotnet, spring, nestjs
-  ${pc.yellow('-a, --architecture')} Architecture: clean, nlayer, feature ${pc.gray('(default: clean)')}
-  ${pc.yellow('-f, --framework')}    Frontend framework: vue, react ${pc.gray('(default: vue)')}
-  ${pc.yellow('-u, --ui')}           UI library: vuetify, primevue (Vue) | mui, primereact (React)
-  ${pc.yellow('-n, --name')}         Project namespace (Company.Project format, .NET/Spring only)
-  ${pc.yellow('-r, --root')}         Place files in project root ${pc.gray('(backend/frontend-only)')}
-  ${pc.yellow('-V, --variant')}      Template variant: full, minimal ${pc.gray('(default: full)')}
-                       full: All features (user management, departments, dashboard)
-                       minimal: Auth, files, audit logs, notifications only
-  ${pc.yellow('-i, --install')}      Install dependencies after creation
-  ${pc.yellow('-h, --help')}         Show this help message
-  ${pc.yellow('-v, --version')}      Show version number
+  ${pc.yellow('-t, --type')} ${pc.gray('<value>')}         Project type ${pc.gray('(default: fullstack)')}
+                            Values: ${pc.cyan('fullstack')}, ${pc.cyan('backend')}, ${pc.cyan('frontend')}
+  ${pc.yellow('-b, --backend')} ${pc.gray('<value>')}      Backend framework ${pc.gray('(required for non-interactive)')}
+                            Values: ${pc.cyan('dotnet')}, ${pc.cyan('spring')}, ${pc.cyan('nestjs')}
+  ${pc.yellow('-a, --architecture')} ${pc.gray('<value>')} Architecture pattern ${pc.gray('(default: clean)')}
+                            Values: ${pc.cyan('clean')}, ${pc.cyan('nlayer')}, ${pc.cyan('feature')}
+  ${pc.yellow('-f, --framework')} ${pc.gray('<value>')}    Frontend framework ${pc.gray('(default: vue)')}
+                            Values: ${pc.cyan('vue')}, ${pc.cyan('react')}
+  ${pc.yellow('-u, --ui')} ${pc.gray('<value>')}           UI library ${pc.gray('(default: vuetify for vue, mui for react)')}
+                            Vue: ${pc.cyan('vuetify')}, ${pc.cyan('primevue')}
+                            React: ${pc.cyan('mui')}, ${pc.cyan('primereact')}
+  ${pc.yellow('-n, --name')} ${pc.gray('<value>')}         Project namespace in Company.Project format
+                            Required for ${pc.cyan('dotnet')} and ${pc.cyan('spring')} backends
+  ${pc.yellow('-V, --variant')} ${pc.gray('<value>')}      Template variant ${pc.gray('(default: full)')}
+                            ${pc.cyan('full')}: All features (user management, departments, dashboard)
+                            ${pc.cyan('minimal')}: Auth, files, audit logs, notifications only
+  ${pc.yellow('-r, --root')}                Place files in project root ${pc.gray('(backend/frontend-only)')}
+  ${pc.yellow('-i, --install')}              Install dependencies after creation
+  ${pc.yellow('-q, --quiet')}                Suppress output except errors ${pc.gray('(non-interactive only)')}
+  ${pc.yellow('    --dry-run')}              Show what would be generated without creating files
+  ${pc.yellow('-h, --help')}                 Show this help message
+  ${pc.yellow('-v, --version')}              Show version number
 
 ${pc.bold('Examples:')}
-  ${pc.gray('# Interactive mode')}
+  ${pc.gray('# Interactive mode (prompts for all options)')}
   npm create apptemplate@latest
 
-  ${pc.gray('# Create fullstack project with .NET backend')}
+  ${pc.gray('# Fullstack: .NET + Vue/Vuetify (defaults)')}
   npm create apptemplate@latest my-app -b dotnet -n "MyCompany.MyApp" -i
 
-  ${pc.gray('# Create minimal backend-only project (no user management)')}
-  npm create apptemplate@latest my-api -t backend -b spring -n "MyCompany.MyApi" -V minimal
+  ${pc.gray('# Fullstack: Spring Boot + React/MUI')}
+  npm create apptemplate@latest my-app -b spring -f react -u mui -n "MyCompany.MyApp"
 
-  ${pc.gray('# Create frontend-only project with PrimeVue')}
-  npm create apptemplate@latest my-spa -t frontend -u primevue
+  ${pc.gray('# Backend-only: NestJS with feature architecture, placed in project root')}
+  npm create apptemplate@latest my-api -t backend -b nestjs -a feature --root
 
-  ${pc.gray('# Create fullstack project with React + MUI')}
-  npm create apptemplate@latest my-app -b dotnet -f react -u mui -n "MyCompany.MyApp"
+  ${pc.gray('# Frontend-only: Vue + PrimeVue, minimal variant')}
+  npm create apptemplate@latest my-spa -t frontend -f vue -u primevue -V minimal
 
-  ${pc.gray('# Create backend in project root (no subfolder)')}
-  npm create apptemplate@latest my-api -t backend -b nestjs --root
+  ${pc.gray('# Dry run: preview what would be generated')}
+  npm create apptemplate@latest my-app -b dotnet -n "My.App" --dry-run
+
+  ${pc.gray('# CI/CD: quiet mode with install')}
+  npm create apptemplate@latest my-app -b nestjs -q -i
+
+${pc.bold('Validation rules:')}
+  ${pc.gray('•')} --type frontend cannot be combined with --backend, --architecture, or --name
+  ${pc.gray('•')} --type backend cannot be combined with --framework or --ui
+  ${pc.gray('•')} --root cannot be used with --type fullstack
+  ${pc.gray('•')} --ui must be compatible with --framework (e.g., vue → vuetify/primevue)
+
+${pc.bold('Docs:')} ${pc.cyan('https://github.com/abuhanna/app-template#readme')}
 `);
+}
+
+function showDryRun(config: ProjectConfig): void {
+  const absolutePath = path.resolve(config.projectPath);
+
+  console.log();
+  console.log(pc.bold(pc.cyan('  Dry Run — no files will be created')));
+  console.log();
+
+  // Resolved configuration
+  console.log(pc.bold('  Configuration:'));
+  console.log(`    ${pc.cyan('Path')}           ${absolutePath}`);
+  console.log(`    ${pc.cyan('Type')}           ${config.projectType}`);
+
+  if (config.projectType !== 'frontend') {
+    console.log(`    ${pc.cyan('Backend')}        ${getBackendLabel(config.backend)} (${getArchitectureLabel(config.architecture)})`);
+  }
+  if (config.projectType !== 'backend') {
+    console.log(`    ${pc.cyan('Frontend')}       ${getFrontendLabel(config.frontendFramework)} + ${getUILabel(config.ui)}`);
+  }
+
+  console.log(`    ${pc.cyan('Variant')}        ${config.variant}`);
+  if (config.projectName) {
+    console.log(`    ${pc.cyan('Namespace')}      ${config.projectName}`);
+  }
+  console.log(`    ${pc.cyan('Install deps')}   ${config.installDeps ? 'yes' : 'no'}`);
+  console.log(`    ${pc.cyan('Place in root')}  ${config.placeInRoot ? 'yes' : 'no'}`);
+
+  // Template source paths
+  console.log();
+  console.log(pc.bold('  Template sources (degit):'));
+  const repo = 'abuhanna/app-template';
+
+  if (config.projectType !== 'frontend') {
+    const backendSrc = `${repo}/backend/${config.backend}/${config.architecture}-architecture/${config.variant}`;
+    const backendDest = config.projectType === 'fullstack'
+      ? path.join(absolutePath, 'backend')
+      : config.placeInRoot ? absolutePath : path.join(absolutePath, 'backend');
+    console.log(`    ${pc.green('↓')} ${pc.gray(backendSrc)}`);
+    console.log(`      ${pc.cyan('→')} ${backendDest}`);
+  }
+
+  if (config.projectType !== 'backend') {
+    const frontendSrc = `${repo}/frontend/${config.frontendFramework}/${config.ui}/${config.variant}`;
+    const frontendDest = config.projectType === 'fullstack'
+      ? path.join(absolutePath, 'frontend')
+      : config.placeInRoot ? absolutePath : path.join(absolutePath, 'frontend');
+    console.log(`    ${pc.green('↓')} ${pc.gray(frontendSrc)}`);
+    console.log(`      ${pc.cyan('→')} ${frontendDest}`);
+  }
+
+  // Namespace transformations
+  if (config.projectName && config.projectName !== 'App.Template') {
+    console.log();
+    console.log(pc.bold('  Namespace transformations:'));
+    console.log(`    ${pc.gray('App.Template')}      ${pc.cyan('→')} ${config.projectName}`);
+    const kebab = config.projectName.toLowerCase().replace(/\./g, '-');
+    console.log(`    ${pc.gray('app-template')}      ${pc.cyan('→')} ${kebab}`);
+    const pascal = config.projectName.replace(/\./g, '');
+    console.log(`    ${pc.gray('AppTemplate')}       ${pc.cyan('→')} ${pascal}`);
+  }
+
+  console.log();
 }
 
 function showProjectSummary(config: ProjectConfig, totalTime: string): void {

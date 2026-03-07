@@ -45,6 +45,18 @@ export function parseArgs(): CLIArgs {
       continue;
     }
 
+    if (arg === '-q' || arg === '--quiet') {
+      result.quiet = true;
+      i++;
+      continue;
+    }
+
+    if (arg === '--dry-run') {
+      result.dryRun = true;
+      i++;
+      continue;
+    }
+
     // Handle options with values
     if (arg === '-t' || arg === '--type') {
       const value = args[++i];
@@ -131,13 +143,6 @@ export function parseArgs(): CLIArgs {
     i++;
   }
 
-  // Cross-validate framework + UI pairing (warn and clear invalid value)
-  const pairingError = validateFrameworkUiPairing(result.framework, result.ui);
-  if (pairingError) {
-    console.warn(`Warning: ${pairingError}`);
-    result.ui = undefined;
-  }
-
   return result;
 }
 
@@ -182,4 +187,56 @@ export function validateFrameworkUiPairing(
     return `UI library "${ui}" is not compatible with framework "${framework}". Valid options for ${framework}: ${allowed.join(', ')}`;
   }
   return null;
+}
+
+/**
+ * Validate flag combinations that are logically incompatible.
+ * Returns an array of error messages (empty if valid).
+ */
+export function validateFlagCombinations(args: CLIArgs): string[] {
+  const errors: string[] = [];
+  const type = args.type;
+
+  // --type frontend: backend-related flags must NOT be provided
+  if (type === 'frontend') {
+    if (args.backend) {
+      errors.push(`--backend cannot be used with --type frontend`);
+    }
+    if (args.architecture) {
+      errors.push(`--architecture cannot be used with --type frontend`);
+    }
+    if (args.projectName) {
+      errors.push(`--name cannot be used with --type frontend`);
+    }
+  }
+
+  // --type backend: frontend-related flags must NOT be provided
+  if (type === 'backend') {
+    if (args.framework) {
+      errors.push(`--framework cannot be used with --type backend`);
+    }
+    if (args.ui) {
+      errors.push(`--ui cannot be used with --type backend`);
+    }
+  }
+
+  // --root is only valid for backend-only or frontend-only
+  if (args.root && type === 'fullstack') {
+    errors.push(`--root cannot be used with --type fullstack (backend and frontend are always in subfolders)`);
+  }
+
+  // Framework + UI pairing
+  if (args.framework && args.ui) {
+    const pairingError = validateFrameworkUiPairing(args.framework, args.ui);
+    if (pairingError) {
+      errors.push(`--framework ${args.framework} cannot be used with --ui ${args.ui}. Valid: ${uiCompatibility[args.framework].join(', ')}`);
+    }
+  }
+
+  // --quiet is only valid in non-interactive mode (projectPath + backend required)
+  if (args.quiet && !args.projectPath) {
+    errors.push(`--quiet requires a project path and enough flags for non-interactive mode`);
+  }
+
+  return errors;
 }

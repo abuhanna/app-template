@@ -1,5 +1,6 @@
 import { describe, it, expect, beforeEach, afterEach, vi } from 'vitest';
-import { parseArgs, validateFrameworkUiPairing } from '../cli.js';
+import { parseArgs, validateFrameworkUiPairing, validateFlagCombinations } from '../cli.js';
+import type { CLIArgs } from '../types.js';
 
 describe('parseArgs', () => {
   const originalArgv = process.argv;
@@ -203,12 +204,11 @@ describe('parseArgs', () => {
     expect(result.root).toBe(true);
   });
 
-  it('cross-validates --framework and --ui and clears ui if invalid pairing', () => {
+  it('parses both framework and ui even when pairing is invalid (validation happens later)', () => {
     setArgs('-f', 'vue', '-u', 'mui');
     const result = parseArgs();
     expect(result.framework).toBe('vue');
-    expect(result.ui).toBeUndefined();
-    expect(console.warn).toHaveBeenCalledWith(expect.stringContaining('not compatible'));
+    expect(result.ui).toBe('mui');
   });
 
   it('keeps valid framework+ui pairing', () => {
@@ -216,7 +216,31 @@ describe('parseArgs', () => {
     const result = parseArgs();
     expect(result.framework).toBe('react');
     expect(result.ui).toBe('mui');
-    expect(console.warn).not.toHaveBeenCalled();
+  });
+
+  // New flag parsing tests
+  it('parses -q flag', () => {
+    setArgs('-q');
+    expect(parseArgs().quiet).toBe(true);
+  });
+
+  it('parses --quiet flag', () => {
+    setArgs('--quiet');
+    expect(parseArgs().quiet).toBe(true);
+  });
+
+  it('parses --dry-run flag', () => {
+    setArgs('--dry-run');
+    expect(parseArgs().dryRun).toBe(true);
+  });
+
+  it('parses all new flags combined with existing ones', () => {
+    setArgs('my-project', '-b', 'dotnet', '-q', '--dry-run');
+    const result = parseArgs();
+    expect(result.projectPath).toBe('my-project');
+    expect(result.backend).toBe('dotnet');
+    expect(result.quiet).toBe(true);
+    expect(result.dryRun).toBe(true);
   });
 });
 
@@ -265,5 +289,166 @@ describe('validateFrameworkUiPairing', () => {
   it('returns error for react + primevue', () => {
     const result = validateFrameworkUiPairing('react', 'primevue');
     expect(result).toContain('not compatible');
+  });
+});
+
+describe('validateFlagCombinations', () => {
+  // --type frontend conflicts
+  it('errors when --type frontend used with --backend', () => {
+    const args: CLIArgs = { type: 'frontend', backend: 'dotnet' };
+    const errors = validateFlagCombinations(args);
+    expect(errors).toContain('--backend cannot be used with --type frontend');
+  });
+
+  it('errors when --type frontend used with --architecture', () => {
+    const args: CLIArgs = { type: 'frontend', architecture: 'clean' };
+    const errors = validateFlagCombinations(args);
+    expect(errors).toContain('--architecture cannot be used with --type frontend');
+  });
+
+  it('errors when --type frontend used with --name', () => {
+    const args: CLIArgs = { type: 'frontend', projectName: 'My.App' };
+    const errors = validateFlagCombinations(args);
+    expect(errors).toContain('--name cannot be used with --type frontend');
+  });
+
+  it('collects multiple frontend conflict errors at once', () => {
+    const args: CLIArgs = { type: 'frontend', backend: 'dotnet', architecture: 'clean', projectName: 'My.App' };
+    const errors = validateFlagCombinations(args);
+    expect(errors).toHaveLength(3);
+  });
+
+  // --type backend conflicts
+  it('errors when --type backend used with --framework', () => {
+    const args: CLIArgs = { type: 'backend', framework: 'vue' };
+    const errors = validateFlagCombinations(args);
+    expect(errors).toContain('--framework cannot be used with --type backend');
+  });
+
+  it('errors when --type backend used with --ui', () => {
+    const args: CLIArgs = { type: 'backend', ui: 'vuetify' };
+    const errors = validateFlagCombinations(args);
+    expect(errors).toContain('--ui cannot be used with --type backend');
+  });
+
+  it('collects multiple backend conflict errors at once', () => {
+    const args: CLIArgs = { type: 'backend', framework: 'vue', ui: 'vuetify' };
+    const errors = validateFlagCombinations(args);
+    expect(errors).toHaveLength(2);
+  });
+
+  // --root + fullstack conflict
+  it('errors when --root used with --type fullstack', () => {
+    const args: CLIArgs = { type: 'fullstack', root: true };
+    const errors = validateFlagCombinations(args);
+    expect(errors).toContain('--root cannot be used with --type fullstack (backend and frontend are always in subfolders)');
+  });
+
+  it('allows --root with --type backend', () => {
+    const args: CLIArgs = { type: 'backend', root: true, projectPath: 'test' };
+    const errors = validateFlagCombinations(args);
+    expect(errors).toHaveLength(0);
+  });
+
+  it('allows --root with --type frontend', () => {
+    const args: CLIArgs = { type: 'frontend', root: true, projectPath: 'test' };
+    const errors = validateFlagCombinations(args);
+    expect(errors).toHaveLength(0);
+  });
+
+  // --quiet validation
+  it('errors when --quiet used without project path', () => {
+    const args: CLIArgs = { quiet: true };
+    const errors = validateFlagCombinations(args);
+    expect(errors).toContain('--quiet requires a project path and enough flags for non-interactive mode');
+  });
+
+  it('allows --quiet with project path', () => {
+    const args: CLIArgs = { quiet: true, projectPath: 'my-app', backend: 'dotnet' };
+    const errors = validateFlagCombinations(args);
+    expect(errors).toHaveLength(0);
+  });
+
+  // Framework + UI pairing
+  it('errors when --framework vue used with --ui mui', () => {
+    const args: CLIArgs = { framework: 'vue', ui: 'mui' };
+    const errors = validateFlagCombinations(args);
+    expect(errors.some(e => e.includes('--framework vue') && e.includes('--ui mui'))).toBe(true);
+  });
+
+  it('errors when --framework vue used with --ui primereact', () => {
+    const args: CLIArgs = { framework: 'vue', ui: 'primereact' };
+    const errors = validateFlagCombinations(args);
+    expect(errors.some(e => e.includes('--framework vue') && e.includes('--ui primereact'))).toBe(true);
+  });
+
+  it('errors when --framework react used with --ui vuetify', () => {
+    const args: CLIArgs = { framework: 'react', ui: 'vuetify' };
+    const errors = validateFlagCombinations(args);
+    expect(errors.some(e => e.includes('--framework react') && e.includes('--ui vuetify'))).toBe(true);
+  });
+
+  it('no error for valid vue + vuetify pairing', () => {
+    const args: CLIArgs = { framework: 'vue', ui: 'vuetify' };
+    const errors = validateFlagCombinations(args);
+    expect(errors).toHaveLength(0);
+  });
+
+  it('no error for valid react + mui pairing', () => {
+    const args: CLIArgs = { framework: 'react', ui: 'mui' };
+    const errors = validateFlagCombinations(args);
+    expect(errors).toHaveLength(0);
+  });
+
+  // Valid combinations return no errors
+  it('returns no errors for valid fullstack config', () => {
+    const args: CLIArgs = {
+      projectPath: 'my-app',
+      type: 'fullstack',
+      backend: 'dotnet',
+      architecture: 'clean',
+      framework: 'vue',
+      ui: 'vuetify',
+      projectName: 'My.App',
+    };
+    const errors = validateFlagCombinations(args);
+    expect(errors).toHaveLength(0);
+  });
+
+  it('returns no errors for valid backend-only config', () => {
+    const args: CLIArgs = {
+      projectPath: 'my-api',
+      type: 'backend',
+      backend: 'nestjs',
+      architecture: 'feature',
+      root: true,
+    };
+    const errors = validateFlagCombinations(args);
+    expect(errors).toHaveLength(0);
+  });
+
+  it('returns no errors for valid frontend-only config', () => {
+    const args: CLIArgs = {
+      projectPath: 'my-spa',
+      type: 'frontend',
+      framework: 'react',
+      ui: 'mui',
+    };
+    const errors = validateFlagCombinations(args);
+    expect(errors).toHaveLength(0);
+  });
+
+  it('returns no errors when no type specified (defaults to fullstack)', () => {
+    const args: CLIArgs = {
+      projectPath: 'my-app',
+      backend: 'dotnet',
+    };
+    const errors = validateFlagCombinations(args);
+    expect(errors).toHaveLength(0);
+  });
+
+  it('returns no errors for empty args', () => {
+    const errors = validateFlagCombinations({});
+    expect(errors).toHaveLength(0);
   });
 });

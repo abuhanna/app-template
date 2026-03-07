@@ -31,4 +31,6 @@ export interface CLIArgs {
   variant?: TemplateVariant;
   help?: boolean;
   version?: boolean;
+  quiet?: boolean;
+  dryRun?: boolean;
 }
