@@ -32,15 +32,13 @@ via degit, mutates namespace/paths, and produces ready-to-run projects.
         {vuetify,primevue,mui,primereact}/
           {full,minimal}/
     create-apptemplate/        ← CLI source code
-    docker/
-      templates/root/          ← Per-backend Docker/compose/README templates
+    shared/                    ← CLI-downloadable root files (degit + raw API)
+      common/                  ← .gitignore, .env.example, CLAUDE.md, etc.
+      docker/                  ← Nginx & supervisor configs for scaffolded projects
+      templates/{backend}/     ← Per-backend Dockerfile, docker-compose, README, supervisord
+    docker/                    ← Local dev Docker configs (monorepo only)
       nginx/                   ← Nginx config for reverse proxy
       supervisor/              ← Supervisor process manager config
-    docs/                      ← Project documentation
-      architecture-patterns.md
-      cli-development.md
-      docker-templates.md
-      version-alignment.md
 
 ## CLI Development Commands
 
@@ -190,14 +188,14 @@ via degit, mutates namespace/paths, and produces ready-to-run projects.
 
 ### Docker & Infrastructure
 - Fullstack: root Dockerfile (multi-stage) + supervisor (backend + nginx)
-- Templates in `docker/templates/root/` keyed by backend (Dockerfile.{backend}, etc.)
+- Templates in `shared/templates/{backend}/` (Dockerfile, docker-compose.yml, README, supervisord.conf)
 - Nginx: reverse proxy /api → backend:8080, static frontend, WebSocket upgrade
 - See [docs/docker-templates.md](docs/docker-templates.md) for full guide
 
 ## Known Issues (prioritize fixing)
 1. ~~CLI version display hardcoded as v1.0.0~~ — FIXED: reads from package.json dynamically
 2. ~~No cross-validation of --framework + --ui~~ — FIXED: validated in cli.ts parseArgs() + index.ts non-interactive mode
-3. ~~Full repo download for ~10 root files~~ — FIXED: uses GitHub raw API + targeted degit for docker/
+3. ~~Full repo download for ~10 root files~~ — FIXED: uses GitHub raw API + targeted degit for shared/
 4. ~~No cleanup on partial failure~~ — FIXED: generator.ts cleans up directory on failure (if we created it)
 5. ~~Version inconsistencies across variants~~ — FIXED: aligned all variants (see [docs/version-alignment.md](docs/version-alignment.md))
 6. lint-staged paths reference post-scaffold names, not monorepo paths
@@ -213,7 +211,7 @@ To add a new backend (e.g., Go), modify these files:
 6. `create-apptemplate/src/index.ts` — update showNextSteps()
 7. `create-apptemplate/src/generator.ts` — update updateFolderReferences()
 8. Create `backend/go/{clean,feature,nlayer}-architecture/{full,minimal}/`
-9. Create `docker/templates/root/Dockerfile.go`, `docker-compose.go.yml`, etc.
+9. Create `shared/templates/go/Dockerfile`, `docker-compose.yml`, `README.fullstack.md`, etc.
 
 See [docs/cli-development.md](docs/cli-development.md) for the complete guide.
 
