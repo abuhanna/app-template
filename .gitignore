@@ -3,6 +3,13 @@
 ##
 ## Get latest from `dotnet new gitignore`
 
+# Build output
+dist/
+target/
+
+# Test coverage
+coverage/
+
 # dotenv files
 .env
 
@@ -515,39 +522,10 @@ docs/
 # Ignore local database data
 pgdata/
 
-# Frontend specific ignores (Vuetify)
-frontend-vuetify/node_modules/
-frontend-vuetify/dist/
-frontend-vuetify/coverage/
-frontend-vuetify/.env
-frontend-vuetify/.env.local
-frontend-vuetify/.env.production
-frontend-vuetify/.env.staging
+# Spring Maven wrapper
+.mvn/wrapper/maven-wrapper.jar
 
-# Frontend specific ignores (PrimeVue)
-frontend-primevue/node_modules/
-frontend-primevue/dist/
-frontend-primevue/coverage/
-frontend-primevue/.env
-frontend-primevue/.env.local
-frontend-primevue/.env.production
-frontend-primevue/.env.staging
-
-# Create-apptemplate CLI
-create-apptemplate/node_modules/
-create-apptemplate/dist/
-create-apptemplate/coverage/
-
-# Backend NestJS
-backend-nestjs/node_modules/
-backend-nestjs/dist/
-backend-nestjs/coverage/
-
-# Backend Spring
-backend-spring/target/
-backend-spring/.mvn/wrapper/maven-wrapper.jar
-backend-spring/HELP.md
-backend-spring/api/src/main/resources/application.yml
+# Spring application config (secrets)
 application.yml
 
 # Temporary and cache files
