@@ -1,293 +1,145 @@
-# CLAUDE.md
+# AppTemplate — Scaffolding Generator Monorepo
 
-This file provides guidance to Claude Code (claude.ai/code) when working with code in this repository.
+## What This Is
+Monorepo containing the `@abuhannaa/create-apptemplate` CLI tool and all reference
+template implementations. The CLI downloads template subdirectories from this repo
+via degit, mutates namespace/paths, and produces ready-to-run projects.
 
-## Project Overview
+## Architecture Overview
+- CLI tool: `create-apptemplate/` (TypeScript, published to npm)
+- Generation strategy: degit download + regex namespace rename (NOT template engine)
+- Templates are REAL working projects — they must build and run as-is in the monorepo
+- 98 total scaffoldable configurations (18 backend + 8 frontend + 72 fullstack)
 
-AppTemplate is a fullstack application scaffolding template monorepo containing:
-- **Backend**: .NET 8.0, Spring Boot 3, or NestJS with multiple architecture options
-- **Frontend (Vue)**: Vue 3 + Vuetify 3 or PrimeVue SPA with Vite
-- **Frontend (React)**: React 18 + MUI or PrimeReact SPA with Vite
-- **CLI Tool**: `@abuhannaa/create-apptemplate` - scaffolding generator published to NPM
-
-This is the **source repository** for the NPM package. End users scaffold projects via `npm create @abuhannaa/apptemplate@latest`.
-
----
-
-## Common Commands
-
-### Backend (.NET)
-
-```bash
-cd backend/dotnet/clean-architecture/full
-
-# Build
-dotnet build
-
-# Run all tests
-dotnet test
-
-# Run single test file
-dotnet test --filter "FullyQualifiedName~UserTests"
-
-# Run single test method
-dotnet test --filter "FullyQualifiedName~UserTests.User_Create_ShouldSetProperties"
-
-# Run tests with coverage
-dotnet test --collect:"XPlat Code Coverage"
-
-# Run application
-dotnet run --project src/Presentation/App.Template.WebAPI
-
-# Add migration
-dotnet ef migrations add <MigrationName> --project src/Infrastructure/App.Template.Infrastructure --startup-project src/Presentation/App.Template.WebAPI
-
-# Apply migrations (also auto-applied on startup)
-dotnet ef database update --project src/Infrastructure/App.Template.Infrastructure --startup-project src/Presentation/App.Template.WebAPI
-```
-
-Backend runs at `http://localhost:5100` with Swagger at `/swagger`.
-
-### Frontend (Vue - Vuetify/PrimeVue)
-
-```bash
-cd frontend/vue/vuetify/full  # or frontend/vue/primevue/full
-
-npm install        # Install dependencies
-npm run dev        # Development server (http://localhost:3000)
-npm run build      # Production build
-
-# Testing
-npm run test              # Run tests once
-npm run test:watch        # Run tests in watch mode
-npm run test:coverage     # Run tests with coverage
-
-# Linting & Formatting
-npm run lint              # Lint and auto-fix
-npm run lint:check        # Check lint (no fix)
-npm run format            # Format with Prettier
-npm run format:check      # Check formatting
-```
-
-### Frontend (React - MUI/PrimeReact)
-
-```bash
-cd frontend/react/mui/full  # or frontend/react/primereact/full
-
-npm install        # Install dependencies
-npm run dev        # Development server (http://localhost:3000)
-npm run build      # Production build
-npm run lint       # Lint with ESLint
-npm run typecheck  # TypeScript type checking
-```
-
-### CLI Tool (`create-apptemplate`)
-
-```bash
-cd create-apptemplate
-
-npm install        # Install dependencies
-npm run build      # Build with tsup
-npm run dev        # Build in watch mode
-npm run typecheck  # TypeScript type checking
-```
-
-### Docker
-
-```bash
-cp .env.example .env      # Setup environment
-docker compose up -d --build   # Start all services
-docker compose logs -f         # View logs
-docker compose down            # Stop services
-```
-
-Access: Frontend at `http://localhost`, API at `http://localhost:5100`, API via nginx at `http://localhost/api`.
-
----
+## Combinatorial Matrix
+| Dimension | Options |
+|-----------|---------|
+| Project type | fullstack, backend-only, frontend-only |
+| Backend | dotnet (.NET 8), spring (Spring Boot 3), nestjs (NestJS 10) |
+| Architecture | clean, feature-based, nlayer |
+| Frontend | vue (Vue 3), react (React 19) |
+| UI library | vuetify, primevue (Vue) / mui, primereact (React) |
+| Variant | full, minimal |
 
 ## Monorepo Structure
 
-```
-├── backend/
-│   ├── dotnet/
-│   │   ├── clean-architecture/
-│   │   │   ├── full/              # All features (user management, departments, etc.)
-│   │   │   └── minimal/           # Auth, files, audit logs, notifications only
-│   │   ├── feature-architecture/
-│   │   │   ├── full/
-│   │   │   └── minimal/
-│   │   └── nlayer-architecture/
-│   │       ├── full/
-│   │       └── minimal/
-│   ├── spring/
-│   │   ├── clean-architecture/{full,minimal}/
-│   │   ├── feature-architecture/{full,minimal}/
-│   │   └── nlayer-architecture/{full,minimal}/
-│   └── nestjs/
-│       ├── clean-architecture/{full,minimal}/
-│       ├── feature-architecture/{full,minimal}/
-│       └── nlayer-architecture/{full,minimal}/
-├── frontend/
-│   ├── vue/
-│   │   ├── vuetify/{full,minimal}/
-│   │   └── primevue/{full,minimal}/
-│   └── react/
-│       ├── mui/{full,minimal}/
-│       └── primereact/{full,minimal}/
-├── create-apptemplate/       # NPM CLI scaffolding tool
-└── docker/                   # Docker/Nginx configurations
-```
+    backend/
+      {dotnet,spring,nestjs}/
+        {clean,feature,nlayer}-architecture/
+          {full,minimal}/
+    frontend/
+      {vue,react}/
+        {vuetify,primevue,mui,primereact}/
+          {full,minimal}/
+    create-apptemplate/        ← CLI source code
+    docker/
+      templates/root/          ← Per-backend Docker/compose/README templates
+      nginx/                   ← Nginx config for reverse proxy
+      supervisor/              ← Supervisor process manager config
 
-### Template Variants
+## CLI Development Commands
 
-- **full**: All features including user management, departments, dashboard, data export
-- **minimal**: Auth, file upload, audit logs, notifications (no user/department management)
+    cd create-apptemplate
+    npm run dev         # Watch mode (tsup --watch)
+    npm run build       # Production build (tsup)
+    npm run typecheck   # TypeScript check (tsc --noEmit)
+    npm run cli         # Run CLI locally (tsx src/index.ts)
+    npm link            # Link for local npm create testing
+    npm publish --access public  # Publish to npm
 
----
+## Backend Commands
 
-## Backend Architecture (Clean Architecture)
+### .NET 8
 
-### Layer Dependencies
-```
-WebAPI → Application → Domain
-           ↓
-      Infrastructure
-```
+    cd backend/dotnet/{arch}-architecture/{variant}
+    dotnet restore
+    dotnet build
+    dotnet run --project src/Presentation/App.Template.WebAPI  # clean-arch
+    dotnet run --project src/App.Template.Api                   # feature/nlayer
+    dotnet test
+    dotnet ef migrations add <Name> --project src/Infrastructure/App.Template.Infrastructure --startup-project src/Presentation/App.Template.WebAPI  # clean-arch only
 
-### Domain Layer (`App.Template.Domain`)
-- Entities: `User`, `Department`, `Notification`, `RefreshToken`
-- No dependencies on other layers
-- Rich domain models with encapsulated business logic
+### Spring Boot 3
 
-### Application Layer (`App.Template.Application`)
-- CQRS with MediatR: Commands for mutations, Queries for reads
-- Feature folders: `Authentication`, `UserManagement`, `DepartmentManagement`, `NotificationManagement`
-- FluentValidation for request validation
-- DTOs and interfaces for infrastructure services
+    cd backend/spring/{arch}-architecture/{variant}
+    ./mvnw clean compile       # Build
+    ./mvnw spring-boot:run     # Run (clean-arch: cd api/ first)
+    ./mvnw test                # Test
 
-### Infrastructure Layer (`App.Template.Infrastructure`)
-- `AppTemplateDbContext` with EF Core + PostgreSQL (Npgsql)
-- Service implementations: `JwtTokenService`, `PasswordHashService`, `EmailService`
-- SignalR Hub for real-time notifications
+### NestJS
 
-### Presentation Layer (`App.Template.WebAPI`)
-- RESTful controllers dispatching via MediatR
-- JWT authentication with refresh token rotation
-- Rate limiting middleware
-- Swagger/OpenAPI with JWT auth UI
+    cd backend/nestjs/{arch}-architecture/{variant}
+    npm install
+    npm run build
+    npm run start:dev
+    npm run test
 
----
+## Frontend Commands
 
-## Frontend Architecture
+### Vue (Vuetify / PrimeVue)
 
-### Vue Frontends (Vuetify/PrimeVue)
-- **Routing**: File-based via `unplugin-vue-router` - pages in `src/pages/` auto-generate routes
-- **State**: Pinia stores in `src/stores/`
-- **API**: Axios services in `src/services/` with auto token refresh interceptor
-- **Components**: Auto-imported from `src/components/`
-- **Layouts**: Layout components in `src/layouts/`
+    cd frontend/vue/{vuetify,primevue}/{full,minimal}
+    npm install
+    npm run dev
+    npm run build
+    npm run lint
 
-### React Frontends (MUI/PrimeReact)
-- **Routing**: React Router v7 with route definitions in `src/router/`
-- **State**: Zustand stores in `src/stores/`
-- **API**: Axios services in `src/services/` with auto token refresh interceptor
-- **Components**: Manual imports from `src/components/`
-- **Layouts**: Layout components in `src/layouts/`
-- **Types**: TypeScript types in `src/types/`
+### React (MUI / PrimeReact)
 
----
+    cd frontend/react/{mui,primereact}/{full,minimal}
+    npm install
+    npm run dev
+    npm run build
+    npm run lint
 
-## Key Patterns
+## Key Architecture Rules
 
-### Backend
-- **No Repository Pattern**: Use `IAppTemplateDbContext` directly
-- **CQRS**: Commands mutate, Queries read
-- **Rich Domain Models**: Business logic in entities, not handlers
+### CLI (create-apptemplate/)
+- Prompt library: @clack/prompts (NOT inquirer)
+- Download: degit from this GitHub repo
+- Rename: regex-based string replacement in rename.ts
+- No template engine — files are real project files, copied as-is
+- CLI args parsed manually in cli.ts (no yargs/commander)
+- Package manager detection: bun > pnpm > yarn > npm
 
-### Vue Frontend
-- **Composition API**: Use `<script setup>` syntax
-- **Auto-imports**: Components, Vue APIs, and Pinia are auto-imported
-- **API Abstraction**: API calls in service files, not components
+### Backend Templates
+- All must use namespace App.Template / AppTemplate as base (CLI replaces it)
+- Clean arch: 4 projects (.NET), multi-module (Spring), modules/ (NestJS)
+- Feature arch: single project, organized by feature folder
+- N-Layer arch: single project, horizontal layers (controllers/services/repos)
+- All MUST include: JWT auth, Swagger, health checks, PostgreSQL, structured logging
 
-### React Frontend
-- **Functional Components**: Use hooks and TypeScript
-- **Zustand for State**: Simple store pattern with `create()` from zustand
-- **API Abstraction**: API calls in service files, stores handle state updates
-- **Null-safe patterns**: Always use fallbacks like `(data || []).map()` for arrays
+### Frontend Templates
+- Vue: JavaScript (jsconfig.json), file-based routing (unplugin-vue-router)
+- React: TypeScript (strict), React Router v7
+- Both: Axios with JWT interceptor + token refresh, i18n (en + ar), real-time support
+- Real-time adapts to backend via VITE_BACKEND_TYPE env var
 
----
+### Docker & Infrastructure
+- Fullstack: root Dockerfile (multi-stage) + supervisor (backend + nginx)
+- Templates in docker/templates/root/ keyed by backend (Dockerfile.{backend}, etc.)
+- Nginx: reverse proxy /api → backend:8080, static frontend
 
-## Adding New Features
+## Known Issues (prioritize fixing)
+1. ~~CLI version display hardcoded as v1.0.0~~ — FIXED: reads from package.json dynamically
+2. ~~No cross-validation of --framework + --ui~~ — FIXED: validated in cli.ts parseArgs() + index.ts non-interactive mode
+3. ~~Full repo download for ~10 root files~~ — FIXED: uses GitHub raw API + targeted degit for docker/
+4. ~~No cleanup on partial failure~~ — FIXED: generator.ts cleans up directory on failure (if we created it)
+5. ~~Version inconsistencies across variants~~ — FIXED: aligned all variants (see docs/version-alignment.md)
+6. lint-staged paths reference post-scaffold names, not monorepo paths
+7. PrimeVue minimal inconsistently strips pages vs other minimals
 
-### Backend Feature
-1. Create entity in `Domain/Entities`
-2. Add `DbSet<TEntity>` to `IAppTemplateDbContext` and `AppTemplateDbContext`
-3. Create DTOs in `Application/DTOs`
-4. Create Commands/Queries in `Application/Features/{Area}/`
-5. Add controller endpoints in `WebAPI/Controllers`
-6. Create migration
+## Adding New Backends/Frontends
+To add a new backend (e.g., Go), modify these files:
+1. create-apptemplate/src/types.ts — add to BackendFramework union
+2. create-apptemplate/src/cli.ts — add to validBackends
+3. create-apptemplate/src/prompts.ts — add select option + label
+4. create-apptemplate/src/utils/rename.ts — add rename function
+5. create-apptemplate/src/utils/package-manager.ts — add install case
+6. create-apptemplate/src/index.ts — update showNextSteps()
+7. create-apptemplate/src/generator.ts — update updateFolderReferences()
+8. Create backend/go/{clean,feature,nlayer}-architecture/{full,minimal}/
+9. Create docker/templates/root/Dockerfile.go, docker-compose.go.yml, etc.
 
-### Vue Frontend Page
-1. Create `.vue` file in `src/pages/` (routing is automatic)
-2. Create API service in `src/services/`
-3. Create Pinia store in `src/stores/` if needed
-4. Update sidebar navigation in `components/AppSidebar.vue`
-
-### React Frontend Page
-1. Create `.tsx` file in `src/pages/`
-2. Add route to `src/router/index.tsx`
-3. Create API service in `src/services/`
-4. Create Zustand store in `src/stores/` if needed
-5. Update sidebar navigation in `components/layout/AppSidebar.tsx`
-
----
-
-## Cross-Frontend Consistency
-
-When making changes, ensure all frontend implementations stay aligned:
-- **API services** should have the same function signatures and return types
-- **Stores** should have the same state shape and actions
-- **Pages** should have the same functionality and UX patterns
-- **Toast notifications** use store methods: `showSuccess()`, `showError()`, `showInfo()`
-- **Confirmation dialogs** should be used for destructive actions (delete, logout)
-
----
-
-## Renaming the Project
-
-Use the automated script to rename `App.Template` to your project name:
-
-```powershell
-# Windows
-.\scripts\rename-project.ps1 -NewName "MyCompany.MyApp"
-```
-
-```bash
-# Linux/Mac
-./scripts/rename-project.sh "MyCompany.MyApp"
-```
-
-This renames folders, files, namespaces, and project references throughout the codebase.
-
----
-
-## Seed Data
-
-Default admin credentials (auto-seeded):
-- **Username**: `admin`
-- **Email**: `admin@apptemplate.local`
-- **Password**: `Admin@123`
-- **Role**: `Admin`
-
----
-
-## Troubleshooting
-
-| Issue | Solution |
-|-------|----------|
-| Connection string not found | Create `appsettings.Development.json` from example |
-| JWT authentication fails | Ensure `Jwt:Secret` is at least 32 characters |
-| Migration errors | Use both `--project` and `--startup-project` flags |
-| Frontend API calls fail | Check backend is running and `VITE_API_BASE_URL` is correct |
-| Port conflicts | Stop services on ports 80, 5432, 5100 |
-| React undefined errors | Add null-safe fallbacks: `(array || []).map()` |
+## Seed Data (all variants)
+- Admin: admin@apptemplate.com / Admin@123
