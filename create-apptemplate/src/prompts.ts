@@ -61,17 +61,17 @@ export async function runInteractivePrompts(cliArgs: CLIArgs): Promise<ProjectCo
         {
           value: 'dotnet' as BackendFramework,
           label: '.NET 8',
-          hint: 'Clean Architecture, CQRS, Entity Framework',
+          hint: 'C#, Entity Framework Core, MediatR',
         },
         {
           value: 'spring' as BackendFramework,
           label: 'Spring Boot 3',
-          hint: 'Clean Architecture, Java 21',
+          hint: 'Java 21, Spring Data JPA, Maven',
         },
         {
           value: 'nestjs' as BackendFramework,
           label: 'NestJS',
-          hint: 'Clean Architecture, TypeScript',
+          hint: 'TypeScript, TypeORM, Decorators',
         },
       ],
     });
@@ -119,8 +119,8 @@ export async function runInteractivePrompts(cliArgs: CLIArgs): Promise<ProjectCo
         },
         {
           value: 'react' as FrontendFramework,
-          label: 'React 18',
-          hint: 'Zustand, React Router v6, TypeScript',
+          label: 'React 19',
+          hint: 'Zustand, React Router v7, TypeScript',
         },
       ],
     });
@@ -289,7 +289,7 @@ function toPascalCase(str: string): string {
     .replace(/^(.)/, (c) => c.toUpperCase());
 }
 
-function getBackendLabel(backend: BackendFramework): string {
+export function getBackendLabel(backend: BackendFramework): string {
   const labels: Record<BackendFramework, string> = {
     dotnet: '.NET 8',
     spring: 'Spring Boot 3',
@@ -298,7 +298,7 @@ function getBackendLabel(backend: BackendFramework): string {
   return labels[backend];
 }
 
-function getArchitectureLabel(architecture: BackendArchitecture): string {
+export function getArchitectureLabel(architecture: BackendArchitecture): string {
   const labels: Record<BackendArchitecture, string> = {
     clean: 'Clean Architecture',
     nlayer: 'N-Layer (3-Tier)',
@@ -307,15 +307,15 @@ function getArchitectureLabel(architecture: BackendArchitecture): string {
   return labels[architecture];
 }
 
-function getFrontendLabel(framework: FrontendFramework): string {
+export function getFrontendLabel(framework: FrontendFramework): string {
   const labels: Record<FrontendFramework, string> = {
     vue: 'Vue 3',
-    react: 'React 18',
+    react: 'React 19',
   };
   return labels[framework];
 }
 
-function getUILabel(ui: UILibrary): string {
+export function getUILabel(ui: UILibrary): string {
   const labels: Record<UILibrary, string> = {
     vuetify: 'Vuetify (Material Design)',
     primevue: 'PrimeVue (Aura Theme)',

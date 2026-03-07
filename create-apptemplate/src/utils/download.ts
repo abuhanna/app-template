@@ -22,7 +22,14 @@ export async function downloadBackendTemplate(
     verbose: false,
   });
 
-  await emitter.clone(destPath);
+  try {
+    await emitter.clone(destPath);
+  } catch (error) {
+    if (error instanceof Error) {
+      (error as any).templatePath = folder;
+    }
+    throw error;
+  }
 }
 
 /**
@@ -44,9 +51,15 @@ export async function downloadFrontendTemplate(
     verbose: false,
   });
 
-  await emitter.clone(destPath);
+  try {
+    await emitter.clone(destPath);
+  } catch (error) {
+    if (error instanceof Error) {
+      (error as any).templatePath = folder;
+    }
+    throw error;
+  }
 }
-
 
 /**
  * Parse a GitHub repo string (e.g. 'owner/repo') into components

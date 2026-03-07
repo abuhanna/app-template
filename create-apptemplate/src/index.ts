@@ -1,9 +1,11 @@
-import { intro, outro, isCancel } from '@clack/prompts';
+import { intro, outro, isCancel, log, note } from '@clack/prompts';
 import pc from 'picocolors';
+import path from 'path';
 import { createRequire } from 'node:module';
 import { parseArgs, validateFrameworkUiPairing } from './cli.js';
-import { runInteractivePrompts } from './prompts.js';
+import { runInteractivePrompts, getBackendLabel, getArchitectureLabel, getFrontendLabel, getUILabel } from './prompts.js';
 import { generateProject } from './generator.js';
+import { formatUserError } from './utils/errors.js';
 import type { ProjectConfig, FrontendFramework } from './types.js';
 
 const require = createRequire(import.meta.url);
@@ -74,20 +76,19 @@ async function main(): Promise<void> {
     }
 
     // Generate the project
+    const genStart = Date.now();
     await generateProject(config);
+    const totalTime = ((Date.now() - genStart) / 1000).toFixed(1);
 
-    // Success message
+    // Success message + summary
     console.log();
-    outro(pc.green('✓ Done! Your project is ready.'));
+    outro(pc.green(`Done! Project created in ${totalTime}s`));
 
-    // Show dynamic next steps based on project type
+    // Show rich summary and next steps
+    showProjectSummary(config, totalTime);
     showNextSteps(config);
   } catch (error) {
-    if (error instanceof Error) {
-      console.error(pc.red(`Error: ${error.message}`));
-    } else {
-      console.error(pc.red('An unexpected error occurred'));
-    }
+    log.error(pc.red(formatUserError(error)));
     process.exit(1);
   }
 }
@@ -133,6 +134,29 @@ ${pc.bold('Examples:')}
 `);
 }
 
+function showProjectSummary(config: ProjectConfig, totalTime: string): void {
+  const lines: string[] = [];
+
+  lines.push(`${pc.cyan('Path')}           ${path.resolve(config.projectPath)}`);
+  lines.push(`${pc.cyan('Type')}           ${config.projectType}`);
+
+  if (config.projectType !== 'frontend') {
+    lines.push(`${pc.cyan('Backend')}        ${getBackendLabel(config.backend)} (${getArchitectureLabel(config.architecture)})`);
+  }
+  if (config.projectType !== 'backend') {
+    lines.push(`${pc.cyan('Frontend')}       ${getFrontendLabel(config.frontendFramework)} + ${getUILabel(config.ui)}`);
+  }
+
+  lines.push(`${pc.cyan('Variant')}        ${config.variant}`);
+  lines.push(`${pc.cyan('Dependencies')}   ${config.installDeps ? 'installed' : 'skipped'}`);
+  if (config.projectName) {
+    lines.push(`${pc.cyan('Namespace')}      ${config.projectName}`);
+  }
+  lines.push(`${pc.cyan('Generated in')}   ${totalTime}s`);
+
+  note(lines.join('\n'), 'Project Created');
+}
+
 function showNextSteps(config: ProjectConfig): void {
   // Determine folder names based on project type and placeInRoot option
   let backendFolder: string;
@@ -149,87 +173,76 @@ function showNextSteps(config: ProjectConfig): void {
     frontendFolder = 'frontend';
   }
 
-  console.log();
-  console.log(pc.cyan('Next steps:'));
-  console.log(`  ${pc.gray('$')} cd ${config.projectPath}`);
+  // Quick start commands
+  const commands: string[] = [];
+  commands.push(`cd ${config.projectPath}`);
 
-  // Show install commands if deps weren't installed
+  // Install commands if deps weren't installed
   if (!config.installDeps) {
     if (config.projectType !== 'frontend') {
       const cdBackend = backendFolder === '.' ? '' : `cd ${backendFolder} && `;
       if (config.backend === 'dotnet') {
-        console.log(`  ${pc.gray('$')} ${cdBackend}dotnet restore`);
+        commands.push(`${cdBackend}dotnet restore`);
       } else if (config.backend === 'nestjs') {
-        console.log(`  ${pc.gray('$')} ${cdBackend}npm install`);
+        commands.push(`${cdBackend}npm install`);
       } else if (config.backend === 'spring') {
-        console.log(`  ${pc.gray('$')} ${cdBackend}./mvnw install -DskipTests`);
+        commands.push(`${cdBackend}./mvnw install -DskipTests`);
       }
     }
     if (config.projectType !== 'backend') {
       const cdFrontend = frontendFolder === '.' ? '' : `cd ${frontendFolder} && `;
-      console.log(`  ${pc.gray('$')} ${cdFrontend}npm install`);
+      commands.push(`${cdFrontend}npm install`);
     }
   }
 
-  // Docker compose option (for fullstack)
-  if (config.projectType === 'fullstack') {
-    console.log();
-    console.log(pc.gray('Run with Docker:'));
-    console.log(`  ${pc.gray('$')} cp .env.example .env`);
-    console.log(`  ${pc.gray('$')} docker compose up -d --build`);
-  }
-
-  // Manual run instructions
-  console.log();
-  console.log(pc.gray('Run manually:'));
-
+  // Run commands
   if (config.projectType !== 'frontend') {
     const cdBackend = backendFolder === '.' ? '' : `cd ${backendFolder} && `;
     if (config.backend === 'dotnet') {
-      console.log(`  ${pc.gray('# Backend (.NET)')}`);
       if (backendFolder === '.') {
-        console.log(`  ${pc.gray('$')} cd src/Presentation/*.WebAPI && dotnet run`);
+        commands.push('cd src/Presentation/*.WebAPI && dotnet run');
       } else {
-        console.log(`  ${pc.gray('$')} cd ${backendFolder}/src/Presentation/*.WebAPI && dotnet run`);
+        commands.push(`cd ${backendFolder}/src/Presentation/*.WebAPI && dotnet run`);
       }
     } else if (config.backend === 'nestjs') {
-      console.log(`  ${pc.gray('# Backend (NestJS)')}`);
-      console.log(`  ${pc.gray('$')} ${cdBackend}npm run start:dev`);
+      commands.push(`${cdBackend}npm run start:dev`);
     } else if (config.backend === 'spring') {
-      console.log(`  ${pc.gray('# Backend (Spring Boot)')}`);
-      console.log(`  ${pc.gray('$')} ${cdBackend}./mvnw spring-boot:run`);
+      commands.push(`${cdBackend}./mvnw spring-boot:run`);
     }
   }
 
   if (config.projectType !== 'backend') {
     const cdFrontend = frontendFolder === '.' ? '' : `cd ${frontendFolder} && `;
-    console.log(`  ${pc.gray('# Frontend')}`);
-    console.log(`  ${pc.gray('$')} ${cdFrontend}npm run dev`);
+    commands.push(`${cdFrontend}npm run dev`);
   }
 
-  // Access points
-  console.log();
-  console.log(pc.gray('Access points:'));
+  log.step(pc.cyan('Quick start'));
+  for (const cmd of commands) {
+    log.message(`  ${pc.gray('$')} ${cmd}`);
+  }
+
+  // Docker option (for fullstack)
+  if (config.projectType === 'fullstack') {
+    console.log();
+    log.step(pc.cyan('Docker'));
+    log.message(`  ${pc.gray('$')} cp .env.example .env`);
+    log.message(`  ${pc.gray('$')} docker compose up -d --build`);
+  }
+
+  // Access points + credentials in a single box
+  const accessLines: string[] = [];
 
   if (config.projectType !== 'backend') {
-    if (config.projectType === 'fullstack') {
-      console.log(`  Frontend: ${pc.cyan('http://localhost:3000')} ${pc.gray('(dev)')}`);
-    } else {
-      console.log(`  Frontend: ${pc.cyan('http://localhost:3000')}`);
-    }
+    accessLines.push(`Frontend   ${pc.cyan('http://localhost:3000')}`);
+  }
+  if (config.projectType !== 'frontend') {
+    accessLines.push(`Swagger    ${pc.cyan('http://localhost:5100/swagger')}`);
+    accessLines.push('');
+    accessLines.push(`Login      ${pc.cyan('admin')} / ${pc.cyan('Admin@123')}`);
   }
 
-  if (config.projectType !== 'frontend') {
-    console.log(`  Backend:  ${pc.cyan('http://localhost:5100')}`);
-    console.log(`  Swagger:  ${pc.cyan('http://localhost:5100/swagger')}`);
-  }
-
-  // Default login (only for projects with backend)
-  if (config.projectType !== 'frontend') {
-    console.log();
-    console.log(pc.gray('Default login:'));
-    console.log(`  Username: ${pc.cyan('admin')}`);
-    console.log(`  Password: ${pc.cyan('Admin@123')}`);
+  if (accessLines.length > 0) {
+    note(accessLines.join('\n'), 'Access');
   }
 
   console.log();

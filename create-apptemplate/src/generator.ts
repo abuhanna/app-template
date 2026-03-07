@@ -10,6 +10,11 @@ import { installDependencies } from './utils/package-manager.js';
 // GitHub repository for templates
 const REPO = 'abuhanna/app-template';
 
+function formatElapsed(startMs: number): string {
+  const elapsed = (Date.now() - startMs) / 1000;
+  return elapsed < 1 ? `${(elapsed * 1000).toFixed(0)}ms` : `${elapsed.toFixed(1)}s`;
+}
+
 export async function generateProject(config: ProjectConfig): Promise<void> {
   const absolutePath = path.resolve(config.projectPath);
 
@@ -22,13 +27,11 @@ export async function generateProject(config: ProjectConfig): Promise<void> {
   const spinner = p.spinner();
 
   try {
-    // Step 1: Download templates (using new path structure with variant)
-    spinner.start('Downloading templates...');
-
-    try {
-      // Download backend (if not frontend-only)
-      if (config.projectType !== 'frontend') {
-        // For fullstack: use 'backend', for backend-only: use subfolder or root
+    // Step 1a: Download backend template (if not frontend-only)
+    if (config.projectType !== 'frontend') {
+      const stepStart = Date.now();
+      spinner.start(`Downloading ${config.backend} backend template...`);
+      try {
         let destFolder: string;
         if (config.projectType === 'fullstack') {
           destFolder = 'backend';
@@ -36,15 +39,19 @@ export async function generateProject(config: ProjectConfig): Promise<void> {
           destFolder = config.placeInRoot ? '' : 'backend';
         }
         const destPath = destFolder ? path.join(absolutePath, destFolder) : absolutePath;
-
-        // Download from new path: backend/{framework}/{architecture}-architecture/{variant}
         await downloadBackendTemplate(REPO, config.backend, config.architecture, config.variant, destPath);
-        spinner.message(`Downloaded backend-${config.backend}-${config.architecture}-${config.variant}`);
+        spinner.stop(`Backend template downloaded (${formatElapsed(stepStart)})`);
+      } catch (error) {
+        spinner.stop('Backend download failed');
+        throw error;
       }
+    }
 
-      // Download frontend (if not backend-only)
-      if (config.projectType !== 'backend') {
-        // For fullstack: use 'frontend', for frontend-only: use subfolder or root
+    // Step 1b: Download frontend template (if not backend-only)
+    if (config.projectType !== 'backend') {
+      const stepStart = Date.now();
+      spinner.start(`Downloading ${config.frontendFramework}/${config.ui} frontend template...`);
+      try {
         let destFolder: string;
         if (config.projectType === 'fullstack') {
           destFolder = 'frontend';
@@ -52,79 +59,89 @@ export async function generateProject(config: ProjectConfig): Promise<void> {
           destFolder = config.placeInRoot ? '' : 'frontend';
         }
         const destPath = destFolder ? path.join(absolutePath, destFolder) : absolutePath;
-
-        // Download from new path: frontend/{framework}/{ui}/{variant}
         await downloadFrontendTemplate(REPO, config.frontendFramework, config.ui, config.variant, destPath);
-        spinner.message(`Downloaded frontend-${config.frontendFramework}-${config.ui}-${config.variant}`);
+        spinner.stop(`Frontend template downloaded (${formatElapsed(stepStart)})`);
+      } catch (error) {
+        spinner.stop('Frontend download failed');
+        throw error;
       }
+    }
 
-      // Download common files (docker, scripts, etc.)
-      await copyRootFiles(REPO, absolutePath, config);
-      spinner.message('Downloaded configuration files');
-
-      spinner.stop('Templates downloaded');
-    } catch (error) {
-      spinner.stop('Download failed');
-      throw error;
+    // Step 1c: Download configuration files
+    {
+      const stepStart = Date.now();
+      spinner.start('Downloading configuration files...');
+      try {
+        await copyRootFiles(REPO, absolutePath, config);
+        spinner.stop(`Configuration files downloaded (${formatElapsed(stepStart)})`);
+      } catch (error) {
+        spinner.stop('Configuration download failed');
+        throw error;
+      }
     }
 
     // Step 2: Update folder references in common files
-    spinner.start('Updating configuration files...');
-    try {
-      await updateFolderReferences(absolutePath, config);
-      spinner.stop('Configuration updated');
-    } catch (error) {
-      spinner.stop('Configuration update failed');
-      throw error;
+    {
+      const stepStart = Date.now();
+      spinner.start('Updating configuration files...');
+      try {
+        await updateFolderReferences(absolutePath, config);
+        spinner.stop(`Configuration updated (${formatElapsed(stepStart)})`);
+      } catch (error) {
+        spinner.stop('Configuration update failed');
+        throw error;
+      }
     }
 
     // Step 3: Rename project namespaces (only for dotnet/spring)
     if (config.projectName && config.projectName !== 'App.Template') {
-      spinner.start('Renaming project namespaces...');
-
+      const stepStart = Date.now();
+      spinner.start('Configuring project namespace...');
       try {
         await renameProject(absolutePath, config);
-        spinner.stop('Project namespaces updated');
+        spinner.stop(`Project namespace configured (${formatElapsed(stepStart)})`);
       } catch (error) {
-        spinner.stop('Namespace rename failed');
+        spinner.stop('Namespace configuration failed');
         throw error;
       }
     }
 
     // Step 4: Install dependencies (if requested)
     if (config.installDeps) {
-      spinner.start('Installing dependencies (this may take a while)...');
-
+      const stepStart = Date.now();
+      spinner.start('Installing dependencies...');
       try {
         await installDependencies(absolutePath, config);
-        spinner.stop('Dependencies installed');
+        spinner.stop(`Dependencies installed (${formatElapsed(stepStart)})`);
       } catch (error) {
         spinner.stop('Installation failed');
         const errorMessage = error instanceof Error ? error.message : String(error);
-        console.log(pc.yellow(`  Warning: Dependency installation failed: ${errorMessage}`));
-        console.log(pc.gray('  You can install manually by running npm install in the project directory'));
+        p.log.warn(pc.yellow(`Dependency installation failed: ${errorMessage}`));
+        p.log.message(pc.gray('You can install manually by running npm install in the project directory'));
       }
     }
 
     // Step 5: Setup environment files
-    await setupEnvironmentFiles(absolutePath, config);
+    {
+      const stepStart = Date.now();
+      spinner.start('Setting up environment...');
+      await setupEnvironmentFiles(absolutePath, config);
 
-    // Step 6: Cleanup Docker files for Fullstack projects
-    // (Fullstack uses root Dockerfile, so we remove the individual ones)
-    if (config.projectType === 'fullstack') {
-      spinner.start('Cleaning up Docker configuration...');
-      try {
-        cleanupFullstackDockerFiles(absolutePath);
-        spinner.stop('Docker configuration cleaned up');
-      } catch {
-        // Ignore errors if files don't exist
-        spinner.stop('Docker cleanup skipped');
+      // Cleanup Docker files for Fullstack projects
+      if (config.projectType === 'fullstack') {
+        try {
+          cleanupFullstackDockerFiles(absolutePath);
+        } catch {
+          // Ignore errors if files don't exist
+        }
       }
-    }
 
-    // Step 7: Create appsettings.Development.json from example (for .NET projects)
-    if (config.projectType !== 'frontend' && config.backend === 'dotnet') {
-      await createAppSettingsFromExample(absolutePath, config);
+      // Create appsettings.Development.json from example (for .NET projects)
+      if (config.projectType !== 'frontend' && config.backend === 'dotnet') {
+        await createAppSettingsFromExample(absolutePath, config);
+      }
+
+      spinner.stop(`Environment configured (${formatElapsed(stepStart)})`);
     }
   } catch (error) {
     // Clean up the project directory only if we created it
