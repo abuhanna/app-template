@@ -499,6 +499,7 @@ $RECYCLE.BIN/
 !DEPLOYMENT.md
 !CONTRIBUTING.md
 !**/README.md
+!shared/**/*.md
 
 !clean_architecture_guide.md
 !CLEAN_ARCHITECTURE_GUIDE.md
