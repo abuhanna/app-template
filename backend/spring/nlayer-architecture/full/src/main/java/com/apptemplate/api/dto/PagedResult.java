@@ -1,6 +1,8 @@
 package com.apptemplate.api.dto;
 
+import com.fasterxml.jackson.annotation.JsonInclude;
 import lombok.AllArgsConstructor;
+import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 import org.springframework.data.domain.Page;
@@ -8,33 +10,60 @@ import org.springframework.data.domain.Page;
 import java.util.List;
 
 @Data
+@Builder
 @NoArgsConstructor
 @AllArgsConstructor
+@JsonInclude(JsonInclude.Include.NON_NULL)
 public class PagedResult<T> {
-    private List<T> items;
+
+    private boolean success;
+    private String message;
+    private List<T> data;
     private PaginationMeta pagination;
 
-    public static <T> PagedResult<T> fromPage(Page<T> page) {
-        PaginationMeta meta = new PaginationMeta(
-                page.getNumber() + 1, // Spring pages are 0-indexed
-                page.getSize(),
-                (int) page.getTotalElements(),
-                page.getTotalPages(),
-                page.hasNext(),
-                page.hasPrevious()
-        );
-        return new PagedResult<>(page.getContent(), meta);
-    }
-
     @Data
+    @Builder
     @NoArgsConstructor
     @AllArgsConstructor
     public static class PaginationMeta {
         private int page;
         private int pageSize;
-        private int totalItems;
+        private long totalItems;
         private int totalPages;
         private boolean hasNext;
         private boolean hasPrevious;
+    }
+
+    public static <T> PagedResult<T> from(Page<T> page) {
+        return PagedResult.<T>builder()
+                .success(true)
+                .message("Items retrieved successfully")
+                .data(page.getContent())
+                .pagination(PaginationMeta.builder()
+                        .page(page.getNumber() + 1) // Convert to 1-based page number
+                        .pageSize(page.getSize())
+                        .totalItems(page.getTotalElements())
+                        .totalPages(page.getTotalPages())
+                        .hasNext(page.hasNext())
+                        .hasPrevious(page.hasPrevious())
+                        .build())
+                .build();
+    }
+
+    public static <T> PagedResult<T> create(List<T> items, int page, int pageSize, long totalItems) {
+        int totalPages = (int) Math.ceil(totalItems / (double) pageSize);
+        return PagedResult.<T>builder()
+                .success(true)
+                .message("Items retrieved successfully")
+                .data(items)
+                .pagination(PaginationMeta.builder()
+                        .page(page)
+                        .pageSize(pageSize)
+                        .totalItems(totalItems)
+                        .totalPages(totalPages)
+                        .hasNext(page < totalPages)
+                        .hasPrevious(page > 1)
+                        .build())
+                .build();
     }
 }

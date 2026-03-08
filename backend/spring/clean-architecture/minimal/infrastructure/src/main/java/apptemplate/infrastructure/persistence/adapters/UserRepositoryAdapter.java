@@ -38,11 +38,6 @@ public class UserRepositoryAdapter implements UserRepository {
     }
 
     @Override
-    public Optional<User> findByPasswordResetToken(String token) {
-        return jpaRepository.findByPasswordResetToken(token).map(mapper::toDomain);
-    }
-
-    @Override
     public List<User> findAll() {
         return jpaRepository.findAll().stream()
                 .map(mapper::toDomain)

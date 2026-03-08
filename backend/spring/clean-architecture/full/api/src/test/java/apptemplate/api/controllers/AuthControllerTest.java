@@ -80,8 +80,7 @@ class AuthControllerTest {
     void login_returnsOk() throws Exception {
         LoginRequest request = new LoginRequest("admin", null, "Admin@123");
         LoginResponse response = LoginResponse.builder()
-                .token("jwt-token")
-                .tokenType("Bearer")
+                .accessToken("jwt-token")
                 .expiresIn(3600)
                 .build();
 
@@ -91,16 +90,15 @@ class AuthControllerTest {
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(objectMapper.writeValueAsString(request)))
                 .andExpect(status().isOk())
-                .andExpect(jsonPath("$.token").value("jwt-token"))
-                .andExpect(jsonPath("$.tokenType").value("Bearer"));
+                .andExpect(jsonPath("$.data.accessToken").value("jwt-token"))
+                .andExpect(jsonPath("$.data.expiresIn").value(3600));
     }
 
     @Test
     void refresh_returnsOk() throws Exception {
         RefreshTokenRequest request = new RefreshTokenRequest("refresh-token");
         LoginResponse response = LoginResponse.builder()
-                .token("new-jwt-token")
-                .tokenType("Bearer")
+                .accessToken("new-jwt-token")
                 .build();
 
         when(refreshTokenUseCase.execute(any())).thenReturn(response);
@@ -109,7 +107,7 @@ class AuthControllerTest {
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(objectMapper.writeValueAsString(request)))
                 .andExpect(status().isOk())
-                .andExpect(jsonPath("$.token").value("new-jwt-token"));
+                .andExpect(jsonPath("$.data.accessToken").value("new-jwt-token"));
     }
 
     @Test
@@ -173,8 +171,8 @@ class AuthControllerTest {
 
         mockMvc.perform(get("/api/auth/me"))
                 .andExpect(status().isOk())
-                .andExpect(jsonPath("$.username").value("admin"))
-                .andExpect(jsonPath("$.email").value("admin@test.com"));
+                .andExpect(jsonPath("$.data.username").value("admin"))
+                .andExpect(jsonPath("$.data.email").value("admin@test.com"));
     }
 
     @Test
@@ -187,7 +185,7 @@ class AuthControllerTest {
 
         mockMvc.perform(get("/api/auth/profile"))
                 .andExpect(status().isOk())
-                .andExpect(jsonPath("$.id").value(1));
+                .andExpect(jsonPath("$.data.id").value(1));
     }
 
     @Test
@@ -207,7 +205,7 @@ class AuthControllerTest {
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(objectMapper.writeValueAsString(request)))
                 .andExpect(status().isOk())
-                .andExpect(jsonPath("$.firstName").value("John"));
+                .andExpect(jsonPath("$.data.firstName").value("John"));
     }
 
     @Test

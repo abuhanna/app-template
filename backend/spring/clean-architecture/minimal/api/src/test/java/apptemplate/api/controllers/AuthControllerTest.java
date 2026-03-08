@@ -50,8 +50,7 @@ class AuthControllerTest {
     void login_returnsOk() throws Exception {
         LoginRequest request = new LoginRequest("admin", null, "Admin@123");
         LoginResponse response = LoginResponse.builder()
-                .token("jwt-token")
-                .tokenType("Bearer")
+                .accessToken("jwt-token")
                 .expiresIn(3600)
                 .build();
 
@@ -61,15 +60,14 @@ class AuthControllerTest {
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(objectMapper.writeValueAsString(request)))
                 .andExpect(status().isOk())
-                .andExpect(jsonPath("$.token").value("jwt-token"));
+                .andExpect(jsonPath("$.accessToken").value("jwt-token"));
     }
 
     @Test
     void refresh_returnsOk() throws Exception {
         RefreshTokenRequest request = new RefreshTokenRequest("refresh-token");
         LoginResponse response = LoginResponse.builder()
-                .token("new-jwt-token")
-                .tokenType("Bearer")
+                .accessToken("new-jwt-token")
                 .build();
 
         when(refreshTokenUseCase.execute(any())).thenReturn(response);
@@ -78,7 +76,7 @@ class AuthControllerTest {
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(objectMapper.writeValueAsString(request)))
                 .andExpect(status().isOk())
-                .andExpect(jsonPath("$.token").value("new-jwt-token"));
+                .andExpect(jsonPath("$.accessToken").value("new-jwt-token"));
     }
 
     @Test

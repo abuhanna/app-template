@@ -68,8 +68,8 @@ class FilesControllerTest {
                         .param("page", "1")
                         .param("pageSize", "20"))
                 .andExpect(status().isOk())
-                .andExpect(jsonPath("$.items").isArray())
-                .andExpect(jsonPath("$.items[0].fileName").value("test.pdf"));
+                .andExpect(jsonPath("$.data").isArray())
+                .andExpect(jsonPath("$.data[0].fileName").value("test.pdf"));
     }
 
     @Test
@@ -82,8 +82,8 @@ class FilesControllerTest {
 
         mockMvc.perform(get("/api/files/1"))
                 .andExpect(status().isOk())
-                .andExpect(jsonPath("$.id").value(1))
-                .andExpect(jsonPath("$.fileName").value("test.pdf"));
+                .andExpect(jsonPath("$.data.id").value(1))
+                .andExpect(jsonPath("$.data.fileName").value("test.pdf"));
     }
 
     @Test
@@ -104,7 +104,7 @@ class FilesControllerTest {
                         .param("category", "documents")
                         .param("isPublic", "false"))
                 .andExpect(status().isCreated())
-                .andExpect(jsonPath("$.id").value(1));
+                .andExpect(jsonPath("$.data.id").value(1));
     }
 
     @Test

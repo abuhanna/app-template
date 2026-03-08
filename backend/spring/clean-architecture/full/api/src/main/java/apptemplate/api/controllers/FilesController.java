@@ -38,7 +38,7 @@ public class FilesController {
             @Parameter(description = "Page number (1-based)") @RequestParam(defaultValue = "1") int page,
             @Parameter(description = "Number of items per page") @RequestParam(defaultValue = "20") int pageSize,
             @Parameter(description = "Column to sort by (e.g., fileName, createdAt)") @RequestParam(required = false) String sortBy,
-            @Parameter(description = "Sort direction: asc or desc") @RequestParam(defaultValue = "desc") String sortDir,
+            @Parameter(description = "Sort direction: asc or desc") @RequestParam(defaultValue = "desc") String sortOrder,
             @Parameter(description = "Search by file name or description") @RequestParam(required = false) String search,
             @Parameter(description = "Filter by category") @RequestParam(required = false) String category,
             @Parameter(description = "Filter by public status") @RequestParam(required = false) Boolean isPublic
@@ -47,20 +47,20 @@ public class FilesController {
         page = Math.max(1, page);
         pageSize = Math.min(Math.max(1, pageSize), 100);
 
-        Page<UploadedFileDto> files = getFilesUseCase.execute(search, category, isPublic, page, pageSize, sortBy, sortDir);
+        Page<UploadedFileDto> files = getFilesUseCase.execute(search, category, isPublic, page, pageSize, sortBy, sortOrder);
         return ResponseEntity.ok(PagedResponse.from(files));
     }
 
     @GetMapping("/{id}")
     @Operation(summary = "Get file by ID", description = "Get file metadata by its ID")
-    public ResponseEntity<UploadedFileDto> getFileById(@PathVariable Long id) {
+    public ResponseEntity<ApiResponse<UploadedFileDto>> getFileById(@PathVariable Long id) {
         UploadedFileDto file = getFileByIdUseCase.execute(id);
-        return ResponseEntity.ok(file);
+        return ResponseEntity.ok(ApiResponse.success(file, "File retrieved successfully"));
     }
 
     @PostMapping(consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
     @Operation(summary = "Upload file", description = "Upload a new file")
-    public ResponseEntity<UploadedFileDto> uploadFile(
+    public ResponseEntity<ApiResponse<UploadedFileDto>> uploadFile(
             @RequestParam("file") MultipartFile file,
             @RequestParam(required = false) String description,
             @RequestParam(required = false) String category,
@@ -69,7 +69,7 @@ public class FilesController {
         log.info("Uploading file: {}, Size: {}", file.getOriginalFilename(), file.getSize());
         UploadedFileDto uploadedFile = uploadFileUseCase.execute(file, description, category, isPublic);
         return ResponseEntity.status(HttpStatus.CREATED)
-                .body(uploadedFile);
+                .body(ApiResponse.success(uploadedFile, "File uploaded successfully"));
     }
 
     @GetMapping("/{id}/download")

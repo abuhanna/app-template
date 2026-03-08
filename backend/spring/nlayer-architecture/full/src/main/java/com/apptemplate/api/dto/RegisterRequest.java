@@ -7,8 +7,9 @@ import lombok.Data;
 
 @Data
 public class RegisterRequest {
+
     @NotBlank
-    private String name;
+    private String username;
 
     @NotBlank
     @Email
@@ -17,4 +18,7 @@ public class RegisterRequest {
     @NotBlank
     @Size(min = 6)
     private String password;
+
+    private String firstName;
+    private String lastName;
 }

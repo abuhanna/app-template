@@ -1,5 +1,6 @@
 package com.apptemplate.api.security;
 
+import com.apptemplate.api.model.User;
 import io.jsonwebtoken.Claims;
 import io.jsonwebtoken.Jwts;
 import io.jsonwebtoken.io.Decoders;
@@ -46,6 +47,27 @@ public class JwtUtils {
                 .compact();
     }
 
+    /**
+     * Generate a token for a User entity, including user-specific claims.
+     */
+    public String generateTokenForUser(User user) {
+        Map<String, Object> claims = new HashMap<>();
+        claims.put("userId", user.getId());
+        claims.put("username", user.getUsername());
+        claims.put("role", user.getRole());
+        if (user.getDepartmentId() != null) {
+            claims.put("departmentId", user.getDepartmentId());
+        }
+
+        return Jwts.builder()
+                .claims(claims)
+                .subject(user.getEmail())
+                .issuedAt(new Date(System.currentTimeMillis()))
+                .expiration(new Date(System.currentTimeMillis() + jwtExpiration))
+                .signWith(getSignInKey())
+                .compact();
+    }
+
     public boolean isTokenValid(String token, UserDetails userDetails) {
         final String username = extractUsername(token);
         return (username.equals(userDetails.getUsername())) && !isTokenExpired(token);
@@ -65,6 +87,10 @@ public class JwtUtils {
                 .build()
                 .parseSignedClaims(token)
                 .getPayload();
+    }
+
+    public long getExpirationSeconds() {
+        return jwtExpiration / 1000;
     }
 
     private SecretKey getSignInKey() {

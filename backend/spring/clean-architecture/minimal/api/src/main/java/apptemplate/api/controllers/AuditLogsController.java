@@ -31,7 +31,7 @@ public class AuditLogsController {
             @Parameter(description = "Page number (1-based)") @RequestParam(defaultValue = "1") int page,
             @Parameter(description = "Number of items per page") @RequestParam(defaultValue = "20") int pageSize,
             @Parameter(description = "Column to sort by (e.g., timestamp, entityName, action)") @RequestParam(required = false) String sortBy,
-            @Parameter(description = "Sort direction: asc or desc") @RequestParam(defaultValue = "desc") String sortDir,
+            @Parameter(description = "Sort direction: asc or desc") @RequestParam(defaultValue = "desc") String sortOrder,
             @Parameter(description = "Search by entity name, entity ID, action, or username") @RequestParam(required = false) String search,
             @Parameter(description = "Filter by entity name") @RequestParam(required = false) String entityName,
             @Parameter(description = "Filter by entity ID") @RequestParam(required = false) String entityId,
@@ -45,7 +45,7 @@ public class AuditLogsController {
         pageSize = Math.min(Math.max(1, pageSize), 100);
 
         Page<AuditLogDto> auditLogs = getAuditLogsUseCase.execute(
-            search, entityName, entityId, userId, action, fromDate, toDate, page, pageSize, sortBy, sortDir
+            search, entityName, entityId, userId, action, fromDate, toDate, page, pageSize, sortBy, sortOrder
         );
         return ResponseEntity.ok(PagedResponse.from(auditLogs));
     }

@@ -1,5 +1,6 @@
 package apptemplate.api.dto;
 
+import com.fasterxml.jackson.annotation.JsonInclude;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
@@ -12,9 +13,12 @@ import java.util.List;
 @Builder
 @NoArgsConstructor
 @AllArgsConstructor
+@JsonInclude(JsonInclude.Include.NON_NULL)
 public class PagedResponse<T> {
 
-    private List<T> items;
+    private boolean success;
+    private String message;
+    private List<T> data;
     private PaginationMeta pagination;
 
     @Data
@@ -32,7 +36,9 @@ public class PagedResponse<T> {
 
     public static <T> PagedResponse<T> from(Page<T> page) {
         return PagedResponse.<T>builder()
-                .items(page.getContent())
+                .success(true)
+                .message("Items retrieved successfully")
+                .data(page.getContent())
                 .pagination(PaginationMeta.builder()
                         .page(page.getNumber() + 1)  // Convert to 1-based page number
                         .pageSize(page.getSize())
@@ -47,7 +53,9 @@ public class PagedResponse<T> {
     public static <T> PagedResponse<T> create(List<T> items, int page, int pageSize, long totalItems) {
         int totalPages = (int) Math.ceil(totalItems / (double) pageSize);
         return PagedResponse.<T>builder()
-                .items(items)
+                .success(true)
+                .message("Items retrieved successfully")
+                .data(items)
                 .pagination(PaginationMeta.builder()
                         .page(page)
                         .pageSize(pageSize)

@@ -1,5 +1,6 @@
 package com.apptemplate.api.controller;
 
+import com.apptemplate.api.dto.UploadedFileDto;
 import com.apptemplate.api.model.UploadedFile;
 import com.apptemplate.api.service.FileService;
 import org.junit.jupiter.api.BeforeEach;
@@ -13,7 +14,7 @@ import org.springframework.mock.web.MockMultipartFile;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.setup.MockMvcBuilders;
 
-import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.*;
 import static org.mockito.Mockito.when;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
@@ -38,19 +39,21 @@ class FileControllerTest {
                 "file", "test.pdf", "application/pdf", "test content".getBytes()
         );
 
-        UploadedFile uploadedFile = new UploadedFile();
-        uploadedFile.setId(1L);
-        uploadedFile.setFileName("test.pdf");
-        uploadedFile.setContentType("application/pdf");
-        uploadedFile.setFileSize(12L);
+        UploadedFileDto uploadedFileDto = UploadedFileDto.builder()
+                .id(1L)
+                .fileName("stored-test.pdf")
+                .originalFileName("test.pdf")
+                .contentType("application/pdf")
+                .fileSize(12L)
+                .build();
 
-        when(fileService.storeFile(any())).thenReturn(uploadedFile);
+        when(fileService.storeFile(any(), any(), any(), anyBoolean())).thenReturn(uploadedFileDto);
 
-        mockMvc.perform(multipart("/api/files/upload")
+        mockMvc.perform(multipart("/api/files")
                         .file(mockFile))
-                .andExpect(status().isOk())
-                .andExpect(jsonPath("$.id").value(1))
-                .andExpect(jsonPath("$.fileName").value("test.pdf"));
+                .andExpect(status().isCreated())
+                .andExpect(jsonPath("$.data.id").value(1))
+                .andExpect(jsonPath("$.data.originalFileName").value("test.pdf"));
     }
 
     @Test
@@ -60,13 +63,13 @@ class FileControllerTest {
 
         UploadedFile metadata = new UploadedFile();
         metadata.setId(1L);
-        metadata.setFileName("test.pdf");
+        metadata.setOriginalFileName("test.pdf");
         metadata.setContentType("application/pdf");
 
         when(fileService.loadFileAsResource(1L)).thenReturn(resource);
         when(fileService.getFileMetadata(1L)).thenReturn(metadata);
 
-        mockMvc.perform(get("/api/files/download/1"))
+        mockMvc.perform(get("/api/files/1/download"))
                 .andExpect(status().isOk())
                 .andExpect(header().string("Content-Disposition", "attachment; filename=\"test.pdf\""));
     }

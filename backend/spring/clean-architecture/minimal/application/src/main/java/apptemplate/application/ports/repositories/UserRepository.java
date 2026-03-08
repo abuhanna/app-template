@@ -19,8 +19,6 @@ public interface UserRepository {
 
     Optional<User> findByEmail(String email);
 
-    Optional<User> findByPasswordResetToken(String token);
-
     List<User> findAll();
 
     Page<User> findByFilters(String search, Long departmentId, Boolean isActive, Pageable pageable);

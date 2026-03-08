@@ -13,7 +13,7 @@ import javax.sql.DataSource;
 import java.sql.Connection;
 import java.sql.SQLException;
 import java.time.Instant;
-import java.util.HashMap;
+import java.util.LinkedHashMap;
 import java.util.Map;
 
 @RestController
@@ -27,7 +27,7 @@ public class HealthController {
     @GetMapping
     @Operation(summary = "Basic health check", description = "Returns the health status of the application")
     public ResponseEntity<Map<String, Object>> health() {
-        Map<String, Object> response = new HashMap<>();
+        Map<String, Object> response = new LinkedHashMap<>();
         response.put("status", "healthy");
         response.put("timestamp", Instant.now().toString());
         response.put("application", "AppTemplate API");
@@ -38,7 +38,7 @@ public class HealthController {
     @GetMapping("/ready")
     @Operation(summary = "Readiness check", description = "Checks if the application is ready to accept traffic (database connected)")
     public ResponseEntity<Map<String, Object>> ready() {
-        Map<String, Object> response = new HashMap<>();
+        Map<String, Object> response = new LinkedHashMap<>();
         response.put("timestamp", Instant.now().toString());
 
         try (Connection connection = dataSource.getConnection()) {
@@ -59,7 +59,7 @@ public class HealthController {
     @GetMapping("/live")
     @Operation(summary = "Liveness check", description = "Checks if the application is alive (always returns 200 if responding)")
     public ResponseEntity<Map<String, Object>> live() {
-        Map<String, Object> response = new HashMap<>();
+        Map<String, Object> response = new LinkedHashMap<>();
         response.put("status", "alive");
         response.put("timestamp", Instant.now().toString());
         return ResponseEntity.ok(response);

@@ -3,6 +3,8 @@ package com.apptemplate.api.controller;
 import com.apptemplate.api.dto.AuthResponse;
 import com.apptemplate.api.dto.LoginRequest;
 import com.apptemplate.api.dto.RegisterRequest;
+import com.apptemplate.api.dto.UserInfoDto;
+import com.apptemplate.api.security.JwtUtils;
 import com.apptemplate.api.service.AuthService;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import org.junit.jupiter.api.BeforeEach;
@@ -28,32 +30,42 @@ class AuthControllerTest {
     @Mock
     private AuthService authService;
 
+    @Mock
+    private JwtUtils jwtUtils;
+
     @BeforeEach
     void setup() {
-        AuthController controller = new AuthController(authService);
+        AuthController controller = new AuthController(authService, jwtUtils);
         mockMvc = MockMvcBuilders.standaloneSetup(controller).build();
     }
 
     @Test
-    void register_returnsOk() throws Exception {
+    void register_returnsCreated() throws Exception {
         RegisterRequest request = new RegisterRequest();
-        request.setName("Test User");
+        request.setUsername("testuser");
         request.setEmail("test@test.com");
         request.setPassword("Password123");
 
-        AuthResponse response = AuthResponse.builder()
-                .token("jwt-token")
-                .user(new AuthResponse.UserDto(1L, "Test User", "test@test.com"))
+        UserInfoDto userInfo = UserInfoDto.builder()
+                .id(1L)
+                .username("testuser")
+                .email("test@test.com")
+                .firstName("testuser")
+                .lastName("")
+                .role("user")
+                .isActive(true)
                 .build();
+
+        AuthResponse response = AuthResponse.of("jwt-token", 3600, "refresh-token", userInfo);
 
         when(authService.register(any())).thenReturn(response);
 
         mockMvc.perform(post("/api/auth/register")
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(objectMapper.writeValueAsString(request)))
-                .andExpect(status().isOk())
-                .andExpect(jsonPath("$.token").value("jwt-token"))
-                .andExpect(jsonPath("$.user.name").value("Test User"));
+                .andExpect(status().isCreated())
+                .andExpect(jsonPath("$.data.accessToken").value("jwt-token"))
+                .andExpect(jsonPath("$.data.user.username").value("testuser"));
     }
 
     @Test
@@ -62,10 +74,15 @@ class AuthControllerTest {
         request.setEmail("test@test.com");
         request.setPassword("Password123");
 
-        AuthResponse response = AuthResponse.builder()
-                .token("jwt-token")
-                .user(new AuthResponse.UserDto(1L, "Test User", "test@test.com"))
+        UserInfoDto userInfo = UserInfoDto.builder()
+                .id(1L)
+                .username("testuser")
+                .email("test@test.com")
+                .role("user")
+                .isActive(true)
                 .build();
+
+        AuthResponse response = AuthResponse.of("jwt-token", 3600, "refresh-token", userInfo);
 
         when(authService.login(any())).thenReturn(response);
 
@@ -73,13 +90,13 @@ class AuthControllerTest {
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(objectMapper.writeValueAsString(request)))
                 .andExpect(status().isOk())
-                .andExpect(jsonPath("$.token").value("jwt-token"));
+                .andExpect(jsonPath("$.data.accessToken").value("jwt-token"));
     }
 
     @Test
     void register_withInvalidEmail_returnsBadRequest() throws Exception {
         RegisterRequest request = new RegisterRequest();
-        request.setName("Test User");
+        request.setUsername("testuser");
         request.setEmail("invalid-email");
         request.setPassword("Password123");
 

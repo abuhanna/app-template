@@ -4,27 +4,28 @@ import jakarta.persistence.*;
 import lombok.Data;
 import org.hibernate.annotations.CreationTimestamp;
 import org.hibernate.annotations.UpdateTimestamp;
-import com.apptemplate.api.common.audit.AuditEntityListener;
 
 import java.time.LocalDateTime;
 
 @Data
 @Entity
 @Table(name = "departments")
-@EntityListeners(AuditEntityListener.class)
 public class Department {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
+    @Column(nullable = false, unique = true, length = 50)
+    private String code;
+
     @Column(nullable = false, length = 100)
     private String name;
 
-    @Column(nullable = false, length = 50)
-    private String code;
-
     @Column(length = 500)
     private String description;
+
+    @Column(name = "is_active", nullable = false)
+    private boolean isActive = true;
 
     @CreationTimestamp
     @Column(name = "created_at", updatable = false)

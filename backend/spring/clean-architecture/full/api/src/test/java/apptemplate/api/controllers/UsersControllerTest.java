@@ -77,8 +77,8 @@ class UsersControllerTest {
                         .param("page", "1")
                         .param("pageSize", "10"))
                 .andExpect(status().isOk())
-                .andExpect(jsonPath("$.items").isArray())
-                .andExpect(jsonPath("$.items[0].id").value(1));
+                .andExpect(jsonPath("$.data").isArray())
+                .andExpect(jsonPath("$.data[0].id").value(1));
     }
 
     @Test
@@ -92,8 +92,8 @@ class UsersControllerTest {
 
         mockMvc.perform(get("/api/users/1"))
                 .andExpect(status().isOk())
-                .andExpect(jsonPath("$.id").value(1))
-                .andExpect(jsonPath("$.username").value("testuser"));
+                .andExpect(jsonPath("$.data.id").value(1))
+                .andExpect(jsonPath("$.data.username").value("testuser"));
     }
 
     @Test
@@ -114,8 +114,8 @@ class UsersControllerTest {
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(objectMapper.writeValueAsString(request)))
                 .andExpect(status().isCreated())
-                .andExpect(jsonPath("$.id").value(2))
-                .andExpect(jsonPath("$.username").value("newuser"));
+                .andExpect(jsonPath("$.data.id").value(2))
+                .andExpect(jsonPath("$.data.username").value("newuser"));
     }
 
     @Test
@@ -136,7 +136,7 @@ class UsersControllerTest {
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(objectMapper.writeValueAsString(request)))
                 .andExpect(status().isOk())
-                .andExpect(jsonPath("$.firstName").value("Updated"));
+                .andExpect(jsonPath("$.data.firstName").value("Updated"));
     }
 
     @Test

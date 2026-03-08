@@ -72,8 +72,8 @@ class DepartmentsControllerTest {
                         .param("page", "1")
                         .param("pageSize", "10"))
                 .andExpect(status().isOk())
-                .andExpect(jsonPath("$.items").isArray())
-                .andExpect(jsonPath("$.items[0].name").value("IT Department"));
+                .andExpect(jsonPath("$.data").isArray())
+                .andExpect(jsonPath("$.data[0].name").value("IT Department"));
     }
 
     @Test
@@ -87,8 +87,8 @@ class DepartmentsControllerTest {
 
         mockMvc.perform(get("/api/departments/1"))
                 .andExpect(status().isOk())
-                .andExpect(jsonPath("$.id").value(1))
-                .andExpect(jsonPath("$.code").value("IT"));
+                .andExpect(jsonPath("$.data.id").value(1))
+                .andExpect(jsonPath("$.data.code").value("IT"));
     }
 
     @Test
@@ -108,8 +108,8 @@ class DepartmentsControllerTest {
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(objectMapper.writeValueAsString(request)))
                 .andExpect(status().isCreated())
-                .andExpect(jsonPath("$.id").value(2))
-                .andExpect(jsonPath("$.name").value("HR Department"));
+                .andExpect(jsonPath("$.data.id").value(2))
+                .andExpect(jsonPath("$.data.name").value("HR Department"));
     }
 
     @Test
@@ -127,7 +127,7 @@ class DepartmentsControllerTest {
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(objectMapper.writeValueAsString(request)))
                 .andExpect(status().isOk())
-                .andExpect(jsonPath("$.name").value("Updated Department"));
+                .andExpect(jsonPath("$.data.name").value("Updated Department"));
     }
 
     @Test

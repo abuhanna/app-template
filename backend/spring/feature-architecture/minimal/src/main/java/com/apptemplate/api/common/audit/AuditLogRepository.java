@@ -11,18 +11,18 @@ import java.time.LocalDateTime;
 public interface AuditLogRepository extends JpaRepository<AuditLog, Long> {
 
     @Query("SELECT a FROM AuditLog a WHERE " +
-           "(:search IS NULL OR LOWER(a.tableName) LIKE LOWER(CONCAT('%', :search, '%')) " +
-           "  OR LOWER(a.type) LIKE LOWER(CONCAT('%', :search, '%')) " +
-           "  OR LOWER(a.userId) LIKE LOWER(CONCAT('%', :search, '%'))) " +
-           "AND (:tableName IS NULL OR a.tableName = :tableName) " +
-           "AND (:type IS NULL OR a.type = :type) " +
-           "AND (:userId IS NULL OR a.userId = :userId) " +
-           "AND (:fromDate IS NULL OR a.dateTime >= :fromDate) " +
-           "AND (:toDate IS NULL OR a.dateTime <= :toDate)")
+           "(:search IS NULL OR LOWER(a.entityType) LIKE LOWER(CONCAT('%', :search, '%')) " +
+           "  OR LOWER(a.action) LIKE LOWER(CONCAT('%', :search, '%')) " +
+           "  OR LOWER(a.userName) LIKE LOWER(CONCAT('%', :search, '%'))) " +
+           "AND (:entityType IS NULL OR a.entityType = :entityType) " +
+           "AND (:action IS NULL OR a.action = :action) " +
+           "AND (:userId IS NULL OR CAST(a.userId AS string) = :userId) " +
+           "AND (:fromDate IS NULL OR a.createdAt >= :fromDate) " +
+           "AND (:toDate IS NULL OR a.createdAt <= :toDate)")
     Page<AuditLog> findWithFilters(
             @Param("search") String search,
-            @Param("tableName") String tableName,
-            @Param("type") String type,
+            @Param("entityType") String entityType,
+            @Param("action") String action,
             @Param("userId") String userId,
             @Param("fromDate") LocalDateTime fromDate,
             @Param("toDate") LocalDateTime toDate,

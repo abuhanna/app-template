@@ -2,7 +2,6 @@ package apptemplate.application.usecases.auth;
 
 import apptemplate.application.dto.auth.LoginResponse;
 import apptemplate.application.dto.auth.RefreshTokenRequest;
-import apptemplate.application.mappers.UserMapper;
 import apptemplate.application.ports.repositories.RefreshTokenRepository;
 import apptemplate.application.ports.repositories.UserRepository;
 import apptemplate.application.ports.services.CurrentUserService;
@@ -24,7 +23,6 @@ public class RefreshTokenUseCase {
     private final UserRepository userRepository;
     private final JwtTokenService jwtTokenService;
     private final CurrentUserService currentUserService;
-    private final UserMapper userMapper;
 
     @Transactional
     public LoginResponse execute(RefreshTokenRequest request) {
@@ -71,12 +69,9 @@ public class RefreshTokenUseCase {
         refreshTokenRepository.save(existingToken);
         refreshTokenRepository.save(newRefreshToken);
 
-        return LoginResponse.builder()
-                .token(accessToken)
-                .refreshToken(newRefreshToken.getToken())
-                .expiresIn(jwtTokenService.getExpirationSeconds())
-                .user(userMapper.toUserInfoResponse(user))
-                .build();
+        // Token refresh returns no user object per API contract
+        return LoginResponse.tokenOnly(accessToken, jwtTokenService.getExpirationSeconds(),
+                newRefreshToken.getToken());
     }
 
     private String generateRefreshTokenValue() {

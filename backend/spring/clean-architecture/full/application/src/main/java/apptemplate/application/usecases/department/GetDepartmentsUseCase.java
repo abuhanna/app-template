@@ -3,6 +3,7 @@ package apptemplate.application.usecases.department;
 import apptemplate.application.dto.department.DepartmentDto;
 import apptemplate.application.mappers.DepartmentMapper;
 import apptemplate.application.ports.repositories.DepartmentRepository;
+import apptemplate.application.ports.repositories.UserRepository;
 import apptemplate.domain.entities.Department;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
@@ -17,6 +18,7 @@ import org.springframework.transaction.annotation.Transactional;
 public class GetDepartmentsUseCase {
 
     private final DepartmentRepository departmentRepository;
+    private final UserRepository userRepository;
     private final DepartmentMapper departmentMapper;
 
     // Map of allowed sort fields to actual entity field names
@@ -32,12 +34,12 @@ public class GetDepartmentsUseCase {
 
     @Transactional(readOnly = true)
     public Page<DepartmentDto> execute(String search, Boolean isActive,
-                                        int page, int pageSize, String sortBy, String sortDir) {
+                                        int page, int pageSize, String sortBy, String sortOrder) {
         // Convert 1-based page to 0-based for Spring Data
         int zeroBasedPage = page - 1;
 
         // Build sorting
-        Sort sort = buildSort(sortBy, sortDir);
+        Sort sort = buildSort(sortBy, sortOrder);
 
         // Create pageable
         Pageable pageable = PageRequest.of(zeroBasedPage, pageSize, sort);
@@ -50,10 +52,14 @@ public class GetDepartmentsUseCase {
         }
 
         Page<Department> departments = departmentRepository.findByFilters(search, isActive, pageable);
-        return departments.map(departmentMapper::toDto);
+        return departments.map(dept -> {
+            DepartmentDto dto = departmentMapper.toDto(dept);
+            dto.setUserCount(userRepository.countByDepartmentId(dept.getId()));
+            return dto;
+        });
     }
 
-    private Sort buildSort(String sortBy, String sortDir) {
+    private Sort buildSort(String sortBy, String sortOrder) {
         if (sortBy == null || sortBy.isBlank()) {
             // Default sort by name ascending
             return Sort.by(Sort.Direction.ASC, "name");
@@ -62,7 +68,7 @@ public class GetDepartmentsUseCase {
         // Map the sort field to actual entity field
         String actualField = SORT_FIELD_MAP.getOrDefault(sortBy.toLowerCase(), sortBy);
 
-        Sort.Direction direction = "desc".equalsIgnoreCase(sortDir)
+        Sort.Direction direction = "desc".equalsIgnoreCase(sortOrder)
             ? Sort.Direction.DESC
             : Sort.Direction.ASC;
 

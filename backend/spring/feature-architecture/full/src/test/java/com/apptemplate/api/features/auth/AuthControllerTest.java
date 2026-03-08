@@ -31,15 +31,23 @@ class AuthControllerTest {
     }
 
     @Test
-    void register_returnsOk() throws Exception {
+    void register_returnsCreated() throws Exception {
         RegisterRequest request = new RegisterRequest();
-        request.setName("Test User");
+        request.setUsername("testuser");
         request.setEmail("test@test.com");
         request.setPassword("Password123");
 
+        AuthResponse.UserDto userDto = AuthResponse.UserDto.builder()
+                .id(1L)
+                .username("testuser")
+                .email("test@test.com")
+                .build();
+
         AuthResponse response = AuthResponse.builder()
-                .token("jwt-token")
-                .user(new AuthResponse.UserDto(1L, "Test User", "test@test.com"))
+                .accessToken("jwt-token")
+                .refreshToken("refresh-token")
+                .expiresIn(3600)
+                .user(userDto)
                 .build();
 
         when(authService.register(any())).thenReturn(response);
@@ -47,9 +55,10 @@ class AuthControllerTest {
         mockMvc.perform(post("/api/auth/register")
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(objectMapper.writeValueAsString(request)))
-                .andExpect(status().isOk())
-                .andExpect(jsonPath("$.token").value("jwt-token"))
-                .andExpect(jsonPath("$.user.name").value("Test User"));
+                .andExpect(status().isCreated())
+                .andExpect(jsonPath("$.success").value(true))
+                .andExpect(jsonPath("$.data.accessToken").value("jwt-token"))
+                .andExpect(jsonPath("$.data.user.username").value("testuser"));
     }
 
     @Test
@@ -58,9 +67,17 @@ class AuthControllerTest {
         request.setEmail("test@test.com");
         request.setPassword("Password123");
 
+        AuthResponse.UserDto userDto = AuthResponse.UserDto.builder()
+                .id(1L)
+                .username("testuser")
+                .email("test@test.com")
+                .build();
+
         AuthResponse response = AuthResponse.builder()
-                .token("jwt-token")
-                .user(new AuthResponse.UserDto(1L, "Test User", "test@test.com"))
+                .accessToken("jwt-token")
+                .refreshToken("refresh-token")
+                .expiresIn(3600)
+                .user(userDto)
                 .build();
 
         when(authService.login(any())).thenReturn(response);
@@ -69,13 +86,14 @@ class AuthControllerTest {
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(objectMapper.writeValueAsString(request)))
                 .andExpect(status().isOk())
-                .andExpect(jsonPath("$.token").value("jwt-token"));
+                .andExpect(jsonPath("$.success").value(true))
+                .andExpect(jsonPath("$.data.accessToken").value("jwt-token"));
     }
 
     @Test
     void register_withInvalidEmail_returnsBadRequest() throws Exception {
         RegisterRequest request = new RegisterRequest();
-        request.setName("Test User");
+        request.setUsername("testuser");
         request.setEmail("invalid-email");
         request.setPassword("Password123");
 

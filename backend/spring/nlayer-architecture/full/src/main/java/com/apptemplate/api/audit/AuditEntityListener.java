@@ -40,38 +40,35 @@ public class AuditEntityListener {
     }
 
     @Transactional(propagation = Propagation.REQUIRES_NEW)
-    private void log(Object entity, String type) {
+    private void log(Object entity, String action) {
         if (entity instanceof AuditLog) return;
-        
+
         try {
             AuditLog auditLog = new AuditLog();
-            auditLog.setTableName(entity.getClass().getSimpleName());
-            auditLog.setType(type);
-            
+            auditLog.setEntityType(entity.getClass().getSimpleName());
+            auditLog.setAction(action.toLowerCase());
+
+            // Try to extract entity ID via reflection
+            try {
+                var idField = entity.getClass().getDeclaredField("id");
+                idField.setAccessible(true);
+                Object idValue = idField.get(entity);
+                if (idValue != null) {
+                    auditLog.setEntityId(idValue.toString());
+                }
+            } catch (NoSuchFieldException ignored) {}
+
             Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
             if (authentication != null && authentication.isAuthenticated()) {
-                auditLog.setUserId(authentication.getName());
+                auditLog.setUserName(authentication.getName());
             }
 
-            // Note: Capturing old/new values in generic EntityListener is complex without extra libraries like Envers.
-            // Simplified logging for now.
-            auditLog.setNewValues(entity.toString()); // Simple representation
-            
+            auditLog.setDetails(entity.toString());
+
             if (entityManager != null) {
-                // Must flush to ensure audit log is saved, but be careful with transaction boundaries.
-                // Using a separate service or propagation REQUIRES_NEW is vital here if modifying DB.
-                // However, listener injection is tricky. 
-                // A better approach in Spring is often AspectJ or Envers, but we'll try this simple approach 
-                // leveraging a static accessor or bean provider if feasible, OR just skip detailed audit saving 
-                // inside the listener if strict consistency isn't critical.
-                // 
-                // Actually, saving inside EntityListener is generally discouraged due to JPA lifecycle restrictions.
-                // But let's assume we can obtain a bean to save it.
-                // For this template, let's keep it simple: WE WILL NOT SAVE TO DB here to avoid recursion/transaction issues 
-                // without full setup. We will just LOG to console as placeholder for Audit.
-                System.out.println("AUDIT [" + type + "] " + entity.getClass().getSimpleName() + " by " + auditLog.getUserId());
+                System.out.println("AUDIT [" + action + "] " + entity.getClass().getSimpleName() + " by " + auditLog.getUserName());
             }
-            
+
         } catch (Exception e) {
             e.printStackTrace();
         }

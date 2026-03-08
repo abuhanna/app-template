@@ -34,7 +34,7 @@ public class LoginUseCase {
         if (identifier == null || identifier.isEmpty()) {
             identifier = request.getEmail();
         }
-        
+
         if (identifier == null || identifier.isEmpty()) {
             throw new AuthenticationException("Username or email is required");
         }
@@ -73,14 +73,8 @@ public class LoginUseCase {
                 .build();
         refreshTokenRepository.save(refreshToken);
 
-        return LoginResponse.builder()
-                .token(accessToken)
-                .tokenType("Bearer")
-                .refreshToken(refreshToken.getToken())
-                .refreshTokenExpiresAt(refreshToken.getExpiresAt())
-                .expiresIn(jwtTokenService.getExpirationSeconds())
-                .user(userMapper.toUserInfoResponse(user))
-                .build();
+        return LoginResponse.of(accessToken, jwtTokenService.getExpirationSeconds(),
+                refreshToken.getToken(), userMapper.toUserInfoResponse(user));
     }
 
     private String generateRefreshTokenValue() {

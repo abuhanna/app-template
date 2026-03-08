@@ -1,32 +1,32 @@
 package apptemplate.domain.exceptions;
 
-import java.util.HashMap;
-import java.util.Map;
+import java.util.ArrayList;
+import java.util.List;
 
 /**
  * Exception thrown when validation fails.
  */
 public class ValidationException extends BusinessException {
 
-    private final Map<String, String> errors;
+    private final List<String> errors;
 
     public ValidationException(String message) {
         super(message);
-        this.errors = new HashMap<>();
+        this.errors = new ArrayList<>();
     }
 
-    public ValidationException(String message, Map<String, String> errors) {
+    public ValidationException(String message, List<String> errors) {
         super(message);
-        this.errors = errors != null ? errors : new HashMap<>();
+        this.errors = errors != null ? errors : new ArrayList<>();
     }
 
     public ValidationException(String field, String errorMessage) {
         super(String.format("Validation failed for field '%s': %s", field, errorMessage));
-        this.errors = new HashMap<>();
-        this.errors.put(field, errorMessage);
+        this.errors = new ArrayList<>();
+        this.errors.add(field + ": " + errorMessage);
     }
 
-    public Map<String, String> getErrors() {
+    public List<String> getErrors() {
         return errors;
     }
 }

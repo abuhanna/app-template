@@ -1,6 +1,5 @@
 package com.apptemplate.api.common.audit;
 
-import jakarta.persistence.EntityManager;
 import jakarta.persistence.PostPersist;
 import jakarta.persistence.PostRemove;
 import jakarta.persistence.PostUpdate;
@@ -13,51 +12,61 @@ import org.springframework.stereotype.Component;
 @Component
 public class AuditEntityListener {
 
-    private static EntityManager entityManager;
+    private static AuditLogRepository auditLogRepository;
 
     @Autowired
     @Lazy
-    public void setEntityManager(EntityManager entityManager) {
-        AuditEntityListener.entityManager = entityManager;
+    public void setAuditLogRepository(AuditLogRepository auditLogRepository) {
+        AuditEntityListener.auditLogRepository = auditLogRepository;
     }
 
     @PostPersist
     public void onPostPersist(Object entity) {
-        log(entity, "INSERT");
+        log(entity, "create");
     }
 
     @PostUpdate
     public void onPostUpdate(Object entity) {
-        log(entity, "UPDATE");
+        log(entity, "update");
     }
 
     @PostRemove
     public void onPostRemove(Object entity) {
-        log(entity, "DELETE");
+        log(entity, "delete");
     }
 
-    private void log(Object entity, String type) {
+    private void log(Object entity, String action) {
         if (entity instanceof AuditLog) return;
-        
+
         try {
             AuditLog auditLog = new AuditLog();
-            auditLog.setTableName(entity.getClass().getSimpleName());
-            auditLog.setType(type);
-            
+            auditLog.setEntityType(entity.getClass().getSimpleName());
+            auditLog.setAction(action);
+
+            // Extract entity ID via reflection
+            try {
+                var idField = entity.getClass().getDeclaredField("id");
+                idField.setAccessible(true);
+                Object idValue = idField.get(entity);
+                if (idValue != null) {
+                    auditLog.setEntityId(idValue.toString());
+                }
+            } catch (NoSuchFieldException | IllegalAccessException ignored) {}
+
             Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
-            if (authentication != null && authentication.isAuthenticated()) {
-                auditLog.setUserId(authentication.getName());
+            if (authentication != null && authentication.isAuthenticated()
+                    && !"anonymousUser".equals(authentication.getName())) {
+                auditLog.setUserName(authentication.getName());
             }
 
-            auditLog.setNewValues(entity.toString());
-            
-            if (entityManager != null) {
-                // Simplified: just logging to console
-                System.out.println("AUDIT [" + type + "] " + entity.getClass().getSimpleName() + " by " + auditLog.getUserId());
+            auditLog.setDetails(action + " " + entity.getClass().getSimpleName());
+
+            if (auditLogRepository != null) {
+                auditLogRepository.save(auditLog);
             }
-            
         } catch (Exception e) {
-            e.printStackTrace();
+            // Don't let audit logging failures break the main operation
+            System.err.println("Audit logging failed: " + e.getMessage());
         }
     }
 }

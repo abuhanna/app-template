@@ -59,8 +59,8 @@ class NotificationsControllerTest {
 
         mockMvc.perform(get("/api/notifications"))
                 .andExpect(status().isOk())
-                .andExpect(jsonPath("$.items").isArray())
-                .andExpect(jsonPath("$.items[0].message").value("Test notification"));
+                .andExpect(jsonPath("$.data").isArray())
+                .andExpect(jsonPath("$.data[0].message").value("Test notification"));
     }
 
     @Test

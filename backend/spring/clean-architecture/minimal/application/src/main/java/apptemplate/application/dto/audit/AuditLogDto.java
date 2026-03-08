@@ -13,12 +13,12 @@ import java.time.LocalDateTime;
 @AllArgsConstructor
 public class AuditLogDto {
     private Long id;
-    private String entityName;
-    private String entityId;
     private String action;
-    private String oldValues;
-    private String newValues;
-    private String affectedColumns;
+    private String entityType;
+    private String entityId;
     private Long userId;
-    private LocalDateTime timestamp;
+    private String userName;
+    private String details;
+    private String ipAddress;
+    private LocalDateTime createdAt;
 }

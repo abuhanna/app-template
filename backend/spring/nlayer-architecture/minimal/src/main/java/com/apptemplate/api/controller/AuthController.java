@@ -1,8 +1,10 @@
 package com.apptemplate.api.controller;
 
+import com.apptemplate.api.dto.ApiResponse;
 import com.apptemplate.api.dto.AuthResponse;
-import com.apptemplate.api.dto.LoginRequest;
 import com.apptemplate.api.dto.RefreshTokenRequest;
+import com.apptemplate.api.dto.UpdateProfileRequest;
+import com.apptemplate.api.dto.ValidateTokenRequest;
 import com.apptemplate.api.service.AuthService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
@@ -19,30 +21,46 @@ public class AuthController {
 
     private final AuthService authService;
 
-    @PostMapping("/login")
-    @Operation(summary = "Login", description = "Authenticate user and receive JWT tokens")
-    public ResponseEntity<AuthResponse> login(@Valid @RequestBody LoginRequest request) {
-        return ResponseEntity.ok(authService.login(request));
+    @PostMapping("/validate-token")
+    @Operation(summary = "Validate token", description = "Validate external token and receive internal JWT tokens")
+    public ResponseEntity<ApiResponse<AuthResponse>> validateToken(@Valid @RequestBody ValidateTokenRequest request) {
+        AuthResponse response = authService.validateToken(request);
+        return ResponseEntity.ok(ApiResponse.success(response, "Token validated successfully"));
     }
 
     @PostMapping("/refresh")
     @Operation(summary = "Refresh token", description = "Get a new access token using refresh token")
-    public ResponseEntity<AuthResponse> refresh(@Valid @RequestBody RefreshTokenRequest request) {
-        return ResponseEntity.ok(authService.refresh(request));
+    public ResponseEntity<ApiResponse<AuthResponse>> refresh(@Valid @RequestBody RefreshTokenRequest request) {
+        AuthResponse response = authService.refresh(request);
+        return ResponseEntity.ok(ApiResponse.success(response, "Token refreshed successfully"));
     }
 
     @PostMapping("/logout")
     @Operation(summary = "Logout", description = "Invalidate refresh token")
     public ResponseEntity<Void> logout(@RequestBody(required = false) RefreshTokenRequest request) {
-        if (request != null) {
-            authService.logout(request.getRefreshToken());
-        }
-        return ResponseEntity.ok().build();
+        authService.logout(request != null ? request.getRefreshToken() : null);
+        return ResponseEntity.noContent().build();
     }
 
     @GetMapping("/me")
-    @Operation(summary = "Get current user", description = "Get basic info of authenticated user")
-    public ResponseEntity<AuthResponse.UserDto> getCurrentUser() {
-        return ResponseEntity.ok(authService.getCurrentUser());
+    @Operation(summary = "Get current user", description = "Get basic info of authenticated user from JWT claims")
+    public ResponseEntity<ApiResponse<AuthResponse.UserDto>> getCurrentUser() {
+        AuthResponse.UserDto user = authService.getCurrentUser();
+        return ResponseEntity.ok(ApiResponse.success(user, "User retrieved successfully"));
+    }
+
+    @GetMapping("/profile")
+    @Operation(summary = "Get profile", description = "Get full profile of authenticated user from DB")
+    public ResponseEntity<ApiResponse<AuthResponse.UserDto>> getProfile() {
+        AuthResponse.UserDto profile = authService.getProfile();
+        return ResponseEntity.ok(ApiResponse.success(profile, "Profile retrieved successfully"));
+    }
+
+    @PutMapping("/profile")
+    @Operation(summary = "Update profile", description = "Update profile of authenticated user")
+    public ResponseEntity<ApiResponse<AuthResponse.UserDto>> updateProfile(
+            @Valid @RequestBody UpdateProfileRequest request) {
+        AuthResponse.UserDto profile = authService.updateProfile(request);
+        return ResponseEntity.ok(ApiResponse.success(profile, "Profile updated successfully"));
     }
 }

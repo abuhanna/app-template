@@ -1,15 +1,13 @@
 package com.apptemplate.api.features.auth;
 
-import jakarta.validation.constraints.Email;
 import jakarta.validation.constraints.NotBlank;
 import lombok.Data;
 
 @Data
 public class LoginRequest {
-    @NotBlank
-    @Email
+    private String username;
     private String email;
 
-    @NotBlank
+    @NotBlank(message = "Password is required")
     private String password;
 }

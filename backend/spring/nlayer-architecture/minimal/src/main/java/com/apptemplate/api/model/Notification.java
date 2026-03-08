@@ -10,20 +10,30 @@ import java.time.LocalDateTime;
 @Entity
 @Table(name = "notifications")
 public class Notification {
+
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
     @Column(name = "user_id", nullable = false)
-    private String userId;
+    private Long userId;
 
     private String title;
     private String message;
-    private String type; // INFO, WARNING, ERROR
+
+    @Column(length = 20)
+    private String type; // info, warning, error, success
+
+    @Column(name = "reference_id")
+    private String referenceId;
+
+    @Column(name = "reference_type")
+    private String referenceType;
 
     @Column(name = "is_read")
     private boolean isRead = false;
 
     @CreationTimestamp
+    @Column(name = "created_at", updatable = false)
     private LocalDateTime createdAt;
 }

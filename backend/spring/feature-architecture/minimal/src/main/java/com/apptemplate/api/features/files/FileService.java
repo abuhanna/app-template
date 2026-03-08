@@ -1,10 +1,12 @@
 package com.apptemplate.api.features.files;
 
+import com.apptemplate.api.common.exception.NotFoundException;
 import lombok.RequiredArgsConstructor;
 import org.springframework.core.io.Resource;
 import org.springframework.core.io.UrlResource;
 import org.springframework.data.domain.Page;
-import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
 
@@ -22,7 +24,7 @@ public class FileService {
     private final FileRepository fileRepository;
     private final Path fileStorageLocation = Paths.get("uploads").toAbsolutePath().normalize();
 
-    public UploadedFile storeFile(MultipartFile file) {
+    public UploadedFile storeFile(MultipartFile file, String description, String category, boolean isPublic) {
         try {
             Files.createDirectories(this.fileStorageLocation);
 
@@ -31,52 +33,59 @@ public class FileService {
             Files.copy(file.getInputStream(), targetLocation);
 
             UploadedFile uploadedFile = new UploadedFile();
-            uploadedFile.setFileName(file.getOriginalFilename());
-            uploadedFile.setStoredFileName(storedFileName);
+            uploadedFile.setFileName(storedFileName);
+            uploadedFile.setOriginalFileName(file.getOriginalFilename());
             uploadedFile.setContentType(file.getContentType());
             uploadedFile.setFileSize(file.getSize());
-            uploadedFile.setFilePath(targetLocation.toString());
+            uploadedFile.setStoragePath(targetLocation.toString());
+            uploadedFile.setDescription(description);
+            uploadedFile.setCategory(category);
+            uploadedFile.setPublic(isPublic);
 
             return fileRepository.save(uploadedFile);
         } catch (IOException ex) {
-            throw new RuntimeException("Could not store file " + file.getOriginalFilename() + ". Please try again!", ex);
+            throw new RuntimeException("Could not store file " + file.getOriginalFilename(), ex);
         }
     }
 
-    public Page<UploadedFile> listFiles(Pageable pageable) {
-        return fileRepository.findAll(pageable);
+    public Page<UploadedFile> listFiles(int page, int pageSize, String search, String sortBy, String sortOrder,
+                                         String category, Boolean isPublic) {
+        page = Math.max(1, page);
+        pageSize = Math.min(Math.max(1, pageSize), 100);
+
+        if (sortBy == null || sortBy.isBlank()) sortBy = "createdAt";
+        Sort sort = "asc".equalsIgnoreCase(sortOrder) ? Sort.by(sortBy).ascending() : Sort.by(sortBy).descending();
+        PageRequest pageRequest = PageRequest.of(page - 1, pageSize, sort);
+
+        return fileRepository.findAll(pageRequest);
+    }
+
+    public UploadedFile getFileById(Long id) {
+        return fileRepository.findById(id)
+                .orElseThrow(() -> new NotFoundException("File not found with id " + id));
     }
 
     public Resource loadFileAsResource(Long fileId) {
         try {
-            UploadedFile uploadedFile = fileRepository.findById(fileId)
-                    .orElseThrow(() -> new RuntimeException("File not found with id " + fileId));
-
-            Path filePath = Paths.get(uploadedFile.getFilePath());
+            UploadedFile uploadedFile = getFileById(fileId);
+            Path filePath = Paths.get(uploadedFile.getStoragePath());
             Resource resource = new UrlResource(filePath.toUri());
 
             if (resource.exists()) {
                 return resource;
             } else {
-                throw new RuntimeException("File not found " + filePath);
+                throw new NotFoundException("File not found on disk: " + filePath);
             }
         } catch (MalformedURLException ex) {
             throw new RuntimeException("File not found", ex);
         }
     }
 
-    public UploadedFile getFileMetadata(Long fileId) {
-         return fileRepository.findById(fileId)
-                    .orElseThrow(() -> new RuntimeException("File not found with id " + fileId));
-    }
-
     public void deleteFile(Long fileId) {
-        UploadedFile uploadedFile = fileRepository.findById(fileId)
-                .orElseThrow(() -> new RuntimeException("File not found with id " + fileId));
+        UploadedFile uploadedFile = getFileById(fileId);
 
-        // Delete physical file
         try {
-            Path filePath = Paths.get(uploadedFile.getFilePath());
+            Path filePath = Paths.get(uploadedFile.getStoragePath());
             Files.deleteIfExists(filePath);
         } catch (IOException ex) {
             // Log but don't fail if physical file can't be deleted

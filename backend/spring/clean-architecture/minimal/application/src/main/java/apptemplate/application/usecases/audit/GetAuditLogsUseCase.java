@@ -44,13 +44,13 @@ public class GetAuditLogsUseCase {
             int page,
             int pageSize,
             String sortBy,
-            String sortDir) {
+            String sortOrder) {
 
         // Convert 1-based page to 0-based for Spring Data
         int zeroBasedPage = page - 1;
 
         // Build sorting
-        Sort sort = buildSort(sortBy, sortDir);
+        Sort sort = buildSort(sortBy, sortOrder);
 
         // Create pageable
         Pageable pageable = PageRequest.of(zeroBasedPage, pageSize, sort);
@@ -67,7 +67,7 @@ public class GetAuditLogsUseCase {
         ).map(auditLogMapper::toDto);
     }
 
-    private Sort buildSort(String sortBy, String sortDir) {
+    private Sort buildSort(String sortBy, String sortOrder) {
         if (sortBy == null || sortBy.isBlank()) {
             // Default sort by timestamp descending
             return Sort.by(Sort.Direction.DESC, "timestamp");
@@ -76,7 +76,7 @@ public class GetAuditLogsUseCase {
         // Map the sort field to actual entity field
         String actualField = SORT_FIELD_MAP.getOrDefault(sortBy.toLowerCase(), sortBy);
 
-        Sort.Direction direction = "desc".equalsIgnoreCase(sortDir)
+        Sort.Direction direction = "desc".equalsIgnoreCase(sortOrder)
             ? Sort.Direction.DESC
             : Sort.Direction.ASC;
 

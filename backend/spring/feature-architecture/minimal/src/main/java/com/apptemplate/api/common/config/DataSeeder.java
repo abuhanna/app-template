@@ -18,9 +18,12 @@ public class DataSeeder implements CommandLineRunner {
     public void run(String... args) {
         if (userRepository.findByEmail("admin@apptemplate.local").isEmpty()) {
             User admin = new User();
-            admin.setName("System Administrator");
-            admin.setEmail("admin@apptemplate.local");
+            admin.setUsername("admin");
+            admin.setEmail("admin@apptemplate.com");
             admin.setPasswordHash(passwordEncoder.encode("Admin@123"));
+            admin.setFirstName("System");
+            admin.setLastName("Administrator");
+            admin.setRole("admin");
             admin.setActive(true);
             userRepository.save(admin);
         }

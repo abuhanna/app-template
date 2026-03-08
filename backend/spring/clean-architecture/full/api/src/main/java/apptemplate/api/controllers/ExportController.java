@@ -47,9 +47,9 @@ public class ExportController {
     ) {
         // Default sort
         String sortBy = "createdAt";
-        String sortDir = "desc";
+        String sortOrder = "desc";
 
-        var users = getUsersUseCase.execute(search, departmentId, isActive, 1, 10000, sortBy, sortDir);
+        var users = getUsersUseCase.execute(search, departmentId, isActive, 1, 10000, sortBy, sortOrder);
         var exportData = users.getContent().stream()
                 .map(this::toUserExportDto)
                 .collect(Collectors.toList());
@@ -77,9 +77,9 @@ public class ExportController {
     ) {
         // Default sort
         String sortBy = "name";
-        String sortDir = "asc";
+        String sortOrder = "asc";
 
-        var departments = getDepartmentsUseCase.execute(search, isActive, 1, 10000, sortBy, sortDir);
+        var departments = getDepartmentsUseCase.execute(search, isActive, 1, 10000, sortBy, sortOrder);
         var exportData = departments.getContent().stream()
                 .map(this::toDepartmentExportDto)
                 .collect(Collectors.toList());
@@ -111,11 +111,11 @@ public class ExportController {
     ) {
         // Default sort
         String sortBy = "timestamp";
-        String sortDir = "desc";
+        String sortOrder = "desc";
         
         var auditLogs = getAuditLogsUseCase.execute(
             search, entityName, entityId, null, action, fromDate, toDate, 
-            1, limit, sortBy, sortDir
+            1, limit, sortBy, sortOrder
         );
         var exportData = auditLogs.getContent().stream()
                 .map(this::toAuditLogExportDto)
@@ -192,12 +192,12 @@ public class ExportController {
     private AuditLogExportDto toAuditLogExportDto(AuditLogDto log) {
         return new AuditLogExportDto(
                 log.getId(),
-                log.getEntityName(),
+                log.getEntityType(),
                 log.getEntityId(),
                 log.getAction(),
-                log.getUserId() != null ? log.getUserId().toString() : "-",
-                log.getTimestamp() != null ? log.getTimestamp().format(DATE_FORMATTER) : "-",
-                log.getAffectedColumns() != null ? log.getAffectedColumns() : "-"
+                log.getUserName() != null ? log.getUserName() : "-",
+                log.getCreatedAt() != null ? log.getCreatedAt().format(DATE_FORMATTER) : "-",
+                log.getDetails() != null ? log.getDetails() : "-"
         );
     }
 
@@ -227,11 +227,11 @@ public class ExportController {
 
     public record AuditLogExportDto(
             Long id,
-            String entityName,
+            String entityType,
             String entityId,
             String action,
-            String userId,
-            String timestamp,
-            String affectedColumns
+            String userName,
+            String createdAt,
+            String details
     ) {}
 }

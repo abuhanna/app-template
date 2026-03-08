@@ -20,6 +20,7 @@ public class DepartmentDto {
     private String description;
     @JsonProperty("isActive")
     private boolean isActive;
+    private long userCount;
     private LocalDateTime createdAt;
     private LocalDateTime updatedAt;
 }

@@ -32,37 +32,32 @@ class AuthControllerTest {
     }
 
     @Test
-    void login_returnsOk() throws Exception {
-        LoginRequest request = new LoginRequest();
-        request.setEmail("test@test.com");
-        request.setPassword("Password123");
+    void validateToken_returnsOk() throws Exception {
+        ValidateTokenRequest request = new ValidateTokenRequest();
+        request.setToken("external-token");
 
-        AuthResponse response = AuthResponse.builder()
-                .token("jwt-token")
-                .refreshToken("refresh-token")
-                .user(new AuthResponse.UserDto(1L, "Test User", "test@test.com"))
+        AuthResponse.UserDto userDto = AuthResponse.UserDto.builder()
+                .id(1L)
+                .username("testuser")
+                .email("test@test.com")
                 .build();
 
-        when(authService.login(any())).thenReturn(response);
+        AuthResponse response = AuthResponse.builder()
+                .accessToken("jwt-token")
+                .refreshToken("refresh-token")
+                .expiresIn(3600)
+                .user(userDto)
+                .build();
 
-        mockMvc.perform(post("/api/auth/login")
+        when(authService.validateToken(any())).thenReturn(response);
+
+        mockMvc.perform(post("/api/auth/validate-token")
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(objectMapper.writeValueAsString(request)))
                 .andExpect(status().isOk())
-                .andExpect(jsonPath("$.token").value("jwt-token"))
-                .andExpect(jsonPath("$.refreshToken").value("refresh-token"));
-    }
-
-    @Test
-    void login_withBlankPassword_returnsBadRequest() throws Exception {
-        LoginRequest request = new LoginRequest();
-        request.setEmail("test@test.com");
-        request.setPassword("");
-
-        mockMvc.perform(post("/api/auth/login")
-                        .contentType(MediaType.APPLICATION_JSON)
-                        .content(objectMapper.writeValueAsString(request)))
-                .andExpect(status().isBadRequest());
+                .andExpect(jsonPath("$.success").value(true))
+                .andExpect(jsonPath("$.data.accessToken").value("jwt-token"))
+                .andExpect(jsonPath("$.data.refreshToken").value("refresh-token"));
     }
 
     @Test
@@ -70,10 +65,17 @@ class AuthControllerTest {
         RefreshTokenRequest request = new RefreshTokenRequest();
         request.setRefreshToken("valid-refresh-token");
 
+        AuthResponse.UserDto userDto = AuthResponse.UserDto.builder()
+                .id(1L)
+                .username("testuser")
+                .email("test@test.com")
+                .build();
+
         AuthResponse response = AuthResponse.builder()
-                .token("new-jwt-token")
+                .accessToken("new-jwt-token")
                 .refreshToken("new-refresh-token")
-                .user(new AuthResponse.UserDto(1L, "Test User", "test@test.com"))
+                .expiresIn(3600)
+                .user(userDto)
                 .build();
 
         when(authService.refresh(any())).thenReturn(response);
@@ -82,17 +84,23 @@ class AuthControllerTest {
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(objectMapper.writeValueAsString(request)))
                 .andExpect(status().isOk())
-                .andExpect(jsonPath("$.token").value("new-jwt-token"));
+                .andExpect(jsonPath("$.success").value(true))
+                .andExpect(jsonPath("$.data.accessToken").value("new-jwt-token"));
     }
 
     @Test
     void me_returnsOk() throws Exception {
-        AuthResponse.UserDto userDto = new AuthResponse.UserDto(1L, "Test User", "test@test.com");
+        AuthResponse.UserDto userDto = AuthResponse.UserDto.builder()
+                .id(1L)
+                .username("testuser")
+                .email("test@test.com")
+                .build();
 
         when(authService.getCurrentUser()).thenReturn(userDto);
 
         mockMvc.perform(get("/api/auth/me"))
                 .andExpect(status().isOk())
-                .andExpect(jsonPath("$.name").value("Test User"));
+                .andExpect(jsonPath("$.success").value(true))
+                .andExpect(jsonPath("$.data.username").value("testuser"));
     }
 }

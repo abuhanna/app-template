@@ -12,18 +12,22 @@ import java.time.LocalDateTime;
 @Table(name = "departments")
 @EntityListeners(com.apptemplate.api.audit.AuditEntityListener.class)
 public class Department {
+
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
+    @Column(nullable = false, unique = true, length = 50)
+    private String code;
+
     @Column(nullable = false, length = 100)
     private String name;
 
-    @Column(nullable = false, length = 50)
-    private String code;
-
     @Column(length = 500)
     private String description;
+
+    @Column(name = "is_active")
+    private boolean isActive = true;
 
     @CreationTimestamp
     @Column(name = "created_at", updatable = false)

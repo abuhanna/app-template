@@ -33,14 +33,22 @@ class NotificationsControllerTest {
     private MarkNotificationAsReadUseCase markNotificationAsReadUseCase;
 
     @Mock
+    private GetUnreadNotificationCountUseCase getUnreadNotificationCountUseCase;
+
+    @Mock
     private MarkAllNotificationsAsReadUseCase markAllNotificationsAsReadUseCase;
+
+    @Mock
+    private DeleteNotificationUseCase deleteNotificationUseCase;
 
     @BeforeEach
     void setup() {
         NotificationsController controller = new NotificationsController(
                 getUserNotificationsUseCase,
+                getUnreadNotificationCountUseCase,
                 markNotificationAsReadUseCase,
-                markAllNotificationsAsReadUseCase
+                markAllNotificationsAsReadUseCase,
+                deleteNotificationUseCase
         );
         mockMvc = MockMvcBuilders.standaloneSetup(controller)
                 .setCustomArgumentResolvers(new PageableHandlerMethodArgumentResolver())
@@ -59,8 +67,8 @@ class NotificationsControllerTest {
 
         mockMvc.perform(get("/api/notifications"))
                 .andExpect(status().isOk())
-                .andExpect(jsonPath("$.items").isArray())
-                .andExpect(jsonPath("$.items[0].message").value("Test notification"));
+                .andExpect(jsonPath("$.data").isArray())
+                .andExpect(jsonPath("$.data[0].message").value("Test notification"));
     }
 
     @Test
@@ -72,7 +80,7 @@ class NotificationsControllerTest {
         mockMvc.perform(get("/api/notifications")
                         .param("unreadOnly", "true"))
                 .andExpect(status().isOk())
-                .andExpect(jsonPath("$.items").isArray());
+                .andExpect(jsonPath("$.data").isArray());
     }
 
     @Test

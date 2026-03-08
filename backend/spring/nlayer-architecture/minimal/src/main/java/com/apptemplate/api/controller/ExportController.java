@@ -1,0 +1,58 @@
+package com.apptemplate.api.controller;
+
+import com.apptemplate.api.model.User;
+import com.apptemplate.api.repository.UserRepository;
+import com.apptemplate.api.service.ExportService;
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.tags.Tag;
+import lombok.RequiredArgsConstructor;
+import org.springframework.http.HttpHeaders;
+import org.springframework.http.MediaType;
+import org.springframework.http.ResponseEntity;
+import org.springframework.security.core.context.SecurityContextHolder;
+import org.springframework.web.bind.annotation.*;
+
+@RestController
+@RequestMapping("/api/export")
+@RequiredArgsConstructor
+@Tag(name = "Export", description = "Data export endpoints for CSV, Excel, and PDF formats")
+public class ExportController {
+
+    private final ExportService exportService;
+    private final UserRepository userRepository;
+
+    @GetMapping("/audit-logs")
+    @Operation(summary = "Export audit logs", description = "Export audit logs to CSV, Excel, or PDF format")
+    public ResponseEntity<byte[]> exportAuditLogs(
+            @RequestParam(defaultValue = "xlsx") String format) {
+        ExportService.ExportResult result = exportService.exportAuditLogs(format);
+        return buildResponse(result);
+    }
+
+    @GetMapping("/notifications")
+    @Operation(summary = "Export notifications", description = "Export notifications to CSV, Excel, or PDF format")
+    public ResponseEntity<byte[]> exportNotifications(
+            @RequestParam(defaultValue = "xlsx") String format) {
+        Long userId = getCurrentUserId();
+        ExportService.ExportResult result = exportService.exportNotifications(format, userId);
+        return buildResponse(result);
+    }
+
+    private ResponseEntity<byte[]> buildResponse(ExportService.ExportResult result) {
+        return ResponseEntity.ok()
+                .header(HttpHeaders.CONTENT_DISPOSITION, "attachment; filename=\"" + result.fileName() + "\"")
+                .contentType(MediaType.parseMediaType(result.contentType()))
+                .body(result.outputStream().toByteArray());
+    }
+
+    private Long getCurrentUserId() {
+        try {
+            String email = SecurityContextHolder.getContext().getAuthentication().getName();
+            return userRepository.findByEmail(email)
+                    .map(User::getId)
+                    .orElse(null);
+        } catch (Exception ignored) {
+        }
+        return null;
+    }
+}

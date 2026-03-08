@@ -1,14 +1,14 @@
 package com.apptemplate.api.features.auth;
 
+import com.apptemplate.api.common.audit.AuditLog;
+import com.apptemplate.api.common.audit.AuditLogRepository;
+import com.apptemplate.api.common.exception.AuthenticationException;
 import com.apptemplate.api.common.security.JwtUtils;
 import com.apptemplate.api.features.users.User;
 import com.apptemplate.api.features.users.UserRepository;
 import lombok.RequiredArgsConstructor;
-import org.springframework.security.authentication.AuthenticationManager;
-import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.security.core.context.SecurityContextHolder;
-import org.springframework.security.core.userdetails.UserDetails;
-import org.springframework.security.core.userdetails.UserDetailsService;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -17,80 +17,85 @@ import java.util.UUID;
 
 @Service
 @RequiredArgsConstructor
+@Slf4j
 public class AuthService {
 
     private final UserRepository userRepository;
     private final JwtUtils jwtUtils;
-    private final AuthenticationManager authenticationManager;
-    private final UserDetailsService userDetailsService;
     private final RefreshTokenRepository refreshTokenRepository;
+    private final AuditLogRepository auditLogRepository;
 
     @Transactional
-    public AuthResponse login(LoginRequest request) {
-        authenticationManager.authenticate(
-                new UsernamePasswordAuthenticationToken(
-                        request.getEmail(),
-                        request.getPassword()
-                )
-        );
+    public AuthResponse validateToken(ValidateTokenRequest request) {
+        // Validate the external token (shared secret / SSO token)
+        // In a real implementation, this would verify the token against an external auth provider
+        try {
+            String email = jwtUtils.extractUsername(request.getToken());
+            if (email == null) {
+                throw new AuthenticationException("Invalid token");
+            }
 
-        UserDetails userDetails = userDetailsService.loadUserByUsername(request.getEmail());
-        User user = userRepository.findByEmail(request.getEmail()).orElseThrow();
-        String token = jwtUtils.generateToken(userDetails);
+            User user = userRepository.findByEmail(email)
+                    .orElseThrow(() -> new AuthenticationException("User not found"));
 
-        // Create refresh token
-        RefreshToken refreshToken = RefreshToken.builder()
-                .token(generateRefreshTokenValue())
-                .userId(user.getId())
-                .expiresAt(LocalDateTime.now().plusDays(7))
-                .build();
-        refreshTokenRepository.save(refreshToken);
+            if (!user.isActive()) {
+                throw new AuthenticationException("Account is disabled");
+            }
 
-        return AuthResponse.builder()
-                .token(token)
-                .refreshToken(refreshToken.getToken())
-                .user(AuthResponse.UserDto.fromEntity(user))
-                .build();
+            user.setLastLoginAt(LocalDateTime.now());
+            userRepository.save(user);
+
+            String accessToken = jwtUtils.generateToken(user.getEmail(), user.getId(),
+                    user.getRole(), user.getDepartmentId());
+            String refreshToken = createRefreshToken(user.getId());
+
+            logAudit("login", "User", user.getId().toString(), user.getId(), user.getUsername());
+
+            return AuthResponse.builder()
+                    .accessToken(accessToken)
+                    .refreshToken(refreshToken)
+                    .expiresIn(jwtUtils.getExpirationSeconds())
+                    .user(AuthResponse.UserDto.fromEntity(user))
+                    .build();
+        } catch (AuthenticationException e) {
+            throw e;
+        } catch (Exception e) {
+            throw new AuthenticationException("Invalid or expired token");
+        }
     }
 
     @Transactional
     public AuthResponse refresh(RefreshTokenRequest request) {
         RefreshToken existingToken = refreshTokenRepository.findByToken(request.getRefreshToken())
-                .orElseThrow(() -> new RuntimeException("Invalid refresh token"));
+                .orElseThrow(() -> new AuthenticationException("Invalid refresh token"));
 
         if (!existingToken.isActive()) {
             refreshTokenRepository.revokeAllByUserId(existingToken.getUserId());
-            throw new RuntimeException("Invalid refresh token - possible token reuse detected");
+            throw new AuthenticationException("Invalid refresh token - possible token reuse detected");
         }
 
         if (existingToken.isExpired()) {
-            throw new RuntimeException("Refresh token has expired");
+            throw new AuthenticationException("Refresh token has expired");
         }
 
         User user = userRepository.findById(existingToken.getUserId())
-                .orElseThrow(() -> new RuntimeException("User not found"));
+                .orElseThrow(() -> new AuthenticationException("User not found"));
 
         // Revoke old token
         existingToken.setRevokedAt(LocalDateTime.now());
-        refreshTokenRepository.save(existingToken);
 
         // Generate new tokens
-        UserDetails userDetails = userDetailsService.loadUserByUsername(user.getEmail());
-        String accessToken = jwtUtils.generateToken(userDetails);
+        String accessToken = jwtUtils.generateToken(user.getEmail(), user.getId(),
+                user.getRole(), user.getDepartmentId());
+        String newRefreshTokenValue = createRefreshToken(user.getId());
 
-        RefreshToken newRefreshToken = RefreshToken.builder()
-                .token(generateRefreshTokenValue())
-                .userId(user.getId())
-                .expiresAt(LocalDateTime.now().plusDays(7))
-                .build();
-
-        existingToken.setReplacedByToken(newRefreshToken.getToken());
+        existingToken.setReplacedByToken(newRefreshTokenValue);
         refreshTokenRepository.save(existingToken);
-        refreshTokenRepository.save(newRefreshToken);
 
         return AuthResponse.builder()
-                .token(accessToken)
-                .refreshToken(newRefreshToken.getToken())
+                .accessToken(accessToken)
+                .refreshToken(newRefreshTokenValue)
+                .expiresIn(jwtUtils.getExpirationSeconds())
                 .user(AuthResponse.UserDto.fromEntity(user))
                 .build();
     }
@@ -103,18 +108,84 @@ public class AuthService {
                 refreshTokenRepository.save(token);
             });
         }
+
+        Long userId = getCurrentUserId();
+        if (userId != null) {
+            logAudit("logout", "User", userId.toString(), userId, getCurrentUserEmail());
+        }
     }
 
     @Transactional(readOnly = true)
     public AuthResponse.UserDto getCurrentUser() {
-        String email = SecurityContextHolder.getContext().getAuthentication().getName();
+        String email = getCurrentUserEmail();
         User user = userRepository.findByEmail(email)
-                .orElseThrow(() -> new RuntimeException("User not found"));
+                .orElseThrow(() -> new AuthenticationException("User not found"));
         return AuthResponse.UserDto.fromEntity(user);
     }
 
-    private String generateRefreshTokenValue() {
-        return UUID.randomUUID().toString().replace("-", "") +
-               UUID.randomUUID().toString().replace("-", "");
+    @Transactional(readOnly = true)
+    public AuthResponse.UserDto getProfile() {
+        String email = getCurrentUserEmail();
+        User user = userRepository.findByEmail(email)
+                .orElseThrow(() -> new AuthenticationException("User not found"));
+        return AuthResponse.UserDto.fromEntity(user);
+    }
+
+    @Transactional
+    public AuthResponse.UserDto updateProfile(UpdateProfileRequest request) {
+        String email = getCurrentUserEmail();
+        User user = userRepository.findByEmail(email)
+                .orElseThrow(() -> new AuthenticationException("User not found"));
+
+        if (request.getFirstName() != null) {
+            user.setFirstName(request.getFirstName());
+        }
+        if (request.getLastName() != null) {
+            user.setLastName(request.getLastName());
+        }
+
+        User savedUser = userRepository.save(user);
+        return AuthResponse.UserDto.fromEntity(savedUser);
+    }
+
+    private String createRefreshToken(Long userId) {
+        String tokenValue = UUID.randomUUID().toString().replace("-", "") +
+                UUID.randomUUID().toString().replace("-", "");
+        RefreshToken refreshToken = RefreshToken.builder()
+                .token(tokenValue)
+                .userId(userId)
+                .expiresAt(LocalDateTime.now().plusDays(jwtUtils.getRefreshExpirationDays()))
+                .build();
+        refreshTokenRepository.save(refreshToken);
+        return tokenValue;
+    }
+
+    private void logAudit(String action, String entityType, String entityId, Long userId, String userName) {
+        try {
+            AuditLog auditLog = new AuditLog();
+            auditLog.setAction(action);
+            auditLog.setEntityType(entityType);
+            auditLog.setEntityId(entityId);
+            auditLog.setUserId(userId);
+            auditLog.setUserName(userName);
+            auditLogRepository.save(auditLog);
+        } catch (Exception e) {
+            log.warn("Failed to create audit log: {}", e.getMessage());
+        }
+    }
+
+    private String getCurrentUserEmail() {
+        return SecurityContextHolder.getContext().getAuthentication().getName();
+    }
+
+    private Long getCurrentUserId() {
+        try {
+            Object credentials = SecurityContextHolder.getContext().getAuthentication().getCredentials();
+            if (credentials instanceof Long) {
+                return (Long) credentials;
+            }
+        } catch (Exception ignored) {
+        }
+        return null;
     }
 }

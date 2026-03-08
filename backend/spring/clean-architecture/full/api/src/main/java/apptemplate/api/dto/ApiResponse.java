@@ -6,8 +6,7 @@ import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
-import java.time.LocalDateTime;
-import java.util.Map;
+import java.util.List;
 
 @Data
 @Builder
@@ -19,14 +18,13 @@ public class ApiResponse<T> {
     private boolean success;
     private String message;
     private T data;
-    private Map<String, String> errors;
-    private LocalDateTime timestamp;
+    private List<String> errors;
 
     public static <T> ApiResponse<T> success(T data) {
         return ApiResponse.<T>builder()
                 .success(true)
+                .message("Operation successful")
                 .data(data)
-                .timestamp(LocalDateTime.now())
                 .build();
     }
 
@@ -35,7 +33,6 @@ public class ApiResponse<T> {
                 .success(true)
                 .message(message)
                 .data(data)
-                .timestamp(LocalDateTime.now())
                 .build();
     }
 
@@ -43,16 +40,14 @@ public class ApiResponse<T> {
         return ApiResponse.<T>builder()
                 .success(false)
                 .message(message)
-                .timestamp(LocalDateTime.now())
                 .build();
     }
 
-    public static <T> ApiResponse<T> error(String message, Map<String, String> errors) {
+    public static <T> ApiResponse<T> error(String message, List<String> errors) {
         return ApiResponse.<T>builder()
                 .success(false)
                 .message(message)
                 .errors(errors)
-                .timestamp(LocalDateTime.now())
                 .build();
     }
 }

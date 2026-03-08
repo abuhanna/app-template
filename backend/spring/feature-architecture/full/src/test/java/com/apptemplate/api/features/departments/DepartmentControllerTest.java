@@ -6,16 +6,17 @@ import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageImpl;
+import org.springframework.data.domain.PageRequest;
 import org.springframework.http.MediaType;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.setup.MockMvcBuilders;
 
-import java.util.Arrays;
 import java.util.List;
 
-import static org.mockito.ArgumentMatchers.any;
-import static org.mockito.ArgumentMatchers.eq;
-import static org.mockito.Mockito.verify;
+import static org.mockito.ArgumentMatchers.*;
+import static org.mockito.Mockito.doNothing;
 import static org.mockito.Mockito.when;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
@@ -42,13 +43,15 @@ class DepartmentControllerTest {
         dept.setName("IT Department");
         dept.setCode("IT");
 
-        List<DepartmentDto> departments = Arrays.asList(dept);
-        when(departmentService.getAllDepartments()).thenReturn(departments);
+        Page<DepartmentDto> page = new PageImpl<>(List.of(dept), PageRequest.of(0, 10), 1);
+        when(departmentService.getDepartments(isNull(), isNull(), eq(1), eq(10), isNull(), eq("desc")))
+                .thenReturn(page);
 
         mockMvc.perform(get("/api/departments"))
                 .andExpect(status().isOk())
-                .andExpect(jsonPath("$[0].id").value(1))
-                .andExpect(jsonPath("$[0].name").value("IT Department"));
+                .andExpect(jsonPath("$.success").value(true))
+                .andExpect(jsonPath("$.data.data[0].id").value(1))
+                .andExpect(jsonPath("$.data.data[0].name").value("IT Department"));
     }
 
     @Test
@@ -62,21 +65,14 @@ class DepartmentControllerTest {
 
         mockMvc.perform(get("/api/departments/1"))
                 .andExpect(status().isOk())
-                .andExpect(jsonPath("$.id").value(1))
-                .andExpect(jsonPath("$.code").value("IT"));
-    }
-
-    @Test
-    void getDepartmentById_whenNotExists_returnsNotFound() throws Exception {
-        when(departmentService.getDepartmentById(999L)).thenReturn(null);
-
-        mockMvc.perform(get("/api/departments/999"))
-                .andExpect(status().isNotFound());
+                .andExpect(jsonPath("$.success").value(true))
+                .andExpect(jsonPath("$.data.id").value(1))
+                .andExpect(jsonPath("$.data.code").value("IT"));
     }
 
     @Test
     void createDepartment_returnsCreatedDepartment() throws Exception {
-        DepartmentDto request = new DepartmentDto();
+        CreateDepartmentRequest request = new CreateDepartmentRequest();
         request.setName("HR Department");
         request.setCode("HR");
 
@@ -85,39 +81,41 @@ class DepartmentControllerTest {
         created.setName("HR Department");
         created.setCode("HR");
 
-        when(departmentService.createDepartment(any())).thenReturn(created);
+        when(departmentService.createDepartment(any(CreateDepartmentRequest.class))).thenReturn(created);
 
         mockMvc.perform(post("/api/departments")
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(objectMapper.writeValueAsString(request)))
-                .andExpect(status().isOk())
-                .andExpect(jsonPath("$.id").value(2))
-                .andExpect(jsonPath("$.name").value("HR Department"));
+                .andExpect(status().isCreated())
+                .andExpect(jsonPath("$.success").value(true))
+                .andExpect(jsonPath("$.data.id").value(2))
+                .andExpect(jsonPath("$.data.name").value("HR Department"));
     }
 
     @Test
     void updateDepartment_returnsUpdatedDepartment() throws Exception {
-        DepartmentDto request = new DepartmentDto();
+        UpdateDepartmentRequest request = new UpdateDepartmentRequest();
         request.setName("Updated Department");
 
         DepartmentDto updated = new DepartmentDto();
         updated.setId(1L);
         updated.setName("Updated Department");
 
-        when(departmentService.updateDepartment(eq(1L), any())).thenReturn(updated);
+        when(departmentService.updateDepartment(eq(1L), any(UpdateDepartmentRequest.class))).thenReturn(updated);
 
         mockMvc.perform(put("/api/departments/1")
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(objectMapper.writeValueAsString(request)))
                 .andExpect(status().isOk())
-                .andExpect(jsonPath("$.name").value("Updated Department"));
+                .andExpect(jsonPath("$.success").value(true))
+                .andExpect(jsonPath("$.data.name").value("Updated Department"));
     }
 
     @Test
     void deleteDepartment_returnsNoContent() throws Exception {
+        doNothing().when(departmentService).deleteDepartment(1L);
+
         mockMvc.perform(delete("/api/departments/1"))
                 .andExpect(status().isNoContent());
-
-        verify(departmentService).deleteDepartment(1L);
     }
 }

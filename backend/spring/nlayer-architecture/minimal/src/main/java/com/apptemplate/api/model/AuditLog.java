@@ -10,25 +10,33 @@ import java.time.LocalDateTime;
 @Entity
 @Table(name = "audit_logs")
 public class AuditLog {
+
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
-    @Column(name = "user_id")
-    private String userId;
+    @Column(nullable = false, length = 50)
+    private String action; // create, update, delete, login, logout
 
-    private String type; // INSERT, UPDATE, DELETE
-    
-    @Column(name = "table_name")
-    private String tableName;
+    @Column(name = "entity_type", length = 100)
+    private String entityType; // User, Department, File, Notification
+
+    @Column(name = "entity_id")
+    private String entityId;
+
+    @Column(name = "user_id")
+    private Long userId;
+
+    @Column(name = "user_name")
+    private String userName;
+
+    @Column(columnDefinition = "TEXT")
+    private String details;
+
+    @Column(name = "ip_address", length = 50)
+    private String ipAddress;
 
     @CreationTimestamp
-    @Column(name = "date_time")
-    private LocalDateTime dateTime;
-
-    @Column(columnDefinition = "TEXT", name = "old_values")
-    private String oldValues;
-
-    @Column(columnDefinition = "TEXT", name = "new_values")
-    private String newValues;
+    @Column(name = "created_at", updatable = false)
+    private LocalDateTime createdAt;
 }

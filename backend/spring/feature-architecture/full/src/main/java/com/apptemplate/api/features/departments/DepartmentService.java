@@ -1,54 +1,79 @@
 package com.apptemplate.api.features.departments;
 
+import com.apptemplate.api.common.exception.ConflictException;
+import com.apptemplate.api.common.exception.NotFoundException;
+import com.apptemplate.api.features.users.UserRepository;
 import lombok.RequiredArgsConstructor;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Service;
-
-import java.util.List;
-import java.util.stream.Collectors;
+import org.springframework.transaction.annotation.Transactional;
 
 @Service
 @RequiredArgsConstructor
 public class DepartmentService {
+
     private final DepartmentRepository departmentRepository;
+    private final UserRepository userRepository;
 
-    public List<DepartmentDto> getAllDepartments() {
-        return departmentRepository.findAll().stream()
-                .map(this::mapToDto)
-                .collect(Collectors.toList());
+    @Transactional(readOnly = true)
+    public Page<DepartmentDto> getDepartments(String search, Boolean isActive,
+                                               int page, int pageSize, String sortBy, String sortOrder) {
+        Sort sort = buildSort(sortBy, sortOrder, "name");
+        PageRequest pageRequest = PageRequest.of(page - 1, pageSize, sort);
+        return departmentRepository.findWithFilters(search, isActive, pageRequest)
+                .map(dept -> DepartmentDto.fromEntity(dept, userRepository.countByDepartmentId(dept.getId())));
     }
 
+    @Transactional(readOnly = true)
     public DepartmentDto getDepartmentById(Long id) {
-        return departmentRepository.findById(id)
-                .map(this::mapToDto)
-                .orElse(null);
+        Department department = departmentRepository.findById(id)
+                .orElseThrow(() -> new NotFoundException("Department not found with id " + id));
+        long userCount = userRepository.countByDepartmentId(id);
+        return DepartmentDto.fromEntity(department, userCount);
     }
 
-    public DepartmentDto createDepartment(DepartmentDto departmentDto) {
+    @Transactional
+    public DepartmentDto createDepartment(CreateDepartmentRequest request) {
+        if (departmentRepository.existsByCode(request.getCode())) {
+            throw new ConflictException("Department with code '" + request.getCode() + "' already exists");
+        }
+
         Department department = new Department();
-        department.setName(departmentDto.getName());
-        department.setCode(departmentDto.getCode());
-        department.setDescription(departmentDto.getDescription());
-        return mapToDto(departmentRepository.save(department));
+        department.setCode(request.getCode());
+        department.setName(request.getName());
+        department.setDescription(request.getDescription());
+        department.setActive(true);
+
+        Department saved = departmentRepository.save(department);
+        return DepartmentDto.fromEntity(saved, 0);
     }
 
-    public DepartmentDto updateDepartment(Long id, DepartmentDto departmentDto) {
-        Department department = departmentRepository.findById(id).orElseThrow();
-        department.setName(departmentDto.getName());
-        department.setCode(departmentDto.getCode());
-        department.setDescription(departmentDto.getDescription());
-        return mapToDto(departmentRepository.save(department));
+    @Transactional
+    public DepartmentDto updateDepartment(Long id, UpdateDepartmentRequest request) {
+        Department department = departmentRepository.findById(id)
+                .orElseThrow(() -> new NotFoundException("Department not found with id " + id));
+
+        if (request.getName() != null) department.setName(request.getName());
+        if (request.getDescription() != null) department.setDescription(request.getDescription());
+        if (request.getIsActive() != null) department.setActive(request.getIsActive());
+
+        Department saved = departmentRepository.save(department);
+        long userCount = userRepository.countByDepartmentId(id);
+        return DepartmentDto.fromEntity(saved, userCount);
     }
 
+    @Transactional
     public void deleteDepartment(Long id) {
+        if (!departmentRepository.existsById(id)) {
+            throw new NotFoundException("Department not found with id " + id);
+        }
         departmentRepository.deleteById(id);
     }
 
-    private DepartmentDto mapToDto(Department department) {
-        DepartmentDto dto = new DepartmentDto();
-        dto.setId(department.getId());
-        dto.setName(department.getName());
-        dto.setCode(department.getCode());
-        dto.setDescription(department.getDescription());
-        return dto;
+    private Sort buildSort(String sortBy, String sortOrder, String defaultSortBy) {
+        String field = (sortBy != null && !sortBy.isBlank()) ? sortBy : defaultSortBy;
+        return "asc".equalsIgnoreCase(sortOrder) ? Sort.by(field).ascending() : Sort.by(field).descending();
     }
 }

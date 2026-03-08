@@ -1,5 +1,6 @@
 package apptemplate.api.controllers;
 
+import apptemplate.api.dto.ApiResponse;
 import apptemplate.api.dto.PagedResponse;
 import apptemplate.application.dto.user.ChangePasswordRequest;
 import apptemplate.application.dto.user.CreateUserRequest;
@@ -16,8 +17,6 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
-
-import java.util.Map;
 
 
 @RestController
@@ -39,7 +38,7 @@ public class UsersController {
             @Parameter(description = "Page number (1-based)") @RequestParam(defaultValue = "1") int page,
             @Parameter(description = "Number of items per page") @RequestParam(defaultValue = "10") int pageSize,
             @Parameter(description = "Column to sort by (e.g., username, email, createdAt)") @RequestParam(required = false) String sortBy,
-            @Parameter(description = "Sort direction: asc or desc") @RequestParam(defaultValue = "asc") String sortDir,
+            @Parameter(description = "Sort direction: asc or desc") @RequestParam(defaultValue = "desc") String sortOrder,
             @Parameter(description = "Search by username, email, or name") @RequestParam(required = false) String search,
             @Parameter(description = "Filter by department ID") @RequestParam(required = false) Long departmentId,
             @Parameter(description = "Filter by active status") @RequestParam(required = false) Boolean isActive
@@ -48,35 +47,35 @@ public class UsersController {
         page = Math.max(1, page);
         pageSize = Math.min(Math.max(1, pageSize), 100);
 
-        Page<UserDto> users = getUsersUseCase.execute(search, departmentId, isActive, page, pageSize, sortBy, sortDir);
+        Page<UserDto> users = getUsersUseCase.execute(search, departmentId, isActive, page, pageSize, sortBy, sortOrder);
         return ResponseEntity.ok(PagedResponse.from(users));
     }
 
     @GetMapping("/{id}")
     @Operation(summary = "Get user by ID", description = "Get a specific user by their ID")
-    public ResponseEntity<UserDto> getUserById(@PathVariable Long id) {
+    public ResponseEntity<ApiResponse<UserDto>> getUserById(@PathVariable Long id) {
         UserDto user = getUserByIdUseCase.execute(id);
-        return ResponseEntity.ok(user);
+        return ResponseEntity.ok(ApiResponse.success(user, "User retrieved successfully"));
     }
 
     @PostMapping
     @PreAuthorize("hasRole('ADMIN')")
     @Operation(summary = "Create user", description = "Create a new user (Admin only)")
-    public ResponseEntity<UserDto> createUser(@Valid @RequestBody CreateUserRequest request) {
+    public ResponseEntity<ApiResponse<UserDto>> createUser(@Valid @RequestBody CreateUserRequest request) {
         UserDto user = createUserUseCase.execute(request);
         return ResponseEntity.status(HttpStatus.CREATED)
-                .body(user);
+                .body(ApiResponse.success(user, "User created successfully"));
     }
 
     @PutMapping("/{id}")
     @PreAuthorize("hasRole('ADMIN')")
     @Operation(summary = "Update user", description = "Update an existing user (Admin only)")
-    public ResponseEntity<UserDto> updateUser(
+    public ResponseEntity<ApiResponse<UserDto>> updateUser(
             @PathVariable Long id,
             @Valid @RequestBody UpdateUserRequest request
     ) {
         UserDto user = updateUserUseCase.execute(id, request);
-        return ResponseEntity.ok(user);
+        return ResponseEntity.ok(ApiResponse.success(user, "User updated successfully"));
     }
 
     @DeleteMapping("/{id}")
@@ -89,11 +88,11 @@ public class UsersController {
 
     @PostMapping("/{id}/change-password")
     @Operation(summary = "Change user password", description = "Change password of a specific user")
-    public ResponseEntity<Map<String, String>> changePassword(
+    public ResponseEntity<ApiResponse<Void>> changePassword(
             @PathVariable Long id,
             @Valid @RequestBody ChangePasswordRequest request
     ) {
         changeUserPasswordUseCase.execute(id, request);
-        return ResponseEntity.ok(Map.of("message", "Password changed successfully"));
+        return ResponseEntity.ok(ApiResponse.success(null, "Password changed successfully"));
     }
 }

@@ -37,7 +37,7 @@ public class DepartmentsController {
             @Parameter(description = "Page number (1-based)") @RequestParam(defaultValue = "1") int page,
             @Parameter(description = "Number of items per page") @RequestParam(defaultValue = "10") int pageSize,
             @Parameter(description = "Column to sort by (e.g., name, code, createdAt)") @RequestParam(required = false) String sortBy,
-            @Parameter(description = "Sort direction: asc or desc") @RequestParam(defaultValue = "asc") String sortDir,
+            @Parameter(description = "Sort direction: asc or desc") @RequestParam(defaultValue = "desc") String sortOrder,
             @Parameter(description = "Search by name or code") @RequestParam(required = false) String search,
             @Parameter(description = "Filter by active status") @RequestParam(required = false) Boolean isActive
     ) {
@@ -45,35 +45,35 @@ public class DepartmentsController {
         page = Math.max(1, page);
         pageSize = Math.min(Math.max(1, pageSize), 100);
 
-        Page<DepartmentDto> departments = getDepartmentsUseCase.execute(search, isActive, page, pageSize, sortBy, sortDir);
+        Page<DepartmentDto> departments = getDepartmentsUseCase.execute(search, isActive, page, pageSize, sortBy, sortOrder);
         return ResponseEntity.ok(PagedResponse.from(departments));
     }
 
     @GetMapping("/{id}")
     @Operation(summary = "Get department by ID", description = "Get a specific department by its ID")
-    public ResponseEntity<DepartmentDto> getDepartmentById(@PathVariable Long id) {
+    public ResponseEntity<ApiResponse<DepartmentDto>> getDepartmentById(@PathVariable Long id) {
         DepartmentDto department = getDepartmentByIdUseCase.execute(id);
-        return ResponseEntity.ok(department);
+        return ResponseEntity.ok(ApiResponse.success(department, "Department retrieved successfully"));
     }
 
     @PostMapping
     @PreAuthorize("hasRole('ADMIN')")
     @Operation(summary = "Create department", description = "Create a new department (Admin only)")
-    public ResponseEntity<DepartmentDto> createDepartment(@Valid @RequestBody CreateDepartmentRequest request) {
+    public ResponseEntity<ApiResponse<DepartmentDto>> createDepartment(@Valid @RequestBody CreateDepartmentRequest request) {
         DepartmentDto department = createDepartmentUseCase.execute(request);
         return ResponseEntity.status(HttpStatus.CREATED)
-                .body(department);
+                .body(ApiResponse.success(department, "Department created successfully"));
     }
 
     @PutMapping("/{id}")
     @PreAuthorize("hasRole('ADMIN')")
     @Operation(summary = "Update department", description = "Update an existing department (Admin only)")
-    public ResponseEntity<DepartmentDto> updateDepartment(
+    public ResponseEntity<ApiResponse<DepartmentDto>> updateDepartment(
             @PathVariable Long id,
             @Valid @RequestBody UpdateDepartmentRequest request
     ) {
         DepartmentDto department = updateDepartmentUseCase.execute(id, request);
-        return ResponseEntity.ok(department);
+        return ResponseEntity.ok(ApiResponse.success(department, "Department updated successfully"));
     }
 
     @DeleteMapping("/{id}")
