@@ -5,6 +5,7 @@
   "description": "AppTemplate - Fullstack Application Scaffolding Tool",
   "scripts": {
     "prepare": "husky",
+    "sync-versions": "npx tsx scripts/sync-versions.ts",
     "check-versions": "npx tsx scripts/check-versions.ts"
   },
   "devDependencies": {
