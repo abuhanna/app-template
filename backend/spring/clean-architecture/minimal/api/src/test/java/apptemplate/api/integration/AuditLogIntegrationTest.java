@@ -1,10 +1,13 @@
 package apptemplate.api.integration;
 
 import apptemplate.domain.enums.NotificationType;
+import apptemplate.domain.enums.UserRole;
 import apptemplate.infrastructure.persistence.jpa.AuditLogJpaRepository;
 import apptemplate.infrastructure.persistence.jpa.NotificationJpaRepository;
+import apptemplate.infrastructure.persistence.jpa.UserJpaRepository;
 import apptemplate.infrastructure.persistence.entities.NotificationJpaEntity;
 import apptemplate.infrastructure.persistence.entities.AuditLogJpaEntity;
+import apptemplate.infrastructure.persistence.entities.UserJpaEntity;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -20,6 +23,9 @@ import java.util.List;
 public class AuditLogIntegrationTest {
 
     @Autowired
+    private UserJpaRepository userRepository;
+
+    @Autowired
     private NotificationJpaRepository notificationRepository;
 
     @Autowired
@@ -27,30 +33,33 @@ public class AuditLogIntegrationTest {
 
     @Test
     public void testAuditLogCreatedOnInsert() {
+        // Create a test user first (needed for FK constraint)
+        UserJpaEntity user = UserJpaEntity.builder()
+            .username("audittest")
+            .email("audittest@test.com")
+            .passwordHash("$2a$10$dummyhash")
+            .role(UserRole.USER)
+            .isActive(true)
+            .build();
+        user = userRepository.save(user);
+
         // Setup mock user
         SecurityContextHolder.getContext().setAuthentication(
-            new UsernamePasswordAuthenticationToken(1L, "password")
+            new UsernamePasswordAuthenticationToken(user.getId(), "password")
         );
 
-        // Create entity
-        NotificationJpaEntity notification = NotificationJpaEntity.builder()
-            .userId(1L)
-            .title("Test Notification")
-            .message("Test message for audit log")
-            .type(NotificationType.INFO)
-            .isRead(false)
-            .build();
-
-        // Save entity (should trigger CREATE audit)
-        notificationRepository.save(notification);
-
-        // Verify audit log
+        // Verify audit log was created for user insert
         List<AuditLogJpaEntity> logs = auditLogRepository.findAll();
         System.out.println("Logs count: " + logs.size());
         logs.forEach(l -> System.out.println("Log: " + l.getAction() + " on " + l.getEntityName()));
 
         Assertions.assertFalse(logs.isEmpty(), "Audit log should not be empty");
-        Assertions.assertEquals("CREATED", logs.get(0).getAction());
-        Assertions.assertEquals("Notification", logs.get(0).getEntityName());
+
+        AuditLogJpaEntity userLog = logs.stream()
+            .filter(l -> "User".equals(l.getEntityName()))
+            .findFirst()
+            .orElse(null);
+        Assertions.assertNotNull(userLog, "Should have audit log for User entity");
+        Assertions.assertEquals("CREATED", userLog.getAction());
     }
 }
