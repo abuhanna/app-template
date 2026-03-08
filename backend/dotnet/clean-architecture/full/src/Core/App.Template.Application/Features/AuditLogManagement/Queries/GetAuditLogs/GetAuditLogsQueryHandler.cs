@@ -30,9 +30,9 @@ public class GetAuditLogsQueryHandler : IRequestHandler<GetAuditLogsQuery, Paged
         var query = _context.AuditLogs.AsQueryable();
 
         // Apply filters
-        if (!string.IsNullOrEmpty(request.EntityName))
+        if (!string.IsNullOrEmpty(request.EntityType))
         {
-            query = query.Where(a => a.EntityName == request.EntityName);
+            query = query.Where(a => a.EntityName == request.EntityType);
         }
 
         if (!string.IsNullOrEmpty(request.EntityId))
@@ -74,14 +74,14 @@ public class GetAuditLogsQueryHandler : IRequestHandler<GetAuditLogsQuery, Paged
         var totalItems = await query.CountAsync(cancellationToken);
 
         // Apply sorting
-        var isDescending = request.SortDir?.Equals("desc", StringComparison.OrdinalIgnoreCase) ?? true;
+        var isDescending = request.SortOrder?.Equals("desc", StringComparison.OrdinalIgnoreCase) ?? true;
         query = request.SortBy?.ToLower() switch
         {
-            "entityname" => isDescending ? query.OrderByDescending(a => a.EntityName) : query.OrderBy(a => a.EntityName),
+            "entitytype" => isDescending ? query.OrderByDescending(a => a.EntityName) : query.OrderBy(a => a.EntityName),
             "entityid" => isDescending ? query.OrderByDescending(a => a.EntityId) : query.OrderBy(a => a.EntityId),
             "action" => isDescending ? query.OrderByDescending(a => a.Action) : query.OrderBy(a => a.Action),
             "userid" => isDescending ? query.OrderByDescending(a => a.UserId) : query.OrderBy(a => a.UserId),
-            "timestamp" => isDescending ? query.OrderByDescending(a => a.Timestamp) : query.OrderBy(a => a.Timestamp),
+            "createdat" => isDescending ? query.OrderByDescending(a => a.Timestamp) : query.OrderBy(a => a.Timestamp),
             _ => query.OrderByDescending(a => a.Timestamp) // Default: newest first
         };
 
@@ -92,14 +92,14 @@ public class GetAuditLogsQueryHandler : IRequestHandler<GetAuditLogsQuery, Paged
             .Select(a => new AuditLogDto
             {
                 Id = a.Id,
-                EntityName = a.EntityName,
+                EntityType = a.EntityName,
                 EntityId = a.EntityId,
                 Action = a.Action.ToString(),
-                OldValues = a.OldValues,
-                NewValues = a.NewValues,
-                AffectedColumns = a.AffectedColumns,
                 UserId = a.UserId,
-                Timestamp = a.Timestamp
+                UserName = a.UserId,
+                Details = a.NewValues,
+                IpAddress = null,
+                CreatedAt = a.Timestamp
             })
             .ToListAsync(cancellationToken);
 

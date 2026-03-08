@@ -7,7 +7,7 @@ using Microsoft.Extensions.Logging;
 
 namespace AppTemplate.Application.Features.Authentication.Commands.RefreshToken;
 
-public class RefreshTokenCommandHandler : IRequestHandler<RefreshTokenCommand, LoginResponseDto>
+public class RefreshTokenCommandHandler : IRequestHandler<RefreshTokenCommand, RefreshResponse>
 {
     private readonly IApplicationDbContext _context;
     private readonly IJwtTokenService _jwtTokenService;
@@ -26,7 +26,7 @@ public class RefreshTokenCommandHandler : IRequestHandler<RefreshTokenCommand, L
         _logger = logger;
     }
 
-    public async Task<LoginResponseDto> Handle(RefreshTokenCommand request, CancellationToken cancellationToken)
+    public async Task<RefreshResponse> Handle(RefreshTokenCommand request, CancellationToken cancellationToken)
     {
         // Find the refresh token
         var refreshToken = await _context.RefreshTokens
@@ -84,23 +84,11 @@ public class RefreshTokenCommandHandler : IRequestHandler<RefreshTokenCommand, L
 
         _logger.LogInformation("Token refreshed for user: {Username}", user.Username);
 
-        return new LoginResponseDto
+        return new RefreshResponse
         {
-            Token = token,
-            TokenType = "Bearer",
+            AccessToken = token,
             ExpiresIn = expirationMinutes * 60,
-            RefreshToken = newRefreshTokenValue,
-            RefreshTokenExpiresAt = newRefreshTokenExpiry,
-            User = new UserInfoDto
-            {
-                Id = user.Id.ToString(),
-                Username = user.Username,
-                Email = user.Email,
-                Name = user.Name ?? user.Username,
-                Role = user.Role,
-                DepartmentId = user.DepartmentId?.ToString(),
-                DepartmentName = user.Department?.Name
-            }
+            RefreshToken = newRefreshTokenValue
         };
     }
 

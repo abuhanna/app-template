@@ -12,6 +12,9 @@ public record GetNotificationsQuery : IRequest<PagedResult<NotificationDto>>
     public int? Limit { get; init; }
     public DateTime? StartDate { get; init; }
     public DateTime? EndDate { get; init; }
+    public string? Search { get; init; }
+    public string? SortBy { get; init; }
+    public string? SortOrder { get; init; } = "desc";
     public int Page { get; init; } = 1;
     public int PageSize { get; init; } = 20;
 }
@@ -51,8 +54,22 @@ public class GetNotificationsQueryHandler : IRequestHandler<GetNotificationsQuer
             query = query.Where(n => n.CreatedAt <= endDate);
         }
 
+        if (!string.IsNullOrWhiteSpace(request.Search))
+        {
+            var search = request.Search.ToLower();
+            query = query.Where(n =>
+                n.Title.ToLower().Contains(search) ||
+                n.Message.ToLower().Contains(search));
+        }
+
         // Apply ordering
-        query = query.OrderByDescending(n => n.CreatedAt);
+        var isDescending = request.SortOrder?.Equals("desc", StringComparison.OrdinalIgnoreCase) ?? true;
+        query = request.SortBy?.ToLower() switch
+        {
+            "title" => isDescending ? query.OrderByDescending(n => n.Title) : query.OrderBy(n => n.Title),
+            "isread" => isDescending ? query.OrderByDescending(n => n.IsRead) : query.OrderBy(n => n.IsRead),
+            _ => isDescending ? query.OrderByDescending(n => n.CreatedAt) : query.OrderBy(n => n.CreatedAt)
+        };
 
         // If a legacy limit is specified (no pagination), honour it
         if (request.Limit.HasValue)

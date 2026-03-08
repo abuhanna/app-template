@@ -1,4 +1,3 @@
-using System.Security.Claims;
 using App.Template.Api.Common.Models;
 using App.Template.Api.Features.Users;
 using App.Template.Api.Features.Users.Dtos;
@@ -24,19 +23,8 @@ public class UsersControllerTests
         };
     }
 
-    private void SetUserClaims(string userId = "1", string role = "Admin")
-    {
-        var claims = new[]
-        {
-            new Claim(ClaimTypes.NameIdentifier, userId),
-            new Claim(ClaimTypes.Role, role),
-        };
-        var identity = new ClaimsIdentity(claims, "TestAuth");
-        _controller.ControllerContext.HttpContext.User = new ClaimsPrincipal(identity);
-    }
-
     [Fact]
-    public async Task GetAll_ReturnsOkResult_WithPagedUsers()
+    public async Task GetAll_ReturnsOkResult_WithPaginatedUsers()
     {
         var queryParams = new UsersQueryParams();
         var users = new PagedResult<UserDto>
@@ -52,7 +40,8 @@ public class UsersControllerTests
         var result = await _controller.GetAll(queryParams);
 
         var okResult = Assert.IsType<OkObjectResult>(result.Result);
-        Assert.NotNull(okResult.Value);
+        var value = Assert.IsType<PaginatedResponse<UserDto>>(okResult.Value);
+        Assert.True(value.Success);
     }
 
     [Fact]
@@ -64,8 +53,9 @@ public class UsersControllerTests
         var result = await _controller.GetById(1);
 
         var okResult = Assert.IsType<OkObjectResult>(result.Result);
-        var value = Assert.IsType<UserDto>(okResult.Value);
-        Assert.Equal("user1", value.Username);
+        var value = Assert.IsType<ApiResponse<UserDto>>(okResult.Value);
+        Assert.True(value.Success);
+        Assert.Equal("user1", value.Data!.Username);
     }
 
     [Fact]
@@ -75,11 +65,13 @@ public class UsersControllerTests
 
         var result = await _controller.GetById(1);
 
-        Assert.IsType<NotFoundResult>(result.Result);
+        var notFoundResult = Assert.IsType<NotFoundObjectResult>(result.Result);
+        var value = Assert.IsType<ApiResponse>(notFoundResult.Value);
+        Assert.False(value.Success);
     }
 
     [Fact]
-    public async Task Create_ReturnsCreatedAtAction_WithUser()
+    public async Task Create_ReturnsCreated_WithUser()
     {
         var request = new CreateUserRequest { Username = "newuser", Email = "new@test.com", Password = "Pass@123" };
         var user = new UserDto { Id = 3, Username = "newuser", Email = "new@test.com" };
@@ -87,10 +79,11 @@ public class UsersControllerTests
 
         var result = await _controller.Create(request);
 
-        var createdResult = Assert.IsType<CreatedAtActionResult>(result.Result);
-        Assert.Equal(nameof(UsersController.GetById), createdResult.ActionName);
-        var value = Assert.IsType<UserDto>(createdResult.Value);
-        Assert.Equal(3, value.Id);
+        var objectResult = Assert.IsType<ObjectResult>(result.Result);
+        Assert.Equal(201, objectResult.StatusCode);
+        var value = Assert.IsType<ApiResponse<UserDto>>(objectResult.Value);
+        Assert.True(value.Success);
+        Assert.Equal(3, value.Data!.Id);
     }
 
     [Fact]
@@ -103,7 +96,8 @@ public class UsersControllerTests
         var result = await _controller.Update(1, request);
 
         var okResult = Assert.IsType<OkObjectResult>(result.Result);
-        Assert.NotNull(okResult.Value);
+        var value = Assert.IsType<ApiResponse<UserDto>>(okResult.Value);
+        Assert.True(value.Success);
     }
 
     [Fact]
@@ -114,7 +108,9 @@ public class UsersControllerTests
 
         var result = await _controller.Update(1, request);
 
-        Assert.IsType<NotFoundResult>(result.Result);
+        var notFoundResult = Assert.IsType<NotFoundObjectResult>(result.Result);
+        var value = Assert.IsType<ApiResponse>(notFoundResult.Value);
+        Assert.False(value.Success);
     }
 
     [Fact]
@@ -134,42 +130,8 @@ public class UsersControllerTests
 
         var result = await _controller.Delete(1);
 
-        Assert.IsType<NotFoundResult>(result);
-    }
-
-    [Fact]
-    public async Task ChangePassword_ReturnsOk_WhenSameUser()
-    {
-        SetUserClaims("1");
-        var request = new ChangePasswordRequest { CurrentPassword = "Old@123", NewPassword = "New@123" };
-        _mockUserService.Setup(s => s.ChangePasswordAsync(1, request)).Returns(Task.CompletedTask);
-
-        var result = await _controller.ChangePassword(1, request);
-
-        Assert.IsType<OkObjectResult>(result);
-    }
-
-    [Fact]
-    public async Task ChangePassword_ReturnsOk_WhenAdmin()
-    {
-        SetUserClaims("2", "Admin");
-        var request = new ChangePasswordRequest { CurrentPassword = "Old@123", NewPassword = "New@123" };
-        _mockUserService.Setup(s => s.ChangePasswordAsync(1, request)).Returns(Task.CompletedTask);
-
-        var result = await _controller.ChangePassword(1, request);
-
-        Assert.IsType<OkObjectResult>(result);
-    }
-
-    [Fact]
-    public async Task ChangePassword_ReturnsForbid_WhenDifferentNonAdminUser()
-    {
-        SetUserClaims("2", "User");
-
-        var request = new ChangePasswordRequest { CurrentPassword = "Old@123", NewPassword = "New@123" };
-
-        var result = await _controller.ChangePassword(1, request);
-
-        Assert.IsType<ForbidResult>(result);
+        var notFoundResult = Assert.IsType<NotFoundObjectResult>(result);
+        var value = Assert.IsType<ApiResponse>(notFoundResult.Value);
+        Assert.False(value.Success);
     }
 }

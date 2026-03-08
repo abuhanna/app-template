@@ -27,7 +27,7 @@ public record GetDepartmentsQuery : IRequest<PagedResult<DepartmentDto>>
     /// <summary>
     /// Sort direction: "asc" or "desc"
     /// </summary>
-    public string? SortDir { get; init; } = "asc";
+    public string? SortOrder { get; init; } = "desc";
 
     /// <summary>
     /// Optional: Filter by active status

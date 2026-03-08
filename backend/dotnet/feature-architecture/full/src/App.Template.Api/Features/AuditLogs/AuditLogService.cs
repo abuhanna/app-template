@@ -2,12 +2,14 @@ using App.Template.Api.Common.Entities;
 using App.Template.Api.Common.Models;
 using App.Template.Api.Data;
 using App.Template.Api.Features.AuditLogs.Dtos;
+using Microsoft.EntityFrameworkCore;
 
 namespace App.Template.Api.Features.AuditLogs;
 
 public interface IAuditLogService
 {
     Task<PagedResult<AuditLogDto>> GetAuditLogsAsync(AuditLogsQueryParams queryParams);
+    Task<AuditLogDto?> GetByIdAsync(long id);
 }
 
 public class AuditLogService : IAuditLogService
@@ -23,8 +25,8 @@ public class AuditLogService : IAuditLogService
     {
         var query = _context.AuditLogs.AsQueryable();
 
-        if (!string.IsNullOrEmpty(queryParams.EntityName))
-            query = query.Where(a => a.EntityName == queryParams.EntityName);
+        if (!string.IsNullOrEmpty(queryParams.EntityType))
+            query = query.Where(a => a.EntityName == queryParams.EntityType);
 
         if (!string.IsNullOrEmpty(queryParams.EntityId))
             query = query.Where(a => a.EntityId == queryParams.EntityId);
@@ -50,24 +52,52 @@ public class AuditLogService : IAuditLogService
         if (queryParams.ToDate.HasValue)
             query = query.Where(a => a.Timestamp <= queryParams.ToDate.Value);
 
-        query = query.OrderByDescending(a => a.Timestamp);
+        query = (queryParams.SortBy?.ToLower(), queryParams.SortOrder?.ToLower()) switch
+        {
+            ("entitytype", "asc") => query.OrderBy(a => a.EntityName),
+            ("entitytype", _) => query.OrderByDescending(a => a.EntityName),
+            ("action", "asc") => query.OrderBy(a => a.Action),
+            ("action", _) => query.OrderByDescending(a => a.Action),
+            ("createdat", "asc") => query.OrderBy(a => a.Timestamp),
+            (_, "asc") => query.OrderBy(a => a.Timestamp),
+            _ => query.OrderByDescending(a => a.Timestamp)
+        };
 
         var page = queryParams.Page < 1 ? 1 : queryParams.Page;
-        var pageSize = queryParams.PageSize < 1 ? 20 : queryParams.PageSize;
+        var pageSize = queryParams.PageSize < 1 ? 10 : queryParams.PageSize;
 
         var dtoQuery = query.Select(a => new AuditLogDto
         {
             Id = a.Id,
-            EntityName = a.EntityName,
+            EntityType = a.EntityName,
             EntityId = a.EntityId,
-            Action = a.Action.ToString(),
-            OldValues = a.OldValues,
-            NewValues = a.NewValues,
-            AffectedColumns = a.AffectedColumns,
+            Action = a.Action.ToString().ToLower(),
             UserId = a.UserId,
-            Timestamp = a.Timestamp
+            UserName = null,
+            Details = a.EntityName + " " + a.EntityId + " was " + a.Action.ToString().ToLower(),
+            IpAddress = null,
+            CreatedAt = a.Timestamp
         });
 
         return await PagedResult<AuditLogDto>.CreateAsync(dtoQuery, page, pageSize);
+    }
+
+    public async Task<AuditLogDto?> GetByIdAsync(long id)
+    {
+        var log = await _context.AuditLogs.FirstOrDefaultAsync(a => a.Id == id);
+        if (log == null) return null;
+
+        return new AuditLogDto
+        {
+            Id = log.Id,
+            EntityType = log.EntityName,
+            EntityId = log.EntityId,
+            Action = log.Action.ToString().ToLower(),
+            UserId = log.UserId,
+            UserName = null,
+            Details = log.EntityName + " " + log.EntityId + " was " + log.Action.ToString().ToLower(),
+            IpAddress = null,
+            CreatedAt = log.Timestamp
+        };
     }
 }

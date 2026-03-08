@@ -7,7 +7,7 @@ namespace App.Template.Api.Features.Departments;
 
 [Authorize]
 [ApiController]
-[Route("api/[controller]")]
+[Route("api/departments")]
 public class DepartmentsController : ControllerBase
 {
     private readonly IDepartmentService _departmentService;
@@ -18,39 +18,40 @@ public class DepartmentsController : ControllerBase
     }
 
     [HttpGet]
-    public async Task<ActionResult<PagedResult<DepartmentDto>>> GetAll([FromQuery] DeptQueryParams queryParams)
+    public async Task<ActionResult<PaginatedResponse<DepartmentDto>>> GetAll([FromQuery] DeptQueryParams queryParams)
     {
-        return Ok(await _departmentService.GetDepartmentsAsync(queryParams));
+        var result = await _departmentService.GetDepartmentsAsync(queryParams);
+        return Ok(PaginatedResponse<DepartmentDto>.From(result));
     }
 
     [HttpGet("{id}")]
-    public async Task<ActionResult<DepartmentDto>> GetById(long id)
+    public async Task<ActionResult<ApiResponse<DepartmentDto>>> GetById(long id)
     {
         var dept = await _departmentService.GetByIdAsync(id);
-        if (dept == null) return NotFound();
-        return Ok(dept);
+        if (dept == null) return NotFound(ApiResponse.Fail("Department not found"));
+        return Ok(ApiResponse.Ok(dept));
     }
 
     [HttpPost]
-    public async Task<ActionResult<DepartmentDto>> Create(CreateDepartmentRequest request)
+    public async Task<ActionResult<ApiResponse<DepartmentDto>>> Create(CreateDepartmentRequest request)
     {
         var created = await _departmentService.CreateAsync(request);
-        return CreatedAtAction(nameof(GetById), new { id = created.Id }, created);
+        return StatusCode(201, ApiResponse.Ok(created, "Department created successfully"));
     }
 
     [HttpPut("{id}")]
-    public async Task<ActionResult<DepartmentDto>> Update(long id, UpdateDepartmentRequest request)
+    public async Task<ActionResult<ApiResponse<DepartmentDto>>> Update(long id, UpdateDepartmentRequest request)
     {
         var updated = await _departmentService.UpdateAsync(id, request);
-        if (updated == null) return NotFound();
-        return Ok(updated);
+        if (updated == null) return NotFound(ApiResponse.Fail("Department not found"));
+        return Ok(ApiResponse.Ok(updated, "Department updated successfully"));
     }
 
     [HttpDelete("{id}")]
     public async Task<ActionResult> Delete(long id)
     {
         var deleted = await _departmentService.DeleteAsync(id);
-        if (!deleted) return NotFound();
+        if (!deleted) return NotFound(ApiResponse.Fail("Department not found"));
         return NoContent();
     }
 }

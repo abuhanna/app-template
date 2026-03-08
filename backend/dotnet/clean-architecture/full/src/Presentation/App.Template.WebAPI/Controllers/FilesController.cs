@@ -32,7 +32,7 @@ public class FilesController : ControllerBase
     /// Get list of uploaded files
     /// </summary>
     [HttpGet]
-    [ProducesResponseType(typeof(PagedResult<UploadedFileDto>), StatusCodes.Status200OK)]
+    [ProducesResponseType(typeof(PaginatedResponse<UploadedFileDto>), StatusCodes.Status200OK)]
     public async Task<IActionResult> GetFiles(
         [FromQuery] string? category,
         [FromQuery] bool? isPublic,
@@ -47,14 +47,14 @@ public class FilesController : ControllerBase
             PageSize = pageSize
         };
         var result = await _mediator.Send(query);
-        return Ok(result);
+        return Ok(PaginatedResponse<UploadedFileDto>.From(result));
     }
 
     /// <summary>
     /// Get file metadata by ID
     /// </summary>
     [HttpGet("{id:long}")]
-    [ProducesResponseType(typeof(UploadedFileDto), StatusCodes.Status200OK)]
+    [ProducesResponseType(typeof(ApiResponse<UploadedFileDto>), StatusCodes.Status200OK)]
     [ProducesResponseType(StatusCodes.Status404NotFound)]
     public async Task<IActionResult> GetFile(long id)
     {
@@ -63,17 +63,17 @@ public class FilesController : ControllerBase
 
         if (result == null)
         {
-            return NotFound(new { message = $"File with ID {id} not found" });
+            return NotFound(ApiResponse.Fail($"File with ID {id} not found"));
         }
 
-        return Ok(result);
+        return Ok(ApiResponse.Ok(result));
     }
 
     /// <summary>
     /// Upload a new file
     /// </summary>
     [HttpPost]
-    [ProducesResponseType(typeof(UploadedFileDto), StatusCodes.Status201Created)]
+    [ProducesResponseType(typeof(ApiResponse<UploadedFileDto>), StatusCodes.Status201Created)]
     [ProducesResponseType(StatusCodes.Status400BadRequest)]
     [RequestSizeLimit(50 * 1024 * 1024)] // 50MB limit
     public async Task<IActionResult> UploadFile(
@@ -84,7 +84,7 @@ public class FilesController : ControllerBase
     {
         if (file == null || file.Length == 0)
         {
-            return BadRequest(new { message = "No file uploaded" });
+            return BadRequest(ApiResponse.Fail("No file uploaded"));
         }
 
         _logger.LogInformation("Uploading file: {FileName}, Size: {Size}", file.FileName, file.Length);
@@ -102,7 +102,7 @@ public class FilesController : ControllerBase
         };
 
         var result = await _mediator.Send(command);
-        return CreatedAtAction(nameof(GetFile), new { id = result.Id }, result);
+        return StatusCode(StatusCodes.Status201Created, ApiResponse.Ok(result, "File uploaded successfully"));
     }
 
     /// <summary>
@@ -119,7 +119,7 @@ public class FilesController : ControllerBase
 
         if (result == null)
         {
-            return NotFound(new { message = $"File with ID {id} not found" });
+            return NotFound(ApiResponse.Fail($"File with ID {id} not found"));
         }
 
         return File(result.FileStream, result.ContentType, result.FileName);
@@ -138,7 +138,7 @@ public class FilesController : ControllerBase
 
         if (!result)
         {
-            return NotFound(new { message = $"File with ID {id} not found" });
+            return NotFound(ApiResponse.Fail($"File with ID {id} not found"));
         }
 
         return NoContent();

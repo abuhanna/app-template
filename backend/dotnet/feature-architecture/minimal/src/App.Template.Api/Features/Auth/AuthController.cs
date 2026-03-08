@@ -1,3 +1,4 @@
+using App.Template.Api.Common.Models;
 using App.Template.Api.Features.Auth.Dtos;
 
 using Microsoft.AspNetCore.Authorization;
@@ -20,7 +21,7 @@ public class AuthController : ControllerBase
 
     /// <summary>Login via SSO and obtain JWT token</summary>
     [HttpPost("login")]
-    [ProducesResponseType(typeof(LoginResponseDto), StatusCodes.Status200OK)]
+    [ProducesResponseType(typeof(ApiResponse<LoginResponseDto>), StatusCodes.Status200OK)]
     [ProducesResponseType(StatusCodes.Status401Unauthorized)]
     [ProducesResponseType(StatusCodes.Status503ServiceUnavailable)]
     public async Task<IActionResult> Login([FromBody] LoginRequest request)
@@ -28,40 +29,32 @@ public class AuthController : ControllerBase
         try
         {
             var result = await _ssoAuthService.LoginAsync(request.Username ?? string.Empty, request.Password);
-            return Ok(result);
+            return Ok(ApiResponse.Ok(result, "Login successful"));
         }
         catch (UnauthorizedAccessException ex)
         {
-            return Unauthorized(new { message = ex.Message });
+            return Unauthorized(ApiResponse.Fail(ex.Message));
         }
         catch (InvalidOperationException ex)
         {
-            return StatusCode(StatusCodes.Status503ServiceUnavailable, new { message = ex.Message });
+            return StatusCode(StatusCodes.Status503ServiceUnavailable, ApiResponse.Fail(ex.Message));
         }
     }
 
     /// <summary>Logout from SSO and invalidate JWT token</summary>
     [HttpPost("logout")]
-    [ProducesResponseType(StatusCodes.Status200OK)]
+    [ProducesResponseType(StatusCodes.Status204NoContent)]
     public async Task<IActionResult> Logout()
     {
-        try
-        {
-            var authHeader = Request.Headers["Authorization"].ToString();
-            await _ssoAuthService.LogoutAsync(authHeader);
-            return Ok(new { message = "Logout successful" });
-        }
-        catch (Exception ex)
-        {
-            return StatusCode(StatusCodes.Status500InternalServerError,
-                new { message = "An error occurred during logout", details = ex.Message });
-        }
+        var authHeader = Request.Headers["Authorization"].ToString();
+        await _ssoAuthService.LogoutAsync(authHeader);
+        return NoContent();
     }
 
     /// <summary>Get current user information from JWT token</summary>
     [Authorize]
     [HttpGet("me")]
-    [ProducesResponseType(typeof(UserInfoResponseDto), StatusCodes.Status200OK)]
+    [ProducesResponseType(typeof(ApiResponse<UserInfoResponseDto>), StatusCodes.Status200OK)]
     [ProducesResponseType(StatusCodes.Status401Unauthorized)]
     public IActionResult GetCurrentUser()
     {
@@ -77,13 +70,29 @@ public class AuthController : ControllerBase
         var role = User.FindFirst("role")?.Value
             ?? User.FindFirst("group")?.Value;
 
-        return Ok(new UserInfoResponseDto
+        var firstName = User.FindFirst("given_name")?.Value
+            ?? User.FindFirst("firstName")?.Value;
+
+        var lastName = User.FindFirst("family_name")?.Value
+            ?? User.FindFirst("lastName")?.Value;
+
+        var fullName = User.FindFirst("name")?.Value;
+        if (string.IsNullOrWhiteSpace(fullName) && (firstName != null || lastName != null))
+            fullName = $"{firstName} {lastName}".Trim();
+
+        var userInfo = new UserInfoResponseDto
         {
             UserId = userId,
             Username = username,
             Email = email,
+            FirstName = firstName,
+            LastName = lastName,
+            FullName = fullName,
             Role = role,
+            IsActive = true,
             Claims = User.Claims.Select(c => new ClaimInfoDto { Type = c.Type, Value = c.Value }).ToList()
-        });
+        };
+
+        return Ok(ApiResponse.Ok(userInfo, "User info retrieved successfully"));
     }
 }

@@ -19,7 +19,7 @@ public class DepartmentsControllerTests
     }
 
     [Fact]
-    public async Task GetAll_ReturnsOk_WithPagedDepartments()
+    public async Task GetAll_ReturnsOk_WithPaginatedDepartments()
     {
         var queryParams = new DeptQueryParams();
         var result = new PagedResult<DepartmentDto>
@@ -35,7 +35,8 @@ public class DepartmentsControllerTests
         var actionResult = await _controller.GetAll(queryParams);
 
         var okResult = Assert.IsType<OkObjectResult>(actionResult.Result);
-        Assert.NotNull(okResult.Value);
+        var value = Assert.IsType<PaginatedResponse<DepartmentDto>>(okResult.Value);
+        Assert.True(value.Success);
     }
 
     [Fact]
@@ -47,8 +48,9 @@ public class DepartmentsControllerTests
         var result = await _controller.GetById(1);
 
         var okResult = Assert.IsType<OkObjectResult>(result.Result);
-        var value = Assert.IsType<DepartmentDto>(okResult.Value);
-        Assert.Equal("IT", value.Name);
+        var value = Assert.IsType<ApiResponse<DepartmentDto>>(okResult.Value);
+        Assert.True(value.Success);
+        Assert.Equal("IT", value.Data!.Name);
     }
 
     [Fact]
@@ -58,11 +60,13 @@ public class DepartmentsControllerTests
 
         var result = await _controller.GetById(1);
 
-        Assert.IsType<NotFoundResult>(result.Result);
+        var notFoundResult = Assert.IsType<NotFoundObjectResult>(result.Result);
+        var value = Assert.IsType<ApiResponse>(notFoundResult.Value);
+        Assert.False(value.Success);
     }
 
     [Fact]
-    public async Task Create_ReturnsCreatedAtAction()
+    public async Task Create_ReturnsCreated()
     {
         var request = new CreateDepartmentRequest { Name = "Finance", Code = "FIN" };
         var dept = new DepartmentDto { Id = 3, Name = "Finance", Code = "FIN" };
@@ -70,8 +74,10 @@ public class DepartmentsControllerTests
 
         var result = await _controller.Create(request);
 
-        var createdResult = Assert.IsType<CreatedAtActionResult>(result.Result);
-        Assert.Equal(nameof(DepartmentsController.GetById), createdResult.ActionName);
+        var objectResult = Assert.IsType<ObjectResult>(result.Result);
+        Assert.Equal(201, objectResult.StatusCode);
+        var value = Assert.IsType<ApiResponse<DepartmentDto>>(objectResult.Value);
+        Assert.True(value.Success);
     }
 
     [Fact]
@@ -84,7 +90,8 @@ public class DepartmentsControllerTests
         var result = await _controller.Update(1, request);
 
         var okResult = Assert.IsType<OkObjectResult>(result.Result);
-        Assert.NotNull(okResult.Value);
+        var value = Assert.IsType<ApiResponse<DepartmentDto>>(okResult.Value);
+        Assert.True(value.Success);
     }
 
     [Fact]
@@ -95,7 +102,9 @@ public class DepartmentsControllerTests
 
         var result = await _controller.Update(1, request);
 
-        Assert.IsType<NotFoundResult>(result.Result);
+        var notFoundResult = Assert.IsType<NotFoundObjectResult>(result.Result);
+        var value = Assert.IsType<ApiResponse>(notFoundResult.Value);
+        Assert.False(value.Success);
     }
 
     [Fact]
@@ -115,6 +124,8 @@ public class DepartmentsControllerTests
 
         var result = await _controller.Delete(1);
 
-        Assert.IsType<NotFoundResult>(result);
+        var notFoundResult = Assert.IsType<NotFoundObjectResult>(result);
+        var value = Assert.IsType<ApiResponse>(notFoundResult.Value);
+        Assert.False(value.Success);
     }
 }

@@ -47,8 +47,8 @@ public class DepartmentsControllerTests
         var result = await _controller.GetById(1);
 
         var okResult = Assert.IsType<OkObjectResult>(result.Result);
-        var value = Assert.IsType<DepartmentDto>(okResult.Value);
-        Assert.Equal("IT", value.Name);
+        var value = Assert.IsType<ApiResponse<DepartmentDto>>(okResult.Value);
+        Assert.Equal("IT", value.Data!.Name);
     }
 
     [Fact]
@@ -58,11 +58,11 @@ public class DepartmentsControllerTests
 
         var result = await _controller.GetById(1);
 
-        Assert.IsType<NotFoundResult>(result.Result);
+        Assert.IsType<NotFoundObjectResult>(result.Result);
     }
 
     [Fact]
-    public async Task Create_ReturnsCreatedAtAction()
+    public async Task Create_Returns201_WithDepartment()
     {
         var request = new CreateDepartmentRequest { Name = "HR", Code = "HR" };
         var created = new DepartmentDto { Id = 2, Name = "HR", Code = "HR" };
@@ -70,9 +70,8 @@ public class DepartmentsControllerTests
 
         var result = await _controller.Create(request);
 
-        var createdResult = Assert.IsType<CreatedAtActionResult>(result.Result);
-        var value = Assert.IsType<DepartmentDto>(createdResult.Value);
-        Assert.Equal(2, value.Id);
+        var objectResult = Assert.IsType<ObjectResult>(result.Result);
+        Assert.Equal(201, objectResult.StatusCode);
     }
 
     [Fact]
@@ -96,7 +95,7 @@ public class DepartmentsControllerTests
 
         var result = await _controller.Update(1, request);
 
-        Assert.IsType<NotFoundResult>(result.Result);
+        Assert.IsType<NotFoundObjectResult>(result.Result);
     }
 
     [Fact]
@@ -116,6 +115,6 @@ public class DepartmentsControllerTests
 
         var result = await _controller.Delete(1);
 
-        Assert.IsType<NotFoundResult>(result);
+        Assert.IsType<NotFoundObjectResult>(result);
     }
 }

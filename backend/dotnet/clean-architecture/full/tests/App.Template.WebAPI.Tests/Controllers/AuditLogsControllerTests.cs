@@ -1,5 +1,6 @@
 using AppTemplate.Application.Common.Models;
 using AppTemplate.Application.DTOs;
+using AppTemplate.Application.Features.AuditLogManagement.Queries.GetAuditLogById;
 using AppTemplate.Application.Features.AuditLogManagement.Queries.GetAuditLogs;
 using AppTemplate.WebAPI.Controllers;
 using MediatR;
@@ -25,7 +26,7 @@ public class AuditLogsControllerTests
     }
 
     [Fact]
-    public async Task GetAuditLogs_ReturnsOk_WithPagedResult()
+    public async Task GetAuditLogs_ReturnsOk_WithPaginatedResponse()
     {
         // Arrange
         var pagedResult = PagedResult<AuditLogDto>.Create(
@@ -34,20 +35,20 @@ public class AuditLogsControllerTests
                 new()
                 {
                     Id = 1,
-                    EntityName = "User",
+                    EntityType = "User",
                     EntityId = "1",
                     Action = "Created",
                     UserId = "admin",
-                    Timestamp = DateTime.UtcNow
+                    CreatedAt = DateTime.UtcNow
                 },
                 new()
                 {
                     Id = 2,
-                    EntityName = "Department",
+                    EntityType = "Department",
                     EntityId = "2",
                     Action = "Updated",
                     UserId = "admin",
-                    Timestamp = DateTime.UtcNow
+                    CreatedAt = DateTime.UtcNow
                 }
             },
             page: 1, pageSize: 20, totalItems: 2);
@@ -61,8 +62,9 @@ public class AuditLogsControllerTests
 
         // Assert
         var okResult = Assert.IsType<OkObjectResult>(result);
-        var response = Assert.IsType<PagedResult<AuditLogDto>>(okResult.Value);
-        Assert.Equal(2, response.Items.Count);
+        var response = Assert.IsType<PaginatedResponse<AuditLogDto>>(okResult.Value);
+        Assert.True(response.Success);
+        Assert.Equal(2, response.Data!.Count);
     }
 
     [Fact]
@@ -83,7 +85,7 @@ public class AuditLogsControllerTests
         var result = await _controller.GetAuditLogs(
             page: 2,
             pageSize: 50,
-            entityName: "User",
+            entityType: "User",
             action: "Created",
             fromDate: fromDate,
             toDate: toDate);
@@ -94,7 +96,7 @@ public class AuditLogsControllerTests
                 It.Is<GetAuditLogsQuery>(q =>
                     q.Page == 2 &&
                     q.PageSize == 50 &&
-                    q.EntityName == "User" &&
+                    q.EntityType == "User" &&
                     q.Action == "Created" &&
                     q.FromDate == fromDate &&
                     q.ToDate == toDate),
@@ -118,8 +120,54 @@ public class AuditLogsControllerTests
 
         // Assert
         var okResult = Assert.IsType<OkObjectResult>(result);
-        var response = Assert.IsType<PagedResult<AuditLogDto>>(okResult.Value);
-        Assert.Empty(response.Items);
-        Assert.Equal(0, response.Pagination.TotalItems);
+        var response = Assert.IsType<PaginatedResponse<AuditLogDto>>(okResult.Value);
+        Assert.True(response.Success);
+        Assert.Empty(response.Data!);
+        Assert.Equal(0, response.Pagination!.TotalItems);
+    }
+
+    [Fact]
+    public async Task GetAuditLogById_ReturnsOk_WhenFound()
+    {
+        // Arrange
+        var auditLog = new AuditLogDto
+        {
+            Id = 1,
+            EntityType = "User",
+            EntityId = "1",
+            Action = "Created",
+            UserId = "admin",
+            CreatedAt = DateTime.UtcNow
+        };
+
+        _mockMediator
+            .Setup(m => m.Send(It.IsAny<GetAuditLogByIdQuery>(), It.IsAny<CancellationToken>()))
+            .ReturnsAsync(auditLog);
+
+        // Act
+        var result = await _controller.GetAuditLogById(1);
+
+        // Assert
+        var okResult = Assert.IsType<OkObjectResult>(result);
+        var response = Assert.IsType<ApiResponse<AuditLogDto>>(okResult.Value);
+        Assert.True(response.Success);
+        Assert.Equal(1, response.Data!.Id);
+    }
+
+    [Fact]
+    public async Task GetAuditLogById_ReturnsNotFound_WhenNotFound()
+    {
+        // Arrange
+        _mockMediator
+            .Setup(m => m.Send(It.IsAny<GetAuditLogByIdQuery>(), It.IsAny<CancellationToken>()))
+            .ReturnsAsync((AuditLogDto?)null);
+
+        // Act
+        var result = await _controller.GetAuditLogById(999);
+
+        // Assert
+        var notFoundResult = Assert.IsType<NotFoundObjectResult>(result);
+        var response = Assert.IsType<ApiResponse>(notFoundResult.Value);
+        Assert.False(response.Success);
     }
 }

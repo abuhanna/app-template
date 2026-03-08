@@ -23,4 +23,6 @@ public class FilesQueryParams
     public string? Category { get; set; }
     public bool? IsPublic { get; set; }
     public string? Search { get; set; }
+    public string? SortBy { get; set; }
+    public string SortOrder { get; set; } = "desc";
 }

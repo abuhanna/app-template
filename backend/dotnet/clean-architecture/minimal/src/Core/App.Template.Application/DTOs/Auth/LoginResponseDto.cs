@@ -8,12 +8,7 @@ public record LoginResponseDto
     /// <summary>
     /// JWT access token
     /// </summary>
-    public string Token { get; init; } = string.Empty;
-
-    /// <summary>
-    /// Token type (usually "Bearer")
-    /// </summary>
-    public string TokenType { get; init; } = "Bearer";
+    public string AccessToken { get; init; } = string.Empty;
 
     /// <summary>
     /// Token expiration time in seconds

@@ -1,4 +1,5 @@
 using System.Security.Claims;
+using AppTemplate.Application.Common.Models;
 using AppTemplate.Application.DTOs;
 using AppTemplate.Application.DTOs.Auth;
 using AppTemplate.Application.Features.Authentication.Commands.Login;
@@ -42,8 +43,7 @@ public class AuthControllerTests
         var command = new LoginCommand { Username = "admin", Password = "Admin@123" };
         var expectedResponse = new LoginResponseDto
         {
-            Token = "jwt-token",
-            TokenType = "Bearer",
+            AccessToken = "jwt-token",
             ExpiresIn = 3600,
             RefreshToken = "refresh-token"
         };
@@ -57,9 +57,9 @@ public class AuthControllerTests
 
         // Assert
         var okResult = Assert.IsType<OkObjectResult>(result);
-        var response = Assert.IsType<LoginResponseDto>(okResult.Value);
-        Assert.Equal("jwt-token", response.Token);
-        Assert.Equal("Bearer", response.TokenType);
+        var response = Assert.IsType<ApiResponse<LoginResponseDto>>(okResult.Value);
+        Assert.True(response.Success);
+        Assert.Equal("jwt-token", response.Data!.AccessToken);
     }
 
     [Fact]
@@ -78,6 +78,8 @@ public class AuthControllerTests
         // Assert
         var unauthorizedResult = Assert.IsType<UnauthorizedObjectResult>(result);
         Assert.Equal(401, unauthorizedResult.StatusCode);
+        var response = Assert.IsType<ApiResponse>(unauthorizedResult.Value);
+        Assert.False(response.Success);
     }
 
     [Fact]
@@ -96,6 +98,8 @@ public class AuthControllerTests
         // Assert
         var statusCodeResult = Assert.IsType<ObjectResult>(result);
         Assert.Equal(503, statusCodeResult.StatusCode);
+        var response = Assert.IsType<ApiResponse>(statusCodeResult.Value);
+        Assert.False(response.Success);
     }
 
     #endregion
@@ -107,9 +111,10 @@ public class AuthControllerTests
     {
         // Arrange
         var command = new RefreshTokenCommand { RefreshToken = "valid-refresh-token" };
-        var expectedResponse = new LoginResponseDto
+        var expectedResponse = new RefreshResponse
         {
-            Token = "new-jwt-token",
+            AccessToken = "new-jwt-token",
+            ExpiresIn = 3600,
             RefreshToken = "new-refresh-token"
         };
 
@@ -122,8 +127,9 @@ public class AuthControllerTests
 
         // Assert
         var okResult = Assert.IsType<OkObjectResult>(result);
-        var response = Assert.IsType<LoginResponseDto>(okResult.Value);
-        Assert.Equal("new-jwt-token", response.Token);
+        var response = Assert.IsType<ApiResponse<RefreshResponse>>(okResult.Value);
+        Assert.True(response.Success);
+        Assert.Equal("new-jwt-token", response.Data!.AccessToken);
     }
 
     [Fact]
@@ -149,7 +155,7 @@ public class AuthControllerTests
     #region Logout
 
     [Fact]
-    public async Task Logout_ReturnsOk_WhenSuccessful()
+    public async Task Logout_ReturnsNoContent_WhenSuccessful()
     {
         // Arrange
         _controller.ControllerContext.HttpContext.Request.Headers["Authorization"] = "Bearer some-token";
@@ -162,24 +168,7 @@ public class AuthControllerTests
         var result = await _controller.Logout();
 
         // Assert
-        var okResult = Assert.IsType<OkObjectResult>(result);
-        Assert.NotNull(okResult.Value);
-    }
-
-    [Fact]
-    public async Task Logout_Returns500_WhenExceptionOccurs()
-    {
-        // Arrange
-        _mockMediator
-            .Setup(m => m.Send(It.IsAny<LogoutCommand>(), It.IsAny<CancellationToken>()))
-            .ThrowsAsync(new Exception("Something went wrong"));
-
-        // Act
-        var result = await _controller.Logout();
-
-        // Assert
-        var statusCodeResult = Assert.IsType<ObjectResult>(result);
-        Assert.Equal(500, statusCodeResult.StatusCode);
+        Assert.IsType<NoContentResult>(result);
     }
 
     #endregion
@@ -210,9 +199,10 @@ public class AuthControllerTests
 
         // Assert
         var okResult = Assert.IsType<OkObjectResult>(result);
-        var response = Assert.IsType<UserInfoResponseDto>(okResult.Value);
-        Assert.Equal("1", response.UserId);
-        Assert.Equal("Admin", response.Role);
+        var response = Assert.IsType<ApiResponse<UserInfoResponseDto>>(okResult.Value);
+        Assert.True(response.Success);
+        Assert.Equal("1", response.Data!.UserId);
+        Assert.Equal("Admin", response.Data.Role);
     }
 
     #endregion
@@ -239,8 +229,9 @@ public class AuthControllerTests
 
         // Assert
         var okResult = Assert.IsType<OkObjectResult>(result);
-        var response = Assert.IsType<UserDto>(okResult.Value);
-        Assert.Equal("admin", response.Username);
+        var response = Assert.IsType<ApiResponse<UserDto>>(okResult.Value);
+        Assert.True(response.Success);
+        Assert.Equal("admin", response.Data!.Username);
     }
 
     #endregion
@@ -251,13 +242,13 @@ public class AuthControllerTests
     public async Task UpdateProfile_ReturnsOk_WithUpdatedProfile()
     {
         // Arrange
-        var command = new UpdateMyProfileCommand { Email = "new@example.com", Name = "Updated Name" };
+        var command = new UpdateMyProfileCommand { Email = "new@example.com", FirstName = "Updated" };
         var expectedProfile = new UserDto
         {
             Id = 1,
             Username = "admin",
             Email = "new@example.com",
-            FullName = "Updated Name"
+            FirstName = "Updated"
         };
 
         _mockMediator
@@ -269,8 +260,9 @@ public class AuthControllerTests
 
         // Assert
         var okResult = Assert.IsType<OkObjectResult>(result);
-        var response = Assert.IsType<UserDto>(okResult.Value);
-        Assert.Equal("new@example.com", response.Email);
+        var response = Assert.IsType<ApiResponse<UserDto>>(okResult.Value);
+        Assert.True(response.Success);
+        Assert.Equal("new@example.com", response.Data!.Email);
     }
 
     #endregion
@@ -292,7 +284,8 @@ public class AuthControllerTests
 
         // Assert
         var okResult = Assert.IsType<OkObjectResult>(result);
-        Assert.NotNull(okResult.Value);
+        var response = Assert.IsType<ApiResponse>(okResult.Value);
+        Assert.True(response.Success);
     }
 
     #endregion
@@ -319,30 +312,8 @@ public class AuthControllerTests
 
         // Assert
         var okResult = Assert.IsType<OkObjectResult>(result);
-        Assert.NotNull(okResult.Value);
-    }
-
-    [Fact]
-    public async Task ResetPassword_ReturnsBadRequest_WhenTokenIsInvalid()
-    {
-        // Arrange
-        var command = new ResetPasswordCommand
-        {
-            Token = "invalid-token",
-            NewPassword = "NewPassword123",
-            ConfirmPassword = "NewPassword123"
-        };
-
-        _mockMediator
-            .Setup(m => m.Send(It.IsAny<ResetPasswordCommand>(), It.IsAny<CancellationToken>()))
-            .ThrowsAsync(new InvalidOperationException("Invalid or expired reset token"));
-
-        // Act
-        var result = await _controller.ResetPassword(command);
-
-        // Assert
-        var badRequestResult = Assert.IsType<BadRequestObjectResult>(result);
-        Assert.Equal(400, badRequestResult.StatusCode);
+        var response = Assert.IsType<ApiResponse>(okResult.Value);
+        Assert.True(response.Success);
     }
 
     #endregion
@@ -373,7 +344,8 @@ public class AuthControllerTests
 
         // Assert
         var okResult = Assert.IsType<OkObjectResult>(result);
-        Assert.NotNull(okResult.Value);
+        var response = Assert.IsType<ApiResponse>(okResult.Value);
+        Assert.True(response.Success);
     }
 
     [Fact]
@@ -395,33 +367,8 @@ public class AuthControllerTests
         // Assert
         var unauthorizedResult = Assert.IsType<UnauthorizedObjectResult>(result);
         Assert.Equal(401, unauthorizedResult.StatusCode);
-    }
-
-    [Fact]
-    public async Task ChangePassword_ReturnsBadRequest_WhenCurrentPasswordIsWrong()
-    {
-        // Arrange
-        var claims = new[] { new Claim("sub", "1") };
-        var identity = new ClaimsIdentity(claims, "TestAuth");
-        _controller.ControllerContext.HttpContext.User = new ClaimsPrincipal(identity);
-
-        var request = new ChangePasswordRequest
-        {
-            CurrentPassword = "WrongPassword",
-            NewPassword = "NewPassword123",
-            ConfirmPassword = "NewPassword123"
-        };
-
-        _mockMediator
-            .Setup(m => m.Send(It.IsAny<ChangePasswordCommand>(), It.IsAny<CancellationToken>()))
-            .ThrowsAsync(new InvalidOperationException("Current password is incorrect"));
-
-        // Act
-        var result = await _controller.ChangePassword(request);
-
-        // Assert
-        var badRequestResult = Assert.IsType<BadRequestObjectResult>(result);
-        Assert.Equal(400, badRequestResult.StatusCode);
+        var response = Assert.IsType<ApiResponse>(unauthorizedResult.Value);
+        Assert.False(response.Success);
     }
 
     #endregion

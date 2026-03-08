@@ -1,7 +1,6 @@
 using App.Template.Api.Models.Common;
 using App.Template.Api.Models.Dtos;
 using App.Template.Api.Repositories;
-using App.Template.Api.Services;
 
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
@@ -23,14 +22,13 @@ public class AuditLogsController : ControllerBase
 
     /// <summary>Get list of audit logs with pagination and filtering</summary>
     [HttpGet]
-    [ProducesResponseType(typeof(PagedResult<AuditLogDto>), StatusCodes.Status200OK)]
     public async Task<IActionResult> GetAuditLogs(
         [FromQuery] int page = 1,
-        [FromQuery] int pageSize = 20,
+        [FromQuery] int pageSize = 10,
         [FromQuery] string? sortBy = null,
-        [FromQuery] string sortDir = "desc",
+        [FromQuery] string sortOrder = "desc",
         [FromQuery] string? search = null,
-        [FromQuery] string? entityName = null,
+        [FromQuery] string? entityType = null,
         [FromQuery] string? entityId = null,
         [FromQuery] string? userId = null,
         [FromQuery] string? action = null,
@@ -40,12 +38,21 @@ public class AuditLogsController : ControllerBase
     {
         var result = await _auditLogRepository.GetPagedAsync(
             page, pageSize,
-            sortBy, sortDir,
-            search, entityName,
+            sortBy, sortOrder,
+            search, entityType,
             entityId, userId,
             action, fromDate,
             toDate, cancellationToken);
 
-        return Ok(result);
+        return Ok(PaginatedResponse<AuditLogDto>.From(result, "Audit logs retrieved successfully"));
+    }
+
+    /// <summary>Get a single audit log by ID</summary>
+    [HttpGet("{id}")]
+    public async Task<IActionResult> GetById(long id, CancellationToken cancellationToken)
+    {
+        var log = await _auditLogRepository.GetByIdAsync(id, cancellationToken);
+        if (log == null) return NotFound(ApiResponse.Fail("Audit log not found"));
+        return Ok(ApiResponse.Ok(log, "Audit log retrieved successfully"));
     }
 }

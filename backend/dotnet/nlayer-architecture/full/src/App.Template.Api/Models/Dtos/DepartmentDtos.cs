@@ -7,6 +7,7 @@ public class DepartmentDto
     public string Name { get; set; } = string.Empty;
     public string? Description { get; set; }
     public bool IsActive { get; set; }
+    public int UserCount { get; set; }
     public DateTime CreatedAt { get; set; }
     public DateTime? UpdatedAt { get; set; }
 }
@@ -31,7 +32,7 @@ public class DeptQueryParams
     public int Page { get; set; } = 1;
     public int PageSize { get; set; } = 10;
     public string? SortBy { get; set; }
-    public string? SortDir { get; set; }
+    public string? SortOrder { get; set; }
     public string? Search { get; set; }
     public bool? IsActive { get; set; }
 }

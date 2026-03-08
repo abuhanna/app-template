@@ -1,3 +1,5 @@
+using App.Template.Api.Models.Common;
+using App.Template.Api.Models.Dtos;
 using App.Template.Api.Services;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
@@ -6,34 +8,82 @@ namespace App.Template.Api.Controllers;
 
 [Authorize]
 [ApiController]
-[Route("api/[controller]")]
+[Route("api/export")]
 public class ExportController : ControllerBase
 {
     private readonly IExportService _exportService;
+    private readonly IUserService _userService;
+    private readonly IDepartmentService _departmentService;
+    private readonly IAuditLogService _auditLogService;
+    private readonly INotificationService _notificationService;
 
-    public ExportController(IExportService exportService)
+    public ExportController(
+        IExportService exportService,
+        IUserService userService,
+        IDepartmentService departmentService,
+        IAuditLogService auditLogService,
+        INotificationService notificationService)
     {
         _exportService = exportService;
+        _userService = userService;
+        _departmentService = departmentService;
+        _auditLogService = auditLogService;
+        _notificationService = notificationService;
     }
 
-    [HttpPost("csv")]
-    public async Task<IActionResult> ExportCsv([FromBody] List<object> data)
+    [HttpGet("users")]
+    public async Task<IActionResult> ExportUsers(
+        [FromQuery] string format = "xlsx",
+        [FromQuery] string? search = null,
+        [FromQuery] bool? isActive = null,
+        [FromQuery] long? departmentId = null)
     {
-        var result = await _exportService.ExportToCsvAsync(data);
-        return File(result, "text/csv", $"export_{DateTime.Now:yyyyMMddHHmmss}.csv");
+        var query = new UsersQueryParams { Page = 1, PageSize = int.MaxValue, Search = search, IsActive = isActive, DepartmentId = departmentId };
+        var result = await _userService.GetUsersAsync(query);
+        return await ExportData(result.Items, format, "users");
     }
 
-    [HttpPost("excel")]
-    public async Task<IActionResult> ExportExcel([FromBody] List<object> data)
+    [HttpGet("departments")]
+    public async Task<IActionResult> ExportDepartments(
+        [FromQuery] string format = "xlsx",
+        [FromQuery] string? search = null,
+        [FromQuery] bool? isActive = null)
     {
-        var result = await _exportService.ExportToExcelAsync(data);
-        return File(result, "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet", $"export_{DateTime.Now:yyyyMMddHHmmss}.xlsx");
+        var query = new DeptQueryParams { Page = 1, PageSize = int.MaxValue, Search = search, IsActive = isActive };
+        var result = await _departmentService.GetDepartmentsAsync(query);
+        return await ExportData(result.Items, format, "departments");
     }
 
-    [HttpPost("pdf")]
-    public async Task<IActionResult> ExportPdf([FromBody] List<object> data)
+    [HttpGet("audit-logs")]
+    public async Task<IActionResult> ExportAuditLogs(
+        [FromQuery] string format = "xlsx",
+        [FromQuery] string? entityType = null,
+        [FromQuery] string? action = null,
+        [FromQuery] DateTime? fromDate = null,
+        [FromQuery] DateTime? toDate = null)
     {
-        var result = await _exportService.ExportToPdfAsync(data, "Export Report");
-        return File(result, "application/pdf", $"export_{DateTime.Now:yyyyMMddHHmmss}.pdf");
+        var query = new AuditLogsQueryParams { Page = 1, PageSize = int.MaxValue, EntityType = entityType, Action = action, FromDate = fromDate, ToDate = toDate };
+        var result = await _auditLogService.GetAuditLogsAsync(query);
+        return await ExportData(result.Items, format, "audit-logs");
+    }
+
+    [HttpGet("notifications")]
+    public async Task<IActionResult> ExportNotifications([FromQuery] string format = "xlsx")
+    {
+        var userId = User.FindFirst(System.Security.Claims.ClaimTypes.NameIdentifier)?.Value ?? "";
+        var query = new NotificationsQueryParams { Page = 1, PageSize = int.MaxValue };
+        var result = await _notificationService.GetNotificationsAsync(userId, query);
+        return await ExportData(result.Items, format, "notifications");
+    }
+
+    private async Task<IActionResult> ExportData<T>(IEnumerable<T> data, string format, string entityName)
+    {
+        var timestamp = DateTime.UtcNow.ToString("yyyyMMdd");
+        return format.ToLower() switch
+        {
+            "csv" => File(await _exportService.ExportToCsvAsync(data), "text/csv", $"{entityName}_{timestamp}.csv"),
+            "pdf" => File(await _exportService.ExportToPdfAsync(data, $"{entityName} Export"), "application/pdf", $"{entityName}_{timestamp}.pdf"),
+            _ => File(await _exportService.ExportToExcelAsync(data, entityName), "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet", $"{entityName}_{timestamp}.xlsx")
+        };
     }
 }

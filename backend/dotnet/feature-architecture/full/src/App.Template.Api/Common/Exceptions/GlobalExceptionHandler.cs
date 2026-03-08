@@ -1,4 +1,3 @@
-using Microsoft.AspNetCore.Mvc;
 using System.Net;
 using System.Text.Json;
 
@@ -32,7 +31,7 @@ public class GlobalExceptionHandler : IMiddleware
     {
         context.Response.ContentType = "application/json";
 
-        var (statusCode, title) = exception switch
+        var (statusCode, message) = exception switch
         {
             UnauthorizedAccessException => (HttpStatusCode.Unauthorized, "Unauthorized"),
             KeyNotFoundException => (HttpStatusCode.NotFound, "Resource not found"),
@@ -43,14 +42,17 @@ public class GlobalExceptionHandler : IMiddleware
 
         context.Response.StatusCode = (int)statusCode;
 
-        var response = new ProblemDetails
+        var detail = isProduction && statusCode == HttpStatusCode.InternalServerError
+            ? "An unexpected error occurred."
+            : exception.Message;
+
+        var response = new
         {
-            Status = (int)statusCode,
-            Title = title,
-            Detail = isProduction && statusCode == HttpStatusCode.InternalServerError
-                ? "An unexpected error occurred."
-                : exception.Message,
-            Type = "https://tools.ietf.org/html/rfc7231"
+            success = false,
+            message = detail,
+            errors = statusCode == HttpStatusCode.InternalServerError
+                ? null
+                : new List<string> { detail }
         };
 
         var jsonOptions = new JsonSerializerOptions { PropertyNamingPolicy = JsonNamingPolicy.CamelCase };

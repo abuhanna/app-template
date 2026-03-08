@@ -33,8 +33,13 @@ try
     // Serilog
     builder.Host.UseSerilog();
 
-    // Controllers
-    builder.Services.AddControllers();
+    // Controllers with camelCase JSON
+    builder.Services.AddControllers()
+        .AddJsonOptions(o =>
+        {
+            o.JsonSerializerOptions.PropertyNamingPolicy = System.Text.Json.JsonNamingPolicy.CamelCase;
+            o.JsonSerializerOptions.DefaultIgnoreCondition = System.Text.Json.Serialization.JsonIgnoreCondition.WhenWritingNull;
+        });
     builder.Services.AddEndpointsApiExplorer();
 
     // Swagger with JWT security

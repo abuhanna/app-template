@@ -1,3 +1,4 @@
+using App.Template.Api.Common.Models;
 using App.Template.Api.Features.Auth;
 using App.Template.Api.Features.Auth.Dtos;
 using Microsoft.AspNetCore.Http;
@@ -31,7 +32,7 @@ public class AuthControllerTests
         var request = new LoginRequest { Username = "admin", Password = "Admin@123" };
         var expectedResponse = new LoginResponseDto
         {
-            Token = "fake-jwt-token",
+            AccessToken = "fake-jwt-token",
             ExpiresIn = 3600,
             User = new UserInfoDto
             {
@@ -51,10 +52,12 @@ public class AuthControllerTests
         // Assert
         var okResult = Assert.IsType<OkObjectResult>(result);
         Assert.NotNull(okResult.Value);
-        var response = Assert.IsType<LoginResponseDto>(okResult.Value);
-        Assert.Equal("fake-jwt-token", response.Token);
-        Assert.Equal(3600, response.ExpiresIn);
-        Assert.Equal("admin", response.User?.Username);
+        var apiResponse = Assert.IsType<ApiResponse<LoginResponseDto>>(okResult.Value);
+        Assert.True(apiResponse.Success);
+        Assert.NotNull(apiResponse.Data);
+        Assert.Equal("fake-jwt-token", apiResponse.Data.AccessToken);
+        Assert.Equal(3600, apiResponse.Data.ExpiresIn);
+        Assert.Equal("admin", apiResponse.Data.User?.Username);
     }
 
     [Fact]
@@ -72,6 +75,8 @@ public class AuthControllerTests
         // Assert
         var unauthorizedResult = Assert.IsType<UnauthorizedObjectResult>(result);
         Assert.NotNull(unauthorizedResult.Value);
+        var apiResponse = Assert.IsType<ApiResponse>(unauthorizedResult.Value);
+        Assert.False(apiResponse.Success);
     }
 
     [Fact]
@@ -92,7 +97,7 @@ public class AuthControllerTests
     }
 
     [Fact]
-    public async Task Logout_ReturnsOkResult()
+    public async Task Logout_ReturnsNoContent()
     {
         // Arrange
         _controller.HttpContext.Request.Headers["Authorization"] = "Bearer fake-jwt-token";
@@ -104,7 +109,6 @@ public class AuthControllerTests
         var result = await _controller.Logout();
 
         // Assert
-        var okResult = Assert.IsType<OkObjectResult>(result);
-        Assert.NotNull(okResult.Value);
+        Assert.IsType<NoContentResult>(result);
     }
 }

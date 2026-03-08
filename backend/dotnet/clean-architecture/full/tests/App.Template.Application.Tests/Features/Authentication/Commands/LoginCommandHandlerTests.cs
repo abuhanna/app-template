@@ -86,8 +86,7 @@ public class LoginCommandHandlerTests
 
         // Assert
         Assert.NotNull(result);
-        Assert.Equal("jwt-token", result.Token);
-        Assert.Equal("Bearer", result.TokenType);
+        Assert.Equal("jwt-token", result.AccessToken);
         Assert.Equal("refresh-token", result.RefreshToken);
         Assert.NotNull(result.User);
         Assert.Equal("admin", result.User!.Username);

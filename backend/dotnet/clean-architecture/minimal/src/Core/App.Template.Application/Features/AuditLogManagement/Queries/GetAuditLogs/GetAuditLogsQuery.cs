@@ -20,19 +20,19 @@ public record GetAuditLogsQuery : IRequest<PagedResult<AuditLogDto>>
     public int PageSize { get; init; } = 20;
 
     /// <summary>
-    /// Column to sort by (e.g., "timestamp", "entityName", "action")
+    /// Column to sort by (e.g., "createdAt", "entityType", "action")
     /// </summary>
     public string? SortBy { get; init; }
 
     /// <summary>
     /// Sort direction: "asc" or "desc"
     /// </summary>
-    public string? SortDir { get; init; } = "desc";
+    public string? SortOrder { get; init; } = "desc";
 
     /// <summary>
-    /// Optional: Filter by entity name
+    /// Optional: Filter by entity type
     /// </summary>
-    public string? EntityName { get; init; }
+    public string? EntityType { get; init; }
 
     /// <summary>
     /// Optional: Filter by entity ID
@@ -60,7 +60,7 @@ public record GetAuditLogsQuery : IRequest<PagedResult<AuditLogDto>>
     public DateTime? ToDate { get; init; }
 
     /// <summary>
-    /// Optional: Search across entity name, entity ID, and user ID
+    /// Optional: Search across entity type, entity ID, and user ID
     /// </summary>
     public string? Search { get; init; }
 }

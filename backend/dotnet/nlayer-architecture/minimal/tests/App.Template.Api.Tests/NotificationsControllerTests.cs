@@ -1,4 +1,5 @@
 using App.Template.Api.Controllers;
+using App.Template.Api.Models.Common;
 using App.Template.Api.Models.Entities;
 using App.Template.Api.Repositories;
 using App.Template.Api.Services;
@@ -25,11 +26,26 @@ public class NotificationsControllerTests
     [Fact]
     public async Task GetMyNotifications_ReturnsOk()
     {
+        var result = new PagedResult<Notification>
+        {
+            Items = new List<Notification>(),
+            Pagination = new PaginationMeta { Page = 1, PageSize = 10, TotalItems = 0, TotalPages = 0 }
+        };
         _mockRepo
-            .Setup(r => r.GetByUserIdAsync("1", 15, null, null, It.IsAny<CancellationToken>()))
-            .ReturnsAsync(new List<Notification>());
+            .Setup(r => r.GetByUserIdPagedAsync("1", 1, 10, null, null, null, "desc", It.IsAny<CancellationToken>()))
+            .ReturnsAsync(result);
 
-        var result = await _controller.GetMyNotifications(null, null, null, CancellationToken.None);
+        var actionResult = await _controller.GetMyNotifications();
+
+        Assert.IsType<OkObjectResult>(actionResult);
+    }
+
+    [Fact]
+    public async Task GetUnreadCount_ReturnsOk()
+    {
+        _mockRepo.Setup(r => r.GetUnreadCountAsync("1", It.IsAny<CancellationToken>())).ReturnsAsync(3);
+
+        var result = await _controller.GetUnreadCount(CancellationToken.None);
 
         Assert.IsType<OkObjectResult>(result);
     }
@@ -62,5 +78,25 @@ public class NotificationsControllerTests
         var result = await _controller.MarkAllAsRead(CancellationToken.None);
 
         Assert.IsType<NoContentResult>(result);
+    }
+
+    [Fact]
+    public async Task Delete_ReturnsNoContent_WhenSuccessful()
+    {
+        _mockRepo.Setup(r => r.DeleteAsync(1, "1", It.IsAny<CancellationToken>())).ReturnsAsync(true);
+
+        var result = await _controller.Delete(1, CancellationToken.None);
+
+        Assert.IsType<NoContentResult>(result);
+    }
+
+    [Fact]
+    public async Task Delete_ReturnsNotFound_WhenNotExists()
+    {
+        _mockRepo.Setup(r => r.DeleteAsync(1, "1", It.IsAny<CancellationToken>())).ReturnsAsync(false);
+
+        var result = await _controller.Delete(1, CancellationToken.None);
+
+        Assert.IsType<NotFoundObjectResult>(result);
     }
 }

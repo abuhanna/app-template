@@ -46,7 +46,6 @@ public class ExceptionHandlerMiddleware
 
     private async Task HandleExceptionAsync(HttpContext context, Exception exception)
     {
-        var correlationId = context.Items["CorrelationId"]?.ToString();
         var requestPath = context.Request.Path.Value;
         var requestMethod = context.Request.Method;
         var userId = context.User?.FindFirst("sub")?.Value ?? "anonymous";
@@ -54,17 +53,14 @@ public class ExceptionHandlerMiddleware
         var response = context.Response;
         response.ContentType = "application/json";
 
-        ApiErrorResponse errorResponse;
+        ApiResponse errorResponse;
 
         switch (exception)
         {
             // Domain Exceptions - Expected errors, log as Warning
             case NotFoundException notFoundException:
                 response.StatusCode = (int)HttpStatusCode.NotFound;
-                errorResponse = ApiErrorResponse.Create(
-                    notFoundException.ErrorCode,
-                    notFoundException.Message,
-                    correlationId);
+                errorResponse = ApiResponse.Fail(notFoundException.Message);
                 _logger.LogWarning(
                     "[{Method} {Path}] Not found: {Entity} (ID: {EntityId}) | User: {UserId}",
                     requestMethod, requestPath, notFoundException.EntityName,
@@ -73,10 +69,7 @@ public class ExceptionHandlerMiddleware
 
             case ConflictException conflictException:
                 response.StatusCode = (int)HttpStatusCode.Conflict;
-                errorResponse = ApiErrorResponse.Create(
-                    conflictException.ErrorCode,
-                    conflictException.Message,
-                    correlationId);
+                errorResponse = ApiResponse.Fail(conflictException.Message);
                 _logger.LogWarning(
                     "[{Method} {Path}] Conflict on field '{Field}': {Message} | User: {UserId}",
                     requestMethod, requestPath, conflictException.ConflictField,
@@ -85,10 +78,7 @@ public class ExceptionHandlerMiddleware
 
             case AuthenticationException authException:
                 response.StatusCode = (int)HttpStatusCode.Unauthorized;
-                errorResponse = ApiErrorResponse.Create(
-                    authException.ErrorCode,
-                    authException.Message,
-                    correlationId);
+                errorResponse = ApiResponse.Fail(authException.Message);
                 _logger.LogWarning(
                     "[{Method} {Path}] Authentication failed: {Message}",
                     requestMethod, requestPath, authException.Message);
@@ -96,10 +86,7 @@ public class ExceptionHandlerMiddleware
 
             case ForbiddenException forbiddenException:
                 response.StatusCode = (int)HttpStatusCode.Forbidden;
-                errorResponse = ApiErrorResponse.Create(
-                    forbiddenException.ErrorCode,
-                    forbiddenException.Message,
-                    correlationId);
+                errorResponse = ApiResponse.Fail(forbiddenException.Message);
                 _logger.LogWarning(
                     "[{Method} {Path}] Access denied: {Message} | User: {UserId}",
                     requestMethod, requestPath, forbiddenException.Message, userId);
@@ -107,10 +94,7 @@ public class ExceptionHandlerMiddleware
 
             case BusinessRuleException businessException:
                 response.StatusCode = (int)HttpStatusCode.BadRequest;
-                errorResponse = ApiErrorResponse.Create(
-                    businessException.ErrorCode,
-                    businessException.Message,
-                    correlationId);
+                errorResponse = ApiResponse.Fail(businessException.Message);
                 _logger.LogWarning(
                     "[{Method} {Path}] Business rule [{Code}]: {Message} | User: {UserId}",
                     requestMethod, requestPath, businessException.ErrorCode,
@@ -119,15 +103,10 @@ public class ExceptionHandlerMiddleware
 
             case ValidationException validationException:
                 response.StatusCode = (int)HttpStatusCode.BadRequest;
-                var validationErrors = validationException.Errors
-                    .GroupBy(e => e.PropertyName)
-                    .ToDictionary(
-                        g => g.Key,
-                        g => g.Select(e => e.ErrorMessage).ToArray());
-                errorResponse = ApiErrorResponse.CreateValidationError(
-                    "One or more validation errors occurred",
-                    validationErrors,
-                    correlationId);
+                var errors = validationException.Errors
+                    .Select(e => e.ErrorMessage)
+                    .ToList();
+                errorResponse = ApiResponse.Fail("One or more validation errors occurred", errors);
                 var errorSummary = string.Join("; ", validationException.Errors
                     .Take(3)
                     .Select(e => $"{e.PropertyName}: {e.ErrorMessage}"));
@@ -140,10 +119,7 @@ public class ExceptionHandlerMiddleware
 
             case InvalidOperationException invalidOperationException:
                 response.StatusCode = (int)HttpStatusCode.BadRequest;
-                errorResponse = ApiErrorResponse.Create(
-                    "BAD_REQUEST",
-                    invalidOperationException.Message,
-                    correlationId);
+                errorResponse = ApiResponse.Fail(invalidOperationException.Message);
                 _logger.LogWarning(
                     "[{Method} {Path}] Invalid operation: {Message} | User: {UserId}",
                     requestMethod, requestPath, invalidOperationException.Message, userId);
@@ -151,10 +127,7 @@ public class ExceptionHandlerMiddleware
 
             case UnauthorizedAccessException unauthorizedException:
                 response.StatusCode = (int)HttpStatusCode.Unauthorized;
-                errorResponse = ApiErrorResponse.Create(
-                    "UNAUTHORIZED",
-                    unauthorizedException.Message,
-                    correlationId);
+                errorResponse = ApiResponse.Fail(unauthorizedException.Message);
                 _logger.LogWarning(
                     "[{Method} {Path}] Unauthorized: {Message}",
                     requestMethod, requestPath, unauthorizedException.Message);
@@ -180,17 +153,17 @@ public class ExceptionHandlerMiddleware
                 // Show detailed error in Development/Staging only
                 if (_environment.IsDevelopment() || _environment.IsStaging())
                 {
-                    errorResponse = ApiErrorResponse.CreateServerError(
-                        exception.Message,
-                        exception.InnerException?.Message,
-                        exception.StackTrace,
-                        correlationId);
+                    var detailErrors = new List<string> { exception.Message };
+                    if (exception.InnerException != null)
+                        detailErrors.Add(exception.InnerException.Message);
+                    errorResponse = ApiResponse.Fail(
+                        "An unexpected error occurred",
+                        detailErrors);
                 }
                 else
                 {
-                    errorResponse = ApiErrorResponse.CreateServerError(
-                        "An unexpected error occurred. Please try again later.",
-                        correlationId: correlationId);
+                    errorResponse = ApiResponse.Fail(
+                        "An unexpected error occurred. Please try again later.");
                 }
                 break;
         }

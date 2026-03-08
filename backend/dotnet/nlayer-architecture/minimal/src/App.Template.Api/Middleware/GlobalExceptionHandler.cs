@@ -1,4 +1,3 @@
-using Microsoft.AspNetCore.Mvc;
 using System.Net;
 using System.Text.Json;
 
@@ -31,12 +30,11 @@ public class GlobalExceptionHandler : IMiddleware
         context.Response.ContentType = "application/json";
         context.Response.StatusCode = (int)HttpStatusCode.InternalServerError;
 
-        var response = new ProblemDetails
+        var response = new
         {
-            Status = (int)HttpStatusCode.InternalServerError,
-            Title = "An error occurred while processing your request.",
-            Detail = exception.Message, // In production, hide this or filter it
-            Type = "https://tools.ietf.org/html/rfc7231#section-6.6.1"
+            success = false,
+            message = "An error occurred while processing your request.",
+            errors = new[] { exception.Message }
         };
 
         var jsonOptions = new JsonSerializerOptions { PropertyNamingPolicy = JsonNamingPolicy.CamelCase };

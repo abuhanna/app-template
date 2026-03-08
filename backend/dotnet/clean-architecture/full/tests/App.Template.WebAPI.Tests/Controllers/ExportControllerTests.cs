@@ -130,11 +130,11 @@ public class ExportControllerTests
                 new()
                 {
                     Id = 1,
-                    EntityName = "User",
+                    EntityType = "User",
                     EntityId = "1",
                     Action = "Created",
                     UserId = "admin",
-                    Timestamp = DateTime.UtcNow
+                    CreatedAt = DateTime.UtcNow
                 }
             },
             page: 1, pageSize: 1000, totalItems: 1);

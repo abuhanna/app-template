@@ -24,7 +24,7 @@ public class FilesControllerTests
     public async Task GetFiles_ReturnsOk()
     {
         _mockFileService
-            .Setup(s => s.GetFilesAsync(null, null, 1, 20, It.IsAny<CancellationToken>()))
+            .Setup(s => s.GetFilesAsync(null, null, 1, 10, It.IsAny<CancellationToken>()))
             .ReturnsAsync(new PagedResult<UploadedFileDto>
             {
                 Items = new List<UploadedFileDto> { new() { Id = 1, OriginalFileName = "test.pdf" } }
@@ -53,7 +53,7 @@ public class FilesControllerTests
 
         var result = await _controller.GetFile(1, CancellationToken.None);
 
-        Assert.IsType<NotFoundResult>(result);
+        Assert.IsType<NotFoundObjectResult>(result);
     }
 
     [Fact]
@@ -94,7 +94,7 @@ public class FilesControllerTests
 
         var result = await _controller.Download(1, CancellationToken.None);
 
-        Assert.IsType<NotFoundResult>(result);
+        Assert.IsType<NotFoundObjectResult>(result);
     }
 
     [Fact]
@@ -114,6 +114,6 @@ public class FilesControllerTests
 
         var result = await _controller.Delete(1, CancellationToken.None);
 
-        Assert.IsType<NotFoundResult>(result);
+        Assert.IsType<NotFoundObjectResult>(result);
     }
 }

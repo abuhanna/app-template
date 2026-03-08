@@ -8,7 +8,7 @@ namespace App.Template.Api.Controllers;
 
 [Authorize]
 [ApiController]
-[Route("api/[controller]")]
+[Route("api/files")]
 public class FilesController : ControllerBase
 {
     private readonly IFileService _fileService;
@@ -19,32 +19,33 @@ public class FilesController : ControllerBase
     }
 
     [HttpGet]
-    public async Task<ActionResult<PagedResult<UploadedFileDto>>> GetAll([FromQuery] FilesQueryParams queryParams)
+    public async Task<ActionResult<PaginatedResponse<UploadedFileDto>>> GetAll([FromQuery] FilesQueryParams queryParams)
     {
-        return Ok(await _fileService.GetFilesAsync(queryParams));
+        var result = await _fileService.GetFilesAsync(queryParams);
+        return Ok(PaginatedResponse<UploadedFileDto>.From(result, "Files retrieved successfully"));
     }
 
     [HttpGet("{id}")]
-    public async Task<ActionResult<UploadedFileDto>> GetMetadata(long id)
+    public async Task<ActionResult<ApiResponse<UploadedFileDto>>> GetMetadata(long id)
     {
         var metadata = await _fileService.GetMetadataAsync(id);
-        if (metadata == null) return NotFound();
-        return Ok(metadata);
+        if (metadata == null) return NotFound(ApiResponse.Fail("File not found"));
+        return Ok(ApiResponse.Ok(metadata, "File retrieved successfully"));
     }
 
     [HttpPost]
     [RequestSizeLimit(52428800)]
-    public async Task<ActionResult<UploadedFileDto>> Upload(
+    public async Task<ActionResult<ApiResponse<UploadedFileDto>>> Upload(
         IFormFile file,
         [FromForm] string? description = null,
         [FromForm] string? category = null,
         [FromForm] bool isPublic = false)
     {
         if (file == null || file.Length == 0)
-            return BadRequest("File is empty");
+            return BadRequest(ApiResponse.Fail("No file provided or file is empty"));
 
         var result = await _fileService.UploadAsync(file, description, category, isPublic);
-        return CreatedAtAction(nameof(GetMetadata), new { id = result.Id }, result);
+        return StatusCode(201, ApiResponse.Ok(result, "File uploaded successfully"));
     }
 
     [AllowAnonymous]
@@ -52,7 +53,7 @@ public class FilesController : ControllerBase
     public async Task<IActionResult> Download(long id)
     {
         var fileData = await _fileService.DownloadAsync(id);
-        if (fileData == null) return NotFound();
+        if (fileData == null) return NotFound(ApiResponse.Fail("File not found"));
         return File(fileData.Value.Stream, fileData.Value.ContentType, fileData.Value.FileName);
     }
 
@@ -60,7 +61,7 @@ public class FilesController : ControllerBase
     public async Task<ActionResult> Delete(long id)
     {
         var deleted = await _fileService.DeleteAsync(id);
-        if (!deleted) return NotFound();
+        if (!deleted) return NotFound(ApiResponse.Fail("File not found"));
         return NoContent();
     }
 }

@@ -37,7 +37,7 @@ public class UserService : IUserService
         if (queryParams.DepartmentId.HasValue)
             query = query.Where(u => u.DepartmentId == queryParams.DepartmentId.Value);
 
-        query = (queryParams.SortBy?.ToLower(), queryParams.SortDir?.ToLower()) switch
+        query = (queryParams.SortBy?.ToLower(), queryParams.SortOrder?.ToLower()) switch
         {
             ("username", "desc") => query.OrderByDescending(u => u.Username),
             ("username", _) => query.OrderBy(u => u.Username),
@@ -64,6 +64,7 @@ public class UserService : IUserService
             DepartmentName = u.Department != null ? u.Department.Name : null,
             IsActive = u.IsActive,
             CreatedAt = u.CreatedAt,
+            UpdatedAt = u.UpdatedAt,
             LastLoginAt = u.LastLoginAt
         });
 
@@ -110,7 +111,7 @@ public class UserService : IUserService
             Name = $"{request.FirstName} {request.LastName}".Trim(),
             Role = request.Role ?? "User",
             DepartmentId = request.DepartmentId,
-            IsActive = true
+            IsActive = request.IsActive
         };
 
         var created = await _userRepository.AddAsync(user);
@@ -204,6 +205,7 @@ public class UserService : IUserService
             DepartmentName = user.Department?.Name,
             IsActive = user.IsActive,
             CreatedAt = user.CreatedAt,
+            UpdatedAt = user.UpdatedAt,
             LastLoginAt = user.LastLoginAt
         };
     }

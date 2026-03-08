@@ -27,7 +27,7 @@ public class AuditLogsControllerTests
         {
             Items = new List<AuditLogDto>
             {
-                new() { Id = 1, EntityName = "User", Action = "Create" }
+                new() { Id = 1, EntityType = "User", Action = "create" }
             }
         };
         _mockAuditLogService.Setup(s => s.GetAuditLogsAsync(queryParams)).ReturnsAsync(logs);
@@ -39,15 +39,24 @@ public class AuditLogsControllerTests
     }
 
     [Fact]
-    public async Task GetAll_ReturnsOk_WithEmptyResult()
+    public async Task GetById_ReturnsOk_WhenExists()
     {
-        var queryParams = new AuditLogsQueryParams();
-        var logs = new PagedResult<AuditLogDto> { Items = new List<AuditLogDto>() };
-        _mockAuditLogService.Setup(s => s.GetAuditLogsAsync(queryParams)).ReturnsAsync(logs);
+        var log = new AuditLogDto { Id = 1, EntityType = "User", Action = "create" };
+        _mockAuditLogService.Setup(s => s.GetByIdAsync(1)).ReturnsAsync(log);
 
-        var result = await _controller.GetAll(queryParams);
+        var result = await _controller.GetById(1);
 
         var okResult = Assert.IsType<OkObjectResult>(result.Result);
         Assert.NotNull(okResult.Value);
+    }
+
+    [Fact]
+    public async Task GetById_ReturnsNotFound_WhenDoesNotExist()
+    {
+        _mockAuditLogService.Setup(s => s.GetByIdAsync(1)).ReturnsAsync((AuditLogDto?)null);
+
+        var result = await _controller.GetById(1);
+
+        Assert.IsType<NotFoundObjectResult>(result.Result);
     }
 }

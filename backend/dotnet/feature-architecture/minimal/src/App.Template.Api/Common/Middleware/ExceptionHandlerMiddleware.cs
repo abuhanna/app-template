@@ -51,18 +51,14 @@ public class ExceptionHandlerMiddleware
         var response = context.Response;
         response.ContentType = "application/json";
 
-        object errorResponse;
+        string message;
+        List<string>? errors = null;
 
         switch (exception)
         {
             case UnauthorizedAccessException unauthorizedException:
                 response.StatusCode = (int)HttpStatusCode.Unauthorized;
-                errorResponse = new
-                {
-                    code = "UNAUTHORIZED",
-                    message = unauthorizedException.Message,
-                    correlationId
-                };
+                message = unauthorizedException.Message;
                 _logger.LogWarning(
                     "[{Method} {Path}] Unauthorized: {Message}",
                     requestMethod, requestPath, unauthorizedException.Message);
@@ -70,12 +66,7 @@ public class ExceptionHandlerMiddleware
 
             case InvalidOperationException invalidOperationException:
                 response.StatusCode = (int)HttpStatusCode.BadRequest;
-                errorResponse = new
-                {
-                    code = "BAD_REQUEST",
-                    message = invalidOperationException.Message,
-                    correlationId
-                };
+                message = invalidOperationException.Message;
                 _logger.LogWarning(
                     "[{Method} {Path}] Invalid operation: {Message} | User: {UserId}",
                     requestMethod, requestPath, invalidOperationException.Message, userId);
@@ -98,26 +89,26 @@ public class ExceptionHandlerMiddleware
                 // Show detailed error in Development/Staging only
                 if (_environment.IsDevelopment() || _environment.IsStaging())
                 {
-                    errorResponse = new
-                    {
-                        code = "INTERNAL_ERROR",
-                        message = exception.Message,
-                        detail = exception.InnerException?.Message,
-                        stackTrace = exception.StackTrace,
-                        correlationId
-                    };
+                    message = exception.Message;
+                    errors = new List<string>();
+                    if (exception.InnerException?.Message != null)
+                        errors.Add(exception.InnerException.Message);
+                    if (exception.StackTrace != null)
+                        errors.Add(exception.StackTrace);
                 }
                 else
                 {
-                    errorResponse = new
-                    {
-                        code = "INTERNAL_ERROR",
-                        message = "An unexpected error occurred. Please try again later.",
-                        correlationId
-                    };
+                    message = "An unexpected error occurred. Please try again later.";
                 }
                 break;
         }
+
+        var errorResponse = new
+        {
+            success = false,
+            message,
+            errors
+        };
 
         var result = JsonSerializer.Serialize(errorResponse, JsonOptions);
         await response.WriteAsync(result);

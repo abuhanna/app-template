@@ -1,3 +1,4 @@
+using App.Template.Api.Common.Models;
 using App.Template.Api.Features.Files;
 using App.Template.Api.Features.Files.Dtos;
 using Microsoft.AspNetCore.Http;
@@ -21,29 +22,37 @@ public class FilesControllerTests
     }
 
     [Fact]
-    public async Task GetFiles_ReturnsOk()
+    public async Task GetFiles_ReturnsPaginatedResponse()
     {
         _mockFileService
             .Setup(s => s.GetFilesAsync(null, null, 1, 20))
-            .ReturnsAsync(new Common.Models.PagedResult<UploadedFileDto>
+            .ReturnsAsync(new PagedResult<UploadedFileDto>
             {
-                Items = new List<UploadedFileDto> { new() { Id = 1, OriginalFileName = "test.pdf" } }
+                Items = new List<UploadedFileDto> { new() { Id = 1, OriginalFileName = "test.pdf" } },
+                Pagination = new PaginationMeta { Page = 1, PageSize = 20, TotalItems = 1, TotalPages = 1 }
             });
 
         var result = await _controller.GetFiles(null, null);
 
-        Assert.IsType<OkObjectResult>(result);
+        var okResult = Assert.IsType<OkObjectResult>(result);
+        var response = Assert.IsType<PaginatedResponse<UploadedFileDto>>(okResult.Value);
+        Assert.True(response.Success);
+        Assert.NotNull(response.Data);
+        Assert.Single(response.Data);
     }
 
     [Fact]
-    public async Task GetFile_ReturnsOk_WhenExists()
+    public async Task GetFile_ReturnsApiResponse_WhenExists()
     {
         var file = new UploadedFileDto { Id = 1, OriginalFileName = "test.pdf" };
         _mockFileService.Setup(s => s.GetFileAsync(1)).ReturnsAsync(file);
 
         var result = await _controller.GetFile(1);
 
-        Assert.IsType<OkObjectResult>(result);
+        var okResult = Assert.IsType<OkObjectResult>(result);
+        var response = Assert.IsType<ApiResponse<UploadedFileDto>>(okResult.Value);
+        Assert.True(response.Success);
+        Assert.NotNull(response.Data);
     }
 
     [Fact]
@@ -53,7 +62,9 @@ public class FilesControllerTests
 
         var result = await _controller.GetFile(1);
 
-        Assert.IsType<NotFoundObjectResult>(result);
+        var notFoundResult = Assert.IsType<NotFoundObjectResult>(result);
+        var response = Assert.IsType<ApiResponse>(notFoundResult.Value);
+        Assert.False(response.Success);
     }
 
     [Fact]
@@ -61,7 +72,9 @@ public class FilesControllerTests
     {
         var result = await _controller.UploadFile(null!, null, null);
 
-        Assert.IsType<BadRequestObjectResult>(result);
+        var badRequestResult = Assert.IsType<BadRequestObjectResult>(result);
+        var response = Assert.IsType<ApiResponse>(badRequestResult.Value);
+        Assert.False(response.Success);
     }
 
     [Fact]
@@ -72,7 +85,9 @@ public class FilesControllerTests
 
         var result = await _controller.UploadFile(mockFile.Object, null, null);
 
-        Assert.IsType<BadRequestObjectResult>(result);
+        var badRequestResult = Assert.IsType<BadRequestObjectResult>(result);
+        var response = Assert.IsType<ApiResponse>(badRequestResult.Value);
+        Assert.False(response.Success);
     }
 
     [Fact]
@@ -82,7 +97,9 @@ public class FilesControllerTests
 
         var result = await _controller.DownloadFile(1);
 
-        Assert.IsType<NotFoundObjectResult>(result);
+        var notFoundResult = Assert.IsType<NotFoundObjectResult>(result);
+        var response = Assert.IsType<ApiResponse>(notFoundResult.Value);
+        Assert.False(response.Success);
     }
 
     [Fact]
@@ -114,6 +131,8 @@ public class FilesControllerTests
 
         var result = await _controller.DeleteFile(1);
 
-        Assert.IsType<NotFoundObjectResult>(result);
+        var notFoundResult = Assert.IsType<NotFoundObjectResult>(result);
+        var response = Assert.IsType<ApiResponse>(notFoundResult.Value);
+        Assert.False(response.Success);
     }
 }

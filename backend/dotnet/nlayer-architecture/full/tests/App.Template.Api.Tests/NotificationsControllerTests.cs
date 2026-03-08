@@ -58,13 +58,13 @@ public class NotificationsControllerTests
     }
 
     [Fact]
-    public async Task MarkAsRead_ReturnsOk_WhenSuccessful()
+    public async Task MarkAsRead_ReturnsNoContent_WhenSuccessful()
     {
         _mockNotificationService.Setup(s => s.MarkAsReadAsync(1, "1")).ReturnsAsync(true);
 
         var result = await _controller.MarkAsRead(1);
 
-        Assert.IsType<OkResult>(result);
+        Assert.IsType<NoContentResult>(result);
     }
 
     [Fact]
@@ -74,16 +74,26 @@ public class NotificationsControllerTests
 
         var result = await _controller.MarkAsRead(1);
 
-        Assert.IsType<NotFoundResult>(result);
+        Assert.IsType<NotFoundObjectResult>(result);
     }
 
     [Fact]
-    public async Task MarkAllAsRead_ReturnsOk()
+    public async Task MarkAllAsRead_ReturnsNoContent()
     {
         _mockNotificationService.Setup(s => s.MarkAllAsReadAsync("1")).Returns(Task.CompletedTask);
 
         var result = await _controller.MarkAllAsRead();
 
-        Assert.IsType<OkResult>(result);
+        Assert.IsType<NoContentResult>(result);
+    }
+
+    [Fact]
+    public async Task Delete_ReturnsNoContent_WhenSuccessful()
+    {
+        _mockNotificationService.Setup(s => s.DeleteAsync(1, "1")).ReturnsAsync(true);
+
+        var result = await _controller.Delete(1);
+
+        Assert.IsType<NoContentResult>(result);
     }
 }

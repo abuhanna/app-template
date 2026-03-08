@@ -1,6 +1,7 @@
 using App.Template.Api.Common.Models;
 using App.Template.Api.Common.Services;
 using App.Template.Api.Data;
+using App.Template.Api.Features.Auth.Dtos;
 using App.Template.Api.Features.Users.Dtos;
 using Microsoft.EntityFrameworkCore;
 
@@ -42,7 +43,7 @@ public class UserService : IUserService
         if (queryParams.DepartmentId.HasValue)
             query = query.Where(u => u.DepartmentId == queryParams.DepartmentId.Value);
 
-        query = (queryParams.SortBy?.ToLower(), queryParams.SortDir?.ToLower()) switch
+        query = (queryParams.SortBy?.ToLower(), queryParams.SortOrder?.ToLower()) switch
         {
             ("username", "desc") => query.OrderByDescending(u => u.Username),
             ("username", _) => query.OrderBy(u => u.Username),

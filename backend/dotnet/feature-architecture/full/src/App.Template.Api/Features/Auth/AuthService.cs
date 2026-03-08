@@ -12,10 +12,12 @@ namespace App.Template.Api.Features.Auth;
 public interface IAuthService
 {
     Task<LoginResponse> LoginAsync(LoginRequest request);
-    Task<LoginResponse> RefreshTokenAsync(RefreshTokenRequest request);
+    Task<UserDto> RegisterAsync(RegisterRequest request);
+    Task<RefreshResponse> RefreshTokenAsync(RefreshTokenRequest request);
     Task LogoutAsync();
     Task<UserDto> GetProfileAsync(string userId);
     Task<UserDto> UpdateProfileAsync(string userId, UpdateProfileRequest request);
+    Task ChangePasswordAsync(string userId, ChangePasswordRequest request);
     Task ForgotPasswordAsync(ForgotPasswordRequest request);
     Task ResetPasswordAsync(ResetPasswordRequest request);
 }
@@ -85,16 +87,44 @@ public class AuthService : IAuthService
 
         return new LoginResponse
         {
-            Token = token,
-            TokenType = "Bearer",
+            AccessToken = token,
             ExpiresIn = expirationMinutes * 60,
             RefreshToken = refreshTokenValue,
-            RefreshTokenExpiresAt = refreshTokenExpiry,
             User = MapToUserInfo(user)
         };
     }
 
-    public async Task<LoginResponse> RefreshTokenAsync(RefreshTokenRequest request)
+    public async Task<UserDto> RegisterAsync(RegisterRequest request)
+    {
+        var existingByUsername = await _context.Users
+            .FirstOrDefaultAsync(u => u.Username == request.Username);
+        if (existingByUsername != null)
+            throw new InvalidOperationException("Username is already taken");
+
+        var existingByEmail = await _context.Users
+            .FirstOrDefaultAsync(u => u.Email == request.Email);
+        if (existingByEmail != null)
+            throw new InvalidOperationException("Email is already in use");
+
+        var user = new User
+        {
+            Username = request.Username,
+            Email = request.Email,
+            PasswordHash = _passwordHashService.HashPassword(request.Password),
+            Name = $"{request.FirstName} {request.LastName}".Trim(),
+            Role = "User",
+            IsActive = true
+        };
+
+        _context.Users.Add(user);
+        await _context.SaveChangesAsync();
+
+        _logger.LogInformation("User registered: {Username}", user.Username);
+
+        return MapToUserDto(user);
+    }
+
+    public async Task<RefreshResponse> RefreshTokenAsync(RefreshTokenRequest request)
     {
         var existingToken = await _context.RefreshTokens
             .Include(rt => rt.User)
@@ -141,14 +171,11 @@ public class AuthService : IAuthService
         var token = _jwtTokenGenerator.GenerateToken(user);
         var expirationMinutes = int.Parse(_configuration["Jwt:ExpirationMinutes"] ?? "60");
 
-        return new LoginResponse
+        return new RefreshResponse
         {
-            Token = token,
-            TokenType = "Bearer",
+            AccessToken = token,
             ExpiresIn = expirationMinutes * 60,
-            RefreshToken = newRefreshTokenValue,
-            RefreshTokenExpiresAt = refreshTokenExpiry,
-            User = MapToUserInfo(user)
+            RefreshToken = newRefreshTokenValue
         };
     }
 
@@ -181,17 +208,41 @@ public class AuthService : IAuthService
             .FirstOrDefaultAsync(u => u.Id == id)
             ?? throw new KeyNotFoundException("User not found");
 
-        if (!string.IsNullOrEmpty(request.Name)) user.Name = request.Name;
-        if (!string.IsNullOrEmpty(request.Email))
+        if (request.FirstName != null || request.LastName != null)
         {
-            var emailExists = await _context.Users.AnyAsync(u => u.Email == request.Email && u.Id != id);
-            if (emailExists)
-                throw new InvalidOperationException("Email is already in use");
-            user.Email = request.Email;
+            var parts = user.Name?.Split(' ', 2) ?? Array.Empty<string>();
+            var curFirst = parts.Length > 0 ? parts[0] : "";
+            var curLast  = parts.Length > 1 ? parts[1] : "";
+            user.Name = $"{request.FirstName ?? curFirst} {request.LastName ?? curLast}".Trim();
         }
 
         await _context.SaveChangesAsync();
         return MapToUserDto(user);
+    }
+
+    public async Task ChangePasswordAsync(string userId, ChangePasswordRequest request)
+    {
+        if (!long.TryParse(userId, out var id))
+            throw new KeyNotFoundException("User not found");
+
+        if (request.NewPassword != request.ConfirmPassword)
+            throw new InvalidOperationException("Passwords do not match");
+
+        var user = await _context.Users.FirstOrDefaultAsync(u => u.Id == id)
+            ?? throw new KeyNotFoundException("User not found");
+
+        if (!_passwordHashService.VerifyPassword(request.CurrentPassword, user.PasswordHash))
+            throw new InvalidOperationException("Current password is incorrect");
+
+        if (user.PasswordHistory.Any(h => _passwordHashService.VerifyPassword(request.NewPassword, h)))
+            throw new InvalidOperationException("Password was recently used. Please choose a different password.");
+
+        user.PasswordHistory.Add(user.PasswordHash);
+        if (user.PasswordHistory.Count > 5)
+            user.PasswordHistory.RemoveAt(0);
+
+        user.PasswordHash = _passwordHashService.HashPassword(request.NewPassword);
+        await _context.SaveChangesAsync();
     }
 
     public async Task ForgotPasswordAsync(ForgotPasswordRequest request)
@@ -242,28 +293,41 @@ public class AuthService : IAuthService
         await _context.SaveChangesAsync();
     }
 
-    private static UserInfoDto MapToUserInfo(User user) => new()
+    private static UserInfoDto MapToUserInfo(User user)
     {
-        Id = user.Id.ToString(),
-        Username = user.Username,
-        Email = user.Email,
-        Name = user.Name ?? user.Username,
-        Role = user.Role,
-        DepartmentId = user.DepartmentId?.ToString(),
-        DepartmentName = user.Department?.Name
-    };
+        var nameParts = user.Name?.Split(' ', 2) ?? Array.Empty<string>();
+        return new UserInfoDto
+        {
+            Id = user.Id,
+            Username = user.Username,
+            Email = user.Email,
+            FirstName = nameParts.Length > 0 ? nameParts[0] : null,
+            LastName = nameParts.Length > 1 ? nameParts[1] : null,
+            FullName = user.Name ?? user.Username,
+            Role = user.Role,
+            DepartmentId = user.DepartmentId,
+            DepartmentName = user.Department?.Name,
+            IsActive = user.IsActive
+        };
+    }
 
-    private static UserDto MapToUserDto(User user) => new()
+    private static UserDto MapToUserDto(User user)
     {
-        Id = user.Id,
-        Username = user.Username,
-        Email = user.Email,
-        FullName = user.Name,
-        Role = user.Role,
-        DepartmentId = user.DepartmentId,
-        DepartmentName = user.Department?.Name,
-        IsActive = user.IsActive,
-        CreatedAt = user.CreatedAt,
-        LastLoginAt = user.LastLoginAt
-    };
+        var nameParts = user.Name?.Split(' ', 2) ?? Array.Empty<string>();
+        return new UserDto
+        {
+            Id = user.Id,
+            Username = user.Username,
+            Email = user.Email,
+            FirstName = nameParts.Length > 0 ? nameParts[0] : "",
+            LastName = nameParts.Length > 1 ? nameParts[1] : "",
+            FullName = user.Name,
+            Role = user.Role,
+            DepartmentId = user.DepartmentId,
+            DepartmentName = user.Department?.Name,
+            IsActive = user.IsActive,
+            CreatedAt = user.CreatedAt,
+            LastLoginAt = user.LastLoginAt
+        };
+    }
 }

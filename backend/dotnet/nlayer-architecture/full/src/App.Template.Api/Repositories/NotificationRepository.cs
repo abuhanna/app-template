@@ -37,4 +37,10 @@ public class NotificationRepository : INotificationRepository
             .Where(n => n.UserId == userId && !n.IsRead)
             .ExecuteUpdateAsync(s => s.SetProperty(n => n.IsRead, true));
     }
+
+    public async Task DeleteAsync(Notification notification)
+    {
+        _context.Notifications.Remove(notification);
+        await _context.SaveChangesAsync();
+    }
 }

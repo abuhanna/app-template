@@ -32,7 +32,7 @@ public class UsersControllerTests
     #region GetUsers
 
     [Fact]
-    public async Task GetUsers_ReturnsOk_WithPagedResult()
+    public async Task GetUsers_ReturnsOk_WithPaginatedResponse()
     {
         // Arrange
         var pagedResult = PagedResult<UserDto>.Create(
@@ -52,9 +52,10 @@ public class UsersControllerTests
 
         // Assert
         var okResult = Assert.IsType<OkObjectResult>(result);
-        var response = Assert.IsType<PagedResult<UserDto>>(okResult.Value);
-        Assert.Equal(2, response.Items.Count);
-        Assert.Equal(2, response.Pagination.TotalItems);
+        var response = Assert.IsType<PaginatedResponse<UserDto>>(okResult.Value);
+        Assert.True(response.Success);
+        Assert.Equal(2, response.Data!.Count);
+        Assert.Equal(2, response.Pagination!.TotalItems);
     }
 
     #endregion
@@ -76,9 +77,10 @@ public class UsersControllerTests
 
         // Assert
         var okResult = Assert.IsType<OkObjectResult>(result);
-        var response = Assert.IsType<UserDto>(okResult.Value);
-        Assert.Equal(1, response.Id);
-        Assert.Equal("admin", response.Username);
+        var response = Assert.IsType<ApiResponse<UserDto>>(okResult.Value);
+        Assert.True(response.Success);
+        Assert.Equal(1, response.Data!.Id);
+        Assert.Equal("admin", response.Data.Username);
     }
 
     [Fact]
@@ -95,6 +97,8 @@ public class UsersControllerTests
         // Assert
         var notFoundResult = Assert.IsType<NotFoundObjectResult>(result);
         Assert.Equal(404, notFoundResult.StatusCode);
+        var response = Assert.IsType<ApiResponse>(notFoundResult.Value);
+        Assert.False(response.Success);
     }
 
     #endregion
@@ -102,7 +106,7 @@ public class UsersControllerTests
     #region CreateUser
 
     [Fact]
-    public async Task CreateUser_ReturnsCreatedAtAction_WhenSuccessful()
+    public async Task CreateUser_Returns201_WhenSuccessful()
     {
         // Arrange
         var request = new CreateUserRequest
@@ -134,12 +138,12 @@ public class UsersControllerTests
         var result = await _controller.CreateUser(request);
 
         // Assert
-        var createdResult = Assert.IsType<CreatedAtActionResult>(result);
-        Assert.Equal(201, createdResult.StatusCode);
-        Assert.Equal(nameof(UsersController.GetUserById), createdResult.ActionName);
-        var response = Assert.IsType<UserDto>(createdResult.Value);
-        Assert.Equal(5, response.Id);
-        Assert.Equal("newuser", response.Username);
+        var statusResult = Assert.IsType<ObjectResult>(result);
+        Assert.Equal(201, statusResult.StatusCode);
+        var response = Assert.IsType<ApiResponse<UserDto>>(statusResult.Value);
+        Assert.True(response.Success);
+        Assert.Equal(5, response.Data!.Id);
+        Assert.Equal("newuser", response.Data.Username);
     }
 
     #endregion
@@ -175,8 +179,9 @@ public class UsersControllerTests
 
         // Assert
         var okResult = Assert.IsType<OkObjectResult>(result);
-        var response = Assert.IsType<UserDto>(okResult.Value);
-        Assert.Equal("updated@example.com", response.Email);
+        var response = Assert.IsType<ApiResponse<UserDto>>(okResult.Value);
+        Assert.True(response.Success);
+        Assert.Equal("updated@example.com", response.Data!.Email);
     }
 
     #endregion
@@ -222,7 +227,8 @@ public class UsersControllerTests
 
         // Assert
         var okResult = Assert.IsType<OkObjectResult>(result);
-        Assert.NotNull(okResult.Value);
+        var response = Assert.IsType<ApiResponse>(okResult.Value);
+        Assert.True(response.Success);
     }
 
     [Fact]

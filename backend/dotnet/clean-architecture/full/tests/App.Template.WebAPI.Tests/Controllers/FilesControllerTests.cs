@@ -34,7 +34,7 @@ public class FilesControllerTests
     #region GetFiles
 
     [Fact]
-    public async Task GetFiles_ReturnsOk_WithPagedResult()
+    public async Task GetFiles_ReturnsOk_WithPaginatedResponse()
     {
         // Arrange
         var pagedResult = PagedResult<UploadedFileDto>.Create(
@@ -54,8 +54,9 @@ public class FilesControllerTests
 
         // Assert
         var okResult = Assert.IsType<OkObjectResult>(result);
-        var response = Assert.IsType<PagedResult<UploadedFileDto>>(okResult.Value);
-        Assert.Equal(2, response.Items.Count);
+        var response = Assert.IsType<PaginatedResponse<UploadedFileDto>>(okResult.Value);
+        Assert.True(response.Success);
+        Assert.Equal(2, response.Data!.Count);
     }
 
     #endregion
@@ -84,9 +85,10 @@ public class FilesControllerTests
 
         // Assert
         var okResult = Assert.IsType<OkObjectResult>(result);
-        var response = Assert.IsType<UploadedFileDto>(okResult.Value);
-        Assert.Equal(1, response.Id);
-        Assert.Equal("report.pdf", response.OriginalFileName);
+        var response = Assert.IsType<ApiResponse<UploadedFileDto>>(okResult.Value);
+        Assert.True(response.Success);
+        Assert.Equal(1, response.Data!.Id);
+        Assert.Equal("report.pdf", response.Data.OriginalFileName);
     }
 
     [Fact]
@@ -103,6 +105,8 @@ public class FilesControllerTests
         // Assert
         var notFoundResult = Assert.IsType<NotFoundObjectResult>(result);
         Assert.Equal(404, notFoundResult.StatusCode);
+        var response = Assert.IsType<ApiResponse>(notFoundResult.Value);
+        Assert.False(response.Success);
     }
 
     #endregion
@@ -110,7 +114,7 @@ public class FilesControllerTests
     #region UploadFile
 
     [Fact]
-    public async Task UploadFile_ReturnsCreatedAtAction_WhenSuccessful()
+    public async Task UploadFile_Returns201_WhenSuccessful()
     {
         // Arrange
         var content = "file content"u8.ToArray();
@@ -137,11 +141,11 @@ public class FilesControllerTests
         var result = await _controller.UploadFile(formFile, "Test file", "documents", false);
 
         // Assert
-        var createdResult = Assert.IsType<CreatedAtActionResult>(result);
-        Assert.Equal(201, createdResult.StatusCode);
-        Assert.Equal(nameof(FilesController.GetFile), createdResult.ActionName);
-        var response = Assert.IsType<UploadedFileDto>(createdResult.Value);
-        Assert.Equal(10, response.Id);
+        var statusResult = Assert.IsType<ObjectResult>(result);
+        Assert.Equal(201, statusResult.StatusCode);
+        var response = Assert.IsType<ApiResponse<UploadedFileDto>>(statusResult.Value);
+        Assert.True(response.Success);
+        Assert.Equal(10, response.Data!.Id);
     }
 
     [Fact]
@@ -153,6 +157,8 @@ public class FilesControllerTests
         // Assert
         var badRequestResult = Assert.IsType<BadRequestObjectResult>(result);
         Assert.Equal(400, badRequestResult.StatusCode);
+        var response = Assert.IsType<ApiResponse>(badRequestResult.Value);
+        Assert.False(response.Success);
     }
 
     [Fact]

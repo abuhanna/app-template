@@ -14,7 +14,12 @@ public record UpdateMyProfileCommand : IRequest<UserDto>
     public string? Email { get; init; }
 
     /// <summary>
-    /// New display name (optional)
+    /// New first name (optional)
     /// </summary>
-    public string? Name { get; init; }
+    public string? FirstName { get; init; }
+
+    /// <summary>
+    /// New last name (optional)
+    /// </summary>
+    public string? LastName { get; init; }
 }

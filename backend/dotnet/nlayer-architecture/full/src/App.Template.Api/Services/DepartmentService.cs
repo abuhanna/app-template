@@ -39,7 +39,7 @@ public class DepartmentService : IDepartmentService
         if (queryParams.IsActive.HasValue)
             query = query.Where(d => d.IsActive == queryParams.IsActive.Value);
 
-        query = (queryParams.SortBy?.ToLower(), queryParams.SortDir?.ToLower()) switch
+        query = (queryParams.SortBy?.ToLower(), queryParams.SortOrder?.ToLower()) switch
         {
             ("name", "desc") => query.OrderByDescending(d => d.Name),
             ("name", _) => query.OrderBy(d => d.Name),
@@ -60,6 +60,7 @@ public class DepartmentService : IDepartmentService
             Name = d.Name,
             Description = d.Description,
             IsActive = d.IsActive,
+            UserCount = d.Users.Count,
             CreatedAt = d.CreatedAt,
             UpdatedAt = d.UpdatedAt
         });
@@ -69,7 +70,9 @@ public class DepartmentService : IDepartmentService
 
     public async Task<DepartmentDto?> GetByIdAsync(long id)
     {
-        var dept = await _departmentRepository.GetByIdAsync(id);
+        var dept = await _departmentRepository.GetQueryable()
+            .Include(d => d.Users)
+            .FirstOrDefaultAsync(d => d.Id == id);
         return dept == null ? null : MapToDto(dept);
     }
 
@@ -93,7 +96,9 @@ public class DepartmentService : IDepartmentService
 
     public async Task<DepartmentDto?> UpdateAsync(long id, UpdateDepartmentRequest request)
     {
-        var dept = await _departmentRepository.GetByIdAsync(id);
+        var dept = await _departmentRepository.GetQueryable()
+            .Include(d => d.Users)
+            .FirstOrDefaultAsync(d => d.Id == id);
         if (dept == null) return null;
 
         if (request.Code != null && request.Code != dept.Code)
@@ -134,6 +139,7 @@ public class DepartmentService : IDepartmentService
         Name = dept.Name,
         Description = dept.Description,
         IsActive = dept.IsActive,
+        UserCount = dept.Users?.Count ?? 0,
         CreatedAt = dept.CreatedAt,
         UpdatedAt = dept.UpdatedAt
     };

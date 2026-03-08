@@ -58,11 +58,11 @@ public class FilesControllerTests
 
         var result = await _controller.GetMetadata(1);
 
-        Assert.IsType<NotFoundResult>(result.Result);
+        Assert.IsType<NotFoundObjectResult>(result.Result);
     }
 
     [Fact]
-    public async Task Upload_ReturnsCreatedAtAction_WithValidFile()
+    public async Task Upload_Returns201_WithValidFile()
     {
         var mockFile = new Mock<IFormFile>();
         mockFile.Setup(f => f.Length).Returns(1024);
@@ -73,8 +73,8 @@ public class FilesControllerTests
 
         var result = await _controller.Upload(mockFile.Object);
 
-        var createdResult = Assert.IsType<CreatedAtActionResult>(result.Result);
-        Assert.NotNull(createdResult.Value);
+        var objectResult = Assert.IsType<ObjectResult>(result.Result);
+        Assert.Equal(201, objectResult.StatusCode);
     }
 
     [Fact]
@@ -115,7 +115,7 @@ public class FilesControllerTests
 
         var result = await _controller.Download(1);
 
-        Assert.IsType<NotFoundResult>(result);
+        Assert.IsType<NotFoundObjectResult>(result);
     }
 
     [Fact]
@@ -135,6 +135,6 @@ public class FilesControllerTests
 
         var result = await _controller.Delete(1);
 
-        Assert.IsType<NotFoundResult>(result);
+        Assert.IsType<NotFoundObjectResult>(result);
     }
 }

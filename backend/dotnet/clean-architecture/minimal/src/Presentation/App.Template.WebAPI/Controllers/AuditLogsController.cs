@@ -1,5 +1,6 @@
 using AppTemplate.Application.Common.Models;
 using AppTemplate.Application.DTOs;
+using AppTemplate.Application.Features.AuditLogManagement.Queries.GetAuditLogById;
 using AppTemplate.Application.Features.AuditLogManagement.Queries.GetAuditLogs;
 using MediatR;
 using Microsoft.AspNetCore.Authorization;
@@ -12,7 +13,7 @@ namespace AppTemplate.WebAPI.Controllers;
 /// </summary>
 [Authorize(Roles = "Admin")]
 [ApiController]
-[Route("api/audit-logs")]
+[Route("api/[controller]")]
 public class AuditLogsController : ControllerBase
 {
     private readonly ISender _mediator;
@@ -26,14 +27,14 @@ public class AuditLogsController : ControllerBase
     /// Get list of audit logs with pagination and filtering
     /// </summary>
     [HttpGet]
-    [ProducesResponseType(typeof(PagedResult<AuditLogDto>), StatusCodes.Status200OK)]
+    [ProducesResponseType(typeof(PaginatedResponse<AuditLogDto>), StatusCodes.Status200OK)]
     public async Task<IActionResult> GetAuditLogs(
         [FromQuery] int page = 1,
         [FromQuery] int pageSize = 20,
         [FromQuery] string? sortBy = null,
-        [FromQuery] string? sortDir = "desc",
+        [FromQuery] string? sortOrder = "desc",
         [FromQuery] string? search = null,
-        [FromQuery] string? entityName = null,
+        [FromQuery] string? entityType = null,
         [FromQuery] string? entityId = null,
         [FromQuery] string? userId = null,
         [FromQuery] string? action = null,
@@ -45,9 +46,9 @@ public class AuditLogsController : ControllerBase
             Page = Math.Max(1, page),
             PageSize = Math.Clamp(pageSize, 1, 100),
             SortBy = sortBy,
-            SortDir = sortDir,
+            SortOrder = sortOrder,
             Search = search,
-            EntityName = entityName,
+            EntityType = entityType,
             EntityId = entityId,
             UserId = userId,
             Action = action,
@@ -55,6 +56,25 @@ public class AuditLogsController : ControllerBase
             ToDate = toDate
         };
         var result = await _mediator.Send(query);
-        return Ok(result);
+        return Ok(PaginatedResponse<AuditLogDto>.From(result));
+    }
+
+    /// <summary>
+    /// Get audit log by ID
+    /// </summary>
+    [HttpGet("{id:long}")]
+    [ProducesResponseType(typeof(ApiResponse<AuditLogDto>), StatusCodes.Status200OK)]
+    [ProducesResponseType(StatusCodes.Status404NotFound)]
+    public async Task<IActionResult> GetAuditLog(long id)
+    {
+        var query = new GetAuditLogByIdQuery(id);
+        var result = await _mediator.Send(query);
+
+        if (result == null)
+        {
+            return NotFound(ApiResponse.Fail($"Audit log with ID {id} not found"));
+        }
+
+        return Ok(ApiResponse.Ok(result, "Audit log retrieved successfully"));
     }
 }

@@ -129,7 +129,7 @@ public class ExportController : ControllerBase
     [ProducesResponseType(typeof(FileResult), StatusCodes.Status200OK)]
     public async Task<IActionResult> ExportAuditLogs(
         [FromQuery] string format = "xlsx",
-        [FromQuery] string? entityName = null,
+        [FromQuery] string? entityType = null,
         [FromQuery] string? action = null,
         [FromQuery] DateTime? fromDate = null,
         [FromQuery] DateTime? toDate = null,
@@ -139,7 +139,7 @@ public class ExportController : ControllerBase
     {
         var query = new GetAuditLogsQuery
         {
-            EntityName = entityName,
+            EntityType = entityType,
             Action = action,
             FromDate = fromDate,
             ToDate = toDate,
@@ -151,12 +151,12 @@ public class ExportController : ControllerBase
         var exportData = auditResult.Items.Select(a => new
         {
             a.Id,
-            a.EntityName,
+            a.EntityType,
             a.EntityId,
             a.Action,
             a.UserId,
-            Timestamp = a.Timestamp.ToString("yyyy-MM-dd HH:mm:ss"),
-            AffectedColumns = a.AffectedColumns ?? "-"
+            CreatedAt = a.CreatedAt.ToString("yyyy-MM-dd HH:mm:ss"),
+            Details = a.Details ?? "-"
         }).ToList();
 
         var exportResult = format.ToLower() switch
@@ -164,7 +164,7 @@ public class ExportController : ControllerBase
             "csv" => await _exportService.ExportToCsvAsync(exportData, "audit_logs", cancellationToken),
             "pdf" => await _exportService.ExportToPdfAsync(exportData, "audit_logs", "Audit Log Report", new PdfReportOptions
             {
-                Subtitle = $"Entity: {entityName ?? "All"}, Action: {action ?? "All"}",
+                Subtitle = $"Entity: {entityType ?? "All"}, Action: {action ?? "All"}",
                 FromDate = fromDate,
                 ToDate = toDate,
                 GeneratedBy = _currentUserService.UserId ?? "System"

@@ -19,8 +19,17 @@ public class AuditLogsController : ControllerBase
     }
 
     [HttpGet]
-    public async Task<ActionResult<PagedResult<AuditLogDto>>> GetAll([FromQuery] AuditLogsQueryParams queryParams)
+    public async Task<ActionResult<PaginatedResponse<AuditLogDto>>> GetAll([FromQuery] AuditLogsQueryParams queryParams)
     {
-        return Ok(await _auditLogService.GetAuditLogsAsync(queryParams));
+        var result = await _auditLogService.GetAuditLogsAsync(queryParams);
+        return Ok(PaginatedResponse<AuditLogDto>.From(result, "Audit logs retrieved successfully"));
+    }
+
+    [HttpGet("{id}")]
+    public async Task<ActionResult<ApiResponse<AuditLogDto>>> GetById(long id)
+    {
+        var log = await _auditLogService.GetByIdAsync(id);
+        if (log == null) return NotFound(ApiResponse.Fail("Audit log not found"));
+        return Ok(ApiResponse.Ok(log, "Audit log retrieved successfully"));
     }
 }

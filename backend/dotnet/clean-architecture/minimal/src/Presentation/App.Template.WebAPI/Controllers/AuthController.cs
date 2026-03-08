@@ -1,3 +1,4 @@
+using AppTemplate.Application.Common.Models;
 using AppTemplate.Application.DTOs.Auth;
 using AppTemplate.Application.Features.Authentication.Commands.Login;
 using AppTemplate.Application.Features.Authentication.Commands.Logout;
@@ -15,7 +16,7 @@ namespace AppTemplate.WebAPI.Controllers;
 /// </summary>
 [AllowAnonymous]
 [ApiController]
-[Route("api/auth")]
+[Route("api/[controller]")]
 public class AuthController : ControllerBase
 {
     private readonly ISender _mediator;
@@ -46,7 +47,7 @@ public class AuthController : ControllerBase
     /// The token should be included in subsequent API requests as: Authorization: Bearer {token}
     /// </remarks>
     [HttpPost("login")]
-    [ProducesResponseType(typeof(LoginResponseDto), StatusCodes.Status200OK)]
+    [ProducesResponseType(typeof(ApiResponse<LoginResponseDto>), StatusCodes.Status200OK)]
     [ProducesResponseType(StatusCodes.Status401Unauthorized)]
     [ProducesResponseType(StatusCodes.Status500InternalServerError)]
     public async Task<IActionResult> Login([FromBody] LoginCommand command)
@@ -54,24 +55,24 @@ public class AuthController : ControllerBase
         try
         {
             var result = await _mediator.Send(command);
-            return Ok(result);
+            return Ok(ApiResponse.Ok(result, "Login successful"));
         }
         catch (UnauthorizedAccessException ex)
         {
-            return Unauthorized(new { message = ex.Message });
+            return Unauthorized(ApiResponse.Fail(ex.Message));
         }
         catch (InvalidOperationException ex)
         {
             return StatusCode(StatusCodes.Status503ServiceUnavailable,
-                new { message = ex.Message });
+                ApiResponse.Fail(ex.Message));
         }
     }
 
     /// <summary>
     /// Logout from SSO and invalidate JWT token
     /// </summary>
-    /// <returns>Logout confirmation</returns>
-    /// <response code="200">Logout successful</response>
+    /// <returns>No content on success</returns>
+    /// <response code="204">Logout successful</response>
     /// <response code="500">SSO service unavailable</response>
     /// <remarks>
     /// Sample request:
@@ -83,7 +84,7 @@ public class AuthController : ControllerBase
     /// The JWT token in the Authorization header will be invalidated.
     /// </remarks>
     [HttpPost("logout")]
-    [ProducesResponseType(StatusCodes.Status200OK)]
+    [ProducesResponseType(StatusCodes.Status204NoContent)]
     [ProducesResponseType(StatusCodes.Status500InternalServerError)]
     public async Task<IActionResult> Logout()
     {
@@ -93,12 +94,12 @@ public class AuthController : ControllerBase
             var command = new LogoutCommand { AuthorizationHeader = authHeader };
 
             await _mediator.Send(command);
-            return Ok(new { message = "Logout successful" });
+            return NoContent();
         }
-        catch (Exception ex)
+        catch (Exception)
         {
             return StatusCode(StatusCodes.Status500InternalServerError,
-                new { message = "An error occurred during logout", details = ex.Message });
+                ApiResponse.Fail("An error occurred during logout"));
         }
     }
 
@@ -118,12 +119,12 @@ public class AuthController : ControllerBase
     /// </remarks>
     [Authorize]
     [HttpGet("me")]
-    [ProducesResponseType(typeof(UserInfoResponseDto), StatusCodes.Status200OK)]
+    [ProducesResponseType(typeof(ApiResponse<UserInfoResponseDto>), StatusCodes.Status200OK)]
     [ProducesResponseType(StatusCodes.Status401Unauthorized)]
     public async Task<IActionResult> GetCurrentUser()
     {
         var query = new GetCurrentUserQuery { User = User };
         var result = await _mediator.Send(query);
-        return Ok(result);
+        return Ok(ApiResponse.Ok(result, "User information retrieved"));
     }
 }

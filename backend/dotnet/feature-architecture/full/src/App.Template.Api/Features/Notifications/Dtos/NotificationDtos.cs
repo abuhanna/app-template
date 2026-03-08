@@ -15,8 +15,9 @@ public class NotificationDto
 public class NotificationsQueryParams
 {
     public int Page { get; set; } = 1;
-    public int PageSize { get; set; } = 20;
-    public bool? IsRead { get; set; }
-    public DateTime? StartDate { get; set; }
-    public DateTime? EndDate { get; set; }
+    public int PageSize { get; set; } = 10;
+    public bool? UnreadOnly { get; set; }
+    public string? Search { get; set; }
+    public string? SortBy { get; set; }
+    public string SortOrder { get; set; } = "desc";
 }

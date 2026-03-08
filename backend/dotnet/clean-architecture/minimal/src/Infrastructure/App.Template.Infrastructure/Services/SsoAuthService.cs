@@ -85,18 +85,27 @@ public class SsoAuthService : ISsoAuthService
 
             string GetClaim(string type) => token.Claims.FirstOrDefault(c => c.Type == type)?.Value;
             var roleClaim = GetClaim("role");
+            var subClaim = GetClaim("sub") ?? "";
+            var firstNameClaim = GetClaim("firstName") ?? GetClaim("given_name") ?? "";
+            var lastNameClaim = GetClaim("lastName") ?? GetClaim("family_name") ?? "";
+            var fullName = !string.IsNullOrWhiteSpace(firstNameClaim) || !string.IsNullOrWhiteSpace(lastNameClaim)
+                ? $"{firstNameClaim} {lastNameClaim}".Trim()
+                : subClaim;
 
             var loginResponse = new LoginResponseDto
             {
-                Token = tokenString,
+                AccessToken = tokenString,
                 ExpiresIn = expiresIn,
                 User = new UserInfoDto
                 {
                     Id = GetClaim("jti"),
                     Username = GetClaim("username"),
                     Email = GetClaim("email"),
+                    FirstName = firstNameClaim,
+                    LastName = lastNameClaim,
+                    FullName = fullName,
                     Role = string.IsNullOrWhiteSpace(roleClaim) ? "User" : roleClaim,
-                    Name = GetClaim("sub")
+                    IsActive = true
                 }
             };
 

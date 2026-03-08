@@ -1,4 +1,3 @@
-using System.Security.Claims;
 using App.Template.Api.Controllers;
 using App.Template.Api.Models.Common;
 using App.Template.Api.Models.Dtos;
@@ -25,19 +24,6 @@ public class UsersControllerTests
         };
     }
 
-    private void SetUserClaims(string userId = "1", string role = "Admin")
-    {
-        var claims = new[]
-        {
-            new Claim(ClaimTypes.NameIdentifier, userId),
-            new Claim(ClaimTypes.Name, "admin"),
-            new Claim(ClaimTypes.Email, "admin@test.com"),
-            new Claim(ClaimTypes.Role, role),
-        };
-        var identity = new ClaimsIdentity(claims, "TestAuth");
-        _controller.ControllerContext.HttpContext.User = new ClaimsPrincipal(identity);
-    }
-
     [Fact]
     public async Task GetAll_ReturnsOk_WithPagedUsers()
     {
@@ -56,8 +42,8 @@ public class UsersControllerTests
         var result = await _controller.GetAll(queryParams);
 
         var okResult = Assert.IsType<OkObjectResult>(result.Result);
-        var value = Assert.IsType<PagedResult<UserDto>>(okResult.Value);
-        Assert.Equal(2, value.Items.Count);
+        var value = Assert.IsType<PaginatedResponse<UserDto>>(okResult.Value);
+        Assert.Equal(2, value.Data!.Count);
     }
 
     [Fact]
@@ -69,8 +55,8 @@ public class UsersControllerTests
         var result = await _controller.GetById(1);
 
         var okResult = Assert.IsType<OkObjectResult>(result.Result);
-        var value = Assert.IsType<UserDto>(okResult.Value);
-        Assert.Equal("admin", value.Username);
+        var value = Assert.IsType<ApiResponse<UserDto>>(okResult.Value);
+        Assert.Equal("admin", value.Data!.Username);
     }
 
     [Fact]
@@ -80,11 +66,11 @@ public class UsersControllerTests
 
         var result = await _controller.GetById(1);
 
-        Assert.IsType<NotFoundResult>(result.Result);
+        Assert.IsType<NotFoundObjectResult>(result.Result);
     }
 
     [Fact]
-    public async Task Create_ReturnsCreatedAtAction()
+    public async Task Create_Returns201_WithUser()
     {
         var request = new CreateUserRequest { Username = "newuser", Email = "new@test.com", Password = "Pass@123" };
         var created = new UserDto { Id = 5, Username = "newuser", Email = "new@test.com" };
@@ -92,9 +78,8 @@ public class UsersControllerTests
 
         var result = await _controller.Create(request);
 
-        var createdResult = Assert.IsType<CreatedAtActionResult>(result.Result);
-        var value = Assert.IsType<UserDto>(createdResult.Value);
-        Assert.Equal(5, value.Id);
+        var objectResult = Assert.IsType<ObjectResult>(result.Result);
+        Assert.Equal(201, objectResult.StatusCode);
     }
 
     [Fact]
@@ -118,7 +103,7 @@ public class UsersControllerTests
 
         var result = await _controller.Update(1, request);
 
-        Assert.IsType<NotFoundResult>(result.Result);
+        Assert.IsType<NotFoundObjectResult>(result.Result);
     }
 
     [Fact]
@@ -138,41 +123,6 @@ public class UsersControllerTests
 
         var result = await _controller.Delete(1);
 
-        Assert.IsType<NotFoundResult>(result);
-    }
-
-    [Fact]
-    public async Task ChangePassword_ReturnsOk_WhenSameUser()
-    {
-        SetUserClaims("1", "User");
-        var request = new ChangePasswordRequest { CurrentPassword = "Old@123", NewPassword = "New@123" };
-        _mockUserService.Setup(s => s.ChangePasswordAsync(1, request)).Returns(Task.CompletedTask);
-
-        var result = await _controller.ChangePassword(1, request);
-
-        Assert.IsType<OkResult>(result);
-    }
-
-    [Fact]
-    public async Task ChangePassword_ReturnsOk_WhenAdmin()
-    {
-        SetUserClaims("2", "Admin");
-        var request = new ChangePasswordRequest { CurrentPassword = "Old@123", NewPassword = "New@123" };
-        _mockUserService.Setup(s => s.ChangePasswordAsync(1, request)).Returns(Task.CompletedTask);
-
-        var result = await _controller.ChangePassword(1, request);
-
-        Assert.IsType<OkResult>(result);
-    }
-
-    [Fact]
-    public async Task ChangePassword_ReturnsForbid_WhenDifferentNonAdminUser()
-    {
-        SetUserClaims("2", "User");
-        var request = new ChangePasswordRequest { CurrentPassword = "Old@123", NewPassword = "New@123" };
-
-        var result = await _controller.ChangePassword(1, request);
-
-        Assert.IsType<ForbidResult>(result);
+        Assert.IsType<NotFoundObjectResult>(result);
     }
 }

@@ -1,4 +1,3 @@
-using System.Security.Claims;
 using App.Template.Api.Models.Common;
 using App.Template.Api.Models.Dtos;
 using App.Template.Api.Services;
@@ -9,7 +8,7 @@ namespace App.Template.Api.Controllers;
 
 [Authorize]
 [ApiController]
-[Route("api/[controller]")]
+[Route("api/users")]
 public class UsersController : ControllerBase
 {
     private readonly IUserService _userService;
@@ -20,52 +19,40 @@ public class UsersController : ControllerBase
     }
 
     [HttpGet]
-    public async Task<ActionResult<PagedResult<UserDto>>> GetAll([FromQuery] UsersQueryParams queryParams)
+    public async Task<ActionResult<PaginatedResponse<UserDto>>> GetAll([FromQuery] UsersQueryParams queryParams)
     {
-        return Ok(await _userService.GetUsersAsync(queryParams));
+        var result = await _userService.GetUsersAsync(queryParams);
+        return Ok(PaginatedResponse<UserDto>.From(result, "Users retrieved successfully"));
     }
 
     [HttpGet("{id}")]
-    public async Task<ActionResult<UserDto>> GetById(long id)
+    public async Task<ActionResult<ApiResponse<UserDto>>> GetById(long id)
     {
         var user = await _userService.GetUserByIdAsync(id);
-        if (user == null) return NotFound();
-        return Ok(user);
+        if (user == null) return NotFound(ApiResponse.Fail("User not found"));
+        return Ok(ApiResponse.Ok(user, "User retrieved successfully"));
     }
 
     [HttpPost]
-    public async Task<ActionResult<UserDto>> Create([FromBody] CreateUserRequest request)
+    public async Task<ActionResult<ApiResponse<UserDto>>> Create([FromBody] CreateUserRequest request)
     {
         var user = await _userService.CreateUserAsync(request);
-        return CreatedAtAction(nameof(GetById), new { id = user.Id }, user);
+        return StatusCode(201, ApiResponse.Ok(user, "User created successfully"));
     }
 
     [HttpPut("{id}")]
-    public async Task<ActionResult<UserDto>> Update(long id, [FromBody] UpdateUserRequest request)
+    public async Task<ActionResult<ApiResponse<UserDto>>> Update(long id, [FromBody] UpdateUserRequest request)
     {
         var user = await _userService.UpdateUserAsync(id, request);
-        if (user == null) return NotFound();
-        return Ok(user);
+        if (user == null) return NotFound(ApiResponse.Fail("User not found"));
+        return Ok(ApiResponse.Ok(user, "User updated successfully"));
     }
 
     [HttpDelete("{id}")]
     public async Task<IActionResult> Delete(long id)
     {
         var result = await _userService.DeleteUserAsync(id);
-        if (!result) return NotFound();
+        if (!result) return NotFound(ApiResponse.Fail("User not found"));
         return NoContent();
-    }
-
-    [HttpPost("{id}/change-password")]
-    public async Task<IActionResult> ChangePassword(long id, [FromBody] ChangePasswordRequest request)
-    {
-        var currentUserId = User.FindFirstValue(ClaimTypes.NameIdentifier);
-        var currentUserRole = User.FindFirstValue(ClaimTypes.Role);
-
-        if (currentUserId != id.ToString() && currentUserRole != "Admin")
-            return Forbid();
-
-        await _userService.ChangePasswordAsync(id, request);
-        return Ok();
     }
 }

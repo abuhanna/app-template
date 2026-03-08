@@ -6,7 +6,7 @@ namespace AppTemplate.Application.Features.Authentication.Commands.RefreshToken;
 /// <summary>
 /// Command to refresh JWT tokens using a refresh token
 /// </summary>
-public record RefreshTokenCommand : IRequest<LoginResponseDto>
+public record RefreshTokenCommand : IRequest<RefreshResponse>
 {
     /// <summary>
     /// The refresh token

@@ -27,7 +27,9 @@ public class GetDepartmentsQueryHandler : IRequestHandler<GetDepartmentsQuery, P
     {
         _logger.LogInformation("Fetching departments from database with pagination");
 
-        var query = _context.Departments.AsQueryable();
+        var query = _context.Departments
+            .Include(d => d.Users)
+            .AsQueryable();
 
         // Apply filters
         if (request.IsActive.HasValue)
@@ -47,7 +49,7 @@ public class GetDepartmentsQueryHandler : IRequestHandler<GetDepartmentsQuery, P
         var totalItems = await query.CountAsync(cancellationToken);
 
         // Apply sorting
-        var isDescending = request.SortDir?.Equals("desc", StringComparison.OrdinalIgnoreCase) ?? false;
+        var isDescending = request.SortOrder?.Equals("desc", StringComparison.OrdinalIgnoreCase) ?? true;
         query = request.SortBy?.ToLower() switch
         {
             "code" => isDescending ? query.OrderByDescending(d => d.Code) : query.OrderBy(d => d.Code),
@@ -55,7 +57,7 @@ public class GetDepartmentsQueryHandler : IRequestHandler<GetDepartmentsQuery, P
             "createdat" => isDescending ? query.OrderByDescending(d => d.CreatedAt) : query.OrderBy(d => d.CreatedAt),
             "updatedat" => isDescending ? query.OrderByDescending(d => d.UpdatedAt) : query.OrderBy(d => d.UpdatedAt),
             "isactive" => isDescending ? query.OrderByDescending(d => d.IsActive) : query.OrderBy(d => d.IsActive),
-            _ => query.OrderBy(d => d.Name)
+            _ => isDescending ? query.OrderByDescending(d => d.CreatedAt) : query.OrderBy(d => d.CreatedAt)
         };
 
         // Apply pagination
@@ -69,6 +71,7 @@ public class GetDepartmentsQueryHandler : IRequestHandler<GetDepartmentsQuery, P
                 Name = d.Name,
                 Description = d.Description,
                 IsActive = d.IsActive,
+                UserCount = d.Users.Count,
                 CreatedAt = d.CreatedAt,
                 UpdatedAt = d.UpdatedAt
             })

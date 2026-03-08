@@ -1,4 +1,5 @@
 using System.Security.Claims;
+using AppTemplate.Application.Common.Models;
 using AppTemplate.Application.DTOs.Auth;
 using AppTemplate.Application.Features.Authentication.Commands.Login;
 using AppTemplate.Application.Features.Authentication.Commands.Logout;
@@ -32,8 +33,7 @@ public class AuthControllerTests
         var command = new LoginCommand { Username = "admin", Password = "Admin@123" };
         var expectedResponse = new LoginResponseDto
         {
-            Token = "jwt-token",
-            TokenType = "Bearer",
+            AccessToken = "jwt-token",
             ExpiresIn = 3600
         };
 
@@ -44,8 +44,9 @@ public class AuthControllerTests
         var result = await _controller.Login(command);
 
         var okResult = Assert.IsType<OkObjectResult>(result);
-        var response = Assert.IsType<LoginResponseDto>(okResult.Value);
-        Assert.Equal("jwt-token", response.Token);
+        var response = Assert.IsType<ApiResponse<LoginResponseDto>>(okResult.Value);
+        Assert.True(response.Success);
+        Assert.Equal("jwt-token", response.Data!.AccessToken);
     }
 
     [Fact]
@@ -79,7 +80,7 @@ public class AuthControllerTests
     }
 
     [Fact]
-    public async Task Logout_ReturnsOk_WhenSuccessful()
+    public async Task Logout_ReturnsNoContent_WhenSuccessful()
     {
         _controller.ControllerContext.HttpContext.Request.Headers["Authorization"] = "Bearer some-token";
 
@@ -89,8 +90,7 @@ public class AuthControllerTests
 
         var result = await _controller.Logout();
 
-        var okResult = Assert.IsType<OkObjectResult>(result);
-        Assert.NotNull(okResult.Value);
+        Assert.IsType<NoContentResult>(result);
     }
 
     [Fact]
@@ -127,7 +127,8 @@ public class AuthControllerTests
         var result = await _controller.GetCurrentUser();
 
         var okResult = Assert.IsType<OkObjectResult>(result);
-        var response = Assert.IsType<UserInfoResponseDto>(okResult.Value);
-        Assert.Equal("1", response.UserId);
+        var response = Assert.IsType<ApiResponse<UserInfoResponseDto>>(okResult.Value);
+        Assert.True(response.Success);
+        Assert.Equal("1", response.Data!.UserId);
     }
 }

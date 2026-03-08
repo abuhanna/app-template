@@ -1,4 +1,5 @@
 using System.Security.Claims;
+using App.Template.Api.Common.Models;
 using App.Template.Api.Features.Auth;
 using App.Template.Api.Features.Auth.Dtos;
 using App.Template.Api.Features.Users.Dtos;
@@ -45,7 +46,7 @@ public class AuthControllerTests
         var request = new LoginRequest { Username = "admin", Password = "Admin@123" };
         var response = new LoginResponse
         {
-            Token = "jwt-token",
+            AccessToken = "jwt-token",
             RefreshToken = "refresh-token",
             ExpiresIn = 3600
         };
@@ -54,31 +55,48 @@ public class AuthControllerTests
         var result = await _controller.Login(request);
 
         var okResult = Assert.IsType<OkObjectResult>(result.Result);
-        var value = Assert.IsType<LoginResponse>(okResult.Value);
-        Assert.Equal("jwt-token", value.Token);
+        var value = Assert.IsType<ApiResponse<LoginResponse>>(okResult.Value);
+        Assert.True(value.Success);
+        Assert.Equal("jwt-token", value.Data!.AccessToken);
+    }
+
+    [Fact]
+    public async Task Register_ReturnsCreated_WithUserDto()
+    {
+        var request = new RegisterRequest { Username = "newuser", Email = "new@test.com", Password = "Pass@123" };
+        var user = new UserDto { Id = 1, Username = "newuser", Email = "new@test.com" };
+        _mockAuthService.Setup(s => s.RegisterAsync(request)).ReturnsAsync(user);
+
+        var result = await _controller.Register(request);
+
+        var objectResult = Assert.IsType<ObjectResult>(result.Result);
+        Assert.Equal(201, objectResult.StatusCode);
+        var value = Assert.IsType<ApiResponse<UserDto>>(objectResult.Value);
+        Assert.True(value.Success);
     }
 
     [Fact]
     public async Task Refresh_ReturnsOk_WithNewTokens()
     {
         var request = new RefreshTokenRequest { RefreshToken = "old-token" };
-        var response = new LoginResponse { Token = "new-token", RefreshToken = "new-refresh" };
+        var response = new RefreshResponse { AccessToken = "new-token", RefreshToken = "new-refresh" };
         _mockAuthService.Setup(s => s.RefreshTokenAsync(request)).ReturnsAsync(response);
 
         var result = await _controller.Refresh(request);
 
         var okResult = Assert.IsType<OkObjectResult>(result.Result);
-        Assert.NotNull(okResult.Value);
+        var value = Assert.IsType<ApiResponse<RefreshResponse>>(okResult.Value);
+        Assert.True(value.Success);
     }
 
     [Fact]
-    public async Task Logout_ReturnsOk()
+    public async Task Logout_ReturnsNoContent()
     {
         _mockAuthService.Setup(s => s.LogoutAsync()).Returns(Task.CompletedTask);
 
         var result = await _controller.Logout();
 
-        Assert.IsType<OkObjectResult>(result);
+        Assert.IsType<NoContentResult>(result);
     }
 
     [Fact]
@@ -89,7 +107,8 @@ public class AuthControllerTests
         var result = _controller.GetCurrentUser();
 
         var okResult = Assert.IsType<OkObjectResult>(result);
-        Assert.NotNull(okResult.Value);
+        var value = Assert.IsType<ApiResponse<UserInfoDto>>(okResult.Value);
+        Assert.True(value.Success);
     }
 
     [Fact]
@@ -102,22 +121,38 @@ public class AuthControllerTests
         var result = await _controller.GetProfile();
 
         var okResult = Assert.IsType<OkObjectResult>(result.Result);
-        var value = Assert.IsType<UserDto>(okResult.Value);
-        Assert.Equal("admin", value.Username);
+        var value = Assert.IsType<ApiResponse<UserDto>>(okResult.Value);
+        Assert.True(value.Success);
+        Assert.Equal("admin", value.Data!.Username);
     }
 
     [Fact]
     public async Task UpdateProfile_ReturnsOk_WithUpdatedProfile()
     {
         SetUserClaims();
-        var request = new UpdateProfileRequest { Name = "Updated Name" };
+        var request = new UpdateProfileRequest { FirstName = "Updated" };
         var profile = new UserDto { Id = 1, Username = "admin" };
         _mockAuthService.Setup(s => s.UpdateProfileAsync("1", request)).ReturnsAsync(profile);
 
         var result = await _controller.UpdateProfile(request);
 
         var okResult = Assert.IsType<OkObjectResult>(result.Result);
-        Assert.NotNull(okResult.Value);
+        var value = Assert.IsType<ApiResponse<UserDto>>(okResult.Value);
+        Assert.True(value.Success);
+    }
+
+    [Fact]
+    public async Task ChangePassword_ReturnsOk()
+    {
+        SetUserClaims();
+        var request = new ChangePasswordRequest { CurrentPassword = "Old@123", NewPassword = "New@1234", ConfirmPassword = "New@1234" };
+        _mockAuthService.Setup(s => s.ChangePasswordAsync("1", request)).Returns(Task.CompletedTask);
+
+        var result = await _controller.ChangePassword(request);
+
+        var okResult = Assert.IsType<OkObjectResult>(result.Result);
+        var value = Assert.IsType<ApiResponse>(okResult.Value);
+        Assert.True(value.Success);
     }
 
     [Fact]
@@ -128,17 +163,21 @@ public class AuthControllerTests
 
         var result = await _controller.ForgotPassword(request);
 
-        Assert.IsType<OkObjectResult>(result);
+        var okResult = Assert.IsType<OkObjectResult>(result.Result);
+        var value = Assert.IsType<ApiResponse>(okResult.Value);
+        Assert.True(value.Success);
     }
 
     [Fact]
     public async Task ResetPassword_ReturnsOk_WhenSuccessful()
     {
-        var request = new ResetPasswordRequest { Token = "reset-token", NewPassword = "New@123" };
+        var request = new ResetPasswordRequest { Token = "reset-token", NewPassword = "New@1234", ConfirmPassword = "New@1234" };
         _mockAuthService.Setup(s => s.ResetPasswordAsync(request)).Returns(Task.CompletedTask);
 
         var result = await _controller.ResetPassword(request);
 
-        Assert.IsType<OkObjectResult>(result);
+        var okResult = Assert.IsType<OkObjectResult>(result.Result);
+        var value = Assert.IsType<ApiResponse>(okResult.Value);
+        Assert.True(value.Success);
     }
 }

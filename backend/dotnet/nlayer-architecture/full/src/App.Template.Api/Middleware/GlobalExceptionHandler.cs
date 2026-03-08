@@ -1,4 +1,3 @@
-using Microsoft.AspNetCore.Mvc;
 using System.Net;
 using System.Text.Json;
 
@@ -32,25 +31,24 @@ public class GlobalExceptionHandler : IMiddleware
     {
         context.Response.ContentType = "application/json";
 
-        var (statusCode, title) = exception switch
+        var (statusCode, message) = exception switch
         {
-            UnauthorizedAccessException => (HttpStatusCode.Unauthorized, "Unauthorized"),
+            UnauthorizedAccessException => (HttpStatusCode.Unauthorized, exception.Message),
             KeyNotFoundException => (HttpStatusCode.NotFound, "Resource not found"),
             InvalidOperationException => (HttpStatusCode.BadRequest, exception.Message),
             ArgumentException => (HttpStatusCode.BadRequest, exception.Message),
-            _ => (HttpStatusCode.InternalServerError, "An error occurred while processing your request.")
+            _ => (HttpStatusCode.InternalServerError, isProduction
+                ? "An error occurred while processing your request."
+                : exception.Message)
         };
 
         context.Response.StatusCode = (int)statusCode;
 
-        var response = new ProblemDetails
+        var response = new
         {
-            Status = (int)statusCode,
-            Title = title,
-            Detail = isProduction && statusCode == HttpStatusCode.InternalServerError
-                ? "An unexpected error occurred."
-                : exception.Message,
-            Type = "https://tools.ietf.org/html/rfc7231"
+            success = false,
+            message,
+            errors = (List<string>?)null
         };
 
         var jsonOptions = new JsonSerializerOptions { PropertyNamingPolicy = JsonNamingPolicy.CamelCase };

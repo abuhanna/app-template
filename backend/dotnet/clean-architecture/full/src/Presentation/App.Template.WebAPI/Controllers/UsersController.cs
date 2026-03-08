@@ -31,12 +31,12 @@ public class UsersController : ControllerBase
     /// Get list of users with pagination
     /// </summary>
     [HttpGet]
-    [ProducesResponseType(typeof(PagedResult<UserDto>), StatusCodes.Status200OK)]
+    [ProducesResponseType(typeof(PaginatedResponse<UserDto>), StatusCodes.Status200OK)]
     public async Task<IActionResult> GetUsers(
         [FromQuery] int page = 1,
         [FromQuery] int pageSize = 10,
         [FromQuery] string? sortBy = null,
-        [FromQuery] string? sortDir = "asc",
+        [FromQuery] string? sortOrder = "desc",
         [FromQuery] bool? isActive = null,
         [FromQuery] long? departmentId = null,
         [FromQuery] string? search = null)
@@ -46,20 +46,20 @@ public class UsersController : ControllerBase
             Page = page,
             PageSize = Math.Min(pageSize, 100), // Cap at 100
             SortBy = sortBy,
-            SortDir = sortDir,
+            SortOrder = sortOrder,
             IsActive = isActive,
             DepartmentId = departmentId,
             Search = search
         };
         var result = await _mediator.Send(query);
-        return Ok(result);
+        return Ok(PaginatedResponse<UserDto>.From(result));
     }
 
     /// <summary>
     /// Get user by ID
     /// </summary>
     [HttpGet("{id:long}")]
-    [ProducesResponseType(typeof(UserDto), StatusCodes.Status200OK)]
+    [ProducesResponseType(typeof(ApiResponse<UserDto>), StatusCodes.Status200OK)]
     [ProducesResponseType(StatusCodes.Status404NotFound)]
     public async Task<IActionResult> GetUserById(long id)
     {
@@ -68,17 +68,17 @@ public class UsersController : ControllerBase
 
         if (result == null)
         {
-            return NotFound(new { message = $"User with ID {id} not found" });
+            return NotFound(ApiResponse.Fail($"User with ID {id} not found"));
         }
 
-        return Ok(result);
+        return Ok(ApiResponse.Ok(result));
     }
 
     /// <summary>
     /// Create a new user
     /// </summary>
     [HttpPost]
-    [ProducesResponseType(typeof(UserDto), StatusCodes.Status201Created)]
+    [ProducesResponseType(typeof(ApiResponse<UserDto>), StatusCodes.Status201Created)]
     [ProducesResponseType(StatusCodes.Status400BadRequest)]
     public async Task<IActionResult> CreateUser([FromBody] CreateUserRequest request)
     {
@@ -94,14 +94,14 @@ public class UsersController : ControllerBase
         };
 
         var result = await _mediator.Send(command);
-        return CreatedAtAction(nameof(GetUserById), new { id = result.Id }, result);
+        return StatusCode(StatusCodes.Status201Created, ApiResponse.Ok(result, "User created successfully"));
     }
 
     /// <summary>
     /// Update an existing user
     /// </summary>
     [HttpPut("{id:long}")]
-    [ProducesResponseType(typeof(UserDto), StatusCodes.Status200OK)]
+    [ProducesResponseType(typeof(ApiResponse<UserDto>), StatusCodes.Status200OK)]
     [ProducesResponseType(StatusCodes.Status400BadRequest)]
     [ProducesResponseType(StatusCodes.Status404NotFound)]
     public async Task<IActionResult> UpdateUser(long id, [FromBody] UpdateUserRequest request)
@@ -118,7 +118,7 @@ public class UsersController : ControllerBase
         };
 
         var result = await _mediator.Send(command);
-        return Ok(result);
+        return Ok(ApiResponse.Ok(result, "User updated successfully"));
     }
 
     /// <summary>
@@ -150,6 +150,6 @@ public class UsersController : ControllerBase
         };
 
         await _mediator.Send(command);
-        return Ok(new { message = "Password changed successfully" });
+        return Ok(ApiResponse.Ok("Password changed successfully"));
     }
 }

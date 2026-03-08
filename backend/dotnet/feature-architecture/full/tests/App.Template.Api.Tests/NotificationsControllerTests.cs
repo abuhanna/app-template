@@ -29,7 +29,7 @@ public class NotificationsControllerTests
     }
 
     [Fact]
-    public async Task GetAll_ReturnsOk_WithPagedNotifications()
+    public async Task GetAll_ReturnsOk_WithPaginatedNotifications()
     {
         var queryParams = new NotificationsQueryParams();
         var notifications = new PagedResult<NotificationDto>
@@ -44,17 +44,29 @@ public class NotificationsControllerTests
         var result = await _controller.GetAll(queryParams);
 
         var okResult = Assert.IsType<OkObjectResult>(result.Result);
+        var value = Assert.IsType<PaginatedResponse<NotificationDto>>(okResult.Value);
+        Assert.True(value.Success);
+    }
+
+    [Fact]
+    public async Task GetUnreadCount_ReturnsOk_WithCount()
+    {
+        _mockNotificationService.Setup(s => s.GetUnreadCountAsync("1")).ReturnsAsync(5);
+
+        var result = await _controller.GetUnreadCount();
+
+        var okResult = Assert.IsType<OkObjectResult>(result.Result);
         Assert.NotNull(okResult.Value);
     }
 
     [Fact]
-    public async Task MarkAsRead_ReturnsOk_WhenSuccessful()
+    public async Task MarkAsRead_ReturnsNoContent_WhenSuccessful()
     {
         _mockNotificationService.Setup(s => s.MarkAsReadAsync(1, "1")).ReturnsAsync(true);
 
         var result = await _controller.MarkAsRead(1);
 
-        Assert.IsType<OkResult>(result);
+        Assert.IsType<NoContentResult>(result);
     }
 
     [Fact]
@@ -64,16 +76,40 @@ public class NotificationsControllerTests
 
         var result = await _controller.MarkAsRead(1);
 
-        Assert.IsType<NotFoundResult>(result);
+        var notFoundResult = Assert.IsType<NotFoundObjectResult>(result);
+        var value = Assert.IsType<ApiResponse>(notFoundResult.Value);
+        Assert.False(value.Success);
     }
 
     [Fact]
-    public async Task MarkAllAsRead_ReturnsOk()
+    public async Task MarkAllAsRead_ReturnsNoContent()
     {
         _mockNotificationService.Setup(s => s.MarkAllAsReadAsync("1")).Returns(Task.CompletedTask);
 
         var result = await _controller.MarkAllAsRead();
 
-        Assert.IsType<OkResult>(result);
+        Assert.IsType<NoContentResult>(result);
+    }
+
+    [Fact]
+    public async Task Delete_ReturnsNoContent_WhenSuccessful()
+    {
+        _mockNotificationService.Setup(s => s.DeleteAsync(1, "1")).ReturnsAsync(true);
+
+        var result = await _controller.Delete(1);
+
+        Assert.IsType<NoContentResult>(result);
+    }
+
+    [Fact]
+    public async Task Delete_ReturnsNotFound_WhenNotificationDoesNotExist()
+    {
+        _mockNotificationService.Setup(s => s.DeleteAsync(1, "1")).ReturnsAsync(false);
+
+        var result = await _controller.Delete(1);
+
+        var notFoundResult = Assert.IsType<NotFoundObjectResult>(result);
+        var value = Assert.IsType<ApiResponse>(notFoundResult.Value);
+        Assert.False(value.Success);
     }
 }

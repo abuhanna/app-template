@@ -1,4 +1,5 @@
 using App.Template.Api.Common.Models;
+using App.Template.Api.Features.Auth.Dtos;
 using App.Template.Api.Features.Users.Dtos;
 
 namespace App.Template.Api.Features.Users;

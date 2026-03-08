@@ -12,8 +12,9 @@ public class UserDto
     public long? DepartmentId { get; set; }
     public string? DepartmentName { get; set; }
     public bool IsActive { get; set; }
-    public DateTime CreatedAt { get; set; }
     public DateTime? LastLoginAt { get; set; }
+    public DateTime CreatedAt { get; set; }
+    public DateTime? UpdatedAt { get; set; }
 }
 
 public class CreateUserRequest
@@ -25,6 +26,7 @@ public class CreateUserRequest
     public string? LastName { get; set; }
     public string? Role { get; set; }
     public long? DepartmentId { get; set; }
+    public bool IsActive { get; set; } = true;
 }
 
 public class UpdateUserRequest
@@ -49,7 +51,7 @@ public class UsersQueryParams
     public int Page { get; set; } = 1;
     public int PageSize { get; set; } = 10;
     public string? SortBy { get; set; }
-    public string? SortDir { get; set; }
+    public string? SortOrder { get; set; }
     public string? Search { get; set; }
     public bool? IsActive { get; set; }
     public long? DepartmentId { get; set; }

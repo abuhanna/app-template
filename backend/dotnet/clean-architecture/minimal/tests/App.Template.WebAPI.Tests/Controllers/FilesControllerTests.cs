@@ -1,3 +1,4 @@
+using AppTemplate.Application.Common.Models;
 using AppTemplate.Application.DTOs;
 using AppTemplate.Application.Features.FileManagement.Commands.DeleteFile;
 using AppTemplate.Application.Features.FileManagement.Commands.UploadFile;
@@ -40,7 +41,9 @@ public class FilesControllerTests
 
         var result = await _controller.GetFiles(null, null);
 
-        Assert.IsType<OkObjectResult>(result);
+        var okResult = Assert.IsType<OkObjectResult>(result);
+        var response = Assert.IsType<ApiResponse<List<UploadedFileDto>>>(okResult.Value);
+        Assert.True(response.Success);
     }
 
     [Fact]
@@ -55,7 +58,9 @@ public class FilesControllerTests
         var result = await _controller.GetFile(1);
 
         var okResult = Assert.IsType<OkObjectResult>(result);
-        Assert.NotNull(okResult.Value);
+        var response = Assert.IsType<ApiResponse<UploadedFileDto>>(okResult.Value);
+        Assert.True(response.Success);
+        Assert.NotNull(response.Data);
     }
 
     [Fact]
@@ -67,7 +72,9 @@ public class FilesControllerTests
 
         var result = await _controller.GetFile(999);
 
-        Assert.IsType<NotFoundObjectResult>(result);
+        var notFoundResult = Assert.IsType<NotFoundObjectResult>(result);
+        var response = Assert.IsType<ApiResponse>(notFoundResult.Value);
+        Assert.False(response.Success);
     }
 
     [Fact]
@@ -75,7 +82,9 @@ public class FilesControllerTests
     {
         var result = await _controller.UploadFile(null!, null, null);
 
-        Assert.IsType<BadRequestObjectResult>(result);
+        var badRequestResult = Assert.IsType<BadRequestObjectResult>(result);
+        var response = Assert.IsType<ApiResponse>(badRequestResult.Value);
+        Assert.False(response.Success);
     }
 
     [Fact]
@@ -89,7 +98,9 @@ public class FilesControllerTests
 
         var result = await _controller.UploadFile(formFile, null, null);
 
-        Assert.IsType<BadRequestObjectResult>(result);
+        var badRequestResult = Assert.IsType<BadRequestObjectResult>(result);
+        var response = Assert.IsType<ApiResponse>(badRequestResult.Value);
+        Assert.False(response.Success);
     }
 
     [Fact]
@@ -119,7 +130,9 @@ public class FilesControllerTests
 
         var result = await _controller.DownloadFile(999);
 
-        Assert.IsType<NotFoundObjectResult>(result);
+        var notFoundResult = Assert.IsType<NotFoundObjectResult>(result);
+        var response = Assert.IsType<ApiResponse>(notFoundResult.Value);
+        Assert.False(response.Success);
     }
 
     [Fact]
@@ -143,6 +156,8 @@ public class FilesControllerTests
 
         var result = await _controller.DeleteFile(999);
 
-        Assert.IsType<NotFoundObjectResult>(result);
+        var notFoundResult = Assert.IsType<NotFoundObjectResult>(result);
+        var response = Assert.IsType<ApiResponse>(notFoundResult.Value);
+        Assert.False(response.Success);
     }
 }

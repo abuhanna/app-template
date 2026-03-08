@@ -1,4 +1,5 @@
 using System.Security.Claims;
+using App.Template.Api.Models.Common;
 using App.Template.Api.Models.Dtos;
 using App.Template.Api.Services;
 using Microsoft.AspNetCore.Authorization;
@@ -7,7 +8,7 @@ using Microsoft.AspNetCore.Mvc;
 namespace App.Template.Api.Controllers;
 
 [ApiController]
-[Route("api/[controller]")]
+[Route("api/auth")]
 public class AuthController : ControllerBase
 {
     private readonly IAuthService _authService;
@@ -17,18 +18,25 @@ public class AuthController : ControllerBase
         _authService = authService;
     }
 
+    [HttpPost("register")]
+    public async Task<ActionResult<ApiResponse<LoginResponse>>> Register(RegisterRequest request)
+    {
+        var response = await _authService.RegisterAsync(request);
+        return StatusCode(201, ApiResponse.Ok(response, "Registration successful"));
+    }
+
     [HttpPost("login")]
-    public async Task<ActionResult<LoginResponse>> Login(LoginRequest request)
+    public async Task<ActionResult<ApiResponse<LoginResponse>>> Login(LoginRequest request)
     {
         var response = await _authService.LoginAsync(request);
-        return Ok(response);
+        return Ok(ApiResponse.Ok(response, "Login successful"));
     }
 
     [HttpPost("refresh")]
-    public async Task<ActionResult<LoginResponse>> Refresh(RefreshTokenRequest request)
+    public async Task<ActionResult<ApiResponse<RefreshResponse>>> Refresh(RefreshTokenRequest request)
     {
         var response = await _authService.RefreshTokenAsync(request);
-        return Ok(response);
+        return Ok(ApiResponse.Ok(response, "Token refreshed"));
     }
 
     [Authorize]
@@ -36,7 +44,7 @@ public class AuthController : ControllerBase
     public async Task<IActionResult> Logout()
     {
         await _authService.LogoutAsync();
-        return Ok();
+        return NoContent();
     }
 
     [Authorize]
@@ -47,49 +55,66 @@ public class AuthController : ControllerBase
         var username = User.FindFirstValue(ClaimTypes.Name);
         var email = User.FindFirstValue(ClaimTypes.Email);
         var role = User.FindFirstValue(ClaimTypes.Role);
-        var name = User.FindFirstValue("name");
+        var firstName = User.FindFirstValue("firstName");
+        var lastName = User.FindFirstValue("lastName");
         var deptId = User.FindFirstValue("departmentId");
+        var deptName = User.FindFirstValue("departmentName");
 
-        return Ok(new
+        var userInfo = new UserInfoDto
         {
-            id = userId,
-            username,
-            email,
-            name,
-            role,
-            departmentId = deptId != null ? long.Parse(deptId) : (long?)null
-        });
+            Id = long.TryParse(userId, out var id) ? id : 0,
+            Username = username ?? "",
+            Email = email ?? "",
+            FirstName = firstName,
+            LastName = lastName,
+            FullName = $"{firstName} {lastName}".Trim(),
+            Role = role,
+            DepartmentId = long.TryParse(deptId, out var did) ? did : null,
+            DepartmentName = deptName,
+            IsActive = true
+        };
+
+        return Ok(ApiResponse.Ok(userInfo, "User info retrieved"));
     }
 
     [Authorize]
     [HttpGet("profile")]
-    public async Task<ActionResult<UserDto>> GetProfile()
+    public async Task<ActionResult<ApiResponse<UserDto>>> GetProfile()
     {
         var userId = User.FindFirstValue(ClaimTypes.NameIdentifier)!;
         var profile = await _authService.GetProfileAsync(userId);
-        return Ok(profile);
+        return Ok(ApiResponse.Ok(profile, "Profile retrieved"));
     }
 
     [Authorize]
     [HttpPut("profile")]
-    public async Task<ActionResult<UserDto>> UpdateProfile(UpdateProfileRequest request)
+    public async Task<ActionResult<ApiResponse<UserDto>>> UpdateProfile(UpdateProfileRequest request)
     {
         var userId = User.FindFirstValue(ClaimTypes.NameIdentifier)!;
         var updated = await _authService.UpdateProfileAsync(userId, request);
-        return Ok(updated);
+        return Ok(ApiResponse.Ok(updated, "Profile updated"));
+    }
+
+    [Authorize]
+    [HttpPost("change-password")]
+    public async Task<ActionResult<ApiResponse>> ChangePassword(ChangePasswordRequest request)
+    {
+        var userId = User.FindFirstValue(ClaimTypes.NameIdentifier)!;
+        await _authService.ChangePasswordAsync(userId, request);
+        return Ok(ApiResponse.Ok("Password changed successfully"));
     }
 
     [HttpPost("forgot-password")]
-    public async Task<IActionResult> ForgotPassword(ForgotPasswordRequest request)
+    public async Task<ActionResult<ApiResponse>> ForgotPassword(ForgotPasswordRequest request)
     {
         await _authService.ForgotPasswordAsync(request);
-        return Ok(new { message = "If an account with that email exists, a reset link has been sent." });
+        return Ok(ApiResponse.Ok("If your email is registered, you will receive a password reset link"));
     }
 
     [HttpPost("reset-password")]
-    public async Task<IActionResult> ResetPassword(ResetPasswordRequest request)
+    public async Task<ActionResult<ApiResponse>> ResetPassword(ResetPasswordRequest request)
     {
         await _authService.ResetPasswordAsync(request);
-        return Ok(new { message = "Password reset successfully." });
+        return Ok(ApiResponse.Ok("Password reset successful"));
     }
 }

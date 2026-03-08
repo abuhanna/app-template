@@ -18,8 +18,8 @@ public class AuditLogRepository : IAuditLogRepository
 
     public async Task<PagedResult<AuditLogDto>> GetPagedAsync(
         int page, int pageSize,
-        string? sortBy, string sortDir,
-        string? search, string? entityName,
+        string? sortBy, string sortOrder,
+        string? search, string? entityType,
         string? entityId, string? userId,
         string? action, DateTime? fromDate,
         DateTime? toDate, CancellationToken ct = default)
@@ -29,8 +29,8 @@ public class AuditLogRepository : IAuditLogRepository
 
         var query = _context.AuditLogs.AsQueryable();
 
-        if (!string.IsNullOrEmpty(entityName))
-            query = query.Where(a => a.EntityName == entityName);
+        if (!string.IsNullOrEmpty(entityType))
+            query = query.Where(a => a.EntityName == entityType);
 
         if (!string.IsNullOrEmpty(entityId))
             query = query.Where(a => a.EntityId == entityId);
@@ -50,15 +50,15 @@ public class AuditLogRepository : IAuditLogRepository
         if (!string.IsNullOrEmpty(search))
             query = query.Where(a => a.EntityName.Contains(search) || a.EntityId.Contains(search));
 
-        query = (sortBy?.ToLower(), sortDir?.ToLower()) switch
+        query = (sortBy?.ToLower(), sortOrder?.ToLower()) switch
         {
-            ("entityname", "asc") => query.OrderBy(a => a.EntityName),
-            ("entityname", _) => query.OrderByDescending(a => a.EntityName),
+            ("entitytype", "asc") => query.OrderBy(a => a.EntityName),
+            ("entitytype", _) => query.OrderByDescending(a => a.EntityName),
             ("userid", "asc") => query.OrderBy(a => a.UserId),
             ("userid", _) => query.OrderByDescending(a => a.UserId),
             ("action", "asc") => query.OrderBy(a => a.Action),
             ("action", _) => query.OrderByDescending(a => a.Action),
-            ("timestamp", "asc") => query.OrderBy(a => a.Timestamp),
+            ("createdat", "asc") => query.OrderBy(a => a.Timestamp),
             _ => query.OrderByDescending(a => a.Timestamp)
         };
 
@@ -69,14 +69,14 @@ public class AuditLogRepository : IAuditLogRepository
             .Select(a => new AuditLogDto
             {
                 Id = a.Id,
-                EntityName = a.EntityName,
+                EntityType = a.EntityName,
                 EntityId = a.EntityId,
-                Action = a.Action.ToString(),
-                OldValues = a.OldValues,
-                NewValues = a.NewValues,
-                AffectedColumns = a.AffectedColumns,
+                Action = a.Action.ToString().ToLower(),
                 UserId = a.UserId,
-                Timestamp = a.Timestamp
+                Details = a.OldValues != null || a.NewValues != null
+                    ? $"Changed from {a.OldValues ?? "null"} to {a.NewValues ?? "null"}"
+                    : null,
+                CreatedAt = a.Timestamp
             })
             .ToListAsync(ct);
 
@@ -92,6 +92,25 @@ public class AuditLogRepository : IAuditLogRepository
                 HasNext = page * pageSize < totalItems,
                 HasPrevious = page > 1
             }
+        };
+    }
+
+    public async Task<AuditLogDto?> GetByIdAsync(long id, CancellationToken ct = default)
+    {
+        var a = await _context.AuditLogs.FindAsync(new object[] { id }, ct);
+        if (a == null) return null;
+
+        return new AuditLogDto
+        {
+            Id = a.Id,
+            EntityType = a.EntityName,
+            EntityId = a.EntityId,
+            Action = a.Action.ToString().ToLower(),
+            UserId = a.UserId,
+            Details = a.OldValues != null || a.NewValues != null
+                ? $"Changed from {a.OldValues ?? "null"} to {a.NewValues ?? "null"}"
+                : null,
+            CreatedAt = a.Timestamp
         };
     }
 }

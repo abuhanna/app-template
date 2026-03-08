@@ -23,7 +23,7 @@ public class FilesController : ControllerBase
 
     /// <summary>Get list of uploaded files</summary>
     [HttpGet]
-    [ProducesResponseType(typeof(PagedResult<UploadedFileDto>), StatusCodes.Status200OK)]
+    [ProducesResponseType(typeof(PaginatedResponse<UploadedFileDto>), StatusCodes.Status200OK)]
     public async Task<IActionResult> GetFiles(
         [FromQuery] string? category,
         [FromQuery] bool? isPublic,
@@ -31,26 +31,26 @@ public class FilesController : ControllerBase
         [FromQuery] int pageSize = 20)
     {
         var result = await _fileService.GetFilesAsync(category, isPublic, page, pageSize);
-        return Ok(result);
+        return Ok(PaginatedResponse<UploadedFileDto>.From(result));
     }
 
     /// <summary>Get file metadata by ID</summary>
     [HttpGet("{id:long}")]
-    [ProducesResponseType(typeof(UploadedFileDto), StatusCodes.Status200OK)]
+    [ProducesResponseType(typeof(ApiResponse<UploadedFileDto>), StatusCodes.Status200OK)]
     [ProducesResponseType(StatusCodes.Status404NotFound)]
     public async Task<IActionResult> GetFile(long id)
     {
         var result = await _fileService.GetFileAsync(id);
         if (result == null)
-            return NotFound(new { message = $"File with ID {id} not found" });
+            return NotFound(ApiResponse.Fail($"File with ID {id} not found"));
 
-        return Ok(result);
+        return Ok(ApiResponse.Ok(result));
     }
 
     /// <summary>Upload a new file</summary>
     [HttpPost]
     [RequestSizeLimit(50 * 1024 * 1024)] // 50MB limit
-    [ProducesResponseType(typeof(UploadedFileDto), StatusCodes.Status201Created)]
+    [ProducesResponseType(typeof(ApiResponse<UploadedFileDto>), StatusCodes.Status201Created)]
     [ProducesResponseType(StatusCodes.Status400BadRequest)]
     public async Task<IActionResult> UploadFile(
         IFormFile file,
@@ -59,14 +59,14 @@ public class FilesController : ControllerBase
         [FromForm] bool isPublic = false)
     {
         if (file == null || file.Length == 0)
-            return BadRequest(new { message = "No file uploaded" });
+            return BadRequest(ApiResponse.Fail("No file uploaded"));
 
         _logger.LogInformation("Uploading file: {FileName}, Size: {Size}", file.FileName, file.Length);
 
         await using var stream = file.OpenReadStream();
         var result = await _fileService.UploadFileAsync(stream, file.FileName, file.ContentType, file.Length, description, category, isPublic);
 
-        return CreatedAtAction(nameof(GetFile), new { id = result.Id }, result);
+        return StatusCode(StatusCodes.Status201Created, ApiResponse.Ok(result, "File uploaded successfully"));
     }
 
     /// <summary>Download a file</summary>
@@ -78,7 +78,7 @@ public class FilesController : ControllerBase
     {
         var fileData = await _fileService.GetFileStreamAsync(id);
         if (fileData == null)
-            return NotFound(new { message = $"File with ID {id} not found" });
+            return NotFound(ApiResponse.Fail($"File with ID {id} not found"));
 
         return File(fileData.Value.Stream, fileData.Value.ContentType, fileData.Value.FileName);
     }
@@ -91,7 +91,7 @@ public class FilesController : ControllerBase
     {
         var result = await _fileService.DeleteFileAsync(id);
         if (!result)
-            return NotFound(new { message = $"File with ID {id} not found" });
+            return NotFound(ApiResponse.Fail($"File with ID {id} not found"));
 
         return NoContent();
     }

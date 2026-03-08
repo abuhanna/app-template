@@ -56,25 +56,26 @@ public class GetUsersQueryHandler : IRequestHandler<GetUsersQuery, PagedResult<U
         var totalItems = await query.CountAsync(cancellationToken);
 
         // Apply sorting
+        var isDescending = request.SortOrder?.Equals("desc", StringComparison.OrdinalIgnoreCase) ?? true;
         if (!string.IsNullOrWhiteSpace(request.SortBy))
         {
             query = request.SortBy.ToLower() switch
             {
-                "username" => request.SortDir == "desc" ? query.OrderByDescending(u => u.Username) : query.OrderBy(u => u.Username),
-                "email" => request.SortDir == "desc" ? query.OrderByDescending(u => u.Email) : query.OrderBy(u => u.Email),
-                "name" or "fullname" => request.SortDir == "desc" ? query.OrderByDescending(u => u.Name) : query.OrderBy(u => u.Name),
-                "createdat" => request.SortDir == "desc" ? query.OrderByDescending(u => u.CreatedAt) : query.OrderBy(u => u.CreatedAt),
-                "lastloginat" => request.SortDir == "desc" ? query.OrderByDescending(u => u.LastLoginAt) : query.OrderBy(u => u.LastLoginAt),
-                "isactive" => request.SortDir == "desc" ? query.OrderByDescending(u => u.IsActive) : query.OrderBy(u => u.IsActive),
-                "departmentname" => request.SortDir == "desc"
+                "username" => isDescending ? query.OrderByDescending(u => u.Username) : query.OrderBy(u => u.Username),
+                "email" => isDescending ? query.OrderByDescending(u => u.Email) : query.OrderBy(u => u.Email),
+                "name" or "fullname" => isDescending ? query.OrderByDescending(u => u.Name) : query.OrderBy(u => u.Name),
+                "createdat" => isDescending ? query.OrderByDescending(u => u.CreatedAt) : query.OrderBy(u => u.CreatedAt),
+                "lastloginat" => isDescending ? query.OrderByDescending(u => u.LastLoginAt) : query.OrderBy(u => u.LastLoginAt),
+                "isactive" => isDescending ? query.OrderByDescending(u => u.IsActive) : query.OrderBy(u => u.IsActive),
+                "departmentname" => isDescending
                     ? query.OrderByDescending(u => u.Department != null ? u.Department.Name : "")
                     : query.OrderBy(u => u.Department != null ? u.Department.Name : ""),
-                _ => query.OrderBy(u => u.Username)
+                _ => isDescending ? query.OrderByDescending(u => u.CreatedAt) : query.OrderBy(u => u.CreatedAt)
             };
         }
         else
         {
-            query = query.OrderBy(u => u.Username);
+            query = isDescending ? query.OrderByDescending(u => u.CreatedAt) : query.OrderBy(u => u.CreatedAt);
         }
 
         // Apply pagination

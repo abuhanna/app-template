@@ -23,14 +23,14 @@ public class AuditLogsController : ControllerBase
 
     /// <summary>Get list of audit logs with pagination and filtering</summary>
     [HttpGet]
-    [ProducesResponseType(typeof(PagedResult<AuditLogDto>), StatusCodes.Status200OK)]
+    [ProducesResponseType(typeof(PaginatedResponse<AuditLogDto>), StatusCodes.Status200OK)]
     public async Task<IActionResult> GetAuditLogs(
         [FromQuery] int page = 1,
         [FromQuery] int pageSize = 20,
         [FromQuery] string? sortBy = null,
-        [FromQuery] string sortDir = "desc",
+        [FromQuery] string sortOrder = "desc",
         [FromQuery] string? search = null,
-        [FromQuery] string? entityName = null,
+        [FromQuery] string? entityType = null,
         [FromQuery] string? entityId = null,
         [FromQuery] string? userId = null,
         [FromQuery] string? action = null,
@@ -42,8 +42,8 @@ public class AuditLogsController : ControllerBase
 
         var query = _context.AuditLogs.AsQueryable();
 
-        if (!string.IsNullOrEmpty(entityName))
-            query = query.Where(a => a.EntityName == entityName);
+        if (!string.IsNullOrEmpty(entityType))
+            query = query.Where(a => a.EntityName == entityType);
 
         if (!string.IsNullOrEmpty(entityId))
             query = query.Where(a => a.EntityId == entityId);
@@ -64,48 +64,60 @@ public class AuditLogsController : ControllerBase
             query = query.Where(a => a.EntityName.Contains(search) || a.EntityId.Contains(search));
 
         // Sorting
-        query = (sortBy?.ToLower(), sortDir?.ToLower()) switch
+        query = (sortBy?.ToLower(), sortOrder?.ToLower()) switch
         {
-            ("entityname", "asc") => query.OrderBy(a => a.EntityName),
-            ("entityname", _) => query.OrderByDescending(a => a.EntityName),
+            ("entitytype", "asc") => query.OrderBy(a => a.EntityName),
+            ("entitytype", _) => query.OrderByDescending(a => a.EntityName),
             ("userid", "asc") => query.OrderBy(a => a.UserId),
             ("userid", _) => query.OrderByDescending(a => a.UserId),
             ("action", "asc") => query.OrderBy(a => a.Action),
             ("action", _) => query.OrderByDescending(a => a.Action),
-            ("timestamp", "asc") => query.OrderBy(a => a.Timestamp),
+            ("createdat", "asc") => query.OrderBy(a => a.Timestamp),
             _ => query.OrderByDescending(a => a.Timestamp)
         };
 
-        var totalItems = await query.CountAsync();
-        var items = await query
-            .Skip((page - 1) * pageSize)
-            .Take(pageSize)
+        var pagedResult = await PagedResult<AuditLogDto>.CreateAsync(
+            query.Select(a => new AuditLogDto
+            {
+                Id = a.Id,
+                EntityType = a.EntityName,
+                EntityId = a.EntityId,
+                Action = a.Action.ToString(),
+                UserId = a.UserId,
+                UserName = a.UserId,
+                Details = a.NewValues ?? a.OldValues,
+                CreatedAt = a.Timestamp
+            }),
+            page,
+            pageSize);
+
+        return Ok(PaginatedResponse<AuditLogDto>.From(pagedResult));
+    }
+
+    /// <summary>Get a single audit log by ID</summary>
+    [HttpGet("{id:long}")]
+    [ProducesResponseType(typeof(ApiResponse<AuditLogDto>), StatusCodes.Status200OK)]
+    [ProducesResponseType(StatusCodes.Status404NotFound)]
+    public async Task<IActionResult> GetAuditLog(long id)
+    {
+        var auditLog = await _context.AuditLogs
+            .Where(a => a.Id == id)
             .Select(a => new AuditLogDto
             {
                 Id = a.Id,
-                EntityName = a.EntityName,
+                EntityType = a.EntityName,
                 EntityId = a.EntityId,
                 Action = a.Action.ToString(),
-                OldValues = a.OldValues,
-                NewValues = a.NewValues,
-                AffectedColumns = a.AffectedColumns,
                 UserId = a.UserId,
-                Timestamp = a.Timestamp
+                UserName = a.UserId,
+                Details = a.NewValues ?? a.OldValues,
+                CreatedAt = a.Timestamp
             })
-            .ToListAsync();
+            .FirstOrDefaultAsync();
 
-        return Ok(new PagedResult<AuditLogDto>
-        {
-            Items = items,
-            Pagination = new PaginationMeta
-            {
-                Page = page,
-                PageSize = pageSize,
-                TotalItems = totalItems,
-                TotalPages = (int)Math.Ceiling(totalItems / (double)pageSize),
-                HasNext = page * pageSize < totalItems,
-                HasPrevious = page > 1
-            }
-        });
+        if (auditLog == null)
+            return NotFound(ApiResponse.Fail($"Audit log with ID {id} not found"));
+
+        return Ok(ApiResponse.Ok(auditLog));
     }
 }

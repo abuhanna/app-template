@@ -1,5 +1,5 @@
+using App.Template.Api.Common.Models;
 using App.Template.Api.Common.Services;
-using App.Template.Api.Data;
 
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
@@ -10,57 +10,44 @@ namespace App.Template.Api.Features.Notifications;
 /// <summary>Notification management endpoints</summary>
 [Authorize]
 [ApiController]
-[Route("api/[controller]")]
+[Route("api/notifications")]
 public class NotificationsController : ControllerBase
 {
-    private readonly AppDbContext _context;
+    private readonly INotificationService _notificationService;
     private readonly ICurrentUserService _currentUserService;
 
-    public NotificationsController(AppDbContext context, ICurrentUserService currentUserService)
+    public NotificationsController(INotificationService notificationService, ICurrentUserService currentUserService)
     {
-        _context = context;
+        _notificationService = notificationService;
         _currentUserService = currentUserService;
     }
 
-    /// <summary>Get current user's notifications</summary>
+    /// <summary>Get current user's notifications with pagination</summary>
     [HttpGet]
+    [ProducesResponseType(typeof(PaginatedResponse<NotificationDto>), StatusCodes.Status200OK)]
     public async Task<IActionResult> GetMyNotifications(
-        [FromQuery] int? limit,
-        [FromQuery] DateTime? startDate,
-        [FromQuery] DateTime? endDate)
+        [FromQuery] int page = 1,
+        [FromQuery] int pageSize = 15,
+        [FromQuery] string? search = null,
+        [FromQuery] string? sortBy = null,
+        [FromQuery] string sortOrder = "desc")
     {
         var userId = _currentUserService.UserId ?? "";
 
-        var query = _context.Notifications
-            .Where(n => n.UserId == userId)
-            .AsQueryable();
+        var result = await _notificationService.GetUserNotificationsAsync(
+            userId, page, pageSize, search, sortBy, sortOrder);
 
-        if (startDate.HasValue)
-            query = query.Where(n => n.CreatedAt >= startDate.Value);
+        return Ok(PaginatedResponse<NotificationDto>.From(result));
+    }
 
-        if (endDate.HasValue)
-            query = query.Where(n => n.CreatedAt <= endDate.Value);
-
-        query = query.OrderByDescending(n => n.CreatedAt);
-
-        if (limit.HasValue)
-            query = query.Take(limit.Value);
-        else if (!startDate.HasValue && !endDate.HasValue)
-            query = query.Take(15); // Default limit
-
-        var notifications = await query.Select(n => new
-        {
-            n.Id,
-            n.Title,
-            n.Message,
-            Type = n.Type.ToString(),
-            n.ReferenceId,
-            n.ReferenceType,
-            n.IsRead,
-            n.CreatedAt
-        }).ToListAsync();
-
-        return Ok(notifications);
+    /// <summary>Get unread notification count</summary>
+    [HttpGet("unread-count")]
+    [ProducesResponseType(typeof(ApiResponse<int>), StatusCodes.Status200OK)]
+    public async Task<IActionResult> GetUnreadCount()
+    {
+        var userId = _currentUserService.UserId ?? "";
+        var count = await _notificationService.GetUnreadCountAsync(userId);
+        return Ok(ApiResponse.Ok(count, "Unread count retrieved successfully"));
     }
 
     /// <summary>Mark a notification as read</summary>
@@ -70,14 +57,17 @@ public class NotificationsController : ControllerBase
     public async Task<IActionResult> MarkAsRead(long id)
     {
         var userId = _currentUserService.UserId ?? "";
-        var notification = await _context.Notifications
-            .FirstOrDefaultAsync(n => n.Id == id && n.UserId == userId);
+        // Use DbContext directly for mark-as-read (simple operation)
+        var context = HttpContext.RequestServices.GetRequiredService<Data.AppDbContext>();
+        var notification = await context.Notifications
+            .Where(n => n.Id == id && n.UserId == userId)
+            .FirstOrDefaultAsync();
 
         if (notification == null)
-            return NotFound(new { message = $"Notification {id} not found" });
+            return NotFound(ApiResponse.Fail($"Notification {id} not found"));
 
         notification.MarkAsRead();
-        await _context.SaveChangesAsync();
+        await context.SaveChangesAsync();
         return NoContent();
     }
 
@@ -87,14 +77,30 @@ public class NotificationsController : ControllerBase
     public async Task<IActionResult> MarkAllAsRead()
     {
         var userId = _currentUserService.UserId ?? "";
-        var unread = await _context.Notifications
+        var context = HttpContext.RequestServices.GetRequiredService<Data.AppDbContext>();
+        var unread = await context.Notifications
             .Where(n => n.UserId == userId && !n.IsRead)
             .ToListAsync();
 
         foreach (var notification in unread)
             notification.MarkAsRead();
 
-        await _context.SaveChangesAsync();
+        await context.SaveChangesAsync();
+        return NoContent();
+    }
+
+    /// <summary>Delete a notification</summary>
+    [HttpDelete("{id:long}")]
+    [ProducesResponseType(StatusCodes.Status204NoContent)]
+    [ProducesResponseType(StatusCodes.Status404NotFound)]
+    public async Task<IActionResult> Delete(long id)
+    {
+        var userId = _currentUserService.UserId ?? "";
+        var result = await _notificationService.DeleteAsync(id, userId);
+
+        if (!result)
+            return NotFound(ApiResponse.Fail($"Notification {id} not found"));
+
         return NoContent();
     }
 }

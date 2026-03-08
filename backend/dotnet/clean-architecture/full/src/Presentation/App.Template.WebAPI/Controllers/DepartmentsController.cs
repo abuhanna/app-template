@@ -30,12 +30,12 @@ public class DepartmentsController : ControllerBase
     /// Get list of departments with pagination
     /// </summary>
     [HttpGet]
-    [ProducesResponseType(typeof(PagedResult<DepartmentDto>), StatusCodes.Status200OK)]
+    [ProducesResponseType(typeof(PaginatedResponse<DepartmentDto>), StatusCodes.Status200OK)]
     public async Task<IActionResult> GetDepartments(
         [FromQuery] int page = 1,
         [FromQuery] int pageSize = 10,
         [FromQuery] string? sortBy = null,
-        [FromQuery] string? sortDir = "asc",
+        [FromQuery] string? sortOrder = "desc",
         [FromQuery] bool? isActive = null,
         [FromQuery] string? search = null)
     {
@@ -44,19 +44,19 @@ public class DepartmentsController : ControllerBase
             Page = Math.Max(1, page),
             PageSize = Math.Clamp(pageSize, 1, 100),
             SortBy = sortBy,
-            SortDir = sortDir,
+            SortOrder = sortOrder,
             IsActive = isActive,
             Search = search
         };
         var result = await _mediator.Send(query);
-        return Ok(result);
+        return Ok(PaginatedResponse<DepartmentDto>.From(result));
     }
 
     /// <summary>
     /// Get department by ID
     /// </summary>
     [HttpGet("{id:long}")]
-    [ProducesResponseType(typeof(DepartmentDto), StatusCodes.Status200OK)]
+    [ProducesResponseType(typeof(ApiResponse<DepartmentDto>), StatusCodes.Status200OK)]
     [ProducesResponseType(StatusCodes.Status404NotFound)]
     public async Task<IActionResult> GetDepartmentById(long id)
     {
@@ -65,10 +65,10 @@ public class DepartmentsController : ControllerBase
 
         if (result == null)
         {
-            return NotFound(new { message = $"Department with ID {id} not found" });
+            return NotFound(ApiResponse.Fail($"Department with ID {id} not found"));
         }
 
-        return Ok(result);
+        return Ok(ApiResponse.Ok(result));
     }
 
     /// <summary>
@@ -76,7 +76,7 @@ public class DepartmentsController : ControllerBase
     /// </summary>
     [Authorize(Roles = "Admin")]
     [HttpPost]
-    [ProducesResponseType(typeof(DepartmentDto), StatusCodes.Status201Created)]
+    [ProducesResponseType(typeof(ApiResponse<DepartmentDto>), StatusCodes.Status201Created)]
     [ProducesResponseType(StatusCodes.Status400BadRequest)]
     [ProducesResponseType(StatusCodes.Status403Forbidden)]
     public async Task<IActionResult> CreateDepartment([FromBody] CreateDepartmentRequest request)
@@ -89,7 +89,7 @@ public class DepartmentsController : ControllerBase
         };
 
         var result = await _mediator.Send(command);
-        return CreatedAtAction(nameof(GetDepartmentById), new { id = result.Id }, result);
+        return StatusCode(StatusCodes.Status201Created, ApiResponse.Ok(result, "Department created successfully"));
     }
 
     /// <summary>
@@ -97,7 +97,7 @@ public class DepartmentsController : ControllerBase
     /// </summary>
     [Authorize(Roles = "Admin")]
     [HttpPut("{id:long}")]
-    [ProducesResponseType(typeof(DepartmentDto), StatusCodes.Status200OK)]
+    [ProducesResponseType(typeof(ApiResponse<DepartmentDto>), StatusCodes.Status200OK)]
     [ProducesResponseType(StatusCodes.Status400BadRequest)]
     [ProducesResponseType(StatusCodes.Status403Forbidden)]
     [ProducesResponseType(StatusCodes.Status404NotFound)]
@@ -113,7 +113,7 @@ public class DepartmentsController : ControllerBase
         };
 
         var result = await _mediator.Send(command);
-        return Ok(result);
+        return Ok(ApiResponse.Ok(result, "Department updated successfully"));
     }
 
     /// <summary>

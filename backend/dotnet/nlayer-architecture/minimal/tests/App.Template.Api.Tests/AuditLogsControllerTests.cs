@@ -26,11 +26,11 @@ public class AuditLogsControllerTests
         {
             Items = new List<AuditLogDto>
             {
-                new() { Id = 1, EntityName = "User", Action = "Create" }
+                new() { Id = 1, EntityType = "User", Action = "create" }
             }
         };
         _mockRepo
-            .Setup(r => r.GetPagedAsync(1, 20, null, "desc", null, null, null, null, null, null, null, It.IsAny<CancellationToken>()))
+            .Setup(r => r.GetPagedAsync(1, 10, null, "desc", null, null, null, null, null, null, null, It.IsAny<CancellationToken>()))
             .ReturnsAsync(result);
 
         var actionResult = await _controller.GetAuditLogs();
@@ -49,5 +49,26 @@ public class AuditLogsControllerTests
         var actionResult = await _controller.GetAuditLogs();
 
         Assert.IsType<OkObjectResult>(actionResult);
+    }
+
+    [Fact]
+    public async Task GetById_ReturnsOk_WhenExists()
+    {
+        var log = new AuditLogDto { Id = 1, EntityType = "User", Action = "create" };
+        _mockRepo.Setup(r => r.GetByIdAsync(1, It.IsAny<CancellationToken>())).ReturnsAsync(log);
+
+        var actionResult = await _controller.GetById(1, CancellationToken.None);
+
+        Assert.IsType<OkObjectResult>(actionResult);
+    }
+
+    [Fact]
+    public async Task GetById_ReturnsNotFound_WhenDoesNotExist()
+    {
+        _mockRepo.Setup(r => r.GetByIdAsync(1, It.IsAny<CancellationToken>())).ReturnsAsync((AuditLogDto?)null);
+
+        var actionResult = await _controller.GetById(1, CancellationToken.None);
+
+        Assert.IsType<NotFoundObjectResult>(actionResult);
     }
 }

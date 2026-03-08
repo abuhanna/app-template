@@ -1,4 +1,4 @@
-using App.Template.Api.Models.Entities;
+using App.Template.Api.Models.Common;
 using App.Template.Api.Repositories;
 using App.Template.Api.Services;
 
@@ -10,7 +10,7 @@ namespace App.Template.Api.Controllers;
 /// <summary>Notification management endpoints</summary>
 [Authorize]
 [ApiController]
-[Route("api/[controller]")]
+[Route("api/notifications")]
 public class NotificationsController : ControllerBase
 {
     private readonly INotificationRepository _notificationRepository;
@@ -24,60 +24,96 @@ public class NotificationsController : ControllerBase
         _currentUserService = currentUserService;
     }
 
-    /// <summary>Get current user's notifications</summary>
+    /// <summary>Get current user's notifications with pagination</summary>
     [HttpGet]
     public async Task<IActionResult> GetMyNotifications(
-        [FromQuery] int? limit,
-        [FromQuery] DateTime? startDate,
-        [FromQuery] DateTime? endDate,
-        CancellationToken cancellationToken)
+        [FromQuery] int page = 1,
+        [FromQuery] int pageSize = 10,
+        [FromQuery] bool? unreadOnly = null,
+        [FromQuery] string? search = null,
+        [FromQuery] string? sortBy = null,
+        [FromQuery] string sortOrder = "desc",
+        CancellationToken cancellationToken = default)
     {
         var userId = _currentUserService.UserId ?? "";
 
-        var notifications = await _notificationRepository.GetByUserIdAsync(
-            userId,
-            limit.HasValue ? limit : (!startDate.HasValue && !endDate.HasValue ? 15 : null),
-            startDate,
-            endDate,
-            cancellationToken);
+        var result = await _notificationRepository.GetByUserIdPagedAsync(
+            userId, page, pageSize, unreadOnly, search, sortBy, sortOrder, cancellationToken);
 
-        var result = notifications.Select(n => new
+        var dtoResult = new PagedResult<object>
         {
-            n.Id,
-            n.Title,
-            n.Message,
-            Type = n.Type.ToString(),
-            n.ReferenceId,
-            n.ReferenceType,
-            n.IsRead,
-            n.CreatedAt
-        });
+            Items = result.Items.Select(n => (object)new
+            {
+                n.Id,
+                n.Title,
+                n.Message,
+                Type = n.Type.ToString().ToLower(),
+                n.ReferenceId,
+                n.ReferenceType,
+                n.IsRead,
+                n.CreatedAt
+            }).ToList(),
+            Pagination = result.Pagination
+        };
 
-        return Ok(result);
+        return Ok(new PaginatedResponse<object>
+        {
+            Success = true,
+            Message = "Notifications retrieved successfully",
+            Data = dtoResult.Items,
+            Pagination = new PaginationInfo
+            {
+                Page = dtoResult.Pagination.Page,
+                PageSize = dtoResult.Pagination.PageSize,
+                TotalItems = dtoResult.Pagination.TotalItems,
+                TotalPages = dtoResult.Pagination.TotalPages,
+                HasNext = dtoResult.Pagination.HasNext,
+                HasPrevious = dtoResult.Pagination.HasPrevious
+            }
+        });
+    }
+
+    /// <summary>Get unread notification count</summary>
+    [HttpGet("unread-count")]
+    public async Task<IActionResult> GetUnreadCount(CancellationToken cancellationToken)
+    {
+        var userId = _currentUserService.UserId ?? "";
+        var count = await _notificationRepository.GetUnreadCountAsync(userId, cancellationToken);
+        return Ok(ApiResponse.Ok(new { count }, "Unread count retrieved successfully"));
     }
 
     /// <summary>Mark a notification as read</summary>
     [HttpPut("{id:long}/read")]
-    [ProducesResponseType(StatusCodes.Status204NoContent)]
-    [ProducesResponseType(StatusCodes.Status404NotFound)]
     public async Task<IActionResult> MarkAsRead(long id, CancellationToken cancellationToken)
     {
         var userId = _currentUserService.UserId ?? "";
         var found = await _notificationRepository.MarkAsReadAsync(id, userId, cancellationToken);
 
         if (!found)
-            return NotFound(new { message = $"Notification {id} not found" });
+            return NotFound(ApiResponse.Fail($"Notification {id} not found"));
 
         return NoContent();
     }
 
     /// <summary>Mark all notifications as read</summary>
     [HttpPut("read-all")]
-    [ProducesResponseType(StatusCodes.Status204NoContent)]
     public async Task<IActionResult> MarkAllAsRead(CancellationToken cancellationToken)
     {
         var userId = _currentUserService.UserId ?? "";
         await _notificationRepository.MarkAllAsReadAsync(userId, cancellationToken);
+        return NoContent();
+    }
+
+    /// <summary>Delete a notification</summary>
+    [HttpDelete("{id:long}")]
+    public async Task<IActionResult> Delete(long id, CancellationToken cancellationToken)
+    {
+        var userId = _currentUserService.UserId ?? "";
+        var deleted = await _notificationRepository.DeleteAsync(id, userId, cancellationToken);
+
+        if (!deleted)
+            return NotFound(ApiResponse.Fail($"Notification {id} not found"));
+
         return NoContent();
     }
 }

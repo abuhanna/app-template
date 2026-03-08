@@ -107,23 +107,20 @@ public class LoginCommandHandler : IRequestHandler<LoginCommand, LoginResponseDt
 
         return new LoginResponseDto
         {
-            Token = token,
-            TokenType = "Bearer",
+            AccessToken = token,
             ExpiresIn = expirationMinutes * 60,
             RefreshToken = refreshTokenValue,
-            RefreshTokenExpiresAt = refreshTokenExpiry,
             User = new UserInfoDto
             {
-                Id = user.Id.ToString(),
+                Id = user.Id,
                 Username = user.Username,
                 Email = user.Email,
-                Name = user.Name ?? user.Username,
                 FirstName = firstName,
                 LastName = lastName,
                 FullName = user.Name,
                 IsActive = user.IsActive,
                 Role = user.Role,
-                DepartmentId = user.DepartmentId?.ToString(),
+                DepartmentId = user.DepartmentId,
                 DepartmentName = user.Department?.Name
             }
         };
