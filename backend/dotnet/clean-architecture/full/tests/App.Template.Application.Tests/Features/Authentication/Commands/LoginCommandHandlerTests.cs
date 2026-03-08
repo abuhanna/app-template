@@ -1,6 +1,7 @@
 using System.Linq.Expressions;
 using AppTemplate.Application.Features.Authentication.Commands.Login;
 using AppTemplate.Application.Interfaces;
+using AppTemplate.Application.Tests.Features.UserManagement.Commands;
 using AppTemplate.Domain.Entities;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Query;
@@ -186,11 +187,3 @@ public class LoginCommandHandlerTests
         return mockSet;
     }
 }
-
-// Reuse the same async query helpers from CreateUserCommandHandlerTests
-// These are already defined in that file's namespace and compilation unit
-// but since C# requires them to be accessible, we define internal aliases
-// that reference the same pattern. The existing TestAsyncQueryProvider,
-// TestAsyncEnumerable, and TestAsyncEnumerator classes from
-// CreateUserCommandHandlerTests.cs are in the same project/namespace
-// and are already internal, so they are accessible here.
