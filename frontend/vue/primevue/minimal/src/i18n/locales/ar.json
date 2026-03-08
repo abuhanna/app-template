@@ -31,6 +31,8 @@
     "password": "كلمة المرور",
     "username": "اسم المستخدم",
     "rememberMe": "تذكرني",
+    "forgotPassword": "نسيت كلمة المرور؟",
+    "resetPassword": "إعادة تعيين كلمة المرور",
     "currentPassword": "كلمة المرور الحالية",
     "newPassword": "كلمة المرور الجديدة",
     "confirmPassword": "تأكيد كلمة المرور",
@@ -39,34 +41,18 @@
     "sessionExpired": "انتهت الجلسة. يرجى تسجيل الدخول مرة أخرى."
   },
   "nav": {
-    "dashboard": "لوحة التحكم",
-    "users": "المستخدمين",
-    "departments": "الأقسام",
+    "profile": "الملف الشخصي",
+    "settings": "الإعدادات",
     "notifications": "الإشعارات",
     "files": "الملفات",
     "auditLogs": "سجلات التدقيق"
   },
-  "user": {
-    "title": "المستخدمين",
-    "addUser": "إضافة مستخدم",
-    "editUser": "تعديل مستخدم",
-    "deleteUser": "حذف مستخدم",
-    "firstName": "الاسم الأول",
-    "lastName": "اسم العائلة",
-    "role": "الدور",
-    "department": "القسم",
-    "createdAt": "تاريخ الإنشاء",
-    "lastLogin": "آخر تسجيل دخول",
-    "deleteConfirm": "هل أنت متأكد من حذف هذا المستخدم؟"
-  },
-  "department": {
-    "title": "الأقسام",
-    "addDepartment": "إضافة قسم",
-    "editDepartment": "تعديل قسم",
-    "deleteDepartment": "حذف قسم",
-    "name": "الاسم",
-    "description": "الوصف",
-    "deleteConfirm": "هل أنت متأكد من حذف هذا القسم؟"
+  "profile": {
+    "title": "الملف الشخصي",
+    "updateProfile": "تحديث الملف الشخصي",
+    "changePassword": "تغيير كلمة المرور",
+    "profileUpdated": "تم تحديث الملف الشخصي بنجاح",
+    "passwordChanged": "تم تغيير كلمة المرور بنجاح"
   },
   "notification": {
     "title": "الإشعارات",

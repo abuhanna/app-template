@@ -3,7 +3,7 @@ import { describe, it, expect, beforeEach, vi } from 'vitest'
 vi.mock('@/router', () => ({
   default: {
     push: vi.fn(),
-    currentRoute: { value: { fullPath: '/dashboard' } },
+    currentRoute: { value: { fullPath: '/notifications' } },
   },
 }))
 

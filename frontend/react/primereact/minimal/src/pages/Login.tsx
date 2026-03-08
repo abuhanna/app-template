@@ -24,7 +24,7 @@ export default function Login() {
 
   useEffect(() => {
     if (token) {
-      navigate('/dashboard')
+      navigate('/notifications')
     }
   }, [token, navigate])
 
@@ -55,7 +55,7 @@ export default function Login() {
 
     try {
       await login({ username, password })
-      navigate('/dashboard')
+      navigate('/notifications')
     } catch (err: any) {
       setError(err.response?.data?.message || 'Invalid username or password')
     } finally {

@@ -12,11 +12,10 @@ interface AppHeaderProps {
 }
 
 const pageTitles: Record<string, string> = {
-  '/dashboard': 'Dashboard',
   '/profile': 'Profile',
-  '/users': 'User Management',
-  '/departments': 'Department Management',
   '/notifications': 'Notifications',
+  '/files': 'Files',
+  '/audit-logs': 'Audit Logs',
 }
 
 export function AppHeader({ onToggleSidebar }: AppHeaderProps) {

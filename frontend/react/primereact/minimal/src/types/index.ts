@@ -1,5 +1,3 @@
 export * from './auth'
-export * from './user'
-export * from './department'
 export * from './notification'
 export * from './pagination'

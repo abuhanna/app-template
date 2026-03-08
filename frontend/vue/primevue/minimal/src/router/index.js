@@ -41,7 +41,7 @@ router.beforeEach((to, from, next) => {
   }
 
   // Public pages that don't require authentication
-  const publicPages = ['/login']
+  const publicPages = ['/login', '/forgot-password', '/reset-password']
   const authRequired = !publicPages.includes(to.path)
 
   // Pages restricted to admin role only

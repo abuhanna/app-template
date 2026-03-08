@@ -133,6 +133,16 @@ export const useAuthStore = defineStore('auth', () => {
     }
   }
 
+  const fetchProfile = async () => {
+    try {
+      const profile = await authApi.getProfile()
+      user.value = profile
+      localStorage.setItem('user', JSON.stringify(profile))
+    } catch (error_) {
+      console.error('Failed to fetch profile:', error_)
+    }
+  }
+
   const clearAuth = () => {
     token.value = null
     user.value = null
@@ -159,6 +169,7 @@ export const useAuthStore = defineStore('auth', () => {
     login,
     logout,
     refreshTokens,
+    fetchProfile,
     clearAuth,
     initAuth,
   }

@@ -32,7 +32,7 @@ export default function Login() {
   const [showPassword, setShowPassword] = useState(false)
   const [error, setError] = useState('')
 
-  const from = (location.state as { from?: { pathname: string } })?.from?.pathname || '/dashboard'
+  const from = (location.state as { from?: { pathname: string } })?.from?.pathname || '/notifications'
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()

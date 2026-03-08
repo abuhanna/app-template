@@ -62,6 +62,12 @@
 
 
 
+          <div class="form-options">
+            <router-link to="/forgot-password" class="forgot-link">
+              Forgot password?
+            </router-link>
+          </div>
+
           <Button
             type="submit"
             label="Sign In"
@@ -354,6 +360,25 @@ const handleLogin = async () => {
 }
 
 
+
+.form-options {
+  display: flex;
+  justify-content: flex-end;
+  margin-top: -0.5rem;
+}
+
+.forgot-link {
+  font-size: 0.875rem;
+  font-weight: 500;
+  color: #6366f1;
+  text-decoration: none;
+  transition: color 0.2s;
+}
+
+.forgot-link:hover {
+  color: #4f46e5;
+  text-decoration: underline;
+}
 
 /* Submit Button */
 .submit-button {

@@ -1,4 +1,15 @@
-import type { User } from './user'
+export interface User {
+  id: string
+  username: string
+  email: string
+  name?: string
+  role: string
+  departmentId?: string
+  departmentName?: string
+  isActive: boolean
+  createdAt: string
+  updatedAt?: string
+}
 
 export interface LoginCredentials {
   username: string

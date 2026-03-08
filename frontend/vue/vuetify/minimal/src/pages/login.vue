@@ -144,8 +144,8 @@
         password: password.value,
       })
 
-      // Redirect to intended page or dashboard
-      const redirectTo = router.currentRoute.value.query.redirect || '/dashboard'
+      // Redirect to intended page or notifications
+      const redirectTo = router.currentRoute.value.query.redirect || '/notifications'
       router.push(redirectTo)
     } catch (error) {
       console.error('Login failed:', error)

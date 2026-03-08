@@ -1,5 +1,4 @@
 // Common components
-export { default as ExportButton } from './common/ExportButton.vue'
 export { default as NotificationMenu } from './common/NotificationMenu.vue'
 export { default as PasswordStrength } from './common/PasswordStrength.vue'
 export { default as SearchFilterBar } from './common/SearchFilterBar.vue'
