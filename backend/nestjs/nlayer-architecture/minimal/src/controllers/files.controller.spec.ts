@@ -9,7 +9,8 @@ describe('FilesController', () => {
 
   const mockService = {
     saveFile: jest.fn(),
-    listFiles: jest.fn(),
+    findAllPaginated: jest.fn(),
+    findOne: jest.fn(),
     getFile: jest.fn(),
     deleteFile: jest.fn(),
   };
@@ -43,30 +44,34 @@ describe('FilesController', () => {
 
       const savedFile = {
         id: 1,
-        fileName: 'test.pdf',
-        storedFileName: '1234567890-test.pdf',
+        fileName: '1234567890-test.pdf',
+        originalFileName: 'test.pdf',
         contentType: 'application/pdf',
         fileSize: 1024,
-        filePath: './uploads/1234567890-test.pdf',
       };
       mockService.saveFile.mockResolvedValue(savedFile);
 
-      const result = await controller.uploadFile(mockFile);
+      const mockReq = { user: { userId: 1 } };
+      const result = await controller.uploadFile(mockFile, mockReq);
 
-      expect(service.saveFile).toHaveBeenCalledWith(mockFile);
+      expect(service.saveFile).toHaveBeenCalledWith(mockFile, '1', undefined, undefined, false);
       expect(result).toEqual(savedFile);
     });
   });
 
   describe('listFiles', () => {
-    it('should return list of files', async () => {
-      const files = [{ id: 1, fileName: 'test.pdf' }];
-      mockService.listFiles.mockResolvedValue(files);
+    it('should return paginated list of files', async () => {
+      const paginatedResult = {
+        data: [{ id: 1, fileName: 'test.pdf' }],
+        pagination: { page: 1, pageSize: 10, totalItems: 1, totalPages: 1, hasNext: false, hasPrevious: false },
+      };
+      mockService.findAllPaginated.mockResolvedValue(paginatedResult);
 
-      const result = await controller.listFiles();
+      const query = { page: 1, pageSize: 10 } as any;
+      const result = await controller.listFiles(query);
 
-      expect(service.listFiles).toHaveBeenCalled();
-      expect(result).toEqual(files);
+      expect(service.findAllPaginated).toHaveBeenCalled();
+      expect(result).toEqual(paginatedResult);
     });
   });
 

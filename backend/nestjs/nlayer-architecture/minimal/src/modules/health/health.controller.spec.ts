@@ -1,5 +1,4 @@
 import { Test, TestingModule } from '@nestjs/testing';
-import { HttpException } from '@nestjs/common';
 import { HealthController } from './health.controller';
 import { DataSource } from 'typeorm';
 
@@ -40,16 +39,31 @@ describe('HealthController', () => {
     it('should return ready when database is connected', async () => {
       mockDataSource.query.mockResolvedValue([{ '?column?': 1 }]);
 
-      const result = await controller.ready();
+      const mockResponse = {
+        status: jest.fn().mockReturnThis(),
+        json: jest.fn().mockReturnThis(),
+      };
+      await controller.ready(mockResponse as any);
 
-      expect(result.status).toBe('ready');
-      expect(result.database).toBe('connected');
+      expect(mockResponse.status).toHaveBeenCalledWith(200);
+      expect(mockResponse.json).toHaveBeenCalledWith(
+        expect.objectContaining({ status: 'ready', database: 'connected' }),
+      );
     });
 
-    it('should throw when database is disconnected', async () => {
+    it('should return 503 when database is disconnected', async () => {
       mockDataSource.query.mockRejectedValue(new Error('Connection refused'));
 
-      await expect(controller.ready()).rejects.toThrow(HttpException);
+      const mockResponse = {
+        status: jest.fn().mockReturnThis(),
+        json: jest.fn().mockReturnThis(),
+      };
+      await controller.ready(mockResponse as any);
+
+      expect(mockResponse.status).toHaveBeenCalledWith(503);
+      expect(mockResponse.json).toHaveBeenCalledWith(
+        expect.objectContaining({ status: 'not ready', database: 'disconnected' }),
+      );
     });
   });
 

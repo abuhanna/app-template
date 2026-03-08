@@ -1,92 +1,126 @@
-import { TransformInterceptor } from './transform.interceptor';
+import { TransformInterceptor, RESPONSE_MESSAGE_KEY, SKIP_TRANSFORM_KEY } from './transform.interceptor';
+import { Reflector } from '@nestjs/core';
 import { ExecutionContext, CallHandler } from '@nestjs/common';
 import { of } from 'rxjs';
 
 describe('TransformInterceptor', () => {
-  let interceptor: TransformInterceptor<any>;
+  let interceptor: TransformInterceptor;
+  let reflector: Reflector;
+
+  const mockHandler = jest.fn();
+  const mockClass = jest.fn();
+
+  function createMockContext(): ExecutionContext {
+    return {
+      getHandler: () => mockHandler,
+      getClass: () => mockClass,
+    } as unknown as ExecutionContext;
+  }
 
   beforeEach(() => {
-    interceptor = new TransformInterceptor();
+    reflector = new Reflector();
+    interceptor = new TransformInterceptor(reflector);
   });
 
   it('should be defined', () => {
     expect(interceptor).toBeDefined();
   });
 
-  describe('intercept', () => {
-    const mockExecutionContext = {} as ExecutionContext;
+  it('should wrap response in success envelope', (done) => {
+    const mockContext = createMockContext();
+    const mockCallHandler: CallHandler = {
+      handle: () => of({ id: 1, name: 'test' }),
+    };
 
-    it('should wrap response data in ApiResponse format', (done) => {
-      const inputData = { id: 1, name: 'Test' };
-      const mockCallHandler: CallHandler = {
-        handle: () => of(inputData),
-      };
-
-      interceptor.intercept(mockExecutionContext, mockCallHandler).subscribe({
-        next: (result) => {
-          expect(result).toHaveProperty('data');
-          expect(result).toHaveProperty('timestamp');
-          expect(result.data).toEqual(inputData);
-        },
-        complete: () => done(),
-      });
+    jest.spyOn(reflector, 'get').mockImplementation((key: string) => {
+      if (key === SKIP_TRANSFORM_KEY) return undefined;
+      if (key === RESPONSE_MESSAGE_KEY) return undefined;
+      return undefined;
     });
 
-    it('should include a valid ISO timestamp', (done) => {
-      const mockCallHandler: CallHandler = {
-        handle: () => of({ test: true }),
-      };
+    interceptor.intercept(mockContext, mockCallHandler).subscribe((result: any) => {
+      expect(result.success).toBe(true);
+      expect(result.message).toBe('Operation successful');
+      expect(result.data).toEqual({ id: 1, name: 'test' });
+      done();
+    });
+  });
 
-      interceptor.intercept(mockExecutionContext, mockCallHandler).subscribe({
-        next: (result) => {
-          const timestamp = new Date(result.timestamp);
-          expect(timestamp.toISOString()).toBe(result.timestamp);
-        },
-        complete: () => done(),
-      });
+  it('should use custom message from ResponseMessage decorator', (done) => {
+    const mockContext = createMockContext();
+    const mockCallHandler: CallHandler = {
+      handle: () => of({ id: 1 }),
+    };
+
+    jest.spyOn(reflector, 'get').mockImplementation((key: string) => {
+      if (key === SKIP_TRANSFORM_KEY) return undefined;
+      if (key === RESPONSE_MESSAGE_KEY) return 'Custom message';
+      return undefined;
     });
 
-    it('should handle null data', (done) => {
-      const mockCallHandler: CallHandler = {
-        handle: () => of(null),
-      };
+    interceptor.intercept(mockContext, mockCallHandler).subscribe((result: any) => {
+      expect(result.message).toBe('Custom message');
+      done();
+    });
+  });
 
-      interceptor.intercept(mockExecutionContext, mockCallHandler).subscribe({
-        next: (result) => {
-          expect(result.data).toBeNull();
-          expect(result).toHaveProperty('timestamp');
-        },
-        complete: () => done(),
-      });
+  it('should pass through null/undefined for 204 responses', (done) => {
+    const mockContext = createMockContext();
+    const mockCallHandler: CallHandler = {
+      handle: () => of(undefined),
+    };
+
+    jest.spyOn(reflector, 'get').mockImplementation((key: string) => {
+      if (key === SKIP_TRANSFORM_KEY) return undefined;
+      if (key === RESPONSE_MESSAGE_KEY) return undefined;
+      return undefined;
     });
 
-    it('should handle array data', (done) => {
-      const inputData = [{ id: 1 }, { id: 2 }];
-      const mockCallHandler: CallHandler = {
-        handle: () => of(inputData),
-      };
+    interceptor.intercept(mockContext, mockCallHandler).subscribe((result: any) => {
+      expect(result).toBeUndefined();
+      done();
+    });
+  });
 
-      interceptor.intercept(mockExecutionContext, mockCallHandler).subscribe({
-        next: (result) => {
-          expect(result.data).toEqual(inputData);
-          expect(Array.isArray(result.data)).toBe(true);
-        },
-        complete: () => done(),
-      });
+  it('should flatten paginated responses', (done) => {
+    const mockContext = createMockContext();
+    const paginatedData = {
+      data: [{ id: 1 }],
+      pagination: { page: 1, pageSize: 10, totalItems: 1, totalPages: 1, hasNext: false, hasPrevious: false },
+    };
+    const mockCallHandler: CallHandler = {
+      handle: () => of(paginatedData),
+    };
+
+    jest.spyOn(reflector, 'get').mockImplementation((key: string) => {
+      if (key === SKIP_TRANSFORM_KEY) return undefined;
+      if (key === RESPONSE_MESSAGE_KEY) return undefined;
+      return undefined;
     });
 
-    it('should handle string data', (done) => {
-      const mockCallHandler: CallHandler = {
-        handle: () => of('simple string'),
-      };
+    interceptor.intercept(mockContext, mockCallHandler).subscribe((result: any) => {
+      expect(result.success).toBe(true);
+      expect(result.data).toEqual([{ id: 1 }]);
+      expect(result.pagination).toBeDefined();
+      done();
+    });
+  });
 
-      interceptor.intercept(mockExecutionContext, mockCallHandler).subscribe({
-        next: (result) => {
-          expect(result.data).toBe('simple string');
-          expect(result).toHaveProperty('timestamp');
-        },
-        complete: () => done(),
-      });
+  it('should skip transform when SKIP_TRANSFORM_KEY is set on handler', (done) => {
+    const mockContext = createMockContext();
+    const rawData = { id: 1, name: 'raw' };
+    const mockCallHandler: CallHandler = {
+      handle: () => of(rawData),
+    };
+
+    jest.spyOn(reflector, 'get').mockImplementation((key: string, target: any) => {
+      if (key === SKIP_TRANSFORM_KEY && target === mockHandler) return true;
+      return undefined;
+    });
+
+    interceptor.intercept(mockContext, mockCallHandler).subscribe((result: any) => {
+      expect(result).toEqual(rawData);
+      done();
     });
   });
 });

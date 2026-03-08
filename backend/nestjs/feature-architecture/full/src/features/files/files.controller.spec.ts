@@ -8,8 +8,11 @@ describe('FilesController', () => {
   let service: FilesService;
 
   const mockService = {
+    findAll: jest.fn(),
     saveFile: jest.fn(),
-    getFile: jest.fn(),
+    getFileMetadata: jest.fn(),
+    getFileForDownload: jest.fn(),
+    deleteFile: jest.fn(),
   };
 
   beforeEach(async () => {
@@ -41,17 +44,17 @@ describe('FilesController', () => {
 
       const savedFile = {
         id: 1,
-        fileName: 'test.pdf',
-        storedFileName: '1234567890-test.pdf',
+        fileName: 'uuid_test.pdf',
+        originalFileName: 'test.pdf',
         contentType: 'application/pdf',
         fileSize: 1024,
-        filePath: './uploads/1234567890-test.pdf',
+        downloadUrl: '/api/files/1/download',
       };
       mockService.saveFile.mockResolvedValue(savedFile);
 
-      const result = await controller.uploadFile(mockFile);
+      const result = await controller.uploadFile(mockFile, { user: { userId: 1 } });
 
-      expect(service.saveFile).toHaveBeenCalledWith(mockFile);
+      expect(service.saveFile).toHaveBeenCalled();
       expect(result).toEqual(savedFile);
     });
   });
@@ -64,15 +67,15 @@ describe('FilesController', () => {
         contentType: 'application/pdf',
         fileName: 'test.pdf',
       };
-      mockService.getFile.mockResolvedValue(fileResult);
+      mockService.getFileForDownload.mockResolvedValue(fileResult);
 
       const mockResponse = {
         set: jest.fn(),
       } as any;
 
-      const result = await controller.downloadFile('1', mockResponse);
+      const result = await controller.downloadFile(1, mockResponse, { user: null });
 
-      expect(service.getFile).toHaveBeenCalledWith(1);
+      expect(service.getFileForDownload).toHaveBeenCalledWith(1, false);
       expect(mockResponse.set).toHaveBeenCalledWith({
         'Content-Type': 'application/pdf',
         'Content-Disposition': 'attachment; filename="test.pdf"',

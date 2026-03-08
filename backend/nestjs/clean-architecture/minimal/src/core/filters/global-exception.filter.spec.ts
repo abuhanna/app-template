@@ -44,16 +44,13 @@ describe('GlobalExceptionFilter', () => {
       filter.catch(exception, mockArgumentsHost);
 
       expect(mockResponse.status).toHaveBeenCalledWith(HttpStatus.NOT_FOUND);
-      expect(mockResponse.json).toHaveBeenCalledWith(
-        expect.objectContaining({
-          statusCode: HttpStatus.NOT_FOUND,
-          message: 'Not Found',
-          path: '/api/test',
-        }),
-      );
+      expect(mockResponse.json).toHaveBeenCalledWith({
+        success: false,
+        message: 'Not Found',
+      });
     });
 
-    it('should handle HttpException with object response', () => {
+    it('should handle HttpException with object response containing string message', () => {
       const exception = new HttpException(
         { message: 'Validation failed', error: 'Bad Request' },
         HttpStatus.BAD_REQUEST,
@@ -62,14 +59,10 @@ describe('GlobalExceptionFilter', () => {
       filter.catch(exception, mockArgumentsHost);
 
       expect(mockResponse.status).toHaveBeenCalledWith(HttpStatus.BAD_REQUEST);
-      expect(mockResponse.json).toHaveBeenCalledWith(
-        expect.objectContaining({
-          statusCode: HttpStatus.BAD_REQUEST,
-          message: 'Validation failed',
-          error: 'Bad Request',
-          path: '/api/test',
-        }),
-      );
+      expect(mockResponse.json).toHaveBeenCalledWith({
+        success: false,
+        message: 'Validation failed',
+      });
     });
 
     it('should handle HttpException with array message (validation errors)', () => {
@@ -85,60 +78,55 @@ describe('GlobalExceptionFilter', () => {
 
       expect(mockResponse.status).toHaveBeenCalledWith(HttpStatus.BAD_REQUEST);
       const jsonCall = mockResponse.json.mock.calls[0][0];
-      expect(jsonCall.message).toEqual(['field1 is required', 'field2 must be a string']);
+      expect(jsonCall.success).toBe(false);
+      expect(jsonCall.message).toBe('Validation failed');
+      expect(jsonCall.errors).toEqual(['field1 is required', 'field2 must be a string']);
     });
 
-    it('should handle generic Error', () => {
+    it('should handle generic Error with 500 status and generic message', () => {
       const exception = new Error('Something went wrong');
 
       filter.catch(exception, mockArgumentsHost);
 
       expect(mockResponse.status).toHaveBeenCalledWith(HttpStatus.INTERNAL_SERVER_ERROR);
-      expect(mockResponse.json).toHaveBeenCalledWith(
-        expect.objectContaining({
-          statusCode: HttpStatus.INTERNAL_SERVER_ERROR,
-          message: 'Something went wrong',
-          error: 'Error',
-          path: '/api/test',
-        }),
-      );
+      expect(mockResponse.json).toHaveBeenCalledWith({
+        success: false,
+        message: 'Internal server error',
+      });
     });
 
-    it('should handle unknown exception type', () => {
+    it('should handle unknown exception type with 500 status and generic message', () => {
       const exception = 'unexpected string error';
 
       filter.catch(exception, mockArgumentsHost);
 
       expect(mockResponse.status).toHaveBeenCalledWith(HttpStatus.INTERNAL_SERVER_ERROR);
-      expect(mockResponse.json).toHaveBeenCalledWith(
-        expect.objectContaining({
-          statusCode: HttpStatus.INTERNAL_SERVER_ERROR,
-          message: 'Internal server error',
-          error: 'Internal Server Error',
-          path: '/api/test',
-        }),
-      );
+      expect(mockResponse.json).toHaveBeenCalledWith({
+        success: false,
+        message: 'Internal server error',
+      });
     });
 
-    it('should include timestamp in response', () => {
+    it('should not include errors array when there are no validation errors', () => {
       const exception = new HttpException('Test', HttpStatus.BAD_REQUEST);
 
       filter.catch(exception, mockArgumentsHost);
 
       const jsonCall = mockResponse.json.mock.calls[0][0];
-      expect(jsonCall).toHaveProperty('timestamp');
-      const timestamp = new Date(jsonCall.timestamp);
-      expect(timestamp.toISOString()).toBe(jsonCall.timestamp);
+      expect(jsonCall.success).toBe(false);
+      expect(jsonCall).not.toHaveProperty('errors');
     });
 
-    it('should include request path in response', () => {
-      mockRequest.url = '/api/users/123';
-      const exception = new HttpException('Not Found', HttpStatus.NOT_FOUND);
+    it('should use generic message for 500 errors even from HttpException', () => {
+      const exception = new HttpException('Sensitive error details', HttpStatus.INTERNAL_SERVER_ERROR);
 
       filter.catch(exception, mockArgumentsHost);
 
-      const jsonCall = mockResponse.json.mock.calls[0][0];
-      expect(jsonCall.path).toBe('/api/users/123');
+      expect(mockResponse.status).toHaveBeenCalledWith(HttpStatus.INTERNAL_SERVER_ERROR);
+      expect(mockResponse.json).toHaveBeenCalledWith({
+        success: false,
+        message: 'Internal server error',
+      });
     });
   });
 });

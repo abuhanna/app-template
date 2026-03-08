@@ -14,17 +14,17 @@ export class GetDepartmentsHandler implements IQueryHandler<GetDepartmentsQuery>
   ) {}
 
   async execute(query: GetDepartmentsQuery): Promise<PagedResult<DepartmentDto>> {
-    const { page, pageSize, sortBy, sortDir, search } = query;
+    const { page, pageSize, sortBy, sortOrder, search } = query;
 
     const result = await this.departmentRepository.findAllPaginated({
       page,
       pageSize,
       sortBy,
-      sortDir,
+      sortOrder,
       search,
     });
 
-    const departmentDtos = DepartmentMapper.toDtoList(result.items);
+    const departmentDtos = DepartmentMapper.toDtoList(result.data);
 
     return createPagedResult(departmentDtos, result.totalItems, page, pageSize);
   }

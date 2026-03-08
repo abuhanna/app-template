@@ -17,7 +17,11 @@ export class DepartmentRepository implements IDepartmentRepository {
   ) {}
 
   async findById(id: number): Promise<Department | null> {
-    const entity = await this.repository.findOne({ where: { id: id.toString() } });
+    const entity = await this.repository
+      .createQueryBuilder('department')
+      .loadRelationCountAndMap('department.userCount', 'department.users')
+      .where('department.id = :id', { id: id.toString() })
+      .getOne();
     return entity ? this.toDomain(entity) : null;
   }
 
@@ -27,14 +31,21 @@ export class DepartmentRepository implements IDepartmentRepository {
   }
 
   async findAll(): Promise<Department[]> {
-    const entities = await this.repository.find({ order: { name: 'ASC' } });
+    const entities = await this.repository
+      .createQueryBuilder('department')
+      .loadRelationCountAndMap('department.userCount', 'department.users')
+      .orderBy('department.name', 'ASC')
+      .getMany();
     return entities.map((entity) => this.toDomain(entity));
   }
 
   async findAllPaginated(options: DepartmentPaginationOptions): Promise<DepartmentPaginatedResult> {
-    const { page, pageSize, sortBy, sortDir = 'asc', search } = options;
+    const { page, pageSize, sortBy, sortOrder = 'desc', search } = options;
 
     const queryBuilder = this.repository.createQueryBuilder('department');
+
+    // Load user count
+    queryBuilder.loadRelationCountAndMap('department.userCount', 'department.users');
 
     // Apply search filter
     if (search) {
@@ -56,7 +67,7 @@ export class DepartmentRepository implements IDepartmentRepository {
     };
 
     if (sortBy && validSortFields.includes(sortBy)) {
-      queryBuilder.orderBy(sortFieldMap[sortBy], sortDir.toUpperCase() as 'ASC' | 'DESC');
+      queryBuilder.orderBy(sortFieldMap[sortBy], sortOrder.toUpperCase() as 'ASC' | 'DESC');
     } else {
       queryBuilder.orderBy('department.name', 'ASC');
     }
@@ -70,7 +81,7 @@ export class DepartmentRepository implements IDepartmentRepository {
     const entities = await queryBuilder.getMany();
 
     return {
-      items: entities.map((entity) => this.toDomain(entity)),
+      data: entities.map((entity) => this.toDomain(entity)),
       totalItems,
     };
   }
@@ -96,6 +107,7 @@ export class DepartmentRepository implements IDepartmentRepository {
       entity.updatedAt,
       entity.createdBy ? parseInt(entity.createdBy, 10) : null,
       entity.updatedBy ? parseInt(entity.updatedBy, 10) : null,
+      entity.userCount ?? 0,
     );
   }
 

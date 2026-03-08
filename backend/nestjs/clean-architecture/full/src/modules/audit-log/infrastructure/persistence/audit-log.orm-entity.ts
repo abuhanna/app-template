@@ -7,22 +7,34 @@ import {
 } from 'typeorm';
 
 @Entity('audit_logs')
-@Index(['entityName'])
+@Index(['entityType'])
 @Index(['entityId'])
 @Index(['userId'])
-@Index(['timestamp'])
+@Index(['createdAt'])
 export class AuditLogOrmEntity {
   @PrimaryGeneratedColumn()
   id: number;
 
-  @Column({ name: 'entity_name', length: 100 })
-  entityName: string;
+  @Column({ name: 'entity_type', length: 100 })
+  entityType: string;
 
-  @Column({ name: 'entity_id', length: 50 })
-  entityId: string;
+  @Column({ name: 'entity_id', length: 50, nullable: true })
+  entityId: string | null;
 
   @Column({ length: 20 })
   action: string;
+
+  @Column({ name: 'user_id', type: 'bigint', nullable: true })
+  userId: number | null;
+
+  @Column({ name: 'user_name', length: 200, nullable: true })
+  userName: string | null;
+
+  @Column({ type: 'text', nullable: true })
+  details: string | null;
+
+  @Column({ name: 'ip_address', length: 50, nullable: true })
+  ipAddress: string | null;
 
   @Column({ name: 'old_values', type: 'text', nullable: true })
   oldValues: string | null;
@@ -33,9 +45,6 @@ export class AuditLogOrmEntity {
   @Column({ name: 'affected_columns', type: 'text', nullable: true })
   affectedColumns: string | null;
 
-  @Column({ name: 'user_id', type: 'bigint', nullable: true })
-  userId: number | null;
-
-  @CreateDateColumn({ name: 'timestamp' })
-  timestamp: Date;
+  @CreateDateColumn({ name: 'created_at', type: 'timestamptz' })
+  createdAt: Date;
 }

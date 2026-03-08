@@ -9,70 +9,128 @@ export class AuditService {
   constructor(private readonly auditLogRepository: IAuditLogRepository) {}
 
   async logCreate(
-    entityName: string,
+    entityType: string,
     entityId: string,
     newValues: object,
     userId?: number,
+    userName?: string,
+    details?: string,
+    ipAddress?: string,
   ): Promise<void> {
     try {
       const auditLog = AuditLog.create(
-        entityName,
+        entityType,
         entityId,
-        AuditAction.CREATED,
+        AuditAction.CREATE,
         null,
         JSON.stringify(newValues),
         null,
         userId ?? null,
+        userName,
+        details,
+        ipAddress,
       );
       await this.auditLogRepository.save(auditLog);
     } catch (error) {
-      this.logger.warn(`Failed to log create audit for ${entityName} ${entityId}: ${error.message}`);
+      this.logger.warn(`Failed to log create audit for ${entityType} ${entityId}: ${error.message}`);
     }
   }
 
   async logUpdate(
-    entityName: string,
+    entityType: string,
     entityId: string,
     oldValues: object | null,
     newValues: object,
     affectedColumns?: string[],
     userId?: number,
+    userName?: string,
+    details?: string,
+    ipAddress?: string,
   ): Promise<void> {
     try {
       const auditLog = AuditLog.create(
-        entityName,
+        entityType,
         entityId,
-        AuditAction.UPDATED,
+        AuditAction.UPDATE,
         oldValues ? JSON.stringify(oldValues) : null,
         JSON.stringify(newValues),
         affectedColumns ? JSON.stringify(affectedColumns) : null,
         userId ?? null,
+        userName,
+        details,
+        ipAddress,
       );
       await this.auditLogRepository.save(auditLog);
     } catch (error) {
-      this.logger.warn(`Failed to log update audit for ${entityName} ${entityId}: ${error.message}`);
+      this.logger.warn(`Failed to log update audit for ${entityType} ${entityId}: ${error.message}`);
     }
   }
 
   async logDelete(
-    entityName: string,
+    entityType: string,
     entityId: string,
     oldValues: object,
     userId?: number,
+    userName?: string,
+    details?: string,
+    ipAddress?: string,
   ): Promise<void> {
     try {
       const auditLog = AuditLog.create(
-        entityName,
+        entityType,
         entityId,
-        AuditAction.DELETED,
+        AuditAction.DELETE,
         JSON.stringify(oldValues),
         null,
         null,
         userId ?? null,
+        userName,
+        details,
+        ipAddress,
       );
       await this.auditLogRepository.save(auditLog);
     } catch (error) {
-      this.logger.warn(`Failed to log delete audit for ${entityName} ${entityId}: ${error.message}`);
+      this.logger.warn(`Failed to log delete audit for ${entityType} ${entityId}: ${error.message}`);
+    }
+  }
+
+  async logLogin(userId: number, userName?: string, ipAddress?: string): Promise<void> {
+    try {
+      const auditLog = AuditLog.create(
+        'User',
+        String(userId),
+        AuditAction.LOGIN,
+        null,
+        null,
+        null,
+        userId,
+        userName,
+        'User logged in',
+        ipAddress,
+      );
+      await this.auditLogRepository.save(auditLog);
+    } catch (error) {
+      this.logger.warn(`Failed to log login audit for user ${userId}: ${error.message}`);
+    }
+  }
+
+  async logLogout(userId: number, userName?: string, ipAddress?: string): Promise<void> {
+    try {
+      const auditLog = AuditLog.create(
+        'User',
+        String(userId),
+        AuditAction.LOGOUT,
+        null,
+        null,
+        null,
+        userId,
+        userName,
+        'User logged out',
+        ipAddress,
+      );
+      await this.auditLogRepository.save(auditLog);
+    } catch (error) {
+      this.logger.warn(`Failed to log logout audit for user ${userId}: ${error.message}`);
     }
   }
 }

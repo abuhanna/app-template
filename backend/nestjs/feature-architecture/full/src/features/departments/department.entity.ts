@@ -5,14 +5,17 @@ export class Department {
   @PrimaryGeneratedColumn()
   id: number;
 
+  @Column({ length: 50, unique: true })
+  code: string;
+
   @Column({ length: 100 })
   name: string;
 
-  @Column({ length: 50 })
-  code: string;
-
   @Column({ length: 500, nullable: true })
-  description: string;
+  description: string | null;
+
+  @Column({ name: 'is_active', default: true })
+  isActive: boolean;
 
   @CreateDateColumn({ name: 'created_at' })
   createdAt: Date;

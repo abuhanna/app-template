@@ -25,8 +25,10 @@ import { IEmailService } from './domain/interfaces/email.service.interface';
 // Application
 import {
   LoginHandler,
+  RegisterHandler,
   RefreshTokenHandler,
   LogoutHandler,
+  ChangePasswordHandler,
   RequestPasswordResetHandler,
   ResetPasswordHandler,
   UpdateProfileHandler,
@@ -39,8 +41,10 @@ import { DepartmentManagementModule } from '../department-management/department-
 
 const CommandHandlers = [
   LoginHandler,
+  RegisterHandler,
   RefreshTokenHandler,
   LogoutHandler,
+  ChangePasswordHandler,
   RequestPasswordResetHandler,
   ResetPasswordHandler,
   UpdateProfileHandler,

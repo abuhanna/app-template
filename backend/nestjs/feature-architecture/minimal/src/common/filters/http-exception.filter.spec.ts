@@ -1,14 +1,14 @@
 import { HttpException, HttpStatus } from '@nestjs/common';
-import { HttpExceptionFilter } from './http-exception.filter';
+import { GlobalExceptionFilter } from './http-exception.filter';
 
-describe('HttpExceptionFilter', () => {
-  let filter: HttpExceptionFilter;
+describe('GlobalExceptionFilter', () => {
+  let filter: GlobalExceptionFilter;
   let mockResponse: any;
   let mockRequest: any;
   let mockHost: any;
 
   beforeEach(() => {
-    filter = new HttpExceptionFilter();
+    filter = new GlobalExceptionFilter();
 
     mockResponse = {
       status: jest.fn().mockReturnThis(),
@@ -36,8 +36,8 @@ describe('HttpExceptionFilter', () => {
     expect(mockResponse.status).toHaveBeenCalledWith(HttpStatus.NOT_FOUND);
     expect(mockResponse.json).toHaveBeenCalledWith(
       expect.objectContaining({
-        statusCode: HttpStatus.NOT_FOUND,
-        path: '/api/test',
+        success: false,
+        message: 'Not Found',
       }),
     );
   });
@@ -50,7 +50,7 @@ describe('HttpExceptionFilter', () => {
     expect(mockResponse.status).toHaveBeenCalledWith(HttpStatus.INTERNAL_SERVER_ERROR);
     expect(mockResponse.json).toHaveBeenCalledWith(
       expect.objectContaining({
-        statusCode: HttpStatus.INTERNAL_SERVER_ERROR,
+        success: false,
         message: 'Internal server error',
       }),
     );

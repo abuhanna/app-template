@@ -1,6 +1,6 @@
 import { Injectable } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
-import { Repository, Between, LessThanOrEqual, MoreThanOrEqual } from 'typeorm';
+import { Repository } from 'typeorm';
 import { AuditLog, AuditAction } from '../../domain/entities/audit-log.entity';
 import {
   IAuditLogRepository,
@@ -16,13 +16,18 @@ export class AuditLogRepository implements IAuditLogRepository {
     private readonly repository: Repository<AuditLogOrmEntity>,
   ) {}
 
+  async findById(id: number): Promise<AuditLog | null> {
+    const entity = await this.repository.findOne({ where: { id } });
+    return entity ? this.toDomain(entity) : null;
+  }
+
   async findByFilters(filters: GetAuditLogsFilters): Promise<AuditLog[]> {
-    const { entityName, entityId, userId, action, fromDate, toDate, page = 1, pageSize = 20 } = filters;
+    const { entityType, entityId, userId, action, fromDate, toDate, page = 1, pageSize = 10 } = filters;
 
     const queryBuilder = this.repository.createQueryBuilder('audit');
 
-    if (entityName) {
-      queryBuilder.andWhere('audit.entityName = :entityName', { entityName });
+    if (entityType) {
+      queryBuilder.andWhere('audit.entityType = :entityType', { entityType });
     }
 
     if (entityId) {
@@ -38,15 +43,15 @@ export class AuditLogRepository implements IAuditLogRepository {
     }
 
     if (fromDate) {
-      queryBuilder.andWhere('audit.timestamp >= :fromDate', { fromDate });
+      queryBuilder.andWhere('audit.createdAt >= :fromDate', { fromDate });
     }
 
     if (toDate) {
-      queryBuilder.andWhere('audit.timestamp <= :toDate', { toDate });
+      queryBuilder.andWhere('audit.createdAt <= :toDate', { toDate });
     }
 
     queryBuilder
-      .orderBy('audit.timestamp', 'DESC')
+      .orderBy('audit.createdAt', 'DESC')
       .skip((page - 1) * pageSize)
       .take(pageSize);
 
@@ -57,23 +62,23 @@ export class AuditLogRepository implements IAuditLogRepository {
 
   async findByFiltersPaginated(filters: GetAuditLogsFilters): Promise<AuditLogPaginatedResult> {
     const {
-      entityName,
+      entityType,
       entityId,
       userId,
       action,
       fromDate,
       toDate,
       page = 1,
-      pageSize = 20,
+      pageSize = 10,
       sortBy,
-      sortDir = 'desc',
+      sortOrder = 'desc',
       search,
     } = filters;
 
     const queryBuilder = this.repository.createQueryBuilder('audit');
 
-    if (entityName) {
-      queryBuilder.andWhere('audit.entityName = :entityName', { entityName });
+    if (entityType) {
+      queryBuilder.andWhere('audit.entityType = :entityType', { entityType });
     }
 
     if (entityId) {
@@ -89,36 +94,36 @@ export class AuditLogRepository implements IAuditLogRepository {
     }
 
     if (fromDate) {
-      queryBuilder.andWhere('audit.timestamp >= :fromDate', { fromDate });
+      queryBuilder.andWhere('audit.createdAt >= :fromDate', { fromDate });
     }
 
     if (toDate) {
-      queryBuilder.andWhere('audit.timestamp <= :toDate', { toDate });
+      queryBuilder.andWhere('audit.createdAt <= :toDate', { toDate });
     }
 
     // Apply search filter
     if (search) {
       queryBuilder.andWhere(
-        '(audit.entityName ILIKE :search OR audit.entityId ILIKE :search OR audit.action ILIKE :search)',
+        '(audit.entityType ILIKE :search OR audit.entityId ILIKE :search OR audit.action ILIKE :search OR audit.userName ILIKE :search OR audit.details ILIKE :search)',
         { search: `%${search}%` },
       );
     }
 
     // Apply sorting
-    const validSortFields = ['id', 'entityName', 'entityId', 'action', 'userId', 'timestamp'];
+    const validSortFields = ['id', 'entityType', 'entityId', 'action', 'userId', 'createdAt'];
     const sortFieldMap: Record<string, string> = {
       id: 'audit.id',
-      entityName: 'audit.entityName',
+      entityType: 'audit.entityType',
       entityId: 'audit.entityId',
       action: 'audit.action',
       userId: 'audit.userId',
-      timestamp: 'audit.timestamp',
+      createdAt: 'audit.createdAt',
     };
 
     if (sortBy && validSortFields.includes(sortBy)) {
-      queryBuilder.orderBy(sortFieldMap[sortBy], sortDir.toUpperCase() as 'ASC' | 'DESC');
+      queryBuilder.orderBy(sortFieldMap[sortBy], sortOrder.toUpperCase() as 'ASC' | 'DESC');
     } else {
-      queryBuilder.orderBy('audit.timestamp', 'DESC');
+      queryBuilder.orderBy('audit.createdAt', 'DESC');
     }
 
     // Get total count
@@ -144,28 +149,34 @@ export class AuditLogRepository implements IAuditLogRepository {
   private toDomain(entity: AuditLogOrmEntity): AuditLog {
     return new AuditLog({
       id: entity.id,
-      entityName: entity.entityName,
+      entityType: entity.entityType,
       entityId: entity.entityId,
       action: entity.action as AuditAction,
+      userId: entity.userId,
+      userName: entity.userName,
+      details: entity.details,
+      ipAddress: entity.ipAddress,
       oldValues: entity.oldValues,
       newValues: entity.newValues,
       affectedColumns: entity.affectedColumns,
-      userId: entity.userId,
-      timestamp: entity.timestamp,
+      createdAt: entity.createdAt,
     });
   }
 
   private toEntity(domain: AuditLog): Partial<AuditLogOrmEntity> {
     return {
       id: domain.id,
-      entityName: domain.entityName,
+      entityType: domain.entityType,
       entityId: domain.entityId,
       action: domain.action,
+      userId: domain.userId,
+      userName: domain.userName,
+      details: domain.details,
+      ipAddress: domain.ipAddress,
       oldValues: domain.oldValues,
       newValues: domain.newValues,
       affectedColumns: domain.affectedColumns,
-      userId: domain.userId,
-      timestamp: domain.timestamp,
+      createdAt: domain.createdAt,
     };
   }
 }

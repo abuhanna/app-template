@@ -16,6 +16,9 @@ export class DepartmentDto {
   @ApiProperty({ description: 'Is active' })
   isActive: boolean;
 
+  @ApiProperty({ description: 'Number of users in the department' })
+  userCount: number;
+
   @ApiProperty({ description: 'Created at' })
   createdAt: Date;
 

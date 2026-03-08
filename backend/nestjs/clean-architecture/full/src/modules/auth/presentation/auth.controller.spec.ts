@@ -210,14 +210,11 @@ describe('AuthController', () => {
       mockCommandBus.execute.mockResolvedValue(undefined);
 
       const dto = { email: 'admin@test.com' };
-      const result = await controller.forgotPassword(dto);
+      await controller.forgotPassword(dto);
 
       expect(mockCommandBus.execute).toHaveBeenCalledWith(
         new RequestPasswordResetCommand('admin@test.com'),
       );
-      expect(result).toEqual({
-        message: 'If your email is registered, you will receive a password reset link.',
-      });
     });
   });
 
@@ -230,12 +227,11 @@ describe('AuthController', () => {
         newPassword: 'NewPassword@123',
         confirmPassword: 'NewPassword@123',
       };
-      const result = await controller.resetPassword(dto);
+      await controller.resetPassword(dto);
 
       expect(mockCommandBus.execute).toHaveBeenCalledWith(
         new ResetPasswordCommand('reset-token', 'NewPassword@123'),
       );
-      expect(result).toEqual({ message: 'Password reset successful' });
     });
 
     it('should throw error when passwords do not match', async () => {

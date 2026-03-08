@@ -2,9 +2,7 @@ import { Injectable, UnauthorizedException, NotFoundException } from '@nestjs/co
 import { JwtService } from '@nestjs/jwt';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
-import * as bcrypt from 'bcrypt';
 import { User } from '../entities/user.entity';
-import { RefreshToken } from '../entities/refresh-token.entity';
 import { ConfigService } from '@nestjs/config';
 
 @Injectable()
@@ -12,86 +10,43 @@ export class AuthService {
   constructor(
     @InjectRepository(User)
     private readonly userRepository: Repository<User>,
-    @InjectRepository(RefreshToken)
-    private readonly refreshTokenRepository: Repository<RefreshToken>,
     private readonly jwtService: JwtService,
     private readonly configService: ConfigService,
   ) {}
 
-  async validateUser(identifier: string, password: string): Promise<User | null> {
-    const user = await this.userRepository.findOne({
-      where: [{ email: identifier }, { name: identifier }],
-    });
-    if (user && (await bcrypt.compare(password, user.passwordHash))) {
-      return user;
-    }
-    return null;
-  }
-
-  async login(user: User) {
-    const payload = { email: user.email, sub: user.id };
-    const accessToken = this.jwtService.sign(payload);
-    const refreshToken = this.jwtService.sign(payload, {
-      expiresIn: this.configService.get<string>('JWT_REFRESH_EXPIRES_IN', '7d'),
-    });
-
-    // Save refresh token
-    const tokenEntity = this.refreshTokenRepository.create({
-      userId: user.id,
-      token: refreshToken,
-      expiresAt: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000),
-    });
-    await this.refreshTokenRepository.save(tokenEntity);
-
-    return {
-      accessToken,
-      refreshToken,
-      user: {
-        id: user.id,
-        name: user.name,
-        email: user.email,
-      },
-    };
-  }
-
-  async refresh(refreshTokenValue: string) {
+  async validateToken(externalToken: string) {
     try {
-      const decoded = this.jwtService.verify(refreshTokenValue);
-      const storedToken = await this.refreshTokenRepository.findOne({
-        where: { token: refreshTokenValue, isRevoked: false },
+      // Decode the external token (shared secret or public key)
+      const decoded = this.jwtService.verify(externalToken);
+
+      // Find or create user from external token claims
+      let user = await this.userRepository.findOne({
+        where: [{ email: decoded.email }, { username: decoded.username || decoded.sub }],
       });
 
-      if (!storedToken || storedToken.expiresAt < new Date()) {
-        throw new UnauthorizedException('Invalid or expired refresh token');
-      }
-
-      const user = await this.userRepository.findOneBy({ id: decoded.sub });
       if (!user) {
-        throw new UnauthorizedException('User not found');
+        user = this.userRepository.create({
+          username: decoded.username || decoded.sub || decoded.email.split('@')[0],
+          email: decoded.email,
+          firstName: decoded.firstName ?? undefined,
+          lastName: decoded.lastName ?? undefined,
+          role: decoded.role || 'user',
+          isActive: true,
+        });
+        user = await this.userRepository.save(user);
       }
 
-      // Revoke old refresh token
-      storedToken.isRevoked = true;
-      await this.refreshTokenRepository.save(storedToken);
+      // Issue internal access token
+      const payload = this.buildPayload(user);
+      const accessToken = this.jwtService.sign(payload);
 
-      // Issue new tokens
-      return this.login(user);
+      return {
+        accessToken,
+        expiresIn: 900,
+        user: this.buildUserResponse(user),
+      };
     } catch {
-      throw new UnauthorizedException('Invalid or expired refresh token');
-    }
-  }
-
-  async logout(userId: number, refreshTokenValue?: string): Promise<void> {
-    if (refreshTokenValue) {
-      await this.refreshTokenRepository.update(
-        { token: refreshTokenValue, userId },
-        { isRevoked: true },
-      );
-    } else {
-      await this.refreshTokenRepository.update(
-        { userId, isRevoked: false },
-        { isRevoked: true },
-      );
+      throw new UnauthorizedException('Invalid or expired external token');
     }
   }
 
@@ -100,12 +55,77 @@ export class AuthService {
     if (!user) {
       throw new NotFoundException('User not found');
     }
+    return this.buildUserResponse(user);
+  }
+
+  async getProfile(userId: number) {
+    const user = await this.userRepository.findOneBy({ id: userId });
+    if (!user) {
+      throw new NotFoundException('User not found');
+    }
     return {
       id: user.id,
-      name: user.name,
+      username: user.username,
       email: user.email,
+      firstName: user.firstName || null,
+      lastName: user.lastName || null,
+      fullName: user.fullName,
+      role: user.role,
+      departmentId: user.departmentId || null,
       isActive: user.isActive,
-      createdAt: user.createdAt,
+      lastLoginAt: user.lastLoginAt ? user.lastLoginAt.toISOString() : null,
+      createdAt: user.createdAt?.toISOString(),
+      updatedAt: user.updatedAt ? user.updatedAt.toISOString() : null,
+    };
+  }
+
+  async updateProfile(userId: number, dto: { firstName?: string; lastName?: string }) {
+    const user = await this.userRepository.findOneBy({ id: userId });
+    if (!user) {
+      throw new NotFoundException('User not found');
+    }
+
+    if (dto.firstName !== undefined) user.firstName = dto.firstName;
+    if (dto.lastName !== undefined) user.lastName = dto.lastName;
+
+    const updated = await this.userRepository.save(user);
+    return {
+      id: updated.id,
+      username: updated.username,
+      email: updated.email,
+      firstName: updated.firstName || null,
+      lastName: updated.lastName || null,
+      fullName: updated.fullName,
+      role: updated.role,
+      departmentId: updated.departmentId || null,
+      isActive: updated.isActive,
+      lastLoginAt: updated.lastLoginAt ? updated.lastLoginAt.toISOString() : null,
+      createdAt: updated.createdAt?.toISOString(),
+      updatedAt: updated.updatedAt ? updated.updatedAt.toISOString() : null,
+    };
+  }
+
+  private buildPayload(user: User) {
+    return {
+      sub: user.id,
+      email: user.email,
+      username: user.username,
+      role: user.role,
+      departmentId: user.departmentId || null,
+    };
+  }
+
+  private buildUserResponse(user: User) {
+    return {
+      id: user.id,
+      username: user.username,
+      email: user.email,
+      firstName: user.firstName || null,
+      lastName: user.lastName || null,
+      fullName: user.fullName,
+      role: user.role,
+      departmentId: user.departmentId || null,
+      isActive: user.isActive,
     };
   }
 }

@@ -1,18 +1,32 @@
-import { NestFactory } from '@nestjs/core';
-import { ValidationPipe } from '@nestjs/common';
+import { NestFactory, Reflector } from '@nestjs/core';
+import { ValidationPipe, RequestMethod } from '@nestjs/common';
 import { SwaggerModule, DocumentBuilder } from '@nestjs/swagger';
-import { HttpExceptionFilter } from './common/filters/http-exception.filter';
+import { AppModule } from './app.module';
+import { GlobalExceptionFilter } from './common/filters/http-exception.filter';
+import { TransformInterceptor } from './common/interceptors/transform.interceptor';
 import { LoggingInterceptor } from './common/interceptors/logging.interceptor';
 
 async function bootstrap() {
   const app = await NestFactory.create(AppModule);
 
-  // Enable validation
-  app.useGlobalPipes(new ValidationPipe({ transform: true }));
+  // Global prefix with health check exclusions
+  app.setGlobalPrefix('api', {
+    exclude: [
+      { path: 'health', method: RequestMethod.GET },
+      { path: 'health/ready', method: RequestMethod.GET },
+      { path: 'health/live', method: RequestMethod.GET },
+    ],
+  });
 
-  // Global Filter & Interceptor
-  app.useGlobalFilters(new HttpExceptionFilter());
-  app.useGlobalInterceptors(new LoggingInterceptor());
+  // Enable validation
+  app.useGlobalPipes(new ValidationPipe({ whitelist: true, transform: true }));
+
+  // Global Filter & Interceptors
+  app.useGlobalFilters(new GlobalExceptionFilter());
+  app.useGlobalInterceptors(
+    new LoggingInterceptor(),
+    new TransformInterceptor(app.get(Reflector)),
+  );
 
   // Enable CORS
   app.enableCors();
@@ -22,13 +36,24 @@ async function bootstrap() {
     .setTitle('App Template API')
     .setDescription('NestJS N-Layer Architecture API')
     .setVersion('1.0')
-    .addBearerAuth()
+    .addBearerAuth(
+      {
+        type: 'http',
+        scheme: 'bearer',
+        bearerFormat: 'JWT',
+        name: 'Authorization',
+        description: 'Enter JWT token',
+        in: 'header',
+      },
+      'JWT-auth',
+    )
     .build();
   const document = SwaggerModule.createDocument(app, config);
   SwaggerModule.setup('swagger', app, document);
 
-  await app.listen(5100);
-  console.log(`Application is running on: http://localhost:5100`);
-  console.log(`Swagger docs: http://localhost:5100/swagger`);
+  const port = process.env.PORT || 5100;
+  await app.listen(port);
+  console.log(`Application is running on: http://localhost:${port}/api`);
+  console.log(`Swagger docs: http://localhost:${port}/swagger`);
 }
 bootstrap();

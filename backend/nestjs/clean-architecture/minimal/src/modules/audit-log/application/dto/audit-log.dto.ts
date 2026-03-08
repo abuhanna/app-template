@@ -7,35 +7,35 @@ export class AuditLogDto {
   id: number;
 
   @ApiProperty()
-  entityName: string;
-
-  @ApiProperty()
-  entityId: string;
-
-  @ApiProperty()
   action: string;
 
-  @ApiPropertyOptional()
-  oldValues: string | null;
+  @ApiProperty()
+  entityType: string;
 
   @ApiPropertyOptional()
-  newValues: string | null;
+  entityId: string | null;
 
   @ApiPropertyOptional()
-  affectedColumns: string | null;
+  userId: string | null;
 
   @ApiPropertyOptional()
-  userId: number | null;
+  userName: string | null;
+
+  @ApiPropertyOptional()
+  details: string | null;
+
+  @ApiPropertyOptional()
+  ipAddress: string | null;
 
   @ApiProperty()
-  timestamp: Date;
+  createdAt: Date;
 }
 
 export class GetAuditLogsQueryDto {
   @ApiPropertyOptional()
   @IsOptional()
   @IsString()
-  entityName?: string;
+  entityType?: string;
 
   @ApiPropertyOptional()
   @IsOptional()
@@ -44,9 +44,8 @@ export class GetAuditLogsQueryDto {
 
   @ApiPropertyOptional()
   @IsOptional()
-  @Type(() => Number)
-  @IsNumber()
-  userId?: number;
+  @IsString()
+  userId?: string;
 
   @ApiPropertyOptional()
   @IsOptional()
@@ -70,13 +69,13 @@ export class GetAuditLogsQueryDto {
   @Min(1)
   page?: number = 1;
 
-  @ApiPropertyOptional({ description: 'Number of items per page', default: 20, minimum: 1, maximum: 100 })
+  @ApiPropertyOptional({ description: 'Number of items per page', default: 10, minimum: 1, maximum: 100 })
   @IsOptional()
   @Type(() => Number)
   @IsNumber()
   @Min(1)
   @Max(100)
-  pageSize?: number = 20;
+  pageSize?: number = 10;
 
   @ApiPropertyOptional({ description: 'Field to sort by' })
   @IsOptional()
@@ -86,7 +85,7 @@ export class GetAuditLogsQueryDto {
   @ApiPropertyOptional({ description: 'Sort direction', enum: ['asc', 'desc'], default: 'desc' })
   @IsOptional()
   @IsIn(['asc', 'desc'])
-  sortDir?: 'asc' | 'desc' = 'desc';
+  sortOrder?: 'asc' | 'desc' = 'desc';
 
   @ApiPropertyOptional({ description: 'Search term for full-text search' })
   @IsOptional()

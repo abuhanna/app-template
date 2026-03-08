@@ -1,11 +1,11 @@
-import { Entity, PrimaryGeneratedColumn, Column, CreateDateColumn, UpdateDateColumn } from 'typeorm';
+import { Entity, PrimaryGeneratedColumn, Column, CreateDateColumn } from 'typeorm';
 
 @Entity('notifications')
 export class Notification {
   @PrimaryGeneratedColumn()
   id: number;
 
-  @Column()
+  @Column({ name: 'user_id' })
   userId: number;
 
   @Column()
@@ -17,18 +17,15 @@ export class Notification {
   @Column({ default: 'info' })
   type: string;
 
-  @Column({ nullable: true })
-  link: string;
+  @Column({ name: 'reference_id', nullable: true })
+  referenceId: string;
 
-  @Column({ default: false })
+  @Column({ name: 'reference_type', nullable: true })
+  referenceType: string;
+
+  @Column({ name: 'is_read', default: false })
   isRead: boolean;
 
-  @Column({ type: 'timestamptz', nullable: true })
-  readAt: Date;
-
-  @CreateDateColumn()
+  @CreateDateColumn({ name: 'created_at' })
   createdAt: Date;
-
-  @UpdateDateColumn()
-  updatedAt: Date;
 }

@@ -10,7 +10,7 @@ export class GetAuditLogsHandler implements IQueryHandler<GetAuditLogsQuery> {
 
   async execute(query: GetAuditLogsQuery): Promise<PagedResult<AuditLogDto>> {
     const result = await this.auditLogRepository.findByFiltersPaginated({
-      entityName: query.entityName,
+      entityType: query.entityType,
       entityId: query.entityId,
       userId: query.userId,
       action: query.action,
@@ -19,20 +19,20 @@ export class GetAuditLogsHandler implements IQueryHandler<GetAuditLogsQuery> {
       page: query.page,
       pageSize: query.pageSize,
       sortBy: query.sortBy,
-      sortDir: query.sortDir,
+      sortOrder: query.sortOrder,
       search: query.search,
     });
 
-    const auditLogDtos = result.items.map((log) => ({
+    const auditLogDtos: AuditLogDto[] = result.items.map((log) => ({
       id: log.id,
-      entityName: log.entityName,
-      entityId: log.entityId,
       action: log.action,
-      oldValues: log.oldValues,
-      newValues: log.newValues,
-      affectedColumns: log.affectedColumns,
-      userId: log.userId,
-      timestamp: log.timestamp,
+      entityType: log.entityType,
+      entityId: log.entityId,
+      userId: log.userId !== null ? String(log.userId) : null,
+      userName: log.userName,
+      details: log.details,
+      ipAddress: log.ipAddress,
+      createdAt: log.createdAt,
     }));
 
     return createPagedResult(auditLogDtos, result.totalItems, query.page, query.pageSize);

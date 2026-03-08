@@ -1,13 +1,25 @@
-export interface ApiResponse<T> {
+export interface ApiSuccessResponse<T> {
+  success: true;
+  message: string;
   data: T;
-  message?: string;
-  timestamp: string;
+}
+
+export interface ApiPaginatedResponse<T> {
+  success: true;
+  message: string;
+  data: T[];
+  pagination: {
+    page: number;
+    pageSize: number;
+    totalItems: number;
+    totalPages: number;
+    hasNext: boolean;
+    hasPrevious: boolean;
+  };
 }
 
 export interface ApiErrorResponse {
-  statusCode: number;
-  message: string | string[];
-  error: string;
-  timestamp: string;
-  path: string;
+  success: false;
+  message: string;
+  errors?: string[];
 }

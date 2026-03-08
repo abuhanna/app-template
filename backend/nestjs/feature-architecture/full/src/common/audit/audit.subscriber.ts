@@ -3,6 +3,13 @@ import { Injectable } from '@nestjs/common';
 import { InjectDataSource } from '@nestjs/typeorm';
 import { AuditLog } from './audit-log.entity';
 
+const TABLE_TO_ENTITY_TYPE: Record<string, string> = {
+  users: 'User',
+  departments: 'Department',
+  uploaded_files: 'File',
+  notifications: 'Notification',
+};
+
 @Injectable()
 @EventSubscriber()
 export class AuditSubscriber implements EntitySubscriberInterface<any> {
@@ -13,26 +20,26 @@ export class AuditSubscriber implements EntitySubscriberInterface<any> {
   }
 
   async afterInsert(event: InsertEvent<any>) {
-    if (event.metadata.tableName === 'audit_logs') return;
-    await this.log(event.manager, 'INSERT', event.metadata.tableName, null, JSON.stringify(event.entity));
+    if (event.metadata.tableName === 'audit_logs' || event.metadata.tableName === 'refresh_tokens') return;
+    await this.log(event.manager, 'create', event.metadata.tableName, event.entity);
   }
 
   async afterUpdate(event: UpdateEvent<any>) {
-    if (event.metadata.tableName === 'audit_logs') return;
-    await this.log(event.manager, 'UPDATE', event.metadata.tableName, null, JSON.stringify(event.entity));
+    if (event.metadata.tableName === 'audit_logs' || event.metadata.tableName === 'refresh_tokens') return;
+    await this.log(event.manager, 'update', event.metadata.tableName, event.entity);
   }
 
   async afterRemove(event: RemoveEvent<any>) {
-    if (event.metadata.tableName === 'audit_logs') return;
-    await this.log(event.manager, 'DELETE', event.metadata.tableName, JSON.stringify(event.entityId), null);
+    if (event.metadata.tableName === 'audit_logs' || event.metadata.tableName === 'refresh_tokens') return;
+    await this.log(event.manager, 'delete', event.metadata.tableName, event.entity, event.entityId?.toString());
   }
 
-  private async log(manager: any, type: string, tableName: string, oldValues: string | null, newValues: string | null) {
+  private async log(manager: any, action: string, tableName: string, entity: any, entityId?: string) {
     const audit = new AuditLog();
-    audit.type = type;
-    audit.tableName = tableName;
-    audit.oldValues = oldValues ? oldValues : undefined;
-    audit.newValues = newValues ? newValues : undefined;
+    audit.action = action;
+    audit.entityType = TABLE_TO_ENTITY_TYPE[tableName] || tableName;
+    audit.entityId = entityId || entity?.id?.toString() || null;
+    audit.details = entity ? JSON.stringify(entity) : null;
     await manager.save(AuditLog, audit);
   }
 }

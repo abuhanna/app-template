@@ -1,4 +1,5 @@
-import { Entity, PrimaryGeneratedColumn, Column, CreateDateColumn, UpdateDateColumn } from 'typeorm';
+import { Entity, PrimaryGeneratedColumn, Column, CreateDateColumn, UpdateDateColumn, OneToMany } from 'typeorm';
+import { UserOrmEntity } from '@/modules/user-management/infrastructure/persistence/user.orm-entity';
 
 @Entity('departments')
 export class DepartmentOrmEntity {
@@ -28,4 +29,10 @@ export class DepartmentOrmEntity {
 
   @Column({ name: 'updated_by', type: 'bigint', nullable: true })
   updatedBy: string | null;
+
+  @OneToMany(() => UserOrmEntity, (user) => user.department)
+  users?: UserOrmEntity[];
+
+  // Virtual property for count - populated via loadRelationCountAndMap
+  userCount?: number;
 }

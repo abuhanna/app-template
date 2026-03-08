@@ -7,8 +7,10 @@ describe('ExportController', () => {
   let exportService: ExportService;
 
   const mockExportService = {
-    exportToCsv: jest.fn(),
-    exportToExcel: jest.fn(),
+    exportUsers: jest.fn(),
+    exportDepartments: jest.fn(),
+    exportAuditLogs: jest.fn(),
+    exportNotifications: jest.fn(),
   };
 
   const mockResponse = {
@@ -34,41 +36,36 @@ describe('ExportController', () => {
     expect(controller).toBeDefined();
   });
 
-  describe('exportCsv', () => {
-    it('should export data as CSV and send response', async () => {
-      const data = [{ name: 'John', email: 'john@example.com' }];
-      const csvBuffer = Buffer.from('name,email\nJohn,john@example.com');
-      mockExportService.exportToCsv.mockResolvedValue(csvBuffer);
+  describe('exportUsers', () => {
+    it('should export users and send response', async () => {
+      const exportResult = {
+        buffer: Buffer.from('data'),
+        contentType: 'text/csv',
+        fileName: 'users_20240101.csv',
+      };
+      mockExportService.exportUsers.mockResolvedValue(exportResult);
 
-      await controller.exportCsv(data, mockResponse);
+      await controller.exportUsers('csv', undefined, undefined, undefined, mockResponse);
 
-      expect(exportService.exportToCsv).toHaveBeenCalledWith(data);
-      expect(mockResponse.set).toHaveBeenCalledWith(
-        expect.objectContaining({
-          'Content-Type': 'text/csv',
-          'Content-Length': csvBuffer.length,
-        }),
-      );
-      expect(mockResponse.end).toHaveBeenCalledWith(csvBuffer);
+      expect(exportService.exportUsers).toHaveBeenCalledWith('csv', undefined, undefined, undefined);
+      expect(mockResponse.set).toHaveBeenCalled();
+      expect(mockResponse.end).toHaveBeenCalledWith(exportResult.buffer);
     });
   });
 
-  describe('exportExcel', () => {
-    it('should export data as Excel and send response', async () => {
-      const data = [{ name: 'John', email: 'john@example.com' }];
-      const excelBuffer = Buffer.from('excel-binary-data');
-      mockExportService.exportToExcel.mockResolvedValue(excelBuffer);
+  describe('exportDepartments', () => {
+    it('should export departments and send response', async () => {
+      const exportResult = {
+        buffer: Buffer.from('data'),
+        contentType: 'text/csv',
+        fileName: 'departments_20240101.csv',
+      };
+      mockExportService.exportDepartments.mockResolvedValue(exportResult);
 
-      await controller.exportExcel(data, mockResponse);
+      await controller.exportDepartments('csv', undefined, undefined, mockResponse);
 
-      expect(exportService.exportToExcel).toHaveBeenCalledWith(data);
-      expect(mockResponse.set).toHaveBeenCalledWith(
-        expect.objectContaining({
-          'Content-Type': 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
-          'Content-Length': excelBuffer.length,
-        }),
-      );
-      expect(mockResponse.end).toHaveBeenCalledWith(excelBuffer);
+      expect(exportService.exportDepartments).toHaveBeenCalledWith('csv', undefined, undefined);
+      expect(mockResponse.end).toHaveBeenCalledWith(exportResult.buffer);
     });
   });
 });

@@ -1,9 +1,10 @@
-import { NestFactory } from '@nestjs/core';
-import { ValidationPipe } from '@nestjs/common';
+import { NestFactory, Reflector } from '@nestjs/core';
+import { RequestMethod, ValidationPipe } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import { DocumentBuilder, SwaggerModule } from '@nestjs/swagger';
 import { AppModule } from './app.module';
 import { GlobalExceptionFilter } from './core/filters/global-exception.filter';
+import { TransformInterceptor } from './common/interceptors/transform.interceptor';
 import { validateEnvironment } from './common/validators/environment.validator';
 
 import { Logger } from 'nestjs-pino';
@@ -21,9 +22,14 @@ async function bootstrap() {
   app.useLogger(app.get(Logger));
   const configService = app.get(ConfigService);
 
-  // Global prefix
-  const apiPrefix = configService.get<string>('API_PREFIX', 'api');
-  app.setGlobalPrefix(apiPrefix);
+  // Global prefix with health routes excluded
+  app.setGlobalPrefix('api', {
+    exclude: [
+      { path: 'health', method: RequestMethod.GET },
+      { path: 'health/ready', method: RequestMethod.GET },
+      { path: 'health/live', method: RequestMethod.GET },
+    ],
+  });
 
   // CORS
   const corsOrigins = configService.get<string>('CORS_ORIGINS', 'http://localhost:3000');
@@ -46,6 +52,10 @@ async function bootstrap() {
 
   // Global exception filter
   app.useGlobalFilters(new GlobalExceptionFilter());
+
+  // Global transform interceptor with Reflector
+  const reflector = app.get(Reflector);
+  app.useGlobalInterceptors(new TransformInterceptor(reflector));
 
   // Swagger setup (only in development/staging)
   const nodeEnv = configService.get<string>('NODE_ENV', 'development');
@@ -72,7 +82,7 @@ async function bootstrap() {
 
   const port = configService.get<number>('PORT', 5100);
   await app.listen(port);
-  console.log(`Application is running on: http://localhost:${port}/${apiPrefix}`);
+  console.log(`Application is running on: http://localhost:${port}/api`);
   console.log(`Swagger documentation: http://localhost:${port}/swagger`);
 }
 

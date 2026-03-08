@@ -22,8 +22,11 @@ export class NotificationOrmEntity {
   @Column()
   type: string;
 
-  @Column({ type: 'varchar', nullable: true })
-  link: string | null;
+  @Column({ name: 'reference_id', type: 'varchar', nullable: true })
+  referenceId: string | null;
+
+  @Column({ name: 'reference_type', type: 'varchar', nullable: true })
+  referenceType: string | null;
 
   @Column({ name: 'is_read', default: false })
   isRead: boolean;

@@ -32,7 +32,7 @@ export class UploadedFileDto {
   updatedAt: Date;
 
   @ApiProperty({ required: false })
-  createdBy: number | null;
+  createdBy: string | null;
 
   @ApiProperty()
   downloadUrl: string;

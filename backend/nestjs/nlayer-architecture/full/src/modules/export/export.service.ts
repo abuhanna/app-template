@@ -22,4 +22,47 @@ export class ExportService {
     const buffer = await workbook.xlsx.writeBuffer();
     return Buffer.from(buffer);
   }
+
+  async exportToPdf(data: any[]): Promise<Buffer> {
+    // Simple PDF generation with plain text
+    // In production, use pdfkit for proper formatting
+    const content = JSON.stringify(data, null, 2);
+    return Buffer.from(content);
+  }
+
+  getContentType(format: string): string {
+    switch (format) {
+      case 'csv':
+        return 'text/csv';
+      case 'pdf':
+        return 'application/pdf';
+      case 'xlsx':
+      default:
+        return 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet';
+    }
+  }
+
+  getExtension(format: string): string {
+    switch (format) {
+      case 'csv':
+        return 'csv';
+      case 'pdf':
+        return 'pdf';
+      case 'xlsx':
+      default:
+        return 'xlsx';
+    }
+  }
+
+  async exportData(data: any[], format: string): Promise<Buffer> {
+    switch (format) {
+      case 'csv':
+        return this.exportToCsv(data);
+      case 'pdf':
+        return this.exportToPdf(data);
+      case 'xlsx':
+      default:
+        return this.exportToExcel(data);
+    }
+  }
 }

@@ -6,7 +6,8 @@ export interface CreateNotificationProps {
   title: string;
   message: string;
   type: NotificationType;
-  link?: string | null;
+  referenceId?: string | null;
+  referenceType?: string | null;
 }
 
 export class Notification {
@@ -16,7 +17,8 @@ export class Notification {
     public title: string,
     public message: string,
     public type: NotificationType,
-    public link: string | null,
+    public referenceId: string | null,
+    public referenceType: string | null,
     public isRead: boolean,
     public readAt: Date | null,
     public createdAt: Date,
@@ -29,7 +31,8 @@ export class Notification {
       props.title,
       props.message,
       props.type,
-      props.link ?? null,
+      props.referenceId ?? null,
+      props.referenceType ?? null,
       false,
       null,
       new Date(),
@@ -42,12 +45,13 @@ export class Notification {
     title: string,
     message: string,
     type: NotificationType,
-    link: string | null,
+    referenceId: string | null,
+    referenceType: string | null,
     isRead: boolean,
     readAt: Date | null,
     createdAt: Date,
   ): Notification {
-    return new Notification(id, userId, title, message, type, link, isRead, readAt, createdAt);
+    return new Notification(id, userId, title, message, type, referenceId, referenceType, isRead, readAt, createdAt);
   }
 
   markAsRead(): void {

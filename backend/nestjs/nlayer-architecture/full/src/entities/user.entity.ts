@@ -1,25 +1,62 @@
-import { Entity, PrimaryGeneratedColumn, Column, CreateDateColumn, UpdateDateColumn } from 'typeorm';
+import {
+  Entity,
+  PrimaryGeneratedColumn,
+  Column,
+  CreateDateColumn,
+  UpdateDateColumn,
+  ManyToOne,
+  JoinColumn,
+} from 'typeorm';
+import { Department } from './department.entity';
 
 @Entity('users')
 export class User {
   @PrimaryGeneratedColumn()
   id: number;
 
-  @Column({ length: 100 })
-  name: string;
+  @Column({ length: 50, unique: true })
+  username: string;
 
   @Column({ length: 255, unique: true })
   email: string;
 
-  @Column({ length: 500, nullable: true })
+  @Column({ name: 'password_hash', length: 500, nullable: true })
   passwordHash: string;
 
-  @Column({ default: true })
+  @Column({ name: 'first_name', length: 100, nullable: true })
+  firstName: string;
+
+  @Column({ name: 'last_name', length: 100, nullable: true })
+  lastName: string;
+
+  @Column({ length: 20, default: 'user' })
+  role: string;
+
+  @Column({ name: 'department_id', nullable: true })
+  departmentId: number;
+
+  @ManyToOne(() => Department, { nullable: true })
+  @JoinColumn({ name: 'department_id' })
+  department: Department;
+
+  @Column({ name: 'is_active', default: true })
   isActive: boolean;
 
-  @CreateDateColumn()
+  @Column({ name: 'last_login_at', type: 'timestamptz', nullable: true })
+  lastLoginAt: Date;
+
+  @CreateDateColumn({ name: 'created_at' })
   createdAt: Date;
 
-  @UpdateDateColumn()
+  @UpdateDateColumn({ name: 'updated_at' })
   updatedAt: Date;
+
+  get fullName(): string | null {
+    if (this.firstName && this.lastName) return `${this.firstName} ${this.lastName}`;
+    return this.firstName || this.lastName || null;
+  }
+
+  get departmentName(): string | null {
+    return this.department?.name || null;
+  }
 }

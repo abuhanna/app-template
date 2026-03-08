@@ -6,10 +6,19 @@ describe('DepartmentsController', () => {
   let controller: DepartmentsController;
   let service: DepartmentsService;
 
-  const mockDepartment = { id: 1, name: 'IT', code: 'IT', description: 'IT Department', isActive: true };
+  const mockDepartment = {
+    id: 1,
+    code: 'IT',
+    name: 'IT Department',
+    description: 'IT Department',
+    isActive: true,
+    userCount: 0,
+    createdAt: '2024-01-01T00:00:00.000Z',
+    updatedAt: null,
+  };
 
   const mockService = {
-    findAll: jest.fn(),
+    findAllPaginated: jest.fn(),
     findOne: jest.fn(),
     create: jest.fn(),
     update: jest.fn(),
@@ -19,9 +28,7 @@ describe('DepartmentsController', () => {
   beforeEach(async () => {
     const module: TestingModule = await Test.createTestingModule({
       controllers: [DepartmentsController],
-      providers: [
-        { provide: DepartmentsService, useValue: mockService },
-      ],
+      providers: [{ provide: DepartmentsService, useValue: mockService }],
     }).compile();
 
     controller = module.get<DepartmentsController>(DepartmentsController);
@@ -35,22 +42,16 @@ describe('DepartmentsController', () => {
   });
 
   describe('findAll', () => {
-    it('should return an array of departments', async () => {
-      const departments = [mockDepartment];
-      mockService.findAll.mockResolvedValue(departments);
+    it('should return paginated departments', async () => {
+      const paginated = {
+        data: [mockDepartment],
+        pagination: { page: 1, pageSize: 10, totalItems: 1, totalPages: 1, hasNext: false, hasPrevious: false },
+      };
+      mockService.findAllPaginated.mockResolvedValue(paginated);
 
-      const result = await controller.findAll();
+      const result = await controller.findAll({ page: 1, pageSize: 10, sortOrder: 'desc' as const });
 
-      expect(service.findAll).toHaveBeenCalled();
-      expect(result).toEqual(departments);
-    });
-
-    it('should return an empty array when no departments exist', async () => {
-      mockService.findAll.mockResolvedValue([]);
-
-      const result = await controller.findAll();
-
-      expect(result).toEqual([]);
+      expect(result).toEqual(paginated);
     });
   });
 
@@ -58,7 +59,7 @@ describe('DepartmentsController', () => {
     it('should return a department by id', async () => {
       mockService.findOne.mockResolvedValue(mockDepartment);
 
-      const result = await controller.findOne('1');
+      const result = await controller.findOne(1);
 
       expect(service.findOne).toHaveBeenCalledWith(1);
       expect(result).toEqual(mockDepartment);
@@ -67,8 +68,8 @@ describe('DepartmentsController', () => {
 
   describe('create', () => {
     it('should create and return a new department', async () => {
-      const createDto = { name: 'HR', code: 'HR', description: 'Human Resources' };
-      const created = { id: 2, ...createDto, isActive: true };
+      const createDto = { code: 'HR', name: 'Human Resources' };
+      const created = { id: 2, ...createDto, description: null, isActive: true, userCount: 0 };
       mockService.create.mockResolvedValue(created);
 
       const result = await controller.create(createDto);
@@ -84,7 +85,7 @@ describe('DepartmentsController', () => {
       const updated = { ...mockDepartment, name: 'IT Updated' };
       mockService.update.mockResolvedValue(updated);
 
-      const result = await controller.update('1', updateDto);
+      const result = await controller.update(1, updateDto);
 
       expect(service.update).toHaveBeenCalledWith(1, updateDto);
       expect(result).toEqual(updated);
@@ -95,7 +96,7 @@ describe('DepartmentsController', () => {
     it('should remove a department by id', async () => {
       mockService.remove.mockResolvedValue(undefined);
 
-      await controller.remove('1');
+      await controller.remove(1);
 
       expect(service.remove).toHaveBeenCalledWith(1);
     });

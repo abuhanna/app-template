@@ -23,9 +23,12 @@ export class SeedService implements OnModuleInit {
     if (!adminExists) {
       const passwordHash = await bcrypt.hash('Admin@123', 10);
       const admin = this.userRepository.create({
-        name: 'admin',
+        username: 'admin',
         email: 'admin@apptemplate.com',
         passwordHash,
+        firstName: undefined,
+        lastName: undefined,
+        role: 'admin',
         isActive: true,
       });
       await this.userRepository.save(admin);

@@ -5,9 +5,6 @@ export class NotificationDto {
   @ApiProperty({ description: 'Notification ID' })
   id: number;
 
-  @ApiProperty({ description: 'User ID' })
-  userId: number;
-
   @ApiProperty({ description: 'Notification title' })
   title: string;
 
@@ -17,14 +14,14 @@ export class NotificationDto {
   @ApiProperty({ enum: NotificationType, description: 'Notification type' })
   type: NotificationType;
 
-  @ApiProperty({ description: 'Link (optional)', nullable: true })
-  link: string | null;
+  @ApiProperty({ description: 'Reference entity ID', nullable: true })
+  referenceId: string | null;
+
+  @ApiProperty({ description: 'Reference entity type', nullable: true })
+  referenceType: string | null;
 
   @ApiProperty({ description: 'Is read' })
   isRead: boolean;
-
-  @ApiProperty({ description: 'Read at', nullable: true })
-  readAt: Date | null;
 
   @ApiProperty({ description: 'Created at' })
   createdAt: Date;

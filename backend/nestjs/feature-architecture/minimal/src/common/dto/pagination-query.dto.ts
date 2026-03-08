@@ -21,7 +21,7 @@ export class PaginationQueryDto {
 
   @IsOptional()
   @IsIn(['asc', 'desc'])
-  sortDir?: 'asc' | 'desc' = 'asc';
+  sortOrder?: 'asc' | 'desc' = 'desc';
 
   @IsOptional()
   @IsString()

@@ -5,13 +5,12 @@ export class NotificationMapper {
   static toDto(notification: Notification): NotificationDto {
     return new NotificationDto({
       id: notification.id,
-      userId: notification.userId,
       title: notification.title,
       message: notification.message,
       type: notification.type,
-      link: notification.link,
+      referenceId: notification.referenceId,
+      referenceType: notification.referenceType,
       isRead: notification.isRead,
-      readAt: notification.readAt,
       createdAt: notification.createdAt,
     });
   }

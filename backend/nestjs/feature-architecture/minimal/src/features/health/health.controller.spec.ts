@@ -37,15 +37,29 @@ describe('HealthController', () => {
 
   describe('ready', () => {
     it('should return ready status when database is connected', async () => {
-      const result = await controller.ready();
-      expect(result.status).toBe('ready');
-      expect(result.database).toBe('connected');
+      const mockResponse = {
+        status: jest.fn().mockReturnThis(),
+        json: jest.fn().mockReturnThis(),
+      };
+      await controller.ready(mockResponse as any);
+      expect(mockResponse.status).toHaveBeenCalledWith(200);
+      expect(mockResponse.json).toHaveBeenCalledWith(
+        expect.objectContaining({ status: 'ready', database: 'connected' }),
+      );
     });
 
-    it('should throw when database is disconnected', async () => {
+    it('should return 503 when database is disconnected', async () => {
       (dataSource.query as jest.Mock).mockRejectedValue(new Error('Connection failed'));
 
-      await expect(controller.ready()).rejects.toThrow();
+      const mockResponse = {
+        status: jest.fn().mockReturnThis(),
+        json: jest.fn().mockReturnThis(),
+      };
+      await controller.ready(mockResponse as any);
+      expect(mockResponse.status).toHaveBeenCalledWith(503);
+      expect(mockResponse.json).toHaveBeenCalledWith(
+        expect.objectContaining({ status: 'not ready', database: 'disconnected' }),
+      );
     });
   });
 

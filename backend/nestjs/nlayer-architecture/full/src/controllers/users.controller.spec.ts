@@ -1,22 +1,29 @@
 import { Test, TestingModule } from '@nestjs/testing';
 import { UsersController } from './users.controller';
 import { UserService } from '../services/user.service';
-import { UserResponseDto } from '../dtos/user.dto';
 
 describe('UsersController', () => {
   let controller: UsersController;
   let service: UserService;
 
-  const mockUserResponse: UserResponseDto = {
+  const mockUserResponse = {
     id: 1,
-    name: 'John Doe',
+    username: 'johndoe',
     email: 'john@example.com',
+    firstName: 'John',
+    lastName: 'Doe',
+    fullName: 'John Doe',
+    role: 'user',
+    departmentId: null,
+    departmentName: null,
     isActive: true,
-    createdAt: new Date('2024-01-01'),
+    lastLoginAt: null,
+    createdAt: '2024-01-01T00:00:00.000Z',
+    updatedAt: null,
   };
 
   const mockService = {
-    findAll: jest.fn(),
+    findAllPaginated: jest.fn(),
     findById: jest.fn(),
     create: jest.fn(),
     update: jest.fn(),
@@ -26,9 +33,7 @@ describe('UsersController', () => {
   beforeEach(async () => {
     const module: TestingModule = await Test.createTestingModule({
       controllers: [UsersController],
-      providers: [
-        { provide: UserService, useValue: mockService },
-      ],
+      providers: [{ provide: UserService, useValue: mockService }],
     }).compile();
 
     controller = module.get<UsersController>(UsersController);
@@ -42,22 +47,16 @@ describe('UsersController', () => {
   });
 
   describe('findAll', () => {
-    it('should return an array of users', async () => {
-      const users = [mockUserResponse];
-      mockService.findAll.mockResolvedValue(users);
+    it('should return paginated users', async () => {
+      const paginated = {
+        data: [mockUserResponse],
+        pagination: { page: 1, pageSize: 10, totalItems: 1, totalPages: 1, hasNext: false, hasPrevious: false },
+      };
+      mockService.findAllPaginated.mockResolvedValue(paginated);
 
-      const result = await controller.findAll();
+      const result = await controller.findAll({ page: 1, pageSize: 10, sortOrder: 'desc' as const });
 
-      expect(service.findAll).toHaveBeenCalled();
-      expect(result).toEqual(users);
-    });
-
-    it('should return an empty array when no users exist', async () => {
-      mockService.findAll.mockResolvedValue([]);
-
-      const result = await controller.findAll();
-
-      expect(result).toEqual([]);
+      expect(result).toEqual(paginated);
     });
   });
 
@@ -74,7 +73,11 @@ describe('UsersController', () => {
 
   describe('create', () => {
     it('should create and return a new user', async () => {
-      const createDto = { name: 'Jane Doe', email: 'jane@example.com', password: 'password123' };
+      const createDto = {
+        username: 'janedoe',
+        email: 'jane@example.com',
+        password: 'password123',
+      };
       mockService.create.mockResolvedValue(mockUserResponse);
 
       const result = await controller.create(createDto);
@@ -86,8 +89,8 @@ describe('UsersController', () => {
 
   describe('update', () => {
     it('should update and return the user', async () => {
-      const updateDto = { name: 'Updated Name', email: 'updated@example.com' };
-      const updatedUser = { ...mockUserResponse, name: 'Updated Name', email: 'updated@example.com' };
+      const updateDto = { firstName: 'Updated', email: 'updated@example.com' };
+      const updatedUser = { ...mockUserResponse, firstName: 'Updated', email: 'updated@example.com' };
       mockService.update.mockResolvedValue(updatedUser);
 
       const result = await controller.update(1, updateDto);

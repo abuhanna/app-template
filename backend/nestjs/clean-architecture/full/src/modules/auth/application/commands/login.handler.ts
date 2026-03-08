@@ -72,7 +72,6 @@ export class LoginHandler implements ICommandHandler<LoginCommand> {
       tokenPair.accessToken,
       tokenPair.refreshToken,
       expiresIn,
-      tokenPair.refreshTokenExpiresAt,
       new UserDto({
         id: user.id,
         email: user.email,

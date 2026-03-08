@@ -2,110 +2,123 @@ import { Injectable, UnauthorizedException, NotFoundException } from '@nestjs/co
 import { JwtService } from '@nestjs/jwt';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
-import * as bcrypt from 'bcrypt';
-import { User } from '../users/user.entity';
-import { RefreshToken } from './refresh-token.entity';
 import { ConfigService } from '@nestjs/config';
+import { User } from '../users/user.entity';
+import { UserService } from '../users/users.service';
 
 @Injectable()
 export class AuthService {
   constructor(
     @InjectRepository(User)
     private readonly userRepository: Repository<User>,
-    @InjectRepository(RefreshToken)
-    private readonly refreshTokenRepository: Repository<RefreshToken>,
+    private readonly userService: UserService,
     private readonly jwtService: JwtService,
     private readonly configService: ConfigService,
   ) {}
 
-  async validateUser(identifier: string, password: string): Promise<User | null> {
-    const user = await this.userRepository.findOne({
-      where: [{ email: identifier }, { name: identifier }],
-    });
-    if (user && (await bcrypt.compare(password, user.passwordHash))) {
-      return user;
+  async validateToken(externalToken: string) {
+    try {
+      // In production, validate against external identity provider
+      // For template, decode the token to extract claims
+      const decoded = this.jwtService.verify(externalToken, {
+        secret: this.configService.get<string>('JWT_EXTERNAL_SECRET') || this.configService.get<string>('JWT_SECRET') || 'secretKey',
+      });
+
+      // Create or update local user from external claims
+      const user = await this.userService.createFromExternal({
+        username: decoded.username || decoded.sub || decoded.email?.split('@')[0],
+        email: decoded.email,
+        firstName: decoded.firstName,
+        lastName: decoded.lastName,
+        role: decoded.role || 'user',
+        departmentId: decoded.departmentId ? parseInt(decoded.departmentId) : undefined,
+      });
+
+      // Generate internal JWT
+      const payload = this.buildJwtPayload(user);
+      const accessToken = this.jwtService.sign(payload);
+      const expiresIn = this.getExpiresInSeconds();
+
+      return {
+        accessToken,
+        expiresIn,
+        user: this.buildUserResponse(user),
+      };
+    } catch {
+      throw new UnauthorizedException('Invalid or expired external token');
     }
-    return null;
   }
 
-  async login(user: User) {
-    const payload = { email: user.email, sub: user.id };
-    const accessToken = this.jwtService.sign(payload);
-    const refreshToken = this.jwtService.sign(payload, {
-      expiresIn: this.configService.get<string>('JWT_REFRESH_EXPIRES_IN', '7d'),
-    });
-
-    // Save refresh token
-    const tokenEntity = this.refreshTokenRepository.create({
-      userId: user.id,
-      token: refreshToken,
-      expiresAt: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000),
-    });
-    await this.refreshTokenRepository.save(tokenEntity);
-
+  getMe(jwtPayload: any) {
     return {
-      accessToken,
-      refreshToken,
-      user: {
-        id: user.id,
-        name: user.name,
-        email: user.email,
-      },
+      id: parseInt(jwtPayload.sub),
+      username: jwtPayload.username,
+      email: jwtPayload.email,
+      firstName: jwtPayload.firstName || null,
+      lastName: jwtPayload.lastName || null,
+      fullName: jwtPayload.firstName && jwtPayload.lastName
+        ? `${jwtPayload.firstName} ${jwtPayload.lastName}`
+        : jwtPayload.firstName || jwtPayload.lastName || null,
+      role: jwtPayload.role,
+      departmentId: jwtPayload.departmentId ? parseInt(jwtPayload.departmentId) : null,
+      departmentName: jwtPayload.departmentName || null,
+      isActive: true,
     };
   }
 
-  async refresh(refreshTokenValue: string) {
-    try {
-      const decoded = this.jwtService.verify(refreshTokenValue);
-      const storedToken = await this.refreshTokenRepository.findOne({
-        where: { token: refreshTokenValue, isRevoked: false },
-      });
-
-      if (!storedToken || storedToken.expiresAt < new Date()) {
-        throw new UnauthorizedException('Invalid or expired refresh token');
-      }
-
-      const user = await this.userRepository.findOneBy({ id: decoded.sub });
-      if (!user) {
-        throw new UnauthorizedException('User not found');
-      }
-
-      // Revoke old refresh token
-      storedToken.isRevoked = true;
-      await this.refreshTokenRepository.save(storedToken);
-
-      // Issue new tokens
-      return this.login(user);
-    } catch {
-      throw new UnauthorizedException('Invalid or expired refresh token');
-    }
-  }
-
-  async logout(userId: number, refreshTokenValue?: string): Promise<void> {
-    if (refreshTokenValue) {
-      await this.refreshTokenRepository.update(
-        { token: refreshTokenValue, userId },
-        { isRevoked: true },
-      );
-    } else {
-      await this.refreshTokenRepository.update(
-        { userId, isRevoked: false },
-        { isRevoked: true },
-      );
-    }
-  }
-
-  async getMe(userId: number) {
+  async getProfile(userId: number) {
     const user = await this.userRepository.findOneBy({ id: userId });
     if (!user) {
       throw new NotFoundException('User not found');
     }
+    return this.userService.mapToDto(user);
+  }
+
+  async updateProfile(userId: number, dto: { firstName?: string; lastName?: string }) {
+    const user = await this.userService.updateProfile(userId, dto);
+    return this.userService.mapToDto(user);
+  }
+
+  private buildJwtPayload(user: User) {
+    return {
+      sub: user.id.toString(),
+      email: user.email,
+      username: user.username,
+      firstName: user.firstName,
+      lastName: user.lastName,
+      role: user.role,
+      departmentId: user.departmentId?.toString() || null,
+      departmentName: null,
+    };
+  }
+
+  private buildUserResponse(user: User) {
     return {
       id: user.id,
-      name: user.name,
+      username: user.username,
       email: user.email,
+      firstName: user.firstName || null,
+      lastName: user.lastName || null,
+      fullName: user.fullName,
+      role: user.role,
+      departmentId: user.departmentId || null,
+      departmentName: null,
       isActive: user.isActive,
-      createdAt: user.createdAt,
     };
+  }
+
+  private getExpiresInSeconds(): number {
+    const expiresIn = this.configService.get<string>('JWT_EXPIRES_IN', '15m');
+    const match = expiresIn.match(/^(\d+)([smhd])$/);
+    if (match) {
+      const value = parseInt(match[1]);
+      switch (match[2]) {
+        case 's': return value;
+        case 'm': return value * 60;
+        case 'h': return value * 3600;
+        case 'd': return value * 86400;
+      }
+    }
+    return 900;
   }
 }

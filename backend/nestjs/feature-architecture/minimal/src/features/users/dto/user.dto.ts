@@ -1,28 +1,27 @@
-import { IsEmail, IsNotEmpty, IsString, MinLength, IsBoolean, IsOptional } from 'class-validator';
+import { IsEmail, IsString, MinLength, IsBoolean, IsOptional } from 'class-validator';
 
-export class CreateUserDto {
+export class UpdateProfileDto {
+  @IsOptional()
   @IsString()
-  @IsNotEmpty()
-  name: string;
+  firstName?: string;
 
-  @IsEmail()
-  email: string;
-
+  @IsOptional()
   @IsString()
-  @MinLength(6)
-  password: string;
+  lastName?: string;
 }
 
-export class UpdateUserDto {
-  @IsString()
-  @IsOptional()
-  name?: string;
-
-  @IsEmail()
-  @IsOptional()
-  email?: string;
-
-  @IsBoolean()
-  @IsOptional()
-  isActive?: boolean;
+export class UserResponseDto {
+  id: number;
+  username: string;
+  email: string;
+  firstName: string | null;
+  lastName: string | null;
+  fullName: string | null;
+  role: string;
+  departmentId: number | null;
+  departmentName: string | null;
+  isActive: boolean;
+  lastLoginAt: string | null;
+  createdAt: string;
+  updatedAt: string | null;
 }

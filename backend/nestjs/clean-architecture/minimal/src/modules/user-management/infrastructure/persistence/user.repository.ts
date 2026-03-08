@@ -45,7 +45,7 @@ export class UserRepository implements IUserRepository {
   }
 
   async findAllPaginated(options: UserPaginationOptions): Promise<UserPaginatedResult> {
-    const { page, pageSize, sortBy, sortDir = 'asc', search } = options;
+    const { page, pageSize, sortBy, sortOrder = 'asc', search } = options;
 
     const queryBuilder = this.repository.createQueryBuilder('user');
 
@@ -70,7 +70,7 @@ export class UserRepository implements IUserRepository {
     };
 
     if (sortBy && validSortFields.includes(sortBy)) {
-      queryBuilder.orderBy(sortFieldMap[sortBy], sortDir.toUpperCase() as 'ASC' | 'DESC');
+      queryBuilder.orderBy(sortFieldMap[sortBy], sortOrder.toUpperCase() as 'ASC' | 'DESC');
     } else {
       queryBuilder.orderBy('user.created_at', 'DESC');
     }

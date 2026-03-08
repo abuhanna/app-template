@@ -4,12 +4,12 @@ export interface DepartmentPaginationOptions {
   page: number;
   pageSize: number;
   sortBy?: string;
-  sortDir?: 'asc' | 'desc';
+  sortOrder?: 'asc' | 'desc';
   search?: string;
 }
 
 export interface DepartmentPaginatedResult {
-  items: Department[];
+  data: Department[];
   totalItems: number;
 }
 

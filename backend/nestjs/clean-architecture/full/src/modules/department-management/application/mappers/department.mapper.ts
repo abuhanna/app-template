@@ -9,6 +9,7 @@ export class DepartmentMapper {
       code: department.code,
       description: department.description,
       isActive: department.isActive,
+      userCount: department.userCount ?? 0,
       createdAt: department.createdAt,
       updatedAt: department.updatedAt,
     });

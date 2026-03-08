@@ -17,13 +17,13 @@ export class GetUsersHandler implements IQueryHandler<GetUsersQuery> {
   ) {}
 
   async execute(query: GetUsersQuery): Promise<PagedResult<UserDto>> {
-    const { page, pageSize, sortBy, sortDir, search } = query;
+    const { page, pageSize, sortBy, sortOrder, search } = query;
 
     const result = await this.userRepository.findAllPaginated({
       page,
       pageSize,
       sortBy,
-      sortDir,
+      sortOrder,
       search,
     });
 
@@ -32,7 +32,7 @@ export class GetUsersHandler implements IQueryHandler<GetUsersQuery> {
     // Create department map for quick lookup
     const departmentMap = new Map(departments.map((d) => [d.id, d.name]));
 
-    const userDtos = result.items.map((user) =>
+    const userDtos = result.data.map((user) =>
       UserMapper.toDto(
         user,
         user.departmentId ? (departmentMap.get(user.departmentId) ?? null) : null,

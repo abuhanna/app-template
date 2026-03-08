@@ -1,34 +1,118 @@
-import { Controller, Post, Get, Param, UploadedFile as UploadedFileParam, UseInterceptors, Res, UseGuards, ParseFilePipe, MaxFileSizeValidator } from '@nestjs/common';
+import {
+  Controller,
+  Post,
+  Get,
+  Delete,
+  Param,
+  Query,
+  Body,
+  ParseIntPipe,
+  UploadedFile as UploadedFileParam,
+  UseInterceptors,
+  Res,
+  UseGuards,
+  Request,
+  ParseFilePipe,
+  MaxFileSizeValidator,
+  HttpCode,
+  HttpStatus,
+} from '@nestjs/common';
 import { FileInterceptor } from '@nestjs/platform-express';
+import { AuthGuard } from '@nestjs/passport';
+import { ApiTags, ApiOperation, ApiResponse, ApiBearerAuth, ApiConsumes } from '@nestjs/swagger';
 import { FilesService } from './files.service';
 import { Response } from 'express';
-import { AuthGuard } from '@nestjs/passport';
+import { PaginationQueryDto } from '../../common/dto/pagination-query.dto';
+import { ResponseMessage, SkipTransform } from '../../common/decorators/response-message.decorator';
 
-@UseGuards(AuthGuard('jwt'))
+@ApiTags('Files')
 @Controller('files')
 export class FilesController {
   constructor(private readonly filesService: FilesService) {}
 
-  @Post('upload')
+  @Get()
+  @UseGuards(AuthGuard('jwt'))
+  @ApiBearerAuth('JWT-auth')
+  @ApiOperation({ summary: 'List files with pagination' })
+  @ApiResponse({ status: 200, description: 'Paginated list of files' })
+  @ResponseMessage('Files retrieved successfully')
+  async listFiles(
+    @Query() query: PaginationQueryDto,
+    @Query('category') category?: string,
+    @Query('isPublic') isPublic?: string,
+  ) {
+    return this.filesService.findAll(query, category, isPublic);
+  }
+
+  @Post()
+  @UseGuards(AuthGuard('jwt'))
+  @ApiBearerAuth('JWT-auth')
+  @HttpCode(HttpStatus.CREATED)
+  @ApiOperation({ summary: 'Upload a file' })
+  @ApiConsumes('multipart/form-data')
+  @ApiResponse({ status: 201, description: 'File uploaded successfully' })
   @UseInterceptors(FileInterceptor('file'))
+  @ResponseMessage('File uploaded successfully')
   async uploadFile(
     @UploadedFileParam(
       new ParseFilePipe({
-        validators: [new MaxFileSizeValidator({ maxSize: 10 * 1024 * 1024 })], // 10MB
+        validators: [new MaxFileSizeValidator({ maxSize: 50 * 1024 * 1024 })],
       }),
     )
     file: Express.Multer.File,
+    @Request() req: any,
+    @Body('description') description?: string,
+    @Body('category') category?: string,
+    @Body('isPublic') isPublic?: string,
   ) {
-    return this.filesService.saveFile(file);
+    const userId = req.user?.userId?.toString() || req.user?.sub?.toString();
+    return this.filesService.saveFile(
+      file,
+      userId,
+      description,
+      category,
+      isPublic === 'true',
+    );
   }
 
   @Get(':id')
-  async downloadFile(@Param('id') id: string, @Res({ passthrough: true }) res: Response) {
-    const { file, contentType, fileName } = await this.filesService.getFile(+id);
+  @UseGuards(AuthGuard('jwt'))
+  @ApiBearerAuth('JWT-auth')
+  @ApiOperation({ summary: 'Get file metadata' })
+  @ApiResponse({ status: 200, description: 'File metadata' })
+  @ApiResponse({ status: 404, description: 'File not found' })
+  @ResponseMessage('File retrieved successfully')
+  async getFileMetadata(@Param('id', ParseIntPipe) id: number) {
+    return this.filesService.getFileMetadata(id);
+  }
+
+  @Get(':id/download')
+  @SkipTransform()
+  @ApiOperation({ summary: 'Download a file' })
+  @ApiResponse({ status: 200, description: 'File downloaded' })
+  @ApiResponse({ status: 404, description: 'File not found' })
+  async downloadFile(
+    @Param('id', ParseIntPipe) id: number,
+    @Res({ passthrough: true }) res: Response,
+    @Request() req: any,
+  ) {
+    const isAuthenticated = !!req.user;
+    const { file, contentType, fileName } = await this.filesService.getFileForDownload(id, isAuthenticated);
     res.set({
       'Content-Type': contentType,
       'Content-Disposition': `attachment; filename="${fileName}"`,
     });
     return file;
+  }
+
+  @Delete(':id')
+  @UseGuards(AuthGuard('jwt'))
+  @ApiBearerAuth('JWT-auth')
+  @HttpCode(HttpStatus.NO_CONTENT)
+  @ApiOperation({ summary: 'Delete a file' })
+  @ApiResponse({ status: 204, description: 'File deleted' })
+  @ApiResponse({ status: 404, description: 'File not found' })
+  async deleteFile(@Param('id', ParseIntPipe) id: number): Promise<void> {
+    return this.filesService.deleteFile(id);
   }
 }

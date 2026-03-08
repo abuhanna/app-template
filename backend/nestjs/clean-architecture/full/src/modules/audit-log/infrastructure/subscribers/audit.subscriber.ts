@@ -37,7 +37,7 @@ export class AuditSubscriber implements EntitySubscriberInterface {
     this.logAudit(
       this.getEntityName(event.entity),
       this.getEntityId(event.entity),
-      AuditAction.CREATED,
+      AuditAction.CREATE,
       null,
       event.entity,
     );
@@ -49,14 +49,14 @@ export class AuditSubscriber implements EntitySubscriberInterface {
     // Calculate diff
     const { oldValues, newValues } = this.calculateDiff(event.databaseEntity, event.entity);
 
-    // If no changes (and not empty), skip. 
+    // If no changes (and not empty), skip.
     // Note: Sometimes strict diff might return empty if objects are identical.
     if (!oldValues && !newValues) return;
 
     this.logAudit(
       this.getEntityName(event.entity),
       this.getEntityId(event.entity),
-      AuditAction.UPDATED,
+      AuditAction.UPDATE,
       oldValues,
       newValues,
     );
@@ -68,7 +68,7 @@ export class AuditSubscriber implements EntitySubscriberInterface {
     this.logAudit(
       this.getEntityName(event.entity),
       this.getEntityId(event.entity),
-      AuditAction.DELETED,
+      AuditAction.DELETE,
       event.entity, // Old values are the entity being deleted
       null,
     );
@@ -93,38 +93,14 @@ export class AuditSubscriber implements EntitySubscriberInterface {
       return { oldValues: oldEntity, newValues: newEntity };
     }
 
-    const oldValues: any = {};
-    const newValues: any = {};
-    
-    // Iterate over keys in newEntity (assuming it's a partial or full update)
-    // We should ideally use metadata to check columns, but this is a generic approximation
-    const keys = new Set([...Object.keys(oldEntity), ...Object.keys(newEntity)]);
-
-    for (const key of keys) {
-       // Skip internal fields, functions, etc.
-       if (key === 'updatedAt' || key === 'createdAt' || typeof oldEntity[key] === 'function') continue;
-
-       const oldValue = oldEntity[key];
-       const newValue = newEntity[key];
-
-       // Simple equality check (works for primitives, Date needs special handling)
-       if (!this.areValuesEqual(oldValue, newValue)) {
-         oldValues[key] = oldValue;
-         newValues[key] = newValue !== undefined ? newValue : oldValue; // If undefined in newEntity, it might not be updated, but typeorm merge logic is complex. 
-         // Actually, if it's undefined in newEntity, it means it wasn't touched in the partial update object usually.
-         // But typeorm 'entity' in afterUpdate is usually the merged entity or partial? 
-         // 'event.entity' contains the properties being updated.
-       }
-    }
-    
     // Correction: event.entity in afterUpdate typically contains ONLY the updated properties + id.
     // So we should only compare keys present in event.entity.
     const actualOldValues: any = {};
     const actualNewValues: any = {};
-    
+
     for (const key of Object.keys(newEntity)) {
         if (key === 'updatedAt' || key === 'createdAt' || typeof newEntity[key] === 'function') continue;
-        
+
         const oldValue = oldEntity[key];
         const newValue = newEntity[key];
 
@@ -143,13 +119,12 @@ export class AuditSubscriber implements EntitySubscriberInterface {
   private areValuesEqual(v1: any, v2: any): boolean {
     if (v1 === v2) return true;
     if (v1 instanceof Date && v2 instanceof Date) return v1.getTime() === v2.getTime();
-    if (v1 instanceof Date && typeof v2 === 'string') return v1.getTime() === new Date(v2).getTime(); // TypeORM sometimes gives string dates
-    // Basic support for object equality if needed, but risky for deep objects
+    if (v1 instanceof Date && typeof v2 === 'string') return v1.getTime() === new Date(v2).getTime();
     return false;
   }
 
   private async logAudit(
-    entityName: string,
+    entityType: string,
     entityId: string,
     action: AuditAction,
     oldValues: any,
@@ -157,23 +132,24 @@ export class AuditSubscriber implements EntitySubscriberInterface {
   ): Promise<void> {
     try {
       const auditLog = new AuditLogOrmEntity();
-      auditLog.entityName = entityName;
+      auditLog.entityType = entityType;
       auditLog.entityId = entityId;
       auditLog.action = action;
       auditLog.oldValues = oldValues ? JSON.stringify(this.sanitizeForJson(oldValues)) : null;
       auditLog.newValues = newValues ? JSON.stringify(this.sanitizeForJson(newValues)) : null;
-      
+
       // Get User ID from CLS
       const user = this.cls.get('user');
       auditLog.userId = user ? user.id : null;
-      
-      auditLog.timestamp = new Date();
+      auditLog.userName = user ? (user.username || user.email || null) : null;
+
+      auditLog.createdAt = new Date();
 
       // Use a separate connection to avoid transaction issues
       await this.dataSource.getRepository(AuditLogOrmEntity).save(auditLog);
     } catch (error) {
       this.logger.warn(
-        `Failed to log ${action} audit for ${entityName} ${entityId}: ${error.message}`,
+        `Failed to log ${action} audit for ${entityType} ${entityId}: ${error.message}`,
       );
     }
   }
@@ -188,8 +164,6 @@ export class AuditSubscriber implements EntitySubscriberInterface {
       if (value === null || value === undefined) {
         sanitized[key] = value;
       } else if (typeof value === 'object' && !(value instanceof Date)) {
-         // If it has toString, maybe use it? Or just stringify if simple POJO?
-         // For now skip heavy validation, just take it or toString if it looks like an entity reference
          if (value.constructor && value.constructor.name !== 'Object') {
              sanitized[key] = value.id ? value.id : value.toString();
          } else {

@@ -3,7 +3,6 @@ import { ConfigModule } from '@nestjs/config';
 import { TypeOrmModule } from '@nestjs/typeorm';
 import { LoggerModule } from 'nestjs-pino';
 import * as crypto from 'crypto';
-import { AuditLog } from './entities/audit-log.entity';
 import { AuthModule } from './auth/auth.module';
 import { FilesModule } from './modules/files/files.module';
 import { HealthModule } from './modules/health/health.module';
@@ -11,8 +10,8 @@ import { NotificationsModule } from './modules/notifications/notifications.modul
 import { AuditLogsModule } from './modules/audit-logs/audit-logs.module';
 import { User } from './entities/user.entity';
 import { UploadedFile } from './entities/uploaded-file.entity';
+import { AuditLog } from './entities/audit-log.entity';
 import { Notification } from './entities/notification.entity';
-import { RefreshToken } from './entities/refresh-token.entity';
 import { AuditSubscriber } from './subscribers/audit.subscriber';
 import { SeedService } from './services/seed.service';
 
@@ -23,7 +22,7 @@ import { SeedService } from './services/seed.service';
       pinoHttp: {
         genReqId: (req, res) => {
           const correlationId = req.headers['x-correlation-id'] || req.headers['x-request-id'] || crypto.randomUUID();
-          res.setHeader('X-Correlation-Id', correlationId);
+          res.setHeader('X-Correlation-Id', correlationId as string);
           return correlationId;
         },
         transport: process.env.NODE_ENV !== 'production' ? { target: 'pino-pretty' } : undefined,
@@ -37,7 +36,7 @@ import { SeedService } from './services/seed.service';
       username: process.env.DB_USERNAME || 'postgres',
       password: process.env.DB_PASSWORD || 'postgres',
       database: process.env.DB_NAME || 'apptemplate',
-      entities: [User, UploadedFile, AuditLog, Notification, RefreshToken],
+      entities: [User, UploadedFile, AuditLog, Notification],
       synchronize: process.env.NODE_ENV !== 'production',
     }),
     TypeOrmModule.forFeature([User]),

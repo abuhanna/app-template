@@ -1,16 +1,16 @@
 import { AuditLog } from '../entities/audit-log.entity';
 
 export interface GetAuditLogsFilters {
-  entityName?: string;
+  entityType?: string;
   entityId?: string;
-  userId?: number;
+  userId?: string;
   action?: string;
   fromDate?: Date;
   toDate?: Date;
   page?: number;
   pageSize?: number;
   sortBy?: string;
-  sortDir?: 'asc' | 'desc';
+  sortOrder?: 'asc' | 'desc';
   search?: string;
 }
 
@@ -20,6 +20,7 @@ export interface AuditLogPaginatedResult {
 }
 
 export abstract class IAuditLogRepository {
+  abstract findById(id: number): Promise<AuditLog | null>;
   abstract findByFilters(filters: GetAuditLogsFilters): Promise<AuditLog[]>;
   abstract findByFiltersPaginated(filters: GetAuditLogsFilters): Promise<AuditLogPaginatedResult>;
   abstract save(auditLog: AuditLog): Promise<AuditLog>;

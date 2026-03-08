@@ -26,20 +26,16 @@ import { UserRepository } from '../user-management/infrastructure/persistence/us
 import { IUserRepository } from '../user-management/domain/interfaces/user.repository.interface';
 
 // Application
-import {
-  LoginHandler,
-  RefreshTokenHandler,
-  LogoutHandler,
-} from './application/commands';
-import { GetCurrentUserHandler } from './application/queries';
+import { ValidateTokenHandler } from './application/commands/validate-token.handler';
+import { UpdateProfileHandler } from './application/commands/update-profile.handler';
+import { GetMyProfileHandler } from './application/queries/get-my-profile.handler';
 
 const CommandHandlers = [
-  LoginHandler,
-  RefreshTokenHandler,
-  LogoutHandler,
+  ValidateTokenHandler,
+  UpdateProfileHandler,
 ];
 
-const QueryHandlers = [GetCurrentUserHandler];
+const QueryHandlers = [GetMyProfileHandler];
 
 @Module({
   imports: [

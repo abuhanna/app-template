@@ -8,14 +8,6 @@ import {
 } from '@nestjs/common';
 import { Request, Response } from 'express';
 
-interface ErrorResponse {
-  statusCode: number;
-  message: string | string[];
-  error: string;
-  timestamp: string;
-  path: string;
-}
-
 @Catch()
 export class GlobalExceptionFilter implements ExceptionFilter {
   private readonly logger = new Logger(GlobalExceptionFilter.name);
@@ -26,8 +18,8 @@ export class GlobalExceptionFilter implements ExceptionFilter {
     const request = ctx.getRequest<Request>();
 
     let status = HttpStatus.INTERNAL_SERVER_ERROR;
-    let message: string | string[] = 'Internal server error';
-    let error = 'Internal Server Error';
+    let message: string = 'Internal server error';
+    let errors: string[] | undefined;
 
     if (exception instanceof HttpException) {
       status = exception.getStatus();
@@ -37,24 +29,38 @@ export class GlobalExceptionFilter implements ExceptionFilter {
         message = exceptionResponse;
       } else if (typeof exceptionResponse === 'object') {
         const responseObj = exceptionResponse as Record<string, unknown>;
-        message = (responseObj.message as string | string[]) || exception.message;
-        error = (responseObj.error as string) || exception.name;
+        const rawMessage = responseObj.message;
+
+        if (Array.isArray(rawMessage)) {
+          // Validation errors from ValidationPipe
+          errors = rawMessage as string[];
+          message = 'Validation failed';
+        } else if (typeof rawMessage === 'string') {
+          message = rawMessage;
+        } else {
+          message = exception.message;
+        }
       }
     } else if (exception instanceof Error) {
       message = exception.message;
-      error = exception.name;
+    }
+
+    // For 500 errors, always use generic message
+    if (status === HttpStatus.INTERNAL_SERVER_ERROR) {
+      message = 'Internal server error';
     }
 
     // Log the error
     this.logger.error(`${request.method} ${request.url}`, exception instanceof Error ? exception.stack : exception);
 
-    const errorResponse: ErrorResponse = {
-      statusCode: status,
+    const errorResponse: Record<string, unknown> = {
+      success: false,
       message,
-      error,
-      timestamp: new Date().toISOString(),
-      path: request.url,
     };
+
+    if (errors && errors.length > 0) {
+      errorResponse.errors = errors;
+    }
 
     response.status(status).json(errorResponse);
   }

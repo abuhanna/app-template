@@ -146,7 +146,7 @@ export class ExportController {
   @Get('audit-logs')
   @ApiOperation({ summary: 'Export audit logs to CSV, Excel, or PDF' })
   @ApiQuery({ name: 'format', required: false, enum: ['csv', 'xlsx', 'pdf'] })
-  @ApiQuery({ name: 'entityName', required: false })
+  @ApiQuery({ name: 'entityType', required: false })
   @ApiQuery({ name: 'action', required: false })
   @ApiQuery({ name: 'fromDate', required: false })
   @ApiQuery({ name: 'toDate', required: false })
@@ -154,7 +154,7 @@ export class ExportController {
   async exportAuditLogs(
     @Res() res: Response,
     @Query('format') format: string = 'xlsx',
-    @Query('entityName') entityName?: string,
+    @Query('entityType') entityType?: string,
     @Query('action') action?: string,
     @Query('fromDate') fromDate?: string,
     @Query('toDate') toDate?: string,
@@ -163,11 +163,11 @@ export class ExportController {
   ) {
     const query = this.auditLogRepository
       .createQueryBuilder('auditLog')
-      .orderBy('auditLog.timestamp', 'DESC')
+      .orderBy('auditLog.createdAt', 'DESC')
       .take(limit);
 
-    if (entityName) {
-      query.andWhere('auditLog.entityName = :entityName', { entityName });
+    if (entityType) {
+      query.andWhere('auditLog.entityType = :entityType', { entityType });
     }
 
     if (action) {
@@ -175,23 +175,23 @@ export class ExportController {
     }
 
     if (fromDate) {
-      query.andWhere('auditLog.timestamp >= :fromDate', { fromDate: new Date(fromDate) });
+      query.andWhere('auditLog.createdAt >= :fromDate', { fromDate: new Date(fromDate) });
     }
 
     if (toDate) {
-      query.andWhere('auditLog.timestamp <= :toDate', { toDate: new Date(toDate) });
+      query.andWhere('auditLog.createdAt <= :toDate', { toDate: new Date(toDate) });
     }
 
     const auditLogs = await query.getMany();
 
     const exportData = auditLogs.map((log) => ({
       id: log.id,
-      entityName: log.entityName,
+      entityType: log.entityType,
       entityId: log.entityId,
       action: log.action,
       userId: log.userId || '-',
-      timestamp: log.timestamp?.toISOString().replace('T', ' ').split('.')[0] || '-',
-      affectedColumns: log.affectedColumns || '-',
+      createdAt: log.createdAt?.toISOString().replace('T', ' ').split('.')[0] || '-',
+      details: log.details || '-',
     }));
 
     const result = await this.getExportResult(
@@ -200,7 +200,7 @@ export class ExportController {
       'audit_logs',
       'Audit Log Report',
       {
-        subtitle: `Entity: ${entityName || 'All'}, Action: ${action || 'All'}`,
+        subtitle: `Entity: ${entityType || 'All'}, Action: ${action || 'All'}`,
         fromDate: fromDate ? new Date(fromDate) : undefined,
         toDate: toDate ? new Date(toDate) : undefined,
         generatedBy: currentUser?.username || 'System',

@@ -4,7 +4,7 @@ export interface UserPaginationOptions {
   page: number;
   pageSize: number;
   sortBy?: string;
-  sortDir?: 'asc' | 'desc';
+  sortOrder?: 'asc' | 'desc';
   search?: string;
 }
 

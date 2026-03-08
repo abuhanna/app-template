@@ -5,21 +5,27 @@ export class AuditLog {
   @PrimaryGeneratedColumn()
   id: number;
 
-  @Column({ nullable: true })
-  userId: string;
-
   @Column()
-  type: string; // INSERT, UPDATE, DELETE
+  action: string;
 
-  @Column()
-  tableName: string;
+  @Column({ name: 'entity_type' })
+  entityType: string;
 
-  @CreateDateColumn()
-  dateTime: Date;
+  @Column({ name: 'entity_id', nullable: true })
+  entityId: string | null;
+
+  @Column({ name: 'user_id', nullable: true })
+  userId: string | null;
+
+  @Column({ name: 'user_name', nullable: true })
+  userName: string | null;
 
   @Column({ type: 'text', nullable: true })
-  oldValues: string;
+  details: string | null;
 
-  @Column({ type: 'text', nullable: true })
-  newValues: string;
+  @Column({ name: 'ip_address', nullable: true })
+  ipAddress: string | null;
+
+  @CreateDateColumn({ name: 'created_at' })
+  createdAt: Date;
 }

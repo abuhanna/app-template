@@ -7,15 +7,19 @@ import {
   HttpCode,
   HttpStatus,
   UseGuards,
+  BadRequestException,
 } from '@nestjs/common';
 import { CommandBus, QueryBus } from '@nestjs/cqrs';
 import { ApiTags, ApiOperation, ApiResponse, ApiBearerAuth } from '@nestjs/swagger';
 import { JwtAuthGuard } from '@/common/guards/jwt-auth.guard';
 import { CurrentUser, CurrentUserPayload } from '@/common/decorators/current-user.decorator';
+import { ResponseMessage } from '@/common/decorators/response-message.decorator';
 import {
   LoginDto,
   LoginResponseDto,
+  RegisterDto,
   RefreshTokenDto,
+  ChangePasswordDto,
   ForgotPasswordDto,
   ResetPasswordDto,
   UpdateProfileDto,
@@ -23,8 +27,10 @@ import {
 } from '../application/dto';
 import {
   LoginCommand,
+  RegisterCommand,
   RefreshTokenCommand,
   LogoutCommand,
+  ChangePasswordCommand,
   RequestPasswordResetCommand,
   ResetPasswordCommand,
   UpdateProfileCommand,
@@ -39,15 +45,28 @@ export class AuthController {
     private readonly queryBus: QueryBus,
   ) {}
 
+  @Post('register')
+  @HttpCode(HttpStatus.CREATED)
+  @ApiOperation({ summary: 'Register a new user' })
+  @ApiResponse({ status: 201, type: LoginResponseDto })
+  @ApiResponse({ status: 409, description: 'Email or username already exists' })
+  @ResponseMessage('Registration successful')
+  async register(@Body() dto: RegisterDto): Promise<LoginResponseDto> {
+    return this.commandBus.execute(
+      new RegisterCommand(dto.username, dto.email, dto.password, dto.firstName, dto.lastName),
+    );
+  }
+
   @Post('login')
   @HttpCode(HttpStatus.OK)
   @ApiOperation({ summary: 'User login' })
   @ApiResponse({ status: 200, type: LoginResponseDto })
   @ApiResponse({ status: 401, description: 'Invalid credentials' })
+  @ResponseMessage('Login successful')
   async login(@Body() dto: LoginDto): Promise<LoginResponseDto> {
     const identifier = dto.username || dto.email;
     if (!identifier) {
-      throw new Error('Username or email is required');
+      throw new BadRequestException('Username or email is required');
     }
     return this.commandBus.execute(new LoginCommand(identifier, dto.password));
   }
@@ -57,6 +76,7 @@ export class AuthController {
   @ApiOperation({ summary: 'Refresh access token' })
   @ApiResponse({ status: 200, type: LoginResponseDto })
   @ApiResponse({ status: 401, description: 'Invalid refresh token' })
+  @ResponseMessage('Token refreshed')
   async refresh(@Body() dto: RefreshTokenDto): Promise<LoginResponseDto> {
     return this.commandBus.execute(new RefreshTokenCommand(dto.refreshToken));
   }
@@ -79,6 +99,7 @@ export class AuthController {
   @ApiBearerAuth('JWT-auth')
   @ApiOperation({ summary: 'Get current user info' })
   @ApiResponse({ status: 200, type: UserInfoDto })
+  @ResponseMessage('User info retrieved')
   async me(@CurrentUser() user: CurrentUserPayload): Promise<UserInfoDto> {
     return this.queryBus.execute(new GetCurrentUserQuery(user.sub));
   }
@@ -88,6 +109,7 @@ export class AuthController {
   @ApiBearerAuth('JWT-auth')
   @ApiOperation({ summary: 'Get user profile' })
   @ApiResponse({ status: 200, type: UserInfoDto })
+  @ResponseMessage('Profile retrieved')
   async getProfile(@CurrentUser() user: CurrentUserPayload): Promise<UserInfoDto> {
     return this.queryBus.execute(new GetMyProfileQuery(user.sub));
   }
@@ -97,6 +119,7 @@ export class AuthController {
   @ApiBearerAuth('JWT-auth')
   @ApiOperation({ summary: 'Update user profile' })
   @ApiResponse({ status: 200, type: UserInfoDto })
+  @ResponseMessage('Profile updated')
   async updateProfile(
     @CurrentUser() user: CurrentUserPayload,
     @Body() dto: UpdateProfileDto,
@@ -106,13 +129,34 @@ export class AuthController {
     );
   }
 
+  @Post('change-password')
+  @UseGuards(JwtAuthGuard)
+  @HttpCode(HttpStatus.OK)
+  @ApiBearerAuth('JWT-auth')
+  @ApiOperation({ summary: 'Change own password' })
+  @ApiResponse({ status: 200, description: 'Password changed successfully' })
+  @ApiResponse({ status: 400, description: 'Passwords do not match' })
+  @ApiResponse({ status: 401, description: 'Current password is incorrect' })
+  @ResponseMessage('Password changed successfully')
+  async changePassword(
+    @CurrentUser() user: CurrentUserPayload,
+    @Body() dto: ChangePasswordDto,
+  ): Promise<void> {
+    if (dto.newPassword !== dto.confirmPassword) {
+      throw new BadRequestException('Passwords do not match');
+    }
+    await this.commandBus.execute(
+      new ChangePasswordCommand(user.sub, dto.currentPassword, dto.newPassword),
+    );
+  }
+
   @Post('forgot-password')
   @HttpCode(HttpStatus.OK)
   @ApiOperation({ summary: 'Request password reset' })
   @ApiResponse({ status: 200, description: 'Password reset email sent if user exists' })
-  async forgotPassword(@Body() dto: ForgotPasswordDto): Promise<{ message: string }> {
+  @ResponseMessage('If your email is registered, you will receive a password reset link')
+  async forgotPassword(@Body() dto: ForgotPasswordDto): Promise<void> {
     await this.commandBus.execute(new RequestPasswordResetCommand(dto.email));
-    return { message: 'If your email is registered, you will receive a password reset link.' };
   }
 
   @Post('reset-password')
@@ -120,11 +164,11 @@ export class AuthController {
   @ApiOperation({ summary: 'Reset password with token' })
   @ApiResponse({ status: 200, description: 'Password reset successful' })
   @ApiResponse({ status: 400, description: 'Invalid or expired token' })
-  async resetPassword(@Body() dto: ResetPasswordDto): Promise<{ message: string }> {
+  @ResponseMessage('Password reset successful')
+  async resetPassword(@Body() dto: ResetPasswordDto): Promise<void> {
     if (dto.newPassword !== dto.confirmPassword) {
-      throw new Error('Passwords do not match');
+      throw new BadRequestException('Passwords do not match');
     }
     await this.commandBus.execute(new ResetPasswordCommand(dto.token, dto.newPassword));
-    return { message: 'Password reset successful' };
   }
 }

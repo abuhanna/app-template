@@ -4,12 +4,12 @@ export interface UserPaginationOptions {
   page: number;
   pageSize: number;
   sortBy?: string;
-  sortDir?: 'asc' | 'desc';
+  sortOrder?: 'asc' | 'desc';
   search?: string;
 }
 
 export interface UserPaginatedResult {
-  items: User[];
+  data: User[];
   totalItems: number;
 }
 

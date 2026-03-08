@@ -2,6 +2,7 @@ import {
   Controller,
   Post,
   Get,
+  Put,
   Body,
   HttpCode,
   HttpStatus,
@@ -11,18 +12,16 @@ import { CommandBus, QueryBus } from '@nestjs/cqrs';
 import { ApiTags, ApiOperation, ApiResponse, ApiBearerAuth } from '@nestjs/swagger';
 import { JwtAuthGuard } from '@/common/guards/jwt-auth.guard';
 import { CurrentUser, CurrentUserPayload } from '@/common/decorators/current-user.decorator';
+import { ResponseMessage } from '@/common/decorators/response-message.decorator';
 import {
-  LoginDto,
-  LoginResponseDto,
-  RefreshTokenDto,
+  ValidateTokenDto,
+  ValidateTokenResponseDto,
+  UpdateProfileDto,
   UserInfoDto,
 } from '../application/dto';
-import {
-  LoginCommand,
-  RefreshTokenCommand,
-  LogoutCommand,
-} from '../application/commands';
-import { GetCurrentUserQuery } from '../application/queries';
+import { ValidateTokenCommand } from '../application/commands/validate-token.command';
+import { UpdateProfileCommand } from '../application/commands/update-profile.command';
+import { GetMyProfileQuery } from '../application/queries/get-my-profile.query';
 
 @ApiTags('Auth')
 @Controller('auth')
@@ -32,47 +31,53 @@ export class AuthController {
     private readonly queryBus: QueryBus,
   ) {}
 
-  @Post('login')
+  @Post('validate-token')
   @HttpCode(HttpStatus.OK)
-  @ApiOperation({ summary: 'User login' })
-  @ApiResponse({ status: 200, type: LoginResponseDto })
-  @ApiResponse({ status: 401, description: 'Invalid credentials' })
-  async login(@Body() dto: LoginDto): Promise<LoginResponseDto> {
-    const identifier = dto.username || dto.email;
-    if (!identifier) {
-      throw new Error('Username or email is required');
-    }
-    return this.commandBus.execute(new LoginCommand(identifier, dto.password));
-  }
-
-  @Post('refresh')
-  @HttpCode(HttpStatus.OK)
-  @ApiOperation({ summary: 'Refresh access token' })
-  @ApiResponse({ status: 200, type: LoginResponseDto })
-  @ApiResponse({ status: 401, description: 'Invalid refresh token' })
-  async refresh(@Body() dto: RefreshTokenDto): Promise<LoginResponseDto> {
-    return this.commandBus.execute(new RefreshTokenCommand(dto.refreshToken));
-  }
-
-  @Post('logout')
-  @UseGuards(JwtAuthGuard)
-  @HttpCode(HttpStatus.NO_CONTENT)
-  @ApiBearerAuth('JWT-auth')
-  @ApiOperation({ summary: 'User logout' })
-  @ApiResponse({ status: 204, description: 'Logged out successfully' })
-  async logout(
-    @CurrentUser() user: CurrentUserPayload,
-    @Body() dto?: RefreshTokenDto,
-  ): Promise<void> {
-    await this.commandBus.execute(new LogoutCommand(user.sub, dto?.refreshToken));
+  @ApiOperation({ summary: 'Validate external JWT/SSO token' })
+  @ApiResponse({ status: 200, type: ValidateTokenResponseDto })
+  @ApiResponse({ status: 401, description: 'Invalid or expired external token' })
+  @ResponseMessage('Token validated')
+  async validateToken(@Body() dto: ValidateTokenDto): Promise<ValidateTokenResponseDto> {
+    return this.commandBus.execute(new ValidateTokenCommand(dto.token));
   }
 
   @Get('me')
   @UseGuards(JwtAuthGuard)
   @ApiBearerAuth('JWT-auth')
-  @ApiOperation({ summary: 'Get current user info' })
+  @ApiOperation({ summary: 'Get current user info from JWT' })
   @ApiResponse({ status: 200, type: UserInfoDto })
+  @ResponseMessage('User info retrieved')
   async me(@CurrentUser() user: CurrentUserPayload): Promise<UserInfoDto> {
-    return this.queryBus.execute(new GetCurrentUserQuery(user.sub));
+    return new UserInfoDto({
+      id: user.sub,
+      email: user.email,
+      username: user.username,
+      role: user.role,
+    });
+  }
+
+  @Get('profile')
+  @UseGuards(JwtAuthGuard)
+  @ApiBearerAuth('JWT-auth')
+  @ApiOperation({ summary: 'Get full user profile from database' })
+  @ApiResponse({ status: 200, type: UserInfoDto })
+  @ResponseMessage('Profile retrieved')
+  async getProfile(@CurrentUser() user: CurrentUserPayload): Promise<UserInfoDto> {
+    return this.queryBus.execute(new GetMyProfileQuery(user.sub));
+  }
+
+  @Put('profile')
+  @UseGuards(JwtAuthGuard)
+  @ApiBearerAuth('JWT-auth')
+  @ApiOperation({ summary: 'Update own profile' })
+  @ApiResponse({ status: 200, type: UserInfoDto })
+  @ResponseMessage('Profile updated successfully')
+  async updateProfile(
+    @CurrentUser() user: CurrentUserPayload,
+    @Body() dto: UpdateProfileDto,
+  ): Promise<UserInfoDto> {
+    return this.commandBus.execute(
+      new UpdateProfileCommand(user.sub, dto.firstName, dto.lastName),
+    );
   }
 }

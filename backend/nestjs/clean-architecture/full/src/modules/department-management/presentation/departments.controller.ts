@@ -47,7 +47,7 @@ export class DepartmentsController {
         queryDto.page,
         queryDto.pageSize,
         queryDto.sortBy,
-        queryDto.sortDir,
+        queryDto.sortOrder,
         queryDto.search,
       ),
     );

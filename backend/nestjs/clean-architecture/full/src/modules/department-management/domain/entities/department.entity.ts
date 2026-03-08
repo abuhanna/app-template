@@ -14,6 +14,8 @@ export interface UpdateDepartmentProps {
 }
 
 export class Department {
+  public userCount: number;
+
   private constructor(
     public readonly id: number,
     public name: string,
@@ -24,7 +26,10 @@ export class Department {
     public updatedAt: Date,
     public createdBy: number | null,
     public updatedBy: number | null,
-  ) {}
+    userCount?: number,
+  ) {
+    this.userCount = userCount ?? 0;
+  }
 
   static create(props: CreateDepartmentProps): Department {
     const now = new Date();
@@ -51,6 +56,7 @@ export class Department {
     updatedAt: Date,
     createdBy: number | null,
     updatedBy: number | null,
+    userCount?: number,
   ): Department {
     return new Department(
       id,
@@ -62,6 +68,7 @@ export class Department {
       updatedAt,
       createdBy,
       updatedBy,
+      userCount,
     );
   }
 

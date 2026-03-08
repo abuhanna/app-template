@@ -2,12 +2,9 @@ import { Test, TestingModule } from '@nestjs/testing';
 import { JwtService } from '@nestjs/jwt';
 import { ConfigService } from '@nestjs/config';
 import { getRepositoryToken } from '@nestjs/typeorm';
+import { NotFoundException } from '@nestjs/common';
 import { AuthService } from './auth.service';
 import { User } from '../entities/user.entity';
-import { RefreshToken } from '../entities/refresh-token.entity';
-import * as bcrypt from 'bcrypt';
-
-jest.mock('bcrypt');
 
 describe('AuthService', () => {
   let service: AuthService;
@@ -16,23 +13,27 @@ describe('AuthService', () => {
   const mockUserRepository = {
     findOne: jest.fn(),
     findOneBy: jest.fn(),
-  };
-
-  const mockRefreshTokenRepository = {
     create: jest.fn(),
     save: jest.fn(),
-    findOne: jest.fn(),
-    update: jest.fn(),
   };
 
-  const mockUser: User = {
+  const mockUser = {
     id: 1,
-    name: 'John Doe',
+    username: 'johndoe',
     email: 'john@example.com',
     passwordHash: 'hashed-password',
+    firstName: 'John',
+    lastName: 'Doe',
+    role: 'user',
+    departmentId: null,
     isActive: true,
+    lastLoginAt: null,
     createdAt: new Date(),
     updatedAt: new Date(),
+    get fullName() {
+      if (this.firstName && this.lastName) return `${this.firstName} ${this.lastName}`;
+      return this.firstName || this.lastName || null;
+    },
   };
 
   beforeEach(async () => {
@@ -44,10 +45,6 @@ describe('AuthService', () => {
           useValue: mockUserRepository,
         },
         {
-          provide: getRepositoryToken(RefreshToken),
-          useValue: mockRefreshTokenRepository,
-        },
-        {
           provide: JwtService,
           useValue: {
             sign: jest.fn().mockReturnValue('jwt-token'),
@@ -57,7 +54,7 @@ describe('AuthService', () => {
         {
           provide: ConfigService,
           useValue: {
-            get: jest.fn().mockReturnValue('7d'),
+            get: jest.fn().mockReturnValue('test-secret'),
           },
         },
       ],
@@ -73,47 +70,109 @@ describe('AuthService', () => {
     expect(service).toBeDefined();
   });
 
-  describe('validateUser', () => {
-    it('should return user when credentials are valid', async () => {
+  describe('validateToken', () => {
+    it('should return access token for valid external token with existing user', async () => {
+      (jwtService.verify as jest.Mock).mockReturnValue({
+        email: 'john@example.com',
+        username: 'johndoe',
+      });
       mockUserRepository.findOne.mockResolvedValue(mockUser);
-      (bcrypt.compare as jest.Mock).mockResolvedValue(true);
 
-      const result = await service.validateUser('john@example.com', 'password123');
+      const result = await service.validateToken('external-token');
 
-      expect(mockUserRepository.findOne).toHaveBeenCalled();
-      expect(bcrypt.compare).toHaveBeenCalledWith('password123', 'hashed-password');
-      expect(result).toEqual(mockUser);
+      expect(jwtService.verify).toHaveBeenCalledWith('external-token');
+      expect(result).toHaveProperty('accessToken', 'jwt-token');
+      expect(result).toHaveProperty('expiresIn', 900);
+      expect(result.user).toHaveProperty('username', 'johndoe');
     });
 
-    it('should return null when user is not found', async () => {
+    it('should create user when not found and return access token', async () => {
+      (jwtService.verify as jest.Mock).mockReturnValue({
+        email: 'new@example.com',
+        username: 'newuser',
+        role: 'user',
+      });
       mockUserRepository.findOne.mockResolvedValue(null);
+      const newUser = { ...mockUser, id: 2, username: 'newuser', email: 'new@example.com' };
+      mockUserRepository.create.mockReturnValue(newUser);
+      mockUserRepository.save.mockResolvedValue(newUser);
 
-      const result = await service.validateUser('unknown@example.com', 'password123');
+      const result = await service.validateToken('external-token');
 
-      expect(result).toBeNull();
+      expect(mockUserRepository.create).toHaveBeenCalled();
+      expect(mockUserRepository.save).toHaveBeenCalled();
+      expect(result).toHaveProperty('accessToken');
     });
 
-    it('should return null when password does not match', async () => {
-      mockUserRepository.findOne.mockResolvedValue(mockUser);
-      (bcrypt.compare as jest.Mock).mockResolvedValue(false);
+    it('should throw UnauthorizedException for invalid token', async () => {
+      (jwtService.verify as jest.Mock).mockImplementation(() => {
+        throw new Error('invalid token');
+      });
 
-      const result = await service.validateUser('john@example.com', 'wrong-password');
-
-      expect(result).toBeNull();
+      await expect(service.validateToken('bad-token')).rejects.toThrow();
     });
   });
 
-  describe('login', () => {
-    it('should return access token, refresh token, and user info', async () => {
-      mockRefreshTokenRepository.create.mockReturnValue({ userId: 1, token: 'jwt-token' });
-      mockRefreshTokenRepository.save.mockResolvedValue({});
+  describe('getMe', () => {
+    it('should return user info', async () => {
+      mockUserRepository.findOneBy.mockResolvedValue(mockUser);
 
-      const result = await service.login(mockUser);
+      const result = await service.getMe(1);
 
-      expect(jwtService.sign).toHaveBeenCalled();
-      expect(result).toHaveProperty('accessToken');
-      expect(result).toHaveProperty('refreshToken');
-      expect(result.user).toHaveProperty('email', 'john@example.com');
+      expect(result).toHaveProperty('username', 'johndoe');
+      expect(result).toHaveProperty('email', 'john@example.com');
+    });
+
+    it('should throw NotFoundException when user not found', async () => {
+      mockUserRepository.findOneBy.mockResolvedValue(null);
+
+      await expect(service.getMe(999)).rejects.toThrow(NotFoundException);
+    });
+  });
+
+  describe('getProfile', () => {
+    it('should return full profile', async () => {
+      mockUserRepository.findOneBy.mockResolvedValue(mockUser);
+
+      const result = await service.getProfile(1);
+
+      expect(result).toHaveProperty('username', 'johndoe');
+      expect(result).toHaveProperty('firstName', 'John');
+      expect(result).toHaveProperty('lastName', 'Doe');
+      expect(result).toHaveProperty('createdAt');
+    });
+
+    it('should throw NotFoundException when user not found', async () => {
+      mockUserRepository.findOneBy.mockResolvedValue(null);
+
+      await expect(service.getProfile(999)).rejects.toThrow(NotFoundException);
+    });
+  });
+
+  describe('updateProfile', () => {
+    it('should update and return profile', async () => {
+      const updatedUser = { ...mockUser, firstName: 'Jane' };
+      Object.defineProperty(updatedUser, 'fullName', {
+        get() {
+          return this.firstName && this.lastName
+            ? `${this.firstName} ${this.lastName}`
+            : this.firstName || this.lastName || null;
+        },
+      });
+      mockUserRepository.findOneBy.mockResolvedValue({ ...mockUser });
+      mockUserRepository.save.mockResolvedValue(updatedUser);
+
+      const result = await service.updateProfile(1, { firstName: 'Jane' });
+
+      expect(result).toHaveProperty('firstName', 'Jane');
+    });
+
+    it('should throw NotFoundException when user not found', async () => {
+      mockUserRepository.findOneBy.mockResolvedValue(null);
+
+      await expect(service.updateProfile(999, { firstName: 'Jane' })).rejects.toThrow(
+        NotFoundException,
+      );
     });
   });
 });

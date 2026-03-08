@@ -7,7 +7,7 @@ describe('NotificationsController', () => {
 
   const mockService = {
     findAllByUser: jest.fn(),
-    findOne: jest.fn(),
+    getUnreadCount: jest.fn(),
     markAsRead: jest.fn(),
     markAllAsRead: jest.fn(),
     delete: jest.fn(),
@@ -31,27 +31,32 @@ describe('NotificationsController', () => {
   });
 
   describe('findAll', () => {
-    it('should return notifications for user', async () => {
-      const mockNotifications = [
-        { id: 1, title: 'Test', userId: 1, isRead: false },
-      ];
-      mockService.findAllByUser.mockResolvedValue(mockNotifications);
+    it('should return paginated notifications for user', async () => {
+      const mockPaginatedResult = {
+        data: [{ id: 1, title: 'Test', userId: 1, isRead: false }],
+        pagination: { page: 1, pageSize: 10, totalItems: 1, totalPages: 1, hasNext: false, hasPrevious: false },
+      };
+      mockService.findAllByUser.mockResolvedValue(mockPaginatedResult);
 
-      const result = await controller.findAll({ user: { userId: 1 } });
+      const query = { page: 1, pageSize: 10 } as any;
+      const result = await controller.findAll(
+        { user: { userId: 1 } },
+        query,
+        undefined,
+      );
 
-      expect(mockService.findAllByUser).toHaveBeenCalledWith(1);
-      expect(result).toEqual(mockNotifications);
+      expect(mockService.findAllByUser).toHaveBeenCalledWith(1, 1, 10, undefined, undefined, false);
+      expect(result).toEqual(mockPaginatedResult);
     });
   });
 
   describe('markAsRead', () => {
     it('should mark notification as read', async () => {
-      mockService.markAsRead.mockResolvedValue({});
+      mockService.markAsRead.mockResolvedValue(undefined);
 
-      const result = await controller.markAsRead(1, { user: { userId: 1 } });
+      await controller.markAsRead(1, { user: { userId: 1 } });
 
       expect(mockService.markAsRead).toHaveBeenCalledWith(1, 1);
-      expect(result).toEqual({ message: 'Notification marked as read' });
     });
   });
 });

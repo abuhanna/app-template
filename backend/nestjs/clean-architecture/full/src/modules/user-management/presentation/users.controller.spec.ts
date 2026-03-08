@@ -71,7 +71,7 @@ describe('UsersController', () => {
         page: 2,
         pageSize: 25,
         sortBy: 'username',
-        sortDir: 'desc' as const,
+        sortOrder: 'desc' as const,
         search: 'admin',
       };
       await controller.findAll(queryDto);

@@ -55,6 +55,10 @@ export class NotificationRepository implements INotificationRepository {
     );
   }
 
+  async delete(id: number): Promise<void> {
+    await this.repository.delete(id.toString());
+  }
+
   private toDomain(entity: NotificationOrmEntity): Notification {
     return Notification.reconstitute(
       parseInt(entity.id, 10),
@@ -62,7 +66,8 @@ export class NotificationRepository implements INotificationRepository {
       entity.title,
       entity.message,
       entity.type as NotificationType,
-      entity.link,
+      entity.referenceId,
+      entity.referenceType,
       entity.isRead,
       entity.readAt,
       entity.createdAt,
@@ -78,7 +83,8 @@ export class NotificationRepository implements INotificationRepository {
     entity.title = notification.title;
     entity.message = notification.message;
     entity.type = notification.type;
-    entity.link = notification.link;
+    entity.referenceId = notification.referenceId;
+    entity.referenceType = notification.referenceType;
     entity.isRead = notification.isRead;
     entity.readAt = notification.readAt;
     entity.createdAt = notification.createdAt;

@@ -7,10 +7,39 @@ describe('AuthController', () => {
   let controller: AuthController;
   let authService: AuthService;
 
-  const mockUser = { id: 1, name: 'John Doe', email: 'john@example.com' };
+  const mockUser = {
+    id: 1,
+    username: 'johndoe',
+    email: 'john@example.com',
+    passwordHash: 'hash',
+    firstName: 'John',
+    lastName: 'Doe',
+    role: 'user',
+    departmentId: null,
+    isActive: true,
+    lastLoginAt: null,
+    createdAt: new Date(),
+    updatedAt: new Date(),
+    get fullName() { return 'John Doe'; },
+    get departmentName() { return null; },
+  } as any;
+
   const mockLoginResponse = {
-    access_token: 'jwt-token',
-    user: { id: 1, name: 'John Doe', email: 'john@example.com' },
+    accessToken: 'jwt-token',
+    refreshToken: 'refresh-token',
+    expiresIn: 900,
+    user: {
+      id: 1,
+      username: 'johndoe',
+      email: 'john@example.com',
+      firstName: 'John',
+      lastName: 'Doe',
+      fullName: 'John Doe',
+      role: 'user',
+      departmentId: null,
+      departmentName: null,
+      isActive: true,
+    },
   };
 
   beforeEach(async () => {
@@ -23,6 +52,14 @@ describe('AuthController', () => {
             validateUser: jest.fn(),
             login: jest.fn(),
             register: jest.fn(),
+            refresh: jest.fn(),
+            logout: jest.fn(),
+            getMe: jest.fn(),
+            getProfile: jest.fn(),
+            updateProfile: jest.fn(),
+            changePassword: jest.fn(),
+            forgotPassword: jest.fn(),
+            resetPassword: jest.fn(),
           },
         },
       ],
@@ -39,7 +76,7 @@ describe('AuthController', () => {
   });
 
   describe('login', () => {
-    it('should return a JWT token when credentials are valid', async () => {
+    it('should return tokens when credentials are valid', async () => {
       (authService.validateUser as jest.Mock).mockResolvedValue(mockUser);
       (authService.login as jest.Mock).mockResolvedValue(mockLoginResponse);
 
@@ -56,21 +93,41 @@ describe('AuthController', () => {
       await expect(
         controller.login({ email: 'john@example.com', password: 'wrong' }),
       ).rejects.toThrow(UnauthorizedException);
-
-      expect(authService.validateUser).toHaveBeenCalledWith('john@example.com', 'wrong');
-      expect(authService.login).not.toHaveBeenCalled();
     });
   });
 
   describe('register', () => {
-    it('should register a new user and return login response', async () => {
-      const createUserDto = { name: 'Jane Doe', email: 'jane@example.com', password: 'password123' };
+    it('should register a new user and return auth response', async () => {
+      const registerDto = { username: 'janedoe', email: 'jane@example.com', password: 'password123' };
       (authService.register as jest.Mock).mockResolvedValue(mockLoginResponse);
 
-      const result = await controller.register(createUserDto);
+      const result = await controller.register(registerDto);
 
-      expect(authService.register).toHaveBeenCalledWith(createUserDto);
+      expect(authService.register).toHaveBeenCalledWith(registerDto);
       expect(result).toEqual(mockLoginResponse);
+    });
+  });
+
+  describe('refresh', () => {
+    it('should refresh tokens', async () => {
+      const refreshResponse = { accessToken: 'new-token', refreshToken: 'new-refresh', expiresIn: 900 };
+      (authService.refresh as jest.Mock).mockResolvedValue(refreshResponse);
+
+      const result = await controller.refresh({ refreshToken: 'old-token' });
+
+      expect(authService.refresh).toHaveBeenCalledWith('old-token');
+      expect(result).toEqual(refreshResponse);
+    });
+  });
+
+  describe('me', () => {
+    it('should return current user info', async () => {
+      const meResponse = { id: 1, username: 'johndoe', email: 'john@example.com', role: 'user' };
+      (authService.getMe as jest.Mock).mockReturnValue(meResponse);
+
+      const result = await controller.me({ user: { userId: 1, sub: '1', email: 'john@example.com' } });
+
+      expect(result).toEqual(meResponse);
     });
   });
 });

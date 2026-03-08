@@ -22,7 +22,7 @@ export class PaginationMeta {
 
 export class PagedResult<T> {
   @ApiProperty({ description: 'Array of items', isArray: true })
-  items: T[];
+  data: T[];
 
   @ApiProperty({ description: 'Pagination metadata', type: PaginationMeta })
   pagination: PaginationMeta;
@@ -32,7 +32,7 @@ export interface PaginationQuery {
   page?: number;
   pageSize?: number;
   sortBy?: string;
-  sortDir?: 'asc' | 'desc';
+  sortOrder?: 'asc' | 'desc';
   search?: string;
 }
 
@@ -44,7 +44,7 @@ export function createPagedResult<T>(
 ): PagedResult<T> {
   const totalPages = Math.ceil(totalItems / pageSize);
   return {
-    items,
+    data: items,
     pagination: {
       page,
       pageSize,

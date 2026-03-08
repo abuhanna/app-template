@@ -51,7 +51,7 @@ describe('DepartmentsController', () => {
       };
       mockQueryBus.execute.mockResolvedValue(pagedResult);
 
-      const queryDto = { page: 1, pageSize: 10, sortBy: 'name', sortDir: 'asc' as const, search: '' };
+      const queryDto = { page: 1, pageSize: 10, sortBy: 'name', sortOrder: 'asc' as const, search: '' };
       const result = await controller.findAll(queryDto);
 
       expect(mockQueryBus.execute).toHaveBeenCalledWith(

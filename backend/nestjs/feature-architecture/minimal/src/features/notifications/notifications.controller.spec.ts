@@ -18,6 +18,18 @@ describe('NotificationsController', () => {
     updatedAt: new Date(),
   };
 
+  const mockPaginatedResult = {
+    data: [mockNotification],
+    pagination: {
+      page: 1,
+      pageSize: 10,
+      totalItems: 1,
+      totalPages: 1,
+      hasNext: false,
+      hasPrevious: false,
+    },
+  };
+
   beforeEach(async () => {
     const module: TestingModule = await Test.createTestingModule({
       controllers: [NotificationsController],
@@ -25,9 +37,9 @@ describe('NotificationsController', () => {
         {
           provide: NotificationsService,
           useValue: {
-            findAllByUser: jest.fn().mockResolvedValue([mockNotification]),
-            findOne: jest.fn().mockResolvedValue(mockNotification),
-            markAsRead: jest.fn().mockResolvedValue({ ...mockNotification, isRead: true }),
+            findAll: jest.fn().mockResolvedValue(mockPaginatedResult),
+            getUnreadCount: jest.fn().mockResolvedValue({ count: 1 }),
+            markAsRead: jest.fn().mockResolvedValue(undefined),
             markAllAsRead: jest.fn().mockResolvedValue(undefined),
             delete: jest.fn().mockResolvedValue(undefined),
           },
@@ -44,18 +56,22 @@ describe('NotificationsController', () => {
   });
 
   describe('findAll', () => {
-    it('should return notifications for the user', async () => {
-      const result = await controller.findAll({ user: { userId: 1 } });
-      expect(service.findAllByUser).toHaveBeenCalledWith(1);
-      expect(result).toEqual([mockNotification]);
+    it('should return paginated notifications for the user', async () => {
+      const query = { page: 1, pageSize: 10 };
+      const result = await controller.findAll(
+        { user: { userId: 1 } },
+        query as any,
+        undefined,
+      );
+      expect(service.findAll).toHaveBeenCalledWith(1, query, undefined);
+      expect(result).toEqual(mockPaginatedResult);
     });
   });
 
   describe('markAsRead', () => {
     it('should mark notification as read', async () => {
-      const result = await controller.markAsRead(1, { user: { userId: 1 } });
+      await controller.markAsRead(1, { user: { userId: 1 } });
       expect(service.markAsRead).toHaveBeenCalledWith(1, 1);
-      expect(result).toEqual({ message: 'Notification marked as read' });
     });
   });
 
