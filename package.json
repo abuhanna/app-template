@@ -4,7 +4,8 @@
   "private": true,
   "description": "AppTemplate - Fullstack Application Scaffolding Tool",
   "scripts": {
-    "prepare": "husky"
+    "prepare": "husky",
+    "check-versions": "npx tsx scripts/check-versions.ts"
   },
   "devDependencies": {
     "@commitlint/cli": "^19.6.1",
