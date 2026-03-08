@@ -2,6 +2,7 @@ import {
   Controller,
   Get,
   Post,
+  Delete,
   Param,
   ParseIntPipe,
   HttpCode,
@@ -16,6 +17,7 @@ import { NotificationDto } from '../application/dto/notification.dto';
 import {
   MarkNotificationReadCommand,
   MarkAllNotificationsReadCommand,
+  DeleteNotificationCommand,
 } from '../application/commands';
 import { GetNotificationsQuery } from '../application/queries';
 
@@ -56,5 +58,17 @@ export class NotificationsController {
   async markAllAsRead(@CurrentUser() user: CurrentUserPayload): Promise<{ message: string }> {
     await this.commandBus.execute(new MarkAllNotificationsReadCommand(user.sub));
     return { message: 'All notifications marked as read' };
+  }
+
+  @Delete(':id')
+  @HttpCode(HttpStatus.NO_CONTENT)
+  @ApiOperation({ summary: 'Delete a notification' })
+  @ApiResponse({ status: 204, description: 'Notification deleted' })
+  @ApiResponse({ status: 404, description: 'Notification not found' })
+  async delete(
+    @CurrentUser() user: CurrentUserPayload,
+    @Param('id', ParseIntPipe) id: number,
+  ): Promise<void> {
+    await this.commandBus.execute(new DeleteNotificationCommand(id, user.sub));
   }
 }

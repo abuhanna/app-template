@@ -12,7 +12,7 @@
 - **Swagger/OpenAPI** - API documentation
 - **JWT** - Authentication (local + optional SSO)
 - **BCrypt** - Password hashing
-- **SignalR** - Real-time notifications
+- **Serilog** - Structured JSON logging
 
 ## Project Structure (Clean Architecture)
 
@@ -42,8 +42,7 @@ backend/
 │   │       │   ├── PasswordHashService   # BCrypt password hashing
 │   │       │   ├── JwtTokenService       # JWT generation
 │   │       │   ├── SsoAuthService        # Optional SSO integration
-│   │       │   └── NotificationService   # SignalR notifications
-│   │       └── Hubs/                     # SignalR hubs
+│   │       │   └── NotificationService   # Database notifications
 │   │
 │   └── Presentation/
 │       └── App.Template.WebAPI/              # ASP.NET Core Web API (namespace: AppTemplate.WebAPI)

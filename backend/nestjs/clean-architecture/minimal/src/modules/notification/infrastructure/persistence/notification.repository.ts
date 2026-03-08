@@ -55,6 +55,10 @@ export class NotificationRepository implements INotificationRepository {
     );
   }
 
+  async delete(id: number): Promise<void> {
+    await this.repository.delete(id.toString());
+  }
+
   private toDomain(entity: NotificationOrmEntity): Notification {
     return Notification.reconstitute(
       parseInt(entity.id, 10),

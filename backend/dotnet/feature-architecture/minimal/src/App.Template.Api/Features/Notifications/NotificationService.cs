@@ -1,6 +1,5 @@
 using App.Template.Api.Data;
 
-using Microsoft.AspNetCore.SignalR;
 using Microsoft.EntityFrameworkCore;
 
 namespace App.Template.Api.Features.Notifications;
@@ -14,16 +13,13 @@ public interface INotificationService
 public class NotificationService : INotificationService
 {
     private readonly AppDbContext _context;
-    private readonly IHubContext<NotificationHub> _hubContext;
     private readonly ILogger<NotificationService> _logger;
 
     public NotificationService(
         AppDbContext context,
-        IHubContext<NotificationHub> hubContext,
         ILogger<NotificationService> logger)
     {
         _context = context;
-        _hubContext = hubContext;
         _logger = logger;
     }
 
@@ -42,19 +38,6 @@ public class NotificationService : INotificationService
 
             await _context.Notifications.AddAsync(notification, cancellationToken);
             await _context.SaveChangesAsync(cancellationToken);
-
-            // Broadcast via SignalR
-            await _hubContext.Clients.User(userId).SendAsync("ReceiveNotification", new
-            {
-                notification.Id,
-                notification.Title,
-                notification.Message,
-                Type = notification.Type.ToString(),
-                notification.ReferenceId,
-                notification.ReferenceType,
-                notification.IsRead,
-                notification.CreatedAt
-            }, cancellationToken);
 
             _logger.LogInformation("Notification sent to user {UserId}: {Title}", userId, title);
         }

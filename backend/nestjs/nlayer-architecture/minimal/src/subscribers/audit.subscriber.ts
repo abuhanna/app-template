@@ -32,11 +32,9 @@ export class AuditSubscriber implements EntitySubscriberInterface<any> {
     const audit = new AuditLog();
     audit.type = type;
     audit.tableName = tableName;
-    audit.oldValues = oldValues ? oldValues : undefined;
-    audit.newValues = newValues ? newValues : undefined;
-    // Accessing current user in subscriber is tricky in NestJS without CLS (AsyncLocalStorage)
-    // For now, we leave userId null or implement CLS later if requested.
-    
+    audit.oldValues = oldValues as string;
+    audit.newValues = newValues as string;
+
     await manager.save(AuditLog, audit);
   }
 }

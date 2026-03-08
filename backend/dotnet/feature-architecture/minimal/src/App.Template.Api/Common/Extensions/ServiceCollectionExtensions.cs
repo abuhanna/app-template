@@ -1,6 +1,5 @@
 using App.Template.Api.Common.Services;
 using App.Template.Api.Features.Auth;
-using App.Template.Api.Features.Export;
 using App.Template.Api.Features.Files;
 using App.Template.Api.Features.Notifications;
 
@@ -21,9 +20,6 @@ public static class ServiceCollectionExtensions
 
         // Notifications Feature
         services.AddScoped<INotificationService, NotificationService>();
-
-        // Export Feature
-        services.AddScoped<IExportService, ExportService>();
 
         return services;
     }

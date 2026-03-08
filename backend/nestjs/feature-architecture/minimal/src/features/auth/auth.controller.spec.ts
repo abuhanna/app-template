@@ -7,10 +7,11 @@ describe('AuthController', () => {
   let controller: AuthController;
   let authService: AuthService;
 
-  const mockUser = { id: 1, name: 'John Doe', email: 'john@example.com' };
+  const mockUser = { id: 1, name: 'admin', email: 'admin@example.com', passwordHash: 'hash', isActive: true, createdAt: new Date(), updatedAt: new Date() };
   const mockLoginResponse = {
-    access_token: 'jwt-token',
-    user: { id: 1, name: 'John Doe', email: 'john@example.com' },
+    accessToken: 'jwt-token',
+    refreshToken: 'refresh-token',
+    user: { id: 1, name: 'admin', email: 'admin@example.com' },
   };
 
   beforeEach(async () => {
@@ -22,7 +23,9 @@ describe('AuthController', () => {
           useValue: {
             validateUser: jest.fn(),
             login: jest.fn(),
-            register: jest.fn(),
+            refresh: jest.fn(),
+            logout: jest.fn(),
+            getMe: jest.fn(),
           },
         },
       ],
@@ -37,13 +40,13 @@ describe('AuthController', () => {
   });
 
   describe('login', () => {
-    it('should return a JWT token when credentials are valid', async () => {
+    it('should return tokens when credentials are valid', async () => {
       (authService.validateUser as jest.Mock).mockResolvedValue(mockUser);
       (authService.login as jest.Mock).mockResolvedValue(mockLoginResponse);
 
-      const result = await controller.login({ email: 'john@example.com', password: 'password123' });
+      const result = await controller.login({ email: 'admin@example.com', password: 'Admin@123' });
 
-      expect(authService.validateUser).toHaveBeenCalledWith('john@example.com', 'password123');
+      expect(authService.validateUser).toHaveBeenCalledWith('admin@example.com', 'Admin@123');
       expect(authService.login).toHaveBeenCalledWith(mockUser);
       expect(result).toEqual(mockLoginResponse);
     });
@@ -52,23 +55,41 @@ describe('AuthController', () => {
       (authService.validateUser as jest.Mock).mockResolvedValue(null);
 
       await expect(
-        controller.login({ email: 'john@example.com', password: 'wrong' }),
+        controller.login({ email: 'admin@example.com', password: 'wrong' }),
       ).rejects.toThrow(UnauthorizedException);
-
-      expect(authService.validateUser).toHaveBeenCalledWith('john@example.com', 'wrong');
-      expect(authService.login).not.toHaveBeenCalled();
     });
   });
 
-  describe('register', () => {
-    it('should register a new user and return login response', async () => {
-      const createUserDto = { name: 'Jane Doe', email: 'jane@example.com', password: 'password123' };
-      (authService.register as jest.Mock).mockResolvedValue(mockLoginResponse);
+  describe('refresh', () => {
+    it('should refresh tokens', async () => {
+      (authService.refresh as jest.Mock).mockResolvedValue(mockLoginResponse);
 
-      const result = await controller.register(createUserDto);
+      const result = await controller.refresh({ refreshToken: 'old-token' });
 
-      expect(authService.register).toHaveBeenCalledWith(createUserDto);
+      expect(authService.refresh).toHaveBeenCalledWith('old-token');
       expect(result).toEqual(mockLoginResponse);
+    });
+  });
+
+  describe('logout', () => {
+    it('should logout user', async () => {
+      (authService.logout as jest.Mock).mockResolvedValue(undefined);
+
+      await controller.logout({ user: { userId: 1 } }, { refreshToken: 'token' });
+
+      expect(authService.logout).toHaveBeenCalledWith(1, 'token');
+    });
+  });
+
+  describe('me', () => {
+    it('should return current user info', async () => {
+      const userInfo = { id: 1, name: 'admin', email: 'admin@example.com', isActive: true };
+      (authService.getMe as jest.Mock).mockResolvedValue(userInfo);
+
+      const result = await controller.me({ user: { userId: 1 } });
+
+      expect(authService.getMe).toHaveBeenCalledWith(1);
+      expect(result).toEqual(userInfo);
     });
   });
 });

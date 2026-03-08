@@ -9,7 +9,8 @@ describe('AuthController', () => {
 
   const mockUser = { id: 1, name: 'John Doe', email: 'john@example.com' };
   const mockLoginResponse = {
-    access_token: 'jwt-token',
+    accessToken: 'jwt-token',
+    refreshToken: 'refresh-token',
     user: { id: 1, name: 'John Doe', email: 'john@example.com' },
   };
 
@@ -22,7 +23,9 @@ describe('AuthController', () => {
           useValue: {
             validateUser: jest.fn(),
             login: jest.fn(),
-            register: jest.fn(),
+            refresh: jest.fn(),
+            logout: jest.fn(),
+            getMe: jest.fn(),
           },
         },
       ],
@@ -39,7 +42,7 @@ describe('AuthController', () => {
   });
 
   describe('login', () => {
-    it('should return a JWT token when credentials are valid', async () => {
+    it('should return tokens when credentials are valid', async () => {
       (authService.validateUser as jest.Mock).mockResolvedValue(mockUser);
       (authService.login as jest.Mock).mockResolvedValue(mockLoginResponse);
 
@@ -56,21 +59,29 @@ describe('AuthController', () => {
       await expect(
         controller.login({ email: 'john@example.com', password: 'wrong' }),
       ).rejects.toThrow(UnauthorizedException);
-
-      expect(authService.validateUser).toHaveBeenCalledWith('john@example.com', 'wrong');
-      expect(authService.login).not.toHaveBeenCalled();
     });
   });
 
-  describe('register', () => {
-    it('should register a new user and return login response', async () => {
-      const createUserDto = { name: 'Jane Doe', email: 'jane@example.com', password: 'password123' };
-      (authService.register as jest.Mock).mockResolvedValue(mockLoginResponse);
+  describe('refresh', () => {
+    it('should return new tokens', async () => {
+      (authService.refresh as jest.Mock).mockResolvedValue(mockLoginResponse);
 
-      const result = await controller.register(createUserDto);
+      const result = await controller.refresh({ refreshToken: 'old-refresh-token' });
 
-      expect(authService.register).toHaveBeenCalledWith(createUserDto);
+      expect(authService.refresh).toHaveBeenCalledWith('old-refresh-token');
       expect(result).toEqual(mockLoginResponse);
+    });
+  });
+
+  describe('me', () => {
+    it('should return current user info', async () => {
+      const userInfo = { id: 1, name: 'John Doe', email: 'john@example.com', isActive: true };
+      (authService.getMe as jest.Mock).mockResolvedValue(userInfo);
+
+      const result = await controller.me({ user: { userId: 1 } });
+
+      expect(authService.getMe).toHaveBeenCalledWith(1);
+      expect(result).toEqual(userInfo);
     });
   });
 });

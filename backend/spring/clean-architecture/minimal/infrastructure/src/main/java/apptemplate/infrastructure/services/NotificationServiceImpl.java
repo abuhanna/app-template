@@ -8,11 +8,8 @@ import apptemplate.domain.enums.NotificationType;
 import apptemplate.domain.enums.UserRole;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.messaging.simp.SimpMessagingTemplate;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
-
-import java.util.Map;
 
 
 @Service
@@ -22,7 +19,6 @@ public class NotificationServiceImpl implements NotificationService {
 
     private final NotificationRepository notificationRepository;
     private final UserRepository userRepository;
-    private final SimpMessagingTemplate messagingTemplate;
 
     @Override
     @Transactional
@@ -38,10 +34,8 @@ public class NotificationServiceImpl implements NotificationService {
                 .read(false)
                 .build();
 
-        Notification saved = notificationRepository.save(notification);
-
-        // Send via WebSocket
-        sendWebSocketNotification(userId, saved);
+        notificationRepository.save(notification);
+        log.debug("Notification created for user: {}", userId);
     }
 
     @Override
@@ -62,29 +56,5 @@ public class NotificationServiceImpl implements NotificationService {
     @Transactional
     public void notifyAdmins(String title, String message, NotificationType type) {
         notifyAdmins(title, message, type, null, null);
-    }
-
-    private void sendWebSocketNotification(Long userId, Notification notification) {
-        try {
-            Map<String, Object> payload = Map.of(
-                    "id", notification.getId(),
-                    "title", notification.getTitle(),
-                    "message", notification.getMessage(),
-                    "type", notification.getType().name(),
-                    "link", notification.getLink() != null ? notification.getLink() : "",
-                    "isRead", notification.isRead(),
-                    "createdAt", notification.getCreatedAt().toString()
-            );
-
-            messagingTemplate.convertAndSendToUser(
-                    userId.toString(),
-                    "/queue/notifications",
-                    payload
-            );
-
-            log.debug("WebSocket notification sent to user: {}", userId);
-        } catch (Exception e) {
-            log.error("Failed to send WebSocket notification to user: {}", userId, e);
-        }
     }
 }

@@ -9,7 +9,9 @@ describe('FilesController', () => {
 
   const mockService = {
     saveFile: jest.fn(),
+    listFiles: jest.fn(),
     getFile: jest.fn(),
+    deleteFile: jest.fn(),
   };
 
   beforeEach(async () => {
@@ -56,6 +58,18 @@ describe('FilesController', () => {
     });
   });
 
+  describe('listFiles', () => {
+    it('should return list of files', async () => {
+      const files = [{ id: 1, fileName: 'test.pdf' }];
+      mockService.listFiles.mockResolvedValue(files);
+
+      const result = await controller.listFiles();
+
+      expect(service.listFiles).toHaveBeenCalled();
+      expect(result).toEqual(files);
+    });
+  });
+
   describe('downloadFile', () => {
     it('should set response headers and return the file stream', async () => {
       const mockStreamableFile = new StreamableFile(Buffer.from('file content'));
@@ -66,11 +80,9 @@ describe('FilesController', () => {
       };
       mockService.getFile.mockResolvedValue(fileResult);
 
-      const mockResponse = {
-        set: jest.fn(),
-      } as any;
+      const mockResponse = { set: jest.fn() } as any;
 
-      const result = await controller.downloadFile('1', mockResponse);
+      const result = await controller.downloadFile(1, mockResponse);
 
       expect(service.getFile).toHaveBeenCalledWith(1);
       expect(mockResponse.set).toHaveBeenCalledWith({

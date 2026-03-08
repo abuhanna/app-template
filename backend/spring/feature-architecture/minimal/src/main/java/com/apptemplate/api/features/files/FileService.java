@@ -3,6 +3,8 @@ package com.apptemplate.api.features.files;
 import lombok.RequiredArgsConstructor;
 import org.springframework.core.io.Resource;
 import org.springframework.core.io.UrlResource;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
 
@@ -41,11 +43,15 @@ public class FileService {
         }
     }
 
+    public Page<UploadedFile> listFiles(Pageable pageable) {
+        return fileRepository.findAll(pageable);
+    }
+
     public Resource loadFileAsResource(Long fileId) {
         try {
             UploadedFile uploadedFile = fileRepository.findById(fileId)
                     .orElseThrow(() -> new RuntimeException("File not found with id " + fileId));
-            
+
             Path filePath = Paths.get(uploadedFile.getFilePath());
             Resource resource = new UrlResource(filePath.toUri());
 
@@ -58,9 +64,24 @@ public class FileService {
             throw new RuntimeException("File not found", ex);
         }
     }
-    
+
     public UploadedFile getFileMetadata(Long fileId) {
          return fileRepository.findById(fileId)
                     .orElseThrow(() -> new RuntimeException("File not found with id " + fileId));
+    }
+
+    public void deleteFile(Long fileId) {
+        UploadedFile uploadedFile = fileRepository.findById(fileId)
+                .orElseThrow(() -> new RuntimeException("File not found with id " + fileId));
+
+        // Delete physical file
+        try {
+            Path filePath = Paths.get(uploadedFile.getFilePath());
+            Files.deleteIfExists(filePath);
+        } catch (IOException ex) {
+            // Log but don't fail if physical file can't be deleted
+        }
+
+        fileRepository.delete(uploadedFile);
     }
 }

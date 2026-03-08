@@ -1,8 +1,6 @@
 using AppTemplate.Application.Interfaces;
 using AppTemplate.Domain.Entities;
 using AppTemplate.Domain.Enums;
-using AppTemplate.Infrastructure.Hubs;
-using Microsoft.AspNetCore.SignalR;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
 
@@ -11,16 +9,13 @@ namespace AppTemplate.Infrastructure.Services;
 public class NotificationService : INotificationService
 {
     private readonly IApplicationDbContext _context;
-    private readonly IHubContext<NotificationHub> _hubContext;
     private readonly ILogger<NotificationService> _logger;
 
     public NotificationService(
         IApplicationDbContext context,
-        IHubContext<NotificationHub> hubContext,
         ILogger<NotificationService> logger)
     {
         _context = context;
-        _hubContext = hubContext;
         _logger = logger;
     }
 
@@ -39,19 +34,6 @@ public class NotificationService : INotificationService
 
             await _context.Notifications.AddAsync(notification, cancellationToken);
             await _context.SaveChangesAsync(cancellationToken);
-
-            // Broadcast to SignalR Hub
-            await _hubContext.Clients.User(userId).SendAsync("ReceiveNotification", new
-            {
-                notification.Id,
-                notification.Title,
-                notification.Message,
-                notification.Type,
-                notification.ReferenceId,
-                notification.ReferenceType,
-                notification.IsRead,
-                notification.CreatedAt
-            }, cancellationToken);
 
             _logger.LogInformation("Notification sent to user {UserId}: {Title}", userId, title);
         }

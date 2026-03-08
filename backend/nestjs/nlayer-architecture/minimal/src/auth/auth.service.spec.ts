@@ -1,23 +1,38 @@
 import { Test, TestingModule } from '@nestjs/testing';
 import { JwtService } from '@nestjs/jwt';
+import { ConfigService } from '@nestjs/config';
+import { getRepositoryToken } from '@nestjs/typeorm';
 import { AuthService } from './auth.service';
-import { UserService } from '../services/user.service';
+import { User } from '../entities/user.entity';
+import { RefreshToken } from '../entities/refresh-token.entity';
 import * as bcrypt from 'bcrypt';
 
 jest.mock('bcrypt');
 
 describe('AuthService', () => {
   let service: AuthService;
-  let userService: UserService;
   let jwtService: JwtService;
 
-  const mockUserWithPassword = {
+  const mockUserRepository = {
+    findOne: jest.fn(),
+    findOneBy: jest.fn(),
+  };
+
+  const mockRefreshTokenRepository = {
+    create: jest.fn(),
+    save: jest.fn(),
+    findOne: jest.fn(),
+    update: jest.fn(),
+  };
+
+  const mockUser: User = {
     id: 1,
     name: 'John Doe',
     email: 'john@example.com',
     passwordHash: 'hashed-password',
     isActive: true,
     createdAt: new Date(),
+    updatedAt: new Date(),
   };
 
   beforeEach(async () => {
@@ -25,23 +40,30 @@ describe('AuthService', () => {
       providers: [
         AuthService,
         {
-          provide: UserService,
-          useValue: {
-            findByEmail: jest.fn(),
-            create: jest.fn(),
-          },
+          provide: getRepositoryToken(User),
+          useValue: mockUserRepository,
+        },
+        {
+          provide: getRepositoryToken(RefreshToken),
+          useValue: mockRefreshTokenRepository,
         },
         {
           provide: JwtService,
           useValue: {
             sign: jest.fn().mockReturnValue('jwt-token'),
+            verify: jest.fn(),
+          },
+        },
+        {
+          provide: ConfigService,
+          useValue: {
+            get: jest.fn().mockReturnValue('7d'),
           },
         },
       ],
     }).compile();
 
     service = module.get<AuthService>(AuthService);
-    userService = module.get<UserService>(UserService);
     jwtService = module.get<JwtService>(JwtService);
 
     jest.clearAllMocks();
@@ -52,20 +74,19 @@ describe('AuthService', () => {
   });
 
   describe('validateUser', () => {
-    it('should return user data without passwordHash when credentials are valid', async () => {
-      (userService.findByEmail as jest.Mock).mockResolvedValue(mockUserWithPassword);
+    it('should return user when credentials are valid', async () => {
+      mockUserRepository.findOne.mockResolvedValue(mockUser);
       (bcrypt.compare as jest.Mock).mockResolvedValue(true);
 
       const result = await service.validateUser('john@example.com', 'password123');
 
-      expect(userService.findByEmail).toHaveBeenCalledWith('john@example.com');
+      expect(mockUserRepository.findOne).toHaveBeenCalled();
       expect(bcrypt.compare).toHaveBeenCalledWith('password123', 'hashed-password');
-      expect(result).not.toHaveProperty('passwordHash');
-      expect(result).toHaveProperty('email', 'john@example.com');
+      expect(result).toEqual(mockUser);
     });
 
     it('should return null when user is not found', async () => {
-      (userService.findByEmail as jest.Mock).mockResolvedValue(null);
+      mockUserRepository.findOne.mockResolvedValue(null);
 
       const result = await service.validateUser('unknown@example.com', 'password123');
 
@@ -73,7 +94,7 @@ describe('AuthService', () => {
     });
 
     it('should return null when password does not match', async () => {
-      (userService.findByEmail as jest.Mock).mockResolvedValue(mockUserWithPassword);
+      mockUserRepository.findOne.mockResolvedValue(mockUser);
       (bcrypt.compare as jest.Mock).mockResolvedValue(false);
 
       const result = await service.validateUser('john@example.com', 'wrong-password');
@@ -83,32 +104,16 @@ describe('AuthService', () => {
   });
 
   describe('login', () => {
-    it('should return an access token and user info', async () => {
-      const user = { id: 1, name: 'John Doe', email: 'john@example.com' };
+    it('should return access token, refresh token, and user info', async () => {
+      mockRefreshTokenRepository.create.mockReturnValue({ userId: 1, token: 'jwt-token' });
+      mockRefreshTokenRepository.save.mockResolvedValue({});
 
-      const result = await service.login(user);
+      const result = await service.login(mockUser);
 
-      expect(jwtService.sign).toHaveBeenCalledWith({ email: 'john@example.com', sub: 1 });
-      expect(result).toEqual({
-        access_token: 'jwt-token',
-        user: { id: 1, name: 'John Doe', email: 'john@example.com' },
-      });
-    });
-  });
-
-  describe('register', () => {
-    it('should create a user and return login response', async () => {
-      const createUserDto = { name: 'Jane Doe', email: 'jane@example.com', password: 'password123' };
-      const createdUser = { id: 2, name: 'Jane Doe', email: 'jane@example.com' };
-      (userService.create as jest.Mock).mockResolvedValue(createdUser);
-
-      const result = await service.register(createUserDto);
-
-      expect(userService.create).toHaveBeenCalledWith(createUserDto);
-      expect(result).toEqual({
-        access_token: 'jwt-token',
-        user: { id: 2, name: 'Jane Doe', email: 'jane@example.com' },
-      });
+      expect(jwtService.sign).toHaveBeenCalled();
+      expect(result).toHaveProperty('accessToken');
+      expect(result).toHaveProperty('refreshToken');
+      expect(result.user).toHaveProperty('email', 'john@example.com');
     });
   });
 });

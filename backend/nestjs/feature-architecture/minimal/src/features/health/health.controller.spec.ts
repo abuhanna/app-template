@@ -1,67 +1,58 @@
 import { Test, TestingModule } from '@nestjs/testing';
 import { HealthController } from './health.controller';
-import { HealthCheckService, TypeOrmHealthIndicator, HealthCheckResult } from '@nestjs/terminus';
+import { DataSource } from 'typeorm';
 
 describe('HealthController', () => {
   let controller: HealthController;
-  let healthCheckService: HealthCheckService;
-  let typeOrmHealthIndicator: TypeOrmHealthIndicator;
+  let dataSource: DataSource;
 
   beforeEach(async () => {
     const module: TestingModule = await Test.createTestingModule({
       controllers: [HealthController],
       providers: [
         {
-          provide: HealthCheckService,
+          provide: DataSource,
           useValue: {
-            check: jest.fn().mockResolvedValue({
-              status: 'ok',
-              details: {
-                database: { status: 'up' },
-              },
-            } as HealthCheckResult),
-          },
-        },
-        {
-          provide: TypeOrmHealthIndicator,
-          useValue: {
-            pingCheck: jest.fn().mockResolvedValue({ database: { status: 'up' } }),
+            query: jest.fn().mockResolvedValue([{ '?column?': 1 }]),
           },
         },
       ],
     }).compile();
 
     controller = module.get<HealthController>(HealthController);
-    healthCheckService = module.get<HealthCheckService>(HealthCheckService);
-    typeOrmHealthIndicator = module.get<TypeOrmHealthIndicator>(TypeOrmHealthIndicator);
+    dataSource = module.get<DataSource>(DataSource);
   });
 
   it('should be defined', () => {
     expect(controller).toBeDefined();
   });
 
-  describe('check', () => {
-    it('should return health check result', async () => {
-      const result = await controller.check();
+  describe('health', () => {
+    it('should return healthy status', () => {
+      const result = controller.health();
+      expect(result.status).toBe('healthy');
+      expect(result.application).toBe('AppTemplate API');
+    });
+  });
 
-      expect(result).toEqual({
-        status: 'ok',
-        details: {
-          database: { status: 'up' },
-        },
-      });
-      expect(healthCheckService.check).toHaveBeenCalled();
+  describe('ready', () => {
+    it('should return ready status when database is connected', async () => {
+      const result = await controller.ready();
+      expect(result.status).toBe('ready');
+      expect(result.database).toBe('connected');
     });
 
-    it('should invoke the database ping check', async () => {
-      await controller.check();
+    it('should throw when database is disconnected', async () => {
+      (dataSource.query as jest.Mock).mockRejectedValue(new Error('Connection failed'));
 
-      const checkCallArg = (healthCheckService.check as jest.Mock).mock.calls[0][0];
-      expect(checkCallArg).toHaveLength(1);
+      await expect(controller.ready()).rejects.toThrow();
+    });
+  });
 
-      // Execute the indicator function passed to check() to verify it calls pingCheck
-      await checkCallArg[0]();
-      expect(typeOrmHealthIndicator.pingCheck).toHaveBeenCalledWith('database');
+  describe('live', () => {
+    it('should return alive status', () => {
+      const result = controller.live();
+      expect(result.status).toBe('alive');
     });
   });
 });

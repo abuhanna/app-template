@@ -12,6 +12,7 @@ import com.apptemplate.api.features.users.User;
 @NoArgsConstructor
 public class AuthResponse {
     private String token;
+    private String refreshToken;
     private UserDto user;
 
     @Data
@@ -20,7 +21,7 @@ public class AuthResponse {
         private Long id;
         private String name;
         private String email;
-        
+
         public static UserDto fromEntity(User user) {
             return new UserDto(user.getId(), user.getName(), user.getEmail());
         }

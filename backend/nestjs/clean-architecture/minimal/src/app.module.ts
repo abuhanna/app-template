@@ -7,13 +7,10 @@ import { ConfigModule } from '@nestjs/config';
 import { ClsModule } from 'nestjs-cls';
 import { CoreModule } from './core/core.module';
 import { AuthModule } from './modules/auth/auth.module';
-import { UserManagementModule } from './modules/user-management/user-management.module';
-import { DepartmentManagementModule } from './modules/department-management/department-management.module';
 import { NotificationModule } from './modules/notification/notification.module';
 import { FileManagementModule } from './modules/file-management/file-management.module';
 import { AuditLogModule } from './modules/audit-log/audit-log.module';
 import { HealthModule } from './modules/health/health.module';
-import { ExportModule } from './modules/export/export.module';
 import { SeederModule } from './core/database/seed.module';
 
 @Module({
@@ -41,12 +38,9 @@ import { SeederModule } from './core/database/seed.module';
     SeederModule,
     HealthModule,
     AuthModule,
-    UserManagementModule,
-    DepartmentManagementModule,
     NotificationModule,
     FileManagementModule,
     AuditLogModule,
-    ExportModule,
   ],
   providers: [
     {

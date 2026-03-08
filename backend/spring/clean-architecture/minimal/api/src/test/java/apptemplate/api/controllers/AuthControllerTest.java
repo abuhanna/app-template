@@ -1,11 +1,7 @@
 package apptemplate.api.controllers;
 
 import apptemplate.application.dto.auth.*;
-import apptemplate.application.dto.user.ChangePasswordRequest;
-import apptemplate.application.dto.user.UserDto;
 import apptemplate.application.usecases.auth.*;
-import apptemplate.application.ports.services.CurrentUserService;
-import apptemplate.application.usecases.user.ChangeUserPasswordUseCase;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -15,8 +11,6 @@ import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.http.MediaType;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.setup.MockMvcBuilders;
-
-import java.util.Optional;
 
 import static org.mockito.ArgumentMatchers.*;
 import static org.mockito.Mockito.*;
@@ -39,25 +33,7 @@ class AuthControllerTest {
     private LogoutUseCase logoutUseCase;
 
     @Mock
-    private RequestPasswordResetUseCase requestPasswordResetUseCase;
-
-    @Mock
-    private ResetPasswordUseCase resetPasswordUseCase;
-
-    @Mock
     private GetCurrentUserUseCase getCurrentUserUseCase;
-
-    @Mock
-    private GetMyProfileUseCase getMyProfileUseCase;
-
-    @Mock
-    private UpdateMyProfileUseCase updateMyProfileUseCase;
-
-    @Mock
-    private ChangeUserPasswordUseCase changeUserPasswordUseCase;
-
-    @Mock
-    private CurrentUserService currentUserService;
 
     @BeforeEach
     void setup() {
@@ -65,13 +41,7 @@ class AuthControllerTest {
                 loginUseCase,
                 refreshTokenUseCase,
                 logoutUseCase,
-                requestPasswordResetUseCase,
-                resetPasswordUseCase,
-                getCurrentUserUseCase,
-                getMyProfileUseCase,
-                updateMyProfileUseCase,
-                changeUserPasswordUseCase,
-                currentUserService
+                getCurrentUserUseCase
         );
         mockMvc = MockMvcBuilders.standaloneSetup(controller).build();
     }
@@ -132,34 +102,6 @@ class AuthControllerTest {
     }
 
     @Test
-    void forgotPassword_returnsOk() throws Exception {
-        ForgotPasswordRequest request = new ForgotPasswordRequest();
-        request.setEmail("user@test.com");
-
-        mockMvc.perform(post("/api/auth/forgot-password")
-                        .contentType(MediaType.APPLICATION_JSON)
-                        .content(objectMapper.writeValueAsString(request)))
-                .andExpect(status().isOk());
-
-        verify(requestPasswordResetUseCase).execute(any());
-    }
-
-    @Test
-    void resetPassword_returnsOk() throws Exception {
-        ResetPasswordRequest request = new ResetPasswordRequest();
-        request.setToken("reset-token");
-        request.setNewPassword("NewPass@123");
-        request.setConfirmPassword("NewPass@123");
-
-        mockMvc.perform(post("/api/auth/reset-password")
-                        .contentType(MediaType.APPLICATION_JSON)
-                        .content(objectMapper.writeValueAsString(request)))
-                .andExpect(status().isOk());
-
-        verify(resetPasswordUseCase).execute(any());
-    }
-
-    @Test
     void getCurrentUser_returnsOk() throws Exception {
         UserInfoResponse response = UserInfoResponse.builder()
                 .id(1L)
@@ -173,52 +115,5 @@ class AuthControllerTest {
         mockMvc.perform(get("/api/auth/me"))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.username").value("admin"));
-    }
-
-    @Test
-    void getMyProfile_returnsOk() throws Exception {
-        UserDto profile = new UserDto();
-        profile.setId(1L);
-        profile.setUsername("admin");
-
-        when(getMyProfileUseCase.execute()).thenReturn(profile);
-
-        mockMvc.perform(get("/api/auth/profile"))
-                .andExpect(status().isOk())
-                .andExpect(jsonPath("$.id").value(1));
-    }
-
-    @Test
-    void updateMyProfile_returnsOk() throws Exception {
-        UpdateProfileRequest request = new UpdateProfileRequest();
-        request.setName("John Doe");
-        request.setEmail("john@test.com");
-
-        UserDto updatedProfile = new UserDto();
-        updatedProfile.setId(1L);
-        updatedProfile.setUsername("admin");
-
-        when(updateMyProfileUseCase.execute(any())).thenReturn(updatedProfile);
-
-        mockMvc.perform(put("/api/auth/profile")
-                        .contentType(MediaType.APPLICATION_JSON)
-                        .content(objectMapper.writeValueAsString(request)))
-                .andExpect(status().isOk())
-                .andExpect(jsonPath("$.id").value(1));
-    }
-
-    @Test
-    void changePassword_returnsOk() throws Exception {
-        ChangePasswordRequest request = new ChangePasswordRequest();
-        request.setCurrentPassword("OldPass@123");
-        request.setNewPassword("NewPass@123");
-        request.setConfirmPassword("NewPass@123");
-
-        mockMvc.perform(post("/api/auth/change-password")
-                        .contentType(MediaType.APPLICATION_JSON)
-                        .content(objectMapper.writeValueAsString(request)))
-                .andExpect(status().isOk());
-
-        verify(changeUserPasswordUseCase).execute(any(ChangePasswordRequest.class));
     }
 }

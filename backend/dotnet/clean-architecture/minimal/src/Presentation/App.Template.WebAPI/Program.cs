@@ -1,15 +1,11 @@
 using System.Text;
 
-using AspNetCoreRateLimit;
-
 using Serilog;
 
 using FluentValidation;
 
 using AppTemplate.Application.Common.Behaviors;
 using AppTemplate.Application.Interfaces;
-using AppTemplate.Infrastructure.Hubs;
-using AppTemplate.Infrastructure.SignalR;
 using AppTemplate.Infrastructure.Persistence.DataContext;
 using AppTemplate.Infrastructure.Services;
 using AppTemplate.WebAPI.Configuration;
@@ -42,18 +38,10 @@ builder.Host.UseSerilog((context, services, configuration) => configuration
         retainedFileCountLimit: 60));
 
 builder.Services.AddControllers();
-// Add SignalR with custom UserIdProvider
-builder.Services.AddSignalR();
-builder.Services.AddSingleton<Microsoft.AspNetCore.SignalR.IUserIdProvider, CustomUserIdProvider>();
 
 // Add HttpContextAccessor for ICurrentUserService
 builder.Services.AddHttpContextAccessor();
 builder.Services.AddMemoryCache();
-
-// Configure Rate Limiting
-builder.Services.Configure<IpRateLimitOptions>(builder.Configuration.GetSection("IpRateLimiting"));
-builder.Services.AddSingleton<IRateLimitConfiguration, RateLimitConfiguration>();
-builder.Services.AddInMemoryRateLimiting();
 
 // Add DbContext (EF Core)
 // The connection string can be configured via appsettings.json or environment variables
@@ -120,27 +108,6 @@ builder.Services.AddAuthentication(options =>
             var userId = context.Principal?.FindFirst("sub")?.Value ?? context.Principal?.FindFirst("userId")?.Value;
             logger.LogInformation("JWT Token validated for user: {UserId}", userId);
             return Task.CompletedTask;
-        },
-        OnMessageReceived = context =>
-        {
-            var accessToken = context.Request.Query["access_token"];
-
-            // If the request is for our hub...
-            var path = context.HttpContext.Request.Path;
-            if (!string.IsNullOrEmpty(accessToken) &&
-                (path.StartsWithSegments("/hubs")))
-            {
-                var env = context.HttpContext.RequestServices.GetRequiredService<IWebHostEnvironment>();
-                if (env.IsDevelopment() || env.IsStaging())
-                {
-                    var logger = context.HttpContext.RequestServices.GetRequiredService<ILogger<Program>>();
-                    logger.LogInformation("Extracting access_token from query string for SignalR hub request to {Path}", path);
-                }
-                
-                // Read the token out of the query string
-                context.Token = accessToken;
-            }
-            return Task.CompletedTask;
         }
     };
 });
@@ -161,7 +128,6 @@ builder.Services.AddHttpClient();
 builder.Services.AddScoped<ISsoAuthService, SsoAuthService>();
 builder.Services.AddScoped<INotificationService, NotificationService>();
 builder.Services.AddScoped<IFileStorageService, FileStorageService>();
-builder.Services.AddScoped<IExportService, ExportService>();
 
 // Register Correlation ID accessor for request tracing
 builder.Services.AddScoped<ICorrelationIdAccessor, CorrelationIdAccessor>();
@@ -293,9 +259,6 @@ app.UseCorrelationId();
 // Add middleware for Exception Handling (recommended for production)
 app.UseMiddleware<ExceptionHandlerMiddleware>();
 
-// Add Rate Limiting middleware
-app.UseIpRateLimiting();
-
 // Configure HTTPS Redirection
 // Active only in Production or if ASPNETCORE_URLS contains https
 if (app.Environment.IsProduction())
@@ -349,6 +312,5 @@ app.MapGet("/", () => Results.Ok(new
 // Health check endpoints are now handled by HealthController
 
 app.MapControllers();
-app.MapHub<NotificationHub>("/hubs/notifications"); // Map SignalR Hub
 
 app.Run();

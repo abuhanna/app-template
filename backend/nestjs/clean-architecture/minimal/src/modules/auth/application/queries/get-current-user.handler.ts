@@ -3,15 +3,12 @@ import { Inject, NotFoundException } from '@nestjs/common';
 import { GetCurrentUserQuery } from './get-current-user.query';
 import { UserInfoDto } from '../dto/user-info.dto';
 import { IUserRepository } from '@/modules/user-management/domain/interfaces/user.repository.interface';
-import { IDepartmentRepository } from '@/modules/department-management/domain/interfaces/department.repository.interface';
 
 @QueryHandler(GetCurrentUserQuery)
 export class GetCurrentUserHandler implements IQueryHandler<GetCurrentUserQuery> {
   constructor(
     @Inject(IUserRepository)
     private readonly userRepository: IUserRepository,
-    @Inject(IDepartmentRepository)
-    private readonly departmentRepository: IDepartmentRepository,
   ) {}
 
   async execute(query: GetCurrentUserQuery): Promise<UserInfoDto> {
@@ -19,13 +16,6 @@ export class GetCurrentUserHandler implements IQueryHandler<GetCurrentUserQuery>
 
     if (!user) {
       throw new NotFoundException('User not found');
-    }
-
-    // Get department name if exists
-    let departmentName: string | null = null;
-    if (user.departmentId) {
-      const department = await this.departmentRepository.findById(user.departmentId);
-      departmentName = department?.name ?? null;
     }
 
     return new UserInfoDto({
@@ -37,7 +27,7 @@ export class GetCurrentUserHandler implements IQueryHandler<GetCurrentUserQuery>
       fullName: user.fullName,
       role: user.role,
       departmentId: user.departmentId,
-      departmentName,
+      departmentName: null,
     });
   }
 }

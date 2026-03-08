@@ -1,7 +1,7 @@
 import { Injectable, NotFoundException, StreamableFile } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
-import { UploadedFile } from './uploaded-file.entity'; // Relative path within features/files
+import { UploadedFile } from './uploaded-file.entity';
 import * as fs from 'fs';
 import * as path from 'path';
 
@@ -9,13 +9,13 @@ import * as path from 'path';
 export class FilesService {
   constructor(
     @InjectRepository(UploadedFile)
-    private filesRepository: Repository<UploadedFile>,
+    private readonly filesRepository: Repository<UploadedFile>,
   ) {}
 
   async saveFile(file: Express.Multer.File): Promise<UploadedFile> {
     const uploadDir = './uploads';
     if (!fs.existsSync(uploadDir)) {
-      fs.mkdirSync(uploadDir);
+      fs.mkdirSync(uploadDir, { recursive: true });
     }
 
     const storedFileName = `${Date.now()}-${file.originalname}`;
@@ -25,13 +25,17 @@ export class FilesService {
 
     const newFile = this.filesRepository.create({
       fileName: file.originalname,
-      storedFileName: storedFileName,
+      storedFileName,
       contentType: file.mimetype,
       fileSize: file.size,
-      filePath: filePath,
+      filePath,
     });
 
     return this.filesRepository.save(newFile);
+  }
+
+  async listFiles(): Promise<UploadedFile[]> {
+    return this.filesRepository.find({ order: { createdAt: 'DESC' } });
   }
 
   async getFile(id: number): Promise<{ file: StreamableFile; contentType: string; fileName: string }> {
@@ -46,5 +50,19 @@ export class FilesService {
       contentType: fileRecord.contentType,
       fileName: fileRecord.fileName,
     };
+  }
+
+  async deleteFile(id: number): Promise<void> {
+    const fileRecord = await this.filesRepository.findOneBy({ id });
+    if (!fileRecord) {
+      throw new NotFoundException('File not found');
+    }
+
+    // Delete physical file if it exists
+    if (fs.existsSync(fileRecord.filePath)) {
+      fs.unlinkSync(fileRecord.filePath);
+    }
+
+    await this.filesRepository.remove(fileRecord);
   }
 }

@@ -2,7 +2,7 @@ package com.apptemplate.api.controller;
 
 import com.apptemplate.api.dto.AuthResponse;
 import com.apptemplate.api.dto.LoginRequest;
-import com.apptemplate.api.dto.RegisterRequest;
+import com.apptemplate.api.dto.RefreshTokenRequest;
 import com.apptemplate.api.service.AuthService;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import org.junit.jupiter.api.BeforeEach;
@@ -16,6 +16,7 @@ import org.springframework.test.web.servlet.setup.MockMvcBuilders;
 
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.when;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
 
@@ -35,28 +36,6 @@ class AuthControllerTest {
     }
 
     @Test
-    void register_returnsOk() throws Exception {
-        RegisterRequest request = new RegisterRequest();
-        request.setName("Test User");
-        request.setEmail("test@test.com");
-        request.setPassword("Password123");
-
-        AuthResponse response = AuthResponse.builder()
-                .token("jwt-token")
-                .user(new AuthResponse.UserDto(1L, "Test User", "test@test.com"))
-                .build();
-
-        when(authService.register(any())).thenReturn(response);
-
-        mockMvc.perform(post("/api/auth/register")
-                        .contentType(MediaType.APPLICATION_JSON)
-                        .content(objectMapper.writeValueAsString(request)))
-                .andExpect(status().isOk())
-                .andExpect(jsonPath("$.token").value("jwt-token"))
-                .andExpect(jsonPath("$.user.name").value("Test User"));
-    }
-
-    @Test
     void login_returnsOk() throws Exception {
         LoginRequest request = new LoginRequest();
         request.setEmail("test@test.com");
@@ -64,6 +43,7 @@ class AuthControllerTest {
 
         AuthResponse response = AuthResponse.builder()
                 .token("jwt-token")
+                .refreshToken("refresh-token")
                 .user(new AuthResponse.UserDto(1L, "Test User", "test@test.com"))
                 .build();
 
@@ -73,20 +53,8 @@ class AuthControllerTest {
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(objectMapper.writeValueAsString(request)))
                 .andExpect(status().isOk())
-                .andExpect(jsonPath("$.token").value("jwt-token"));
-    }
-
-    @Test
-    void register_withInvalidEmail_returnsBadRequest() throws Exception {
-        RegisterRequest request = new RegisterRequest();
-        request.setName("Test User");
-        request.setEmail("invalid-email");
-        request.setPassword("Password123");
-
-        mockMvc.perform(post("/api/auth/register")
-                        .contentType(MediaType.APPLICATION_JSON)
-                        .content(objectMapper.writeValueAsString(request)))
-                .andExpect(status().isBadRequest());
+                .andExpect(jsonPath("$.token").value("jwt-token"))
+                .andExpect(jsonPath("$.refreshToken").value("refresh-token"));
     }
 
     @Test
@@ -99,5 +67,36 @@ class AuthControllerTest {
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(objectMapper.writeValueAsString(request)))
                 .andExpect(status().isBadRequest());
+    }
+
+    @Test
+    void refresh_returnsOk() throws Exception {
+        RefreshTokenRequest request = new RefreshTokenRequest();
+        request.setRefreshToken("valid-refresh-token");
+
+        AuthResponse response = AuthResponse.builder()
+                .token("new-jwt-token")
+                .refreshToken("new-refresh-token")
+                .user(new AuthResponse.UserDto(1L, "Test User", "test@test.com"))
+                .build();
+
+        when(authService.refresh(any())).thenReturn(response);
+
+        mockMvc.perform(post("/api/auth/refresh")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(objectMapper.writeValueAsString(request)))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.token").value("new-jwt-token"));
+    }
+
+    @Test
+    void me_returnsOk() throws Exception {
+        AuthResponse.UserDto userDto = new AuthResponse.UserDto(1L, "Test User", "test@test.com");
+
+        when(authService.getCurrentUser()).thenReturn(userDto);
+
+        mockMvc.perform(get("/api/auth/me"))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.name").value("Test User"));
     }
 }

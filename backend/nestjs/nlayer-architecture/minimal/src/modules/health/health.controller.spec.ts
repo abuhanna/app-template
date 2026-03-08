@@ -1,30 +1,24 @@
 import { Test, TestingModule } from '@nestjs/testing';
+import { HttpException } from '@nestjs/common';
 import { HealthController } from './health.controller';
-import { HealthCheckService, TypeOrmHealthIndicator } from '@nestjs/terminus';
+import { DataSource } from 'typeorm';
 
 describe('HealthController', () => {
   let controller: HealthController;
-  let healthCheckService: HealthCheckService;
 
-  const mockHealthCheckService = {
-    check: jest.fn(),
-  };
-
-  const mockTypeOrmHealthIndicator = {
-    pingCheck: jest.fn(),
+  const mockDataSource = {
+    query: jest.fn(),
   };
 
   beforeEach(async () => {
     const module: TestingModule = await Test.createTestingModule({
       controllers: [HealthController],
       providers: [
-        { provide: HealthCheckService, useValue: mockHealthCheckService },
-        { provide: TypeOrmHealthIndicator, useValue: mockTypeOrmHealthIndicator },
+        { provide: DataSource, useValue: mockDataSource },
       ],
     }).compile();
 
     controller = module.get<HealthController>(HealthController);
-    healthCheckService = module.get<HealthCheckService>(HealthCheckService);
 
     jest.clearAllMocks();
   });
@@ -33,26 +27,37 @@ describe('HealthController', () => {
     expect(controller).toBeDefined();
   });
 
-  describe('check', () => {
-    it('should return health check result when database is healthy', async () => {
-      const healthResult = {
-        status: 'ok',
-        info: { database: { status: 'up' } },
-        error: {},
-        details: { database: { status: 'up' } },
-      };
-      mockHealthCheckService.check.mockResolvedValue(healthResult);
+  describe('health', () => {
+    it('should return healthy status', () => {
+      const result = controller.health();
 
-      const result = await controller.check();
+      expect(result.status).toBe('healthy');
+      expect(result.application).toBe('AppTemplate API');
+    });
+  });
 
-      expect(healthCheckService.check).toHaveBeenCalled();
-      expect(result).toEqual(healthResult);
+  describe('ready', () => {
+    it('should return ready when database is connected', async () => {
+      mockDataSource.query.mockResolvedValue([{ '?column?': 1 }]);
+
+      const result = await controller.ready();
+
+      expect(result.status).toBe('ready');
+      expect(result.database).toBe('connected');
     });
 
-    it('should propagate error when health check fails', async () => {
-      mockHealthCheckService.check.mockRejectedValue(new Error('Database unreachable'));
+    it('should throw when database is disconnected', async () => {
+      mockDataSource.query.mockRejectedValue(new Error('Connection refused'));
 
-      await expect(controller.check()).rejects.toThrow('Database unreachable');
+      await expect(controller.ready()).rejects.toThrow(HttpException);
+    });
+  });
+
+  describe('live', () => {
+    it('should return alive status', () => {
+      const result = controller.live();
+
+      expect(result.status).toBe('alive');
     });
   });
 });

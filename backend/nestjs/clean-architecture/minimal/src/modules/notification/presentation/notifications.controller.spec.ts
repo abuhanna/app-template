@@ -5,6 +5,7 @@ import { GetNotificationsQuery } from '../application/queries';
 import {
   MarkNotificationReadCommand,
   MarkAllNotificationsReadCommand,
+  DeleteNotificationCommand,
 } from '../application/commands';
 
 describe('NotificationsController', () => {
@@ -101,6 +102,19 @@ describe('NotificationsController', () => {
         new MarkAllNotificationsReadCommand(1),
       );
       expect(result).toEqual({ message: 'All notifications marked as read' });
+    });
+  });
+
+  describe('delete', () => {
+    it('should call CommandBus.execute with DeleteNotificationCommand', async () => {
+      mockCommandBus.execute.mockResolvedValue(undefined);
+
+      const user = { sub: 1, email: 'admin@test.com', username: 'admin', role: 'Admin' };
+      await controller.delete(user, 5);
+
+      expect(mockCommandBus.execute).toHaveBeenCalledWith(
+        new DeleteNotificationCommand(5, 1),
+      );
     });
   });
 });

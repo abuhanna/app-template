@@ -48,10 +48,6 @@ public class UserJpaEntity {
     @Column(name = "department_id")
     private Long departmentId;
 
-    @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "department_id", insertable = false, updatable = false)
-    private DepartmentJpaEntity department;
-
     @Column(name = "is_active", nullable = false)
     @Builder.Default
     private boolean isActive = true;
@@ -61,15 +57,6 @@ public class UserJpaEntity {
 
     @Column(name = "last_login_ip", length = 45)
     private String lastLoginIp;
-
-    @Column(name = "password_reset_token")
-    private String passwordResetToken;
-
-    @Column(name = "password_reset_token_expires_at")
-    private LocalDateTime passwordResetTokenExpiresAt;
-
-    @Column(name = "password_history", columnDefinition = "TEXT")
-    private String passwordHistory;
 
     @Column(name = "created_at", nullable = false, updatable = false)
     private LocalDateTime createdAt;

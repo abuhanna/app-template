@@ -29,7 +29,6 @@
         <mapstruct.version>1.5.5.Final</mapstruct.version>
         <lombok.version>1.18.30</lombok.version>
         <springdoc.version>2.3.0</springdoc.version>
-        <bucket4j.version>8.7.0</bucket4j.version>
     </properties>
 
     <modules>
@@ -89,12 +88,6 @@
                 <version>${springdoc.version}</version>
             </dependency>
 
-            <!-- Rate Limiting -->
-            <dependency>
-                <groupId>com.bucket4j</groupId>
-                <artifactId>bucket4j-core</artifactId>
-                <version>${bucket4j.version}</version>
-            </dependency>
         </dependencies>
     </dependencyManagement>
 

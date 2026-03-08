@@ -1,19 +1,23 @@
 import { Test, TestingModule } from '@nestjs/testing';
 import { NotificationsController } from './notifications.controller';
-import { NotificationGateway } from './notification.gateway';
+import { NotificationsService } from '../../services/notifications.service';
 
 describe('NotificationsController', () => {
   let controller: NotificationsController;
 
-  const mockGateway = {
-    sendNotification: jest.fn(),
+  const mockService = {
+    findAllByUser: jest.fn(),
+    findOne: jest.fn(),
+    markAsRead: jest.fn(),
+    markAllAsRead: jest.fn(),
+    delete: jest.fn(),
   };
 
   beforeEach(async () => {
     const module: TestingModule = await Test.createTestingModule({
       controllers: [NotificationsController],
       providers: [
-        { provide: NotificationGateway, useValue: mockGateway },
+        { provide: NotificationsService, useValue: mockService },
       ],
     }).compile();
 
@@ -26,19 +30,28 @@ describe('NotificationsController', () => {
     expect(controller).toBeDefined();
   });
 
-  describe('getAll', () => {
-    it('should return an empty array', () => {
-      const result = controller.getAll();
+  describe('findAll', () => {
+    it('should return notifications for user', async () => {
+      const mockNotifications = [
+        { id: 1, title: 'Test', userId: 1, isRead: false },
+      ];
+      mockService.findAllByUser.mockResolvedValue(mockNotifications);
 
-      expect(result).toEqual([]);
+      const result = await controller.findAll({ user: { userId: 1 } });
+
+      expect(mockService.findAllByUser).toHaveBeenCalledWith(1);
+      expect(result).toEqual(mockNotifications);
     });
   });
 
   describe('markAsRead', () => {
-    it('should return success response', () => {
-      const result = controller.markAsRead('5');
+    it('should mark notification as read', async () => {
+      mockService.markAsRead.mockResolvedValue({});
 
-      expect(result).toEqual({ success: true });
+      const result = await controller.markAsRead(1, { user: { userId: 1 } });
+
+      expect(mockService.markAsRead).toHaveBeenCalledWith(1, 1);
+      expect(result).toEqual({ message: 'Notification marked as read' });
     });
   });
 });

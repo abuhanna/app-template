@@ -8,6 +8,7 @@ export interface INotificationRepository {
   save(notification: Notification): Promise<Notification>;
   markAsRead(id: number): Promise<void>;
   markAllAsReadByUserId(userId: number): Promise<void>;
+  delete(id: number): Promise<void>;
 }
 
 export const INotificationRepository = Symbol('INotificationRepository');

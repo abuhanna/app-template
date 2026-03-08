@@ -4,11 +4,7 @@ import { AuthController } from './auth.controller';
 import { LoginCommand } from '../application/commands';
 import { LogoutCommand } from '../application/commands';
 import { GetCurrentUserQuery } from '../application/queries';
-import { GetMyProfileQuery } from '../application/queries';
 import { RefreshTokenCommand } from '../application/commands';
-import { RequestPasswordResetCommand } from '../application/commands';
-import { ResetPasswordCommand } from '../application/commands';
-import { UpdateProfileCommand } from '../application/commands';
 
 describe('AuthController', () => {
   let controller: AuthController;
@@ -153,102 +149,6 @@ describe('AuthController', () => {
         new GetCurrentUserQuery(1),
       );
       expect(result).toEqual(userInfo);
-    });
-  });
-
-  describe('getProfile', () => {
-    it('should call QueryBus.execute with GetMyProfileQuery', async () => {
-      const userInfo = {
-        id: 1,
-        email: 'admin@test.com',
-        username: 'admin',
-        firstName: 'Admin',
-        lastName: 'User',
-        role: 'Admin',
-      };
-      mockQueryBus.execute.mockResolvedValue(userInfo);
-
-      const user = { sub: 1, email: 'admin@test.com', username: 'admin', role: 'Admin' };
-      const result = await controller.getProfile(user);
-
-      expect(mockQueryBus.execute).toHaveBeenCalledWith(
-        new GetMyProfileQuery(1),
-      );
-      expect(result).toEqual(userInfo);
-    });
-  });
-
-  describe('updateProfile', () => {
-    it('should call CommandBus.execute with UpdateProfileCommand', async () => {
-      const updatedUser = {
-        id: 1,
-        email: 'updated@test.com',
-        username: 'admin',
-        firstName: 'Updated',
-        lastName: 'Name',
-        role: 'Admin',
-      };
-      mockCommandBus.execute.mockResolvedValue(updatedUser);
-
-      const user = { sub: 1, email: 'admin@test.com', username: 'admin', role: 'Admin' };
-      const dto = {
-        firstName: 'Updated',
-        lastName: 'Name',
-        email: 'updated@test.com',
-      };
-      const result = await controller.updateProfile(user, dto);
-
-      expect(mockCommandBus.execute).toHaveBeenCalledWith(
-        new UpdateProfileCommand(1, 'Updated', 'Name', 'updated@test.com'),
-      );
-      expect(result).toEqual(updatedUser);
-    });
-  });
-
-  describe('forgotPassword', () => {
-    it('should call CommandBus.execute with RequestPasswordResetCommand', async () => {
-      mockCommandBus.execute.mockResolvedValue(undefined);
-
-      const dto = { email: 'admin@test.com' };
-      const result = await controller.forgotPassword(dto);
-
-      expect(mockCommandBus.execute).toHaveBeenCalledWith(
-        new RequestPasswordResetCommand('admin@test.com'),
-      );
-      expect(result).toEqual({
-        message: 'If your email is registered, you will receive a password reset link.',
-      });
-    });
-  });
-
-  describe('resetPassword', () => {
-    it('should call CommandBus.execute with ResetPasswordCommand', async () => {
-      mockCommandBus.execute.mockResolvedValue(undefined);
-
-      const dto = {
-        token: 'reset-token',
-        newPassword: 'NewPassword@123',
-        confirmPassword: 'NewPassword@123',
-      };
-      const result = await controller.resetPassword(dto);
-
-      expect(mockCommandBus.execute).toHaveBeenCalledWith(
-        new ResetPasswordCommand('reset-token', 'NewPassword@123'),
-      );
-      expect(result).toEqual({ message: 'Password reset successful' });
-    });
-
-    it('should throw error when passwords do not match', async () => {
-      const dto = {
-        token: 'reset-token',
-        newPassword: 'NewPassword@123',
-        confirmPassword: 'DifferentPassword@123',
-      };
-
-      await expect(controller.resetPassword(dto)).rejects.toThrow(
-        'Passwords do not match',
-      );
-      expect(mockCommandBus.execute).not.toHaveBeenCalled();
     });
   });
 });

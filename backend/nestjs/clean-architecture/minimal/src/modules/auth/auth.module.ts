@@ -1,4 +1,4 @@
-import { Module, forwardRef } from '@nestjs/common';
+import { Module } from '@nestjs/common';
 import { CqrsModule } from '@nestjs/cqrs';
 import { JwtModule } from '@nestjs/jwt';
 import { PassportModule } from '@nestjs/passport';
@@ -13,46 +13,39 @@ import { RefreshTokenOrmEntity } from './infrastructure/persistence/refresh-toke
 import { RefreshTokenRepository } from './infrastructure/persistence/refresh-token.repository';
 import { JwtTokenService } from './infrastructure/services/jwt-token.service';
 import { BcryptPasswordService } from './infrastructure/services/bcrypt-password.service';
-import { EmailService } from './infrastructure/services/email.service';
 import { JwtStrategy } from './infrastructure/strategies/jwt.strategy';
 
 // Domain interfaces
 import { IRefreshTokenRepository } from './domain/interfaces/refresh-token.repository.interface';
 import { IJwtTokenService } from './domain/interfaces/jwt-token.service.interface';
 import { IPasswordService } from './domain/interfaces/password.service.interface';
-import { IEmailService } from './domain/interfaces/email.service.interface';
+
+// User management (shared domain)
+import { UserOrmEntity } from '../user-management/infrastructure/persistence/user.orm-entity';
+import { UserRepository } from '../user-management/infrastructure/persistence/user.repository';
+import { IUserRepository } from '../user-management/domain/interfaces/user.repository.interface';
 
 // Application
 import {
   LoginHandler,
   RefreshTokenHandler,
   LogoutHandler,
-  RequestPasswordResetHandler,
-  ResetPasswordHandler,
-  UpdateProfileHandler,
 } from './application/commands';
-import { GetCurrentUserHandler, GetMyProfileHandler } from './application/queries';
-
-// Other modules
-import { UserManagementModule } from '../user-management/user-management.module';
-import { DepartmentManagementModule } from '../department-management/department-management.module';
+import { GetCurrentUserHandler } from './application/queries';
 
 const CommandHandlers = [
   LoginHandler,
   RefreshTokenHandler,
   LogoutHandler,
-  RequestPasswordResetHandler,
-  ResetPasswordHandler,
-  UpdateProfileHandler,
 ];
 
-const QueryHandlers = [GetCurrentUserHandler, GetMyProfileHandler];
+const QueryHandlers = [GetCurrentUserHandler];
 
 @Module({
   imports: [
     CqrsModule,
     PassportModule,
-    TypeOrmModule.forFeature([RefreshTokenOrmEntity]),
+    TypeOrmModule.forFeature([RefreshTokenOrmEntity, UserOrmEntity]),
     JwtModule.registerAsync({
       imports: [ConfigModule],
       inject: [ConfigService],
@@ -63,8 +56,6 @@ const QueryHandlers = [GetCurrentUserHandler, GetMyProfileHandler];
         },
       }),
     }),
-    forwardRef(() => UserManagementModule),
-    forwardRef(() => DepartmentManagementModule),
   ],
   controllers: [AuthController],
   providers: [
@@ -75,6 +66,10 @@ const QueryHandlers = [GetCurrentUserHandler, GetMyProfileHandler];
       provide: IRefreshTokenRepository,
       useClass: RefreshTokenRepository,
     },
+    {
+      provide: IUserRepository,
+      useClass: UserRepository,
+    },
     // Services
     {
       provide: IJwtTokenService,
@@ -84,15 +79,11 @@ const QueryHandlers = [GetCurrentUserHandler, GetMyProfileHandler];
       provide: IPasswordService,
       useClass: BcryptPasswordService,
     },
-    {
-      provide: IEmailService,
-      useClass: EmailService,
-    },
     // Command handlers
     ...CommandHandlers,
     // Query handlers
     ...QueryHandlers,
   ],
-  exports: [IPasswordService, IJwtTokenService, IRefreshTokenRepository, JwtModule],
+  exports: [IPasswordService, IJwtTokenService, IRefreshTokenRepository, IUserRepository, JwtModule],
 })
 export class AuthModule {}

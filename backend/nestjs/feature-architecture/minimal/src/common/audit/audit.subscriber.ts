@@ -31,8 +31,8 @@ export class AuditSubscriber implements EntitySubscriberInterface<any> {
     const audit = new AuditLog();
     audit.type = type;
     audit.tableName = tableName;
-    audit.oldValues = oldValues ? oldValues : undefined;
-    audit.newValues = newValues ? newValues : undefined;
+    audit.oldValues = oldValues ?? '';
+    audit.newValues = newValues ?? '';
     await manager.save(AuditLog, audit);
   }
 }
