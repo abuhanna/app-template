@@ -5,7 +5,7 @@ const validBackends: BackendFramework[] = ['dotnet', 'spring', 'nestjs'];
 const validArchitectures: BackendArchitecture[] = ['clean', 'nlayer', 'feature'];
 const validFrontendFrameworks: FrontendFramework[] = ['vue', 'react'];
 const validUILibraries: UILibrary[] = ['vuetify', 'primevue', 'primereact', 'mui'];
-const validVariants: TemplateVariant[] = ['minimal', 'full'];
+const validVariants: TemplateVariant[] = ['full', 'minimal', 'zero'];
 
 const uiCompatibility: Record<FrontendFramework, UILibrary[]> = {
   vue: ['vuetify', 'primevue'],

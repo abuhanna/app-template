@@ -353,7 +353,7 @@ interface FrontendVariant {
   uiLib: string;
 }
 
-function getFrontendVariants(level: "full" | "minimal"): FrontendVariant[] {
+function getFrontendVariants(level: "full" | "minimal" | "zero"): FrontendVariant[] {
   const variants: FrontendVariant[] = [];
   const configs = [
     { framework: "vue" as const, uiLib: "vuetify" },
@@ -479,7 +479,7 @@ function getI18nKeys(variant: FrontendVariant): Set<string> {
   }
 }
 
-function checkFrontendParity(level: "full" | "minimal"): void {
+function checkFrontendParity(level: "full" | "minimal" | "zero"): void {
   const variants = getFrontendVariants(level);
   if (variants.length < 2) return;
 
@@ -532,10 +532,12 @@ function main(): void {
   // Backend checks
   checkBackendParity("dotnet", "full");
   checkBackendParity("dotnet", "minimal");
+  checkBackendParity("dotnet", "zero");
 
   // Frontend checks
   checkFrontendParity("full");
   checkFrontendParity("minimal");
+  checkFrontendParity("zero");
 
   // Summary
   console.log();

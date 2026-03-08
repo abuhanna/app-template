@@ -3,7 +3,7 @@ export type BackendFramework = 'dotnet' | 'spring' | 'nestjs';
 export type BackendArchitecture = 'clean' | 'nlayer' | 'feature';
 export type FrontendFramework = 'vue' | 'react';
 export type UILibrary = 'vuetify' | 'primevue' | 'primereact' | 'mui';
-export type TemplateVariant = 'minimal' | 'full';
+export type TemplateVariant = 'full' | 'minimal' | 'zero';
 
 export interface ProjectConfig {
   projectPath: string;

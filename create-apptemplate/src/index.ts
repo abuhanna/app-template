@@ -162,8 +162,9 @@ ${pc.bold('Options:')}
   ${pc.yellow('-n, --name')} ${pc.gray('<value>')}         Project namespace in Company.Project format
                             Required for ${pc.cyan('dotnet')} and ${pc.cyan('spring')} backends
   ${pc.yellow('-V, --variant')} ${pc.gray('<value>')}      Template variant ${pc.gray('(default: full)')}
-                            ${pc.cyan('full')}: All features (user management, departments, dashboard)
-                            ${pc.cyan('minimal')}: Auth, files, audit logs, notifications only
+                            ${pc.cyan('full')}: Internal auth, user/dept management, all features
+                            ${pc.cyan('minimal')}: External auth (SSO), no user/dept management
+                            ${pc.cyan('zero')}: No authentication, all endpoints public
   ${pc.yellow('-r, --root')}                Place files in project root ${pc.gray('(backend/frontend-only)')}
   ${pc.yellow('-i, --install')}              Install dependencies after creation
   ${pc.yellow('-q, --quiet')}                Suppress output except errors ${pc.gray('(non-interactive only)')}
@@ -369,12 +370,20 @@ function showNextSteps(config: ProjectConfig): void {
   }
   if (config.projectType !== 'frontend') {
     accessLines.push(`Swagger    ${pc.cyan('http://localhost:5100/swagger')}`);
-    accessLines.push('');
-    accessLines.push(`Login      ${pc.cyan('admin')} / ${pc.cyan('Admin@123')}`);
+    if (config.variant !== 'zero') {
+      accessLines.push('');
+      accessLines.push(`Login      ${pc.cyan('admin')} / ${pc.cyan('Admin@123')}`);
+    }
   }
 
   if (accessLines.length > 0) {
     note(accessLines.join('\n'), 'Access');
+  }
+
+  // Warning for zero-auth variant
+  if (config.variant === 'zero') {
+    console.log();
+    log.warn(pc.yellow('This template has no authentication — add auth before deploying to production'));
   }
 
   console.log();

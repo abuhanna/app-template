@@ -19,7 +19,7 @@ via degit, mutates namespace/paths, and produces ready-to-run projects.
 | Architecture | clean, feature-based, nlayer |
 | Frontend | vue (Vue 3), react (React 19) |
 | UI library | vuetify, primevue (Vue) / mui, primereact (React) |
-| Variant | full, minimal |
+| Variant | full, minimal, zero |
 
 ## Monorepo Structure
 
@@ -172,19 +172,20 @@ via degit, mutates namespace/paths, and produces ready-to-run projects.
 | CSS Utility | — | PrimeFlex 4 | CSS-in-JS (Emotion) | PrimeFlex 3 |
 | Icons | @mdi/font | PrimeIcons | @mui/icons-material | PrimeIcons |
 
-### Full vs Minimal Variant
-| Feature | Full | Minimal |
-|---------|------|---------|
-| Dashboard page | Yes | No |
-| User management CRUD | Yes | No |
-| Department management CRUD | Yes | No |
-| Export (XLSX/CSV/PDF) | Yes | No |
-| File management | Yes | Yes |
-| Audit logs | Yes | Yes |
-| Notifications + real-time | Yes | Yes |
-| Auth (login/register/forgot/reset) | Yes | SSO-only (no password mgmt) |
-| Profile page | Yes | Varies |
-| Default redirect | /dashboard | /notifications |
+### Template Variants
+| Feature | Full | Minimal | Zero |
+|---------|------|---------|------|
+| Dashboard page | Yes | No | No |
+| User management CRUD | Yes | No | No |
+| Department management CRUD | Yes | No | No |
+| Export (XLSX/CSV/PDF) | Yes | No | No |
+| File management | Yes | Yes | Yes |
+| Audit logs | Yes | Yes | Yes |
+| Notifications + real-time | Yes | Yes | Yes |
+| Auth | Internal (login/register/forgot/reset) | External (SSO/shared secret JWT) | None |
+| Rate limiting | Yes | Yes | No |
+| Profile page | Yes | Varies | No |
+| Default redirect | /dashboard | /notifications | /notifications |
 
 ### Docker & Infrastructure
 - Fullstack: root Dockerfile (multi-stage) + supervisor (backend + nginx)

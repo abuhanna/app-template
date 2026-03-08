@@ -174,12 +174,17 @@ export async function runInteractivePrompts(cliArgs: CLIArgs): Promise<ProjectCo
         {
           value: 'full' as TemplateVariant,
           label: 'Full',
-          hint: 'User management, departments, dashboard, all features',
+          hint: 'Internal auth (login/register/password reset), user management, department management + all default features',
         },
         {
           value: 'minimal' as TemplateVariant,
           label: 'Minimal',
-          hint: 'Auth, files, audit logs, notifications (no user/dept management)',
+          hint: 'External auth (shared secret JWT / SSO), no user/department management + all default features',
+        },
+        {
+          value: 'zero' as TemplateVariant,
+          label: 'Zero Auth',
+          hint: 'No authentication at all. All endpoints are public. Default features without auth/export/rate-limiting',
         },
       ],
     });
@@ -329,6 +334,7 @@ function getVariantLabel(variant: TemplateVariant): string {
   const labels: Record<TemplateVariant, string> = {
     full: 'Full (all features)',
     minimal: 'Minimal (no user/dept management)',
+    zero: 'Zero Auth (no authentication)',
   };
   return labels[variant];
 }

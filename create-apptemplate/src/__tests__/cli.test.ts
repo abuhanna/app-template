@@ -166,6 +166,11 @@ describe('parseArgs', () => {
     expect(parseArgs().variant).toBe('minimal');
   });
 
+  it('parses --variant with zero', () => {
+    setArgs('--variant', 'zero');
+    expect(parseArgs().variant).toBe('zero');
+  });
+
   it('warns and ignores invalid --variant value', () => {
     setArgs('--variant', 'standard');
     const result = parseArgs();
