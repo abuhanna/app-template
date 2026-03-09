@@ -25,9 +25,9 @@ public class DbSeeder
 
         var department = new Department
         {
-            Name = "IT Department",
-            Code = "IT",
-            Description = "Information Technology Department",
+            Code = "GEN",
+            Name = "General",
+            Description = "Default department",
             IsActive = true
         };
 
@@ -37,15 +37,27 @@ public class DbSeeder
         var admin = new User
         {
             Username = "admin",
-            Email = "admin@apptemplate.local",
+            Email = "admin@apptemplate.com",
             PasswordHash = _passwordHashService.HashPassword("Admin@123"),
-            Name = "Administrator",
-            Role = "Admin",
+            Name = "Admin User",
+            Role = "admin",
+            DepartmentId = department.Id,
+            IsActive = true
+        };
+
+        var sampleUser = new User
+        {
+            Username = "johndoe",
+            Email = "user@apptemplate.com",
+            PasswordHash = _passwordHashService.HashPassword("User@123"),
+            Name = "John Doe",
+            Role = "user",
             DepartmentId = department.Id,
             IsActive = true
         };
 
         _context.Users.Add(admin);
+        _context.Users.Add(sampleUser);
         await _context.SaveChangesAsync();
 
         _logger.LogInformation("Seed data created successfully.");

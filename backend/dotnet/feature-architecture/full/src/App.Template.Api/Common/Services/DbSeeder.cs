@@ -27,9 +27,9 @@ public class DbSeeder
                 _logger.LogInformation("Seeding default departments...");
                 var department = new Department
                 {
-                    Code = "IT",
-                    Name = "Information Technology",
-                    Description = "IT Department",
+                    Code = "GEN",
+                    Name = "General",
+                    Description = "Default department",
                     IsActive = true
                 };
                 _context.Departments.Add(department);
@@ -38,19 +38,30 @@ public class DbSeeder
 
             if (!await _context.Users.AnyAsync())
             {
-                _logger.LogInformation("Seeding admin user...");
-                var itDept = await _context.Departments.FirstAsync(d => d.Code == "IT");
+                _logger.LogInformation("Seeding default users...");
+                var generalDept = await _context.Departments.FirstAsync(d => d.Code == "GEN");
                 var admin = new User
                 {
                     Username = "admin",
-                    Email = "admin@apptemplate.local",
+                    Email = "admin@apptemplate.com",
                     PasswordHash = _passwordHashService.HashPassword("Admin@123"),
-                    Name = "System Administrator",
-                    Role = "Admin",
-                    DepartmentId = itDept.Id,
+                    Name = "Admin User",
+                    Role = "admin",
+                    DepartmentId = generalDept.Id,
+                    IsActive = true
+                };
+                var sampleUser = new User
+                {
+                    Username = "johndoe",
+                    Email = "user@apptemplate.com",
+                    PasswordHash = _passwordHashService.HashPassword("User@123"),
+                    Name = "John Doe",
+                    Role = "user",
+                    DepartmentId = generalDept.Id,
                     IsActive = true
                 };
                 _context.Users.Add(admin);
+                _context.Users.Add(sampleUser);
                 await _context.SaveChangesAsync();
             }
         }

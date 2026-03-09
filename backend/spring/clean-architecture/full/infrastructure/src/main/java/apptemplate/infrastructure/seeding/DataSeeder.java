@@ -33,39 +33,42 @@ public class DataSeeder implements CommandLineRunner {
     }
 
     private void seedDepartments() {
-        if (!departmentRepository.existsByCode("IT")) {
-            Department it = new Department(
-                "IT",
-                "Information Technology",
-                "IT Department"
+        if (!departmentRepository.existsByCode("GEN")) {
+            Department gen = new Department(
+                "GEN",
+                "General",
+                "Default department"
             );
-            departmentRepository.save(it);
+            departmentRepository.save(gen);
         }
     }
 
     private void seedUsers() {
-        if (!userRepository.existsByUsername("admin")) {
-            Department itDept = departmentRepository.findByCode("IT")
-                .orElseThrow(() -> new RuntimeException("IT Department not found"));
+        Department generalDept = departmentRepository.findByCode("GEN")
+            .orElseThrow(() -> new RuntimeException("General Department not found"));
 
+        if (!userRepository.existsByUsername("admin")) {
             User admin = new User(
                  "admin",
-                 "admin@apptemplate.local",
+                 "admin@apptemplate.com",
                  passwordEncoder.encode("Admin@123"),
-                 "System Administrator",
+                 "Admin User",
                  UserRole.ADMIN,
-                 itDept.getId()
+                 generalDept.getId()
             );
-            
             userRepository.save(admin);
-        } else {
-            // Ensure admin is active if they already exist
-            userRepository.findByUsername("admin").ifPresent(admin -> {
-                if (!admin.isActive()) {
-                    admin.setActive(true);
-                    userRepository.save(admin);
-                }
-            });
+        }
+
+        if (!userRepository.existsByUsername("johndoe")) {
+            User sampleUser = new User(
+                 "johndoe",
+                 "user@apptemplate.com",
+                 passwordEncoder.encode("User@123"),
+                 "John Doe",
+                 UserRole.USER,
+                 generalDept.getId()
+            );
+            userRepository.save(sampleUser);
         }
     }
 }

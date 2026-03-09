@@ -24,40 +24,51 @@ export class SeedService implements OnApplicationBootstrap {
   private async seedDepartments() {
     const count = await this.departmentRepository.count();
     if (count === 0) {
-      this.logger.log('Seeding IT department...');
+      this.logger.log('Seeding default departments...');
 
       const dept = this.departmentRepository.create({
-        code: 'IT',
-        name: 'IT Department',
+        code: 'GEN',
+        name: 'General',
+        description: 'Default department',
         isActive: true,
       });
 
       await this.departmentRepository.save(dept);
-      this.logger.log('IT department seeded successfully');
     }
   }
 
   private async seedUsers() {
     const count = await this.userRepository.count();
     if (count === 0) {
-      this.logger.log('Seeding admin user...');
+      this.logger.log('Seeding default users...');
 
-      const dept = await this.departmentRepository.findOneBy({ code: 'IT' });
-      const hashedPassword = await bcrypt.hash('Admin@123', 12);
+      const dept = await this.departmentRepository.findOneBy({ code: 'GEN' });
 
+      const adminPassword = await bcrypt.hash('Admin@123', 12);
       const admin = this.userRepository.create({
         username: 'admin',
         email: 'admin@apptemplate.com',
-        passwordHash: hashedPassword,
+        passwordHash: adminPassword,
         firstName: 'Admin',
-        lastName: undefined,
+        lastName: 'User',
         role: 'admin',
         departmentId: dept?.id ?? undefined,
         isActive: true,
       });
 
-      await this.userRepository.save(admin);
-      this.logger.log('Admin user seeded successfully');
+      const userPassword = await bcrypt.hash('User@123', 12);
+      const sampleUser = this.userRepository.create({
+        username: 'johndoe',
+        email: 'user@apptemplate.com',
+        passwordHash: userPassword,
+        firstName: 'John',
+        lastName: 'Doe',
+        role: 'user',
+        departmentId: dept?.id ?? undefined,
+        isActive: true,
+      });
+
+      await this.userRepository.save([admin, sampleUser]);
     }
   }
 }

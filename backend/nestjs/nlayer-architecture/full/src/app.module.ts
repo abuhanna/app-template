@@ -35,7 +35,7 @@ import { SeedService } from './services/seed.service';
       synchronize: false,
       migrationsRun: true,
     }),
-    TypeOrmModule.forFeature([User]),
+    TypeOrmModule.forFeature([User, Department]),
     AuthModule,
     DepartmentsModule,
     FilesModule,

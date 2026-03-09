@@ -31,22 +31,14 @@ public class DataSeeder implements CommandLineRunner {
         if (!userRepository.existsByUsername("admin")) {
             User admin = new User(
                  "admin",
-                 "admin@apptemplate.local",
-                 passwordEncoder.encode("Admin@123"),
-                 "System Administrator",
+                 "admin@apptemplate.com",
+                 "",
+                 "Admin User",
                  UserRole.ADMIN,
                  null
             );
 
             userRepository.save(admin);
-        } else {
-            // Ensure admin is active if they already exist
-            userRepository.findByUsername("admin").ifPresent(admin -> {
-                if (!admin.isActive()) {
-                    admin.setActive(true);
-                    userRepository.save(admin);
-                }
-            });
         }
     }
 }

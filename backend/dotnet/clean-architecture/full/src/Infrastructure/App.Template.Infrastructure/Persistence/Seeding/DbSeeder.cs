@@ -29,15 +29,12 @@ public class DbSeeder
             if (!_context.Departments.Any())
             {
                 _logger.LogInformation("Seeding default departments...");
-                
+
                 var department = new Department(
-                    "IT",
-                    "Information Technology",
-                    "IT Department"
+                    "GEN",
+                    "General",
+                    "Default department"
                 );
-                // IsActive is true by default in constructor
-                // CreatedAt is handled by DbContext or we rely on AuditInfo logic if we want, but DbContext sets it on SaveChanges if not set, or we can't set it since it inherits from AuditableEntity which likely has private set. 
-                // Actually AuditableEntity usually has standard properties. Let's assume Entity Framework will handle it via the Override SaveChanges method seen in ApplicationDbContext.
 
                 _context.Departments.Add(department);
                 await _context.SaveChangesAsync(CancellationToken.None);
@@ -45,19 +42,30 @@ public class DbSeeder
 
             if (!_context.Users.Any())
             {
-                _logger.LogInformation("Seeding admin user...");
+                _logger.LogInformation("Seeding default users...");
+
+                var generalDept = _context.Departments.First(d => d.Code == "GEN");
 
                 var adminUser = new User(
                     "admin",
-                    "admin@apptemplate.local",
+                    "admin@apptemplate.com",
                     _passwordHashService.HashPassword("Admin@123"),
-                    "System Administrator",
-                    "Admin",
-                    _context.Departments.First(d => d.Code == "IT").Id
+                    "Admin User",
+                    "admin",
+                    generalDept.Id
                 );
-                // IsActive is true by default
+
+                var sampleUser = new User(
+                    "johndoe",
+                    "user@apptemplate.com",
+                    _passwordHashService.HashPassword("User@123"),
+                    "John Doe",
+                    "user",
+                    generalDept.Id
+                );
 
                 _context.Users.Add(adminUser);
+                _context.Users.Add(sampleUser);
                 await _context.SaveChangesAsync(CancellationToken.None);
             }
         }

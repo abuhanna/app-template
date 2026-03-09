@@ -1,4 +1,4 @@
-import { Injectable, OnModuleInit } from '@nestjs/common';
+import { Injectable, Logger, OnModuleInit } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 import * as bcrypt from 'bcrypt';
@@ -7,31 +7,68 @@ import { Department } from '../entities/department.entity';
 
 @Injectable()
 export class SeedService implements OnModuleInit {
+  private readonly logger = new Logger(SeedService.name);
+
   constructor(
     @InjectRepository(User)
     private readonly userRepository: Repository<User>,
+    @InjectRepository(Department)
+    private readonly departmentRepository: Repository<Department>,
   ) {}
 
   async onModuleInit() {
-    await this.seedData();
+    await this.seedDepartments();
+    await this.seedUsers();
   }
 
-  private async seedData() {
-    const adminExists = await this.userRepository.findOneBy({
-      email: 'admin@apptemplate.com',
-    });
+  private async seedDepartments() {
+    const count = await this.departmentRepository.count();
+    if (count === 0) {
+      this.logger.log('Seeding default departments...');
 
-    if (!adminExists) {
-      const passwordHash = await bcrypt.hash('Admin@123', 10);
+      const dept = this.departmentRepository.create({
+        code: 'GEN',
+        name: 'General',
+        description: 'Default department',
+        isActive: true,
+      });
+
+      await this.departmentRepository.save(dept);
+    }
+  }
+
+  private async seedUsers() {
+    const count = await this.userRepository.count();
+    if (count === 0) {
+      this.logger.log('Seeding default users...');
+
+      const dept = await this.departmentRepository.findOneBy({ code: 'GEN' });
+
+      const adminPassword = await bcrypt.hash('Admin@123', 12);
       const admin = this.userRepository.create({
         username: 'admin',
         email: 'admin@apptemplate.com',
-        passwordHash,
+        passwordHash: adminPassword,
+        firstName: 'Admin',
+        lastName: 'User',
         role: 'admin',
+        departmentId: dept?.id ?? undefined,
         isActive: true,
       });
-      await this.userRepository.save(admin);
-      console.log('Admin user seeded: admin@apptemplate.com / Admin@123');
+
+      const userPassword = await bcrypt.hash('User@123', 12);
+      const sampleUser = this.userRepository.create({
+        username: 'johndoe',
+        email: 'user@apptemplate.com',
+        passwordHash: userPassword,
+        firstName: 'John',
+        lastName: 'Doe',
+        role: 'user',
+        departmentId: dept?.id ?? undefined,
+        isActive: true,
+      });
+
+      await this.userRepository.save([admin, sampleUser]);
     }
   }
 }

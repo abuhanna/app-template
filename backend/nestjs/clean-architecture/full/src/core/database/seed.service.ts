@@ -25,40 +25,51 @@ export class SeedService implements OnApplicationBootstrap {
     const count = await this.departmentRepository.count();
     if (count === 0) {
       this.logger.log('Seeding default departments...');
-      
-      const itDept = this.departmentRepository.create({
-        code: 'IT',
-        name: 'Information Technology',
-        description: 'IT Department',
+
+      const generalDept = this.departmentRepository.create({
+        code: 'GEN',
+        name: 'General',
+        description: 'Default department',
         isActive: true,
       });
 
-      await this.departmentRepository.save(itDept);
+      await this.departmentRepository.save(generalDept);
     }
   }
 
   private async seedUsers() {
     const count = await this.userRepository.count();
     if (count === 0) {
-      this.logger.log('Seeding admin user...');
+      this.logger.log('Seeding default users...');
 
-      const itDept = await this.departmentRepository.findOne({ where: { code: 'IT' } });
-      if (!itDept) throw new Error('IT Department not found during seeding');
+      const generalDept = await this.departmentRepository.findOne({ where: { code: 'GEN' } });
+      if (!generalDept) throw new Error('General Department not found during seeding');
 
-      const hashedPassword = await bcrypt.hash('Admin@123', 12);
-
+      const adminPassword = await bcrypt.hash('Admin@123', 12);
       const admin = this.userRepository.create({
         username: 'admin',
-        email: 'admin@apptemplate.local',
-        passwordHash: hashedPassword,
-        firstName: 'System',
-        lastName: 'Administrator',
-        role: 'Admin',
-        department: itDept,
+        email: 'admin@apptemplate.com',
+        passwordHash: adminPassword,
+        firstName: 'Admin',
+        lastName: 'User',
+        role: 'admin',
+        department: generalDept,
         isActive: true,
       });
 
-      await this.userRepository.save(admin);
+      const userPassword = await bcrypt.hash('User@123', 12);
+      const sampleUser = this.userRepository.create({
+        username: 'johndoe',
+        email: 'user@apptemplate.com',
+        passwordHash: userPassword,
+        firstName: 'John',
+        lastName: 'Doe',
+        role: 'user',
+        department: generalDept,
+        isActive: true,
+      });
+
+      await this.userRepository.save([admin, sampleUser]);
     }
   }
 }

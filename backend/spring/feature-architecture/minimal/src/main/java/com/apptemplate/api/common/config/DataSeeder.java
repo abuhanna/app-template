@@ -22,9 +22,9 @@ public class DataSeeder implements CommandLineRunner {
             User admin = new User();
             admin.setUsername("admin");
             admin.setEmail("admin@apptemplate.com");
-            admin.setPasswordHash(passwordEncoder.encode("Admin@123"));
-            admin.setFirstName("System");
-            admin.setLastName("Administrator");
+            admin.setPasswordHash("");
+            admin.setFirstName("Admin");
+            admin.setLastName("User");
             admin.setRole("admin");
             admin.setActive(true);
             userRepository.save(admin);

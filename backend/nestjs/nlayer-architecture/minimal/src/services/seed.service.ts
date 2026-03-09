@@ -1,11 +1,12 @@
-import { Injectable, OnModuleInit } from '@nestjs/common';
+import { Injectable, Logger, OnModuleInit } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
-import * as bcrypt from 'bcrypt';
 import { User } from '../entities/user.entity';
 
 @Injectable()
 export class SeedService implements OnModuleInit {
+  private readonly logger = new Logger(SeedService.name);
+
   constructor(
     @InjectRepository(User)
     private readonly userRepository: Repository<User>,
@@ -21,18 +22,19 @@ export class SeedService implements OnModuleInit {
     });
 
     if (!adminExists) {
-      const passwordHash = await bcrypt.hash('Admin@123', 10);
+      this.logger.log('Seeding admin user...');
+
       const admin = this.userRepository.create({
         username: 'admin',
         email: 'admin@apptemplate.com',
-        passwordHash,
-        firstName: undefined,
-        lastName: undefined,
+        passwordHash: '',
+        firstName: 'Admin',
+        lastName: 'User',
         role: 'admin',
         isActive: true,
       });
+
       await this.userRepository.save(admin);
-      console.log('Admin user seeded: admin@apptemplate.com / Admin@123');
     }
   }
 }
