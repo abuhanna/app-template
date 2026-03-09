@@ -1,4 +1,4 @@
-import { describe, it, expect, beforeEach } from 'vitest'
+import { beforeEach, describe, expect, it } from 'vitest'
 import { useConfirmDialog } from '../useConfirmDialog'
 
 describe('useConfirmDialog', () => {
@@ -11,7 +11,7 @@ describe('useConfirmDialog', () => {
   })
 
   it('returns default values', () => {
-    const { isOpen, dialogTitle, dialogMessage, dialogIcon, dialogColor } = useConfirmDialog()
+    const { isOpen, dialogIcon, dialogColor } = useConfirmDialog()
 
     expect(isOpen.value).toBe(false)
     expect(dialogIcon.value).toBe('mdi-help-circle')

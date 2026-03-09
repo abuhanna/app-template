@@ -7,18 +7,18 @@
           <InputIcon class="pi pi-search" />
           <InputText
             v-model="searchQuery"
-            :placeholder="searchPlaceholder"
             class="w-full"
+            :placeholder="searchPlaceholder"
             @keyup.escape="handleClear"
           />
         </IconField>
         <Button
           v-if="searchQuery"
+          class="clear-search-btn"
           icon="pi pi-times"
-          text
           rounded
           severity="secondary"
-          class="clear-search-btn"
+          text
           @click="handleClear"
         />
       </div>
@@ -30,10 +30,10 @@
       <div v-if="showClearButton || $slots.actions" class="flex gap-2 align-items-center">
         <Button
           v-if="showClearButton && hasActiveFilters"
-          label="Clear All"
           icon="pi pi-filter-slash"
-          text
+          label="Clear All"
           severity="secondary"
+          text
           @click="clearAllFilters"
         />
         <slot name="actions" />
@@ -43,105 +43,105 @@
 </template>
 
 <script setup>
-import { ref, watch } from 'vue'
-import { useDebounce } from '@/composables/useDebounce'
-import Button from 'primevue/button'
-import InputText from 'primevue/inputtext'
-import IconField from 'primevue/iconfield'
-import InputIcon from 'primevue/inputicon'
+  import Button from 'primevue/button'
+  import IconField from 'primevue/iconfield'
+  import InputIcon from 'primevue/inputicon'
+  import InputText from 'primevue/inputtext'
+  import { ref, watch } from 'vue'
+  import { useDebounce } from '@/composables/useDebounce'
 
-const props = defineProps({
-  /**
-   * Initial search value
-   */
-  modelValue: {
-    type: String,
-    default: '',
-  },
-  /**
-   * Placeholder text for the search input
-   */
-  searchPlaceholder: {
-    type: String,
-    default: 'Search...',
-  },
-  /**
-   * Debounce delay in milliseconds
-   */
-  debounceDelay: {
-    type: Number,
-    default: 300,
-  },
-  /**
-   * CSS class for the search input wrapper
-   */
-  searchClass: {
-    type: String,
-    default: 'w-20rem',
-  },
-  /**
-   * Show the clear all filters button
-   */
-  showClearButton: {
-    type: Boolean,
-    default: true,
-  },
-  /**
-   * Indicates if there are active filters (used to show/hide clear button)
-   */
-  hasActiveFilters: {
-    type: Boolean,
-    default: false,
-  },
-})
+  const props = defineProps({
+    /**
+     * Initial search value
+     */
+    modelValue: {
+      type: String,
+      default: '',
+    },
+    /**
+     * Placeholder text for the search input
+     */
+    searchPlaceholder: {
+      type: String,
+      default: 'Search...',
+    },
+    /**
+     * Debounce delay in milliseconds
+     */
+    debounceDelay: {
+      type: Number,
+      default: 300,
+    },
+    /**
+     * CSS class for the search input wrapper
+     */
+    searchClass: {
+      type: String,
+      default: 'w-20rem',
+    },
+    /**
+     * Show the clear all filters button
+     */
+    showClearButton: {
+      type: Boolean,
+      default: true,
+    },
+    /**
+     * Indicates if there are active filters (used to show/hide clear button)
+     */
+    hasActiveFilters: {
+      type: Boolean,
+      default: false,
+    },
+  })
 
-const emit = defineEmits([
-  /**
-   * Emitted when the search value changes (debounced)
-   */
-  'update:modelValue',
-  /**
-   * Emitted when the search value changes (debounced)
-   */
-  'search',
-  /**
-   * Emitted when clear all filters button is clicked
-   */
-  'clear-all',
-])
+  const emit = defineEmits([
+    /**
+     * Emitted when the search value changes (debounced)
+     */
+    'update:modelValue',
+    /**
+     * Emitted when the search value changes (debounced)
+     */
+    'search',
+    /**
+     * Emitted when clear all filters button is clicked
+     */
+    'clear-all',
+  ])
 
-const searchQuery = ref(props.modelValue)
-const debouncedSearch = useDebounce(searchQuery, props.debounceDelay)
+  const searchQuery = ref(props.modelValue)
+  const debouncedSearch = useDebounce(searchQuery, props.debounceDelay)
 
-// Watch for external model changes
-watch(
-  () => props.modelValue,
-  (newValue) => {
-    if (newValue !== searchQuery.value) {
-      searchQuery.value = newValue
-    }
+  // Watch for external model changes
+  watch(
+    () => props.modelValue,
+    newValue => {
+      if (newValue !== searchQuery.value) {
+        searchQuery.value = newValue
+      }
+    },
+  )
+
+  // Emit debounced search value
+  watch(debouncedSearch, value => {
+    emit('update:modelValue', value)
+    emit('search', value)
+  })
+
+  function handleClear () {
+    searchQuery.value = ''
   }
-)
 
-// Emit debounced search value
-watch(debouncedSearch, (value) => {
-  emit('update:modelValue', value)
-  emit('search', value)
-})
+  function clearAllFilters () {
+    searchQuery.value = ''
+    emit('clear-all')
+  }
 
-function handleClear() {
-  searchQuery.value = ''
-}
-
-function clearAllFilters() {
-  searchQuery.value = ''
-  emit('clear-all')
-}
-
-// Expose methods for parent component
-defineExpose({
-  clearSearch: handleClear,
-})
+  // Expose methods for parent component
+  defineExpose({
+    clearSearch: handleClear,
+  })
 </script>
 
 <style scoped>

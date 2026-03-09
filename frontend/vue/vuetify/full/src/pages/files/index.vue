@@ -14,9 +14,9 @@
           <v-card-text>
             <v-data-table
               :headers="headers"
+              item-value="id"
               :items="files"
               :loading="loading"
-              item-value="id"
             >
               <template #item.fileSize="{ item }">
                 {{ formatFileSize(item.fileSize) }}
@@ -32,15 +32,15 @@
               <template #item.actions="{ item }">
                 <v-btn
                   icon="mdi-download"
-                  variant="text"
                   size="small"
+                  variant="text"
                   @click="downloadFile(item)"
                 />
                 <v-btn
-                  icon="mdi-delete"
-                  variant="text"
-                  size="small"
                   color="error"
+                  icon="mdi-delete"
+                  size="small"
+                  variant="text"
                   @click="confirmDelete(item)"
                 />
               </template>
@@ -63,7 +63,7 @@
           />
           <v-text-field v-model="uploadForm.description" label="Description" />
           <v-text-field v-model="uploadForm.category" label="Category" />
-          <v-switch v-model="uploadForm.isPublic" label="Public" color="primary" />
+          <v-switch v-model="uploadForm.isPublic" color="primary" label="Public" />
         </v-card-text>
         <v-card-actions>
           <v-spacer />
@@ -76,95 +76,95 @@
 </template>
 
 <script setup>
-import { ref, onMounted } from 'vue'
-import { useConfirmDialog } from '@/composables/useConfirmDialog'
-import { useNotificationStore } from '@/stores/notification'
-import fileService from '@/services/fileService'
+  import { onMounted, ref } from 'vue'
+  import { useConfirmDialog } from '@/composables/useConfirmDialog'
+  import fileService from '@/services/fileService'
+  import { useNotificationStore } from '@/stores/notification'
 
-const confirmDialog = useConfirmDialog()
-const notificationStore = useNotificationStore()
+  const confirmDialog = useConfirmDialog()
+  const notificationStore = useNotificationStore()
 
-const loading = ref(false)
-const uploading = ref(false)
-const files = ref([])
-const showUploadDialog = ref(false)
-const uploadFile = ref(null)
-const uploadForm = ref({ description: '', category: '', isPublic: false })
+  const loading = ref(false)
+  const uploading = ref(false)
+  const files = ref([])
+  const showUploadDialog = ref(false)
+  const uploadFile = ref(null)
+  const uploadForm = ref({ description: '', category: '', isPublic: false })
 
-const headers = [
-  { title: 'Name', key: 'originalFileName' },
-  { title: 'Type', key: 'contentType' },
-  { title: 'Size', key: 'fileSize' },
-  { title: 'Category', key: 'category' },
-  { title: 'Public', key: 'isPublic' },
-  { title: 'Created', key: 'createdAt' },
-  { title: 'Actions', key: 'actions', sortable: false },
-]
+  const headers = [
+    { title: 'Name', key: 'originalFileName' },
+    { title: 'Type', key: 'contentType' },
+    { title: 'Size', key: 'fileSize' },
+    { title: 'Category', key: 'category' },
+    { title: 'Public', key: 'isPublic' },
+    { title: 'Created', key: 'createdAt' },
+    { title: 'Actions', key: 'actions', sortable: false },
+  ]
 
-async function loadFiles() {
-  loading.value = true
-  try {
-    const response = await fileService.getFiles()
-    files.value = response.items || []
-  } catch (error) {
-    notificationStore.showError('Failed to load files')
-  } finally {
-    loading.value = false
-  }
-}
-
-async function handleUpload() {
-  if (!uploadFile.value) return
-
-  uploading.value = true
-  try {
-    await fileService.uploadFile(uploadFile.value, uploadForm.value)
-    notificationStore.showSuccess('File uploaded successfully')
-    showUploadDialog.value = false
-    uploadFile.value = null
-    uploadForm.value = { description: '', category: '', isPublic: false }
-    await loadFiles()
-  } catch (error) {
-    notificationStore.showError('Failed to upload file')
-  } finally {
-    uploading.value = false
-  }
-}
-
-function downloadFile(file) {
-  window.open(fileService.getDownloadUrl(file.id), '_blank')
-}
-
-async function confirmDelete(file) {
-  const confirmed = await confirmDialog.confirm({
-    title: 'Delete File',
-    message: `Are you sure you want to delete "${file.originalFileName}"?`,
-    confirmLabel: 'Delete',
-    color: 'error',
-  })
-
-  if (confirmed) {
+  async function loadFiles () {
+    loading.value = true
     try {
-      await fileService.deleteFile(file.id)
-      notificationStore.showSuccess('File deleted successfully')
-      await loadFiles()
-    } catch (error) {
-      notificationStore.showError('Failed to delete file')
+      const response = await fileService.getFiles()
+      files.value = Array.isArray(response.data) ? response.data : []
+    } catch {
+      notificationStore.showError('Failed to load files')
+    } finally {
+      loading.value = false
     }
   }
-}
 
-function formatFileSize(bytes) {
-  if (bytes === 0) return '0 B'
-  const k = 1024
-  const sizes = ['B', 'KB', 'MB', 'GB']
-  const i = Math.floor(Math.log(bytes) / Math.log(k))
-  return parseFloat((bytes / Math.pow(k, i)).toFixed(2)) + ' ' + sizes[i]
-}
+  async function handleUpload () {
+    if (!uploadFile.value) return
 
-function formatDate(date) {
-  return new Date(date).toLocaleDateString()
-}
+    uploading.value = true
+    try {
+      await fileService.uploadFile(uploadFile.value, uploadForm.value)
+      notificationStore.showSuccess('File uploaded successfully')
+      showUploadDialog.value = false
+      uploadFile.value = null
+      uploadForm.value = { description: '', category: '', isPublic: false }
+      await loadFiles()
+    } catch {
+      notificationStore.showError('Failed to upload file')
+    } finally {
+      uploading.value = false
+    }
+  }
 
-onMounted(loadFiles)
+  function downloadFile (file) {
+    window.open(fileService.getDownloadUrl(file.id), '_blank')
+  }
+
+  async function confirmDelete (file) {
+    const confirmed = await confirmDialog.confirm({
+      title: 'Delete File',
+      message: `Are you sure you want to delete "${file.originalFileName}"?`,
+      confirmLabel: 'Delete',
+      color: 'error',
+    })
+
+    if (confirmed) {
+      try {
+        await fileService.deleteFile(file.id)
+        notificationStore.showSuccess('File deleted successfully')
+        await loadFiles()
+      } catch {
+        notificationStore.showError('Failed to delete file')
+      }
+    }
+  }
+
+  function formatFileSize (bytes) {
+    if (bytes === 0) return '0 B'
+    const k = 1024
+    const sizes = ['B', 'KB', 'MB', 'GB']
+    const i = Math.floor(Math.log(bytes) / Math.log(k))
+    return Number.parseFloat((bytes / Math.pow(k, i)).toFixed(2)) + ' ' + sizes[i]
+  }
+
+  function formatDate (date) {
+    return new Date(date).toLocaleDateString()
+  }
+
+  onMounted(loadFiles)
 </script>

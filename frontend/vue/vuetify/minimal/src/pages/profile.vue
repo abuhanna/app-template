@@ -1,19 +1,19 @@
 <template>
   <v-container class="py-8">
     <v-row justify="center">
-      <v-col cols="12" md="8" lg="6">
+      <v-col cols="12" lg="6" md="8">
         <!-- Profile Header -->
         <v-card class="mb-6">
           <v-card-text class="text-center py-8">
-            <v-avatar size="100" color="primary" class="mb-4">
+            <v-avatar class="mb-4" color="primary" size="100">
               <span class="text-h3 text-white">{{ userInitials }}</span>
             </v-avatar>
             <h2 class="text-h5 font-weight-bold">{{ profile?.name || profile?.username }}</h2>
             <p class="text-body-2 text-medium-emphasis">{{ profile?.email }}</p>
             <v-chip
-              :color="profile?.role === 'Admin' ? 'primary' : 'secondary'"
-              size="small"
               class="mt-2"
+              :color="profile?.role === 'admin' ? 'primary' : 'secondary'"
+              size="small"
             >
               {{ profile?.role || 'User' }}
             </v-chip>
@@ -41,29 +41,29 @@
             <v-form v-if="isEditing" ref="form" @submit.prevent="saveProfile">
               <v-text-field
                 v-model="editForm.name"
-                label="Display Name"
-                variant="outlined"
                 class="mb-4"
+                label="Display Name"
                 :rules="[v => !v || v.length <= 100 || 'Name cannot exceed 100 characters']"
+                variant="outlined"
               />
 
               <v-text-field
                 v-model="editForm.email"
-                label="Email"
-                type="email"
-                variant="outlined"
                 class="mb-4"
+                label="Email"
                 :rules="[
                   v => !!v || 'Email is required',
                   v => /.+@.+\..+/.test(v) || 'Invalid email format'
                 ]"
+                type="email"
+                variant="outlined"
               />
 
               <div class="d-flex gap-2">
                 <v-btn
                   color="primary"
-                  type="submit"
                   :loading="saving"
+                  type="submit"
                 >
                   Save Changes
                 </v-btn>
@@ -141,18 +141,16 @@
             <v-form ref="passwordForm" @submit.prevent="changePassword">
               <v-text-field
                 v-model="passwordForm.currentPassword"
+                class="mb-4"
                 label="Current Password"
+                :rules="[v => !!v || 'Current password is required']"
                 type="password"
                 variant="outlined"
-                class="mb-4"
-                :rules="[v => !!v || 'Current password is required']"
               />
 
               <v-text-field
                 v-model="passwordForm.newPassword"
                 label="New Password"
-                type="password"
-                variant="outlined"
                 :rules="[
                   v => !!v || 'New password is required',
                   v => v.length >= 8 || 'Password must be at least 8 characters',
@@ -160,25 +158,27 @@
                   v => /[a-z]/.test(v) || 'Must contain lowercase letter',
                   v => /[0-9]/.test(v) || 'Must contain a number'
                 ]"
+                type="password"
+                variant="outlined"
               />
-              <PasswordStrength :password="passwordForm.newPassword" class="mb-4" />
+              <PasswordStrength class="mb-4" :password="passwordForm.newPassword" />
 
               <v-text-field
                 v-model="passwordForm.confirmPassword"
-                label="Confirm New Password"
-                type="password"
-                variant="outlined"
                 class="mb-4"
+                label="Confirm New Password"
                 :rules="[
                   v => !!v || 'Please confirm your password',
                   v => v === passwordForm.newPassword || 'Passwords do not match'
                 ]"
+                type="password"
+                variant="outlined"
               />
 
               <v-btn
                 color="primary"
-                type="submit"
                 :loading="changingPassword"
+                type="submit"
               >
                 Update Password
               </v-btn>
@@ -191,10 +191,10 @@
 </template>
 
 <script setup>
-  import { ref, computed, onMounted } from 'vue'
-  import { getProfile, updateProfile, changePassword as apiChangePassword } from '@/services/authApi'
-  import { useNotificationStore } from '@/stores/notification'
+  import { computed, onMounted, ref } from 'vue'
   import PasswordStrength from '@/components/common/PasswordStrength.vue'
+  import { changePassword as apiChangePassword, getProfile, updateProfile } from '@/services/authApi'
+  import { useNotificationStore } from '@/stores/notification'
 
   const notificationStore = useNotificationStore()
 
@@ -225,7 +225,7 @@
       .slice(0, 2)
   })
 
-  const formatDate = date => {
+  function formatDate (date) {
     if (!date) return 'Never'
     return new Date(date).toLocaleDateString('en-US', {
       year: 'numeric',
@@ -236,10 +236,11 @@
     })
   }
 
-  const fetchProfile = async () => {
+  async function fetchProfile () {
     try {
       loading.value = true
-      profile.value = await getProfile()
+      const result = await getProfile()
+      profile.value = result.data
     } catch (error) {
       notificationStore.showError('Failed to load profile')
       console.error('Error loading profile:', error)
@@ -248,7 +249,7 @@
     }
   }
 
-  const startEditing = () => {
+  function startEditing () {
     editForm.value = {
       name: profile.value?.name || '',
       email: profile.value?.email || '',
@@ -256,14 +257,15 @@
     isEditing.value = true
   }
 
-  const cancelEditing = () => {
+  function cancelEditing () {
     isEditing.value = false
   }
 
-  const saveProfile = async () => {
+  async function saveProfile () {
     try {
       saving.value = true
-      profile.value = await updateProfile(editForm.value)
+      const result = await updateProfile(editForm.value)
+      profile.value = result.data
       isEditing.value = false
       notificationStore.showSuccess('Profile updated successfully')
     } catch (error) {
@@ -273,12 +275,13 @@
     }
   }
 
-  const changePassword = async () => {
+  async function changePassword () {
     try {
       changingPassword.value = true
-      await apiChangePassword(profile.value.id, {
+      await apiChangePassword({
         currentPassword: passwordForm.value.currentPassword,
         newPassword: passwordForm.value.newPassword,
+        confirmPassword: passwordForm.value.confirmPassword,
       })
       passwordForm.value = {
         currentPassword: '',

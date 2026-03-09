@@ -1,5 +1,5 @@
 import { defineStore } from 'pinia'
-import { ref, computed } from 'vue'
+import { computed, ref } from 'vue'
 import { setLocale as setI18nLocale } from '@/i18n'
 
 export const useLocaleStore = defineStore('locale', () => {
@@ -12,7 +12,7 @@ export const useLocaleStore = defineStore('locale', () => {
     { code: 'ar', name: 'العربية', flag: '🇸🇦' },
   ]
 
-  function setLocale(newLocale) {
+  function setLocale (newLocale) {
     locale.value = newLocale
     setI18nLocale(newLocale)
   }

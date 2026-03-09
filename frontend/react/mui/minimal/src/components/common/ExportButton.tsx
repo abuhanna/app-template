@@ -17,8 +17,8 @@ import {
 import { useNotificationStore } from '@/stores'
 
 interface ExportButtonProps {
-  exportFn: (format: string, filters: Record<string, any>) => Promise<{ success: boolean; fileName: string }>
-  filters?: Record<string, any>
+  exportFn: (format: string, filters: Record<string, unknown>) => Promise<{ success: boolean; fileName: string }>
+  filters?: Record<string, unknown>
   disabled?: boolean
   onExportStart?: (format: string) => void
   onExportComplete?: (result: { success: boolean; fileName: string }) => void

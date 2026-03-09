@@ -1,11 +1,11 @@
-import { describe, it, expect, beforeEach, vi } from 'vitest'
+import { beforeEach, describe, expect, it, vi } from 'vitest'
+
+import { usePagination } from '../usePagination'
 
 vi.mock('vue-router', () => ({
   useRoute: () => ({ query: {} }),
   useRouter: () => ({ replace: vi.fn() }),
 }))
-
-import { usePagination } from '../usePagination'
 
 describe('usePagination', () => {
   beforeEach(() => {
@@ -93,7 +93,7 @@ describe('usePagination', () => {
   })
 
   it('setSort toggles direction when same column clicked', () => {
-    const { sortBy, sortDir, setSort } = usePagination({ syncWithUrl: false })
+    const { sortDir, setSort } = usePagination({ syncWithUrl: false })
 
     setSort('name', 'asc')
     expect(sortDir.value).toBe('asc')
@@ -149,7 +149,7 @@ describe('usePagination', () => {
   })
 
   it('firstPage and lastPage navigate correctly', () => {
-    const { page, firstPage, lastPage, setPage, setTotalItems } = usePagination({ syncWithUrl: false })
+    const { page, firstPage, lastPage, setTotalItems } = usePagination({ syncWithUrl: false })
     setTotalItems(50) // 5 pages
 
     lastPage()
@@ -190,7 +190,7 @@ describe('usePagination', () => {
       page: 1,
       pageSize: 10,
       sortBy: 'name',
-      sortDir: 'desc',
+      sortOrder: 'desc',
     })
   })
 

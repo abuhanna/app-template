@@ -63,6 +63,7 @@ export default function Departments() {
   const onGlobalFilterChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const value = e.target.value
     const _filters = { ...filters }
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     ;(_filters['global'] as any).value = value
     setFilters(_filters)
     setGlobalFilterValue(value)

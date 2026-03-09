@@ -35,8 +35,10 @@ describe('UserStore', () => {
   describe('fetchUsers', () => {
     it('updates state on success with pagination', async () => {
       const mockResult = {
-        items: [
-          { id: '1', username: 'admin', email: 'admin@test.com', role: 'Admin', isActive: true },
+        success: true,
+        message: 'Users retrieved',
+        data: [
+          { id: 1, username: 'admin', email: 'admin@test.com', role: 'admin', isActive: true },
         ],
         pagination: {
           page: 1,
@@ -52,7 +54,7 @@ describe('UserStore', () => {
       await useUserStore.getState().fetchUsers()
 
       const state = useUserStore.getState()
-      expect(state.users).toEqual(mockResult.items)
+      expect(state.users).toEqual(mockResult.data)
       expect(state.pagination).toEqual(mockResult.pagination)
       expect(state.loading).toBe(false)
     })
@@ -67,10 +69,10 @@ describe('UserStore', () => {
 
   describe('fetchUser', () => {
     it('updates selectedUser', async () => {
-      const mockUser = { id: '1', username: 'admin', email: 'admin@test.com', role: 'Admin', isActive: true }
-      vi.mocked(userApi.getUser).mockResolvedValue(mockUser as any)
+      const mockUser = { id: 1, username: 'admin', email: 'admin@test.com', role: 'admin', isActive: true }
+      vi.mocked(userApi.getUser).mockResolvedValue({ success: true, message: '', data: mockUser } as any)
 
-      await useUserStore.getState().fetchUser('1')
+      await useUserStore.getState().fetchUser(1)
 
       expect(useUserStore.getState().selectedUser).toEqual(mockUser)
       expect(useUserStore.getState().loading).toBe(false)
@@ -79,8 +81,8 @@ describe('UserStore', () => {
 
   describe('createUser', () => {
     it('calls API and adds user to list', async () => {
-      const newUser = { id: '2', username: 'new', email: 'new@test.com', role: 'User', isActive: true }
-      vi.mocked(userApi.createUser).mockResolvedValue(newUser as any)
+      const newUser = { id: 2, username: 'new', email: 'new@test.com', role: 'user', isActive: true }
+      vi.mocked(userApi.createUser).mockResolvedValue({ success: true, message: '', data: newUser } as any)
 
       const result = await useUserStore.getState().createUser({
         username: 'new',
@@ -95,14 +97,14 @@ describe('UserStore', () => {
 
   describe('updateUser', () => {
     it('calls API and updates user in list', async () => {
-      const existingUser = { id: '1', username: 'old', email: 'old@test.com', role: 'User', isActive: true }
-      const updatedUser = { id: '1', username: 'updated', email: 'updated@test.com', role: 'User', isActive: true }
+      const existingUser = { id: 1, username: 'old', email: 'old@test.com', role: 'user', isActive: true }
+      const updatedUser = { id: 1, username: 'updated', email: 'updated@test.com', role: 'user', isActive: true }
       useUserStore.setState({ users: [existingUser as any] })
-      vi.mocked(userApi.updateUser).mockResolvedValue(updatedUser as any)
+      vi.mocked(userApi.updateUser).mockResolvedValue({ success: true, message: '', data: updatedUser } as any)
 
-      await useUserStore.getState().updateUser('1', { username: 'updated' } as any)
+      await useUserStore.getState().updateUser(1, { email: 'updated@test.com' } as any)
 
-      expect(useUserStore.getState().users[0].username).toBe('updated')
+      expect(useUserStore.getState().users[0].email).toBe('updated@test.com')
     })
   })
 
@@ -110,23 +112,23 @@ describe('UserStore', () => {
     it('calls API and removes user from list', async () => {
       useUserStore.setState({
         users: [
-          { id: '1', username: 'u1' } as any,
-          { id: '2', username: 'u2' } as any,
+          { id: 1, username: 'u1' } as any,
+          { id: 2, username: 'u2' } as any,
         ],
       })
       vi.mocked(userApi.deleteUser).mockResolvedValue(undefined)
 
-      await useUserStore.getState().deleteUser('1')
+      await useUserStore.getState().deleteUser(1)
 
       const state = useUserStore.getState()
       expect(state.users).toHaveLength(1)
-      expect(state.users[0].id).toBe('2')
+      expect(state.users[0].id).toBe(2)
     })
   })
 
   describe('setSelectedUser', () => {
     it('updates state', () => {
-      const user = { id: '1', username: 'admin' } as any
+      const user = { id: 1, username: 'admin' } as any
       useUserStore.getState().setSelectedUser(user)
       expect(useUserStore.getState().selectedUser).toEqual(user)
     })
@@ -135,8 +137,8 @@ describe('UserStore', () => {
   describe('clearUsers', () => {
     it('resets state', () => {
       useUserStore.setState({
-        users: [{ id: '1' } as any],
-        selectedUser: { id: '1' } as any,
+        users: [{ id: 1 } as any],
+        selectedUser: { id: 1 } as any,
         pagination: { page: 1 } as any,
       })
 

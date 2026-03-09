@@ -145,7 +145,7 @@
     } catch (error) {
       console.error('Failed to request password reset:', error)
       notificationStore.error(
-        error.response?.data?.message || 'Failed to send reset link. Please try again.'
+        error.response?.data?.message || 'Failed to send reset link. Please try again.',
       )
     } finally {
       loading.value = false

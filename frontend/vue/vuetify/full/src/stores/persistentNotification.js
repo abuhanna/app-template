@@ -1,6 +1,6 @@
 import { HubConnectionBuilder } from '@microsoft/signalr'
-import { io } from 'socket.io-client'
 import { defineStore } from 'pinia'
+import { io } from 'socket.io-client'
 import { computed, ref } from 'vue'
 import notificationApi from '@/services/notificationApi'
 import { useAuthStore } from '@/stores/auth'
@@ -30,7 +30,7 @@ export const usePersistentNotificationStore = defineStore('persistentNotificatio
     }
   }
 
-  const handleNotification = (notification) => {
+  const handleNotification = notification => {
     // Add to list immediately
     notifications.value.unshift(notification)
 
@@ -59,28 +59,29 @@ export const usePersistentNotificationStore = defineStore('persistentNotificatio
 
       connection.value = io(`${socketUrl}/notifications`, {
         auth: {
-          token: token
+          token,
         },
-        transports: ['websocket']
+        transports: ['websocket'],
       })
 
       connection.value.on('connect', () => {
-        if (import.meta.env.DEV) console.log('Socket.io connected successfully')
+        if (import.meta.env.DEV) {
+          console.log('Socket.io connected successfully')
+        }
         fetchNotifications()
       })
 
-      connection.value.on('notification', (notification) => {
+      connection.value.on('notification', notification => {
         handleNotification(notification)
       })
 
-      connection.value.on('connect_error', (error) => {
+      connection.value.on('connect_error', error => {
         console.error('Socket.io Connection Error:', error)
       })
-
     } else if (backendType === 'spring') {
       // STOMP over WebSocket for Spring Boot
       const { Client } = await import('@stomp/stompjs')
-      
+
       const apiBase = import.meta.env.VITE_API_BASE_URL
       const wsProtocol = window.location.protocol === 'https:' ? 'wss:' : 'ws:'
       const host = apiBase.replace(/^https?:\/\//, '').replace(/\/api\/?$/, '')
@@ -89,24 +90,28 @@ export const usePersistentNotificationStore = defineStore('persistentNotificatio
       connection.value = new Client({
         brokerURL: brokerUrl,
         connectHeaders: {
-          Authorization: `Bearer ${token}`
+          Authorization: `Bearer ${token}`,
         },
-        debug: function (str) {
-          if (import.meta.env.DEV) console.log(str)
+        debug (str) {
+          if (import.meta.env.DEV) {
+            console.log(str)
+          }
         },
         reconnectDelay: 5000,
         heartbeatIncoming: 4000,
         heartbeatOutgoing: 4000,
       })
 
-      connection.value.onConnect = frame => {
-        if (import.meta.env.DEV) console.log('STOMP (Spring) connected successfully')
-        
+      connection.value.onConnect = () => {
+        if (import.meta.env.DEV) {
+          console.log('STOMP (Spring) connected successfully')
+        }
+
         connection.value.subscribe('/user/queue/notifications', message => {
-             const notification = JSON.parse(message.body)
-             handleNotification(notification)
+          const notification = JSON.parse(message.body)
+          handleNotification(notification)
         })
-        
+
         fetchNotifications()
       }
 
@@ -116,7 +121,6 @@ export const usePersistentNotificationStore = defineStore('persistentNotificatio
       }
 
       connection.value.activate()
-
     } else {
       // SignalR for .NET (default)
       const hubUrl = `${import.meta.env.VITE_API_BASE_URL.replace('/api', '')}/hubs/notifications`
@@ -135,7 +139,9 @@ export const usePersistentNotificationStore = defineStore('persistentNotificatio
 
       try {
         await connection.value.start()
-        if (import.meta.env.DEV) console.log('SignalR connected successfully')
+        if (import.meta.env.DEV) {
+          console.log('SignalR connected successfully')
+        }
 
         // Fetch existing notifications after successful connection
         await fetchNotifications()
@@ -153,8 +159,8 @@ export const usePersistentNotificationStore = defineStore('persistentNotificatio
         limit: 15,
         ...filters,
       }
-      const response = await notificationApi.getMyNotifications(params)
-      notifications.value = response.data.items || []
+      const result = await notificationApi.getMyNotifications(params)
+      notifications.value = Array.isArray(result.data) ? result.data : []
     } catch (error) {
       // Silent fail for notifications
       console.error('Failed to fetch notifications', error)

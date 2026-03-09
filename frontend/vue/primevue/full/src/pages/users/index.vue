@@ -1,22 +1,21 @@
 <template>
   <div class="users-page">
 
-
     <!-- Users Table -->
     <Card>
       <template #content>
         <DataTable
-          :value="users"
+          v-model:filters="filters"
+          class="users-table"
+          data-key="id"
+          filter-display="row"
+          :global-filter-fields="['username', 'email', 'name', 'role']"
           :loading="loading"
           paginator
+          responsive-layout="scroll"
           :rows="10"
-          :rowsPerPageOptions="[5, 10, 25, 50]"
-          dataKey="id"
-          filterDisplay="row"
-          v-model:filters="filters"
-          :globalFilterFields="['username', 'email', 'name', 'role']"
-          responsiveLayout="scroll"
-          class="users-table"
+          :rows-per-page-options="[5, 10, 25, 50]"
+          :value="users"
         >
           <template #header>
             <div class="flex flex-wrap align-items-center justify-content-between gap-2">
@@ -24,17 +23,17 @@
                 <InputIcon class="pi pi-search" />
                 <InputText
                   v-model="filters['global'].value"
-                  placeholder="Search users..."
                   class="w-20rem"
+                  placeholder="Search users..."
                 />
               </IconField>
-              <Button label="Add User" icon="pi pi-user-plus" @click="openCreateDialog" />
+              <Button icon="pi pi-user-plus" label="Add User" @click="openCreateDialog" />
             </div>
           </template>
 
           <template #empty>
             <div class="table-empty">
-              <i class="pi pi-users"></i>
+              <i class="pi pi-users" />
               <span>No users found</span>
             </div>
           </template>
@@ -64,7 +63,7 @@
 
           <Column field="role" header="Role" sortable style="min-width: 100px">
             <template #body="{ data }">
-              <Tag :value="data.role" :severity="data.role === 'Admin' ? 'danger' : 'info'" />
+              <Tag :severity="data.role === 'admin' ? 'danger' : 'info'" :value="data.role" />
             </template>
           </Column>
 
@@ -77,8 +76,8 @@
           <Column field="isActive" header="Status" sortable style="min-width: 100px">
             <template #body="{ data }">
               <Tag
-                :value="data.isActive ? 'Active' : 'Inactive'"
                 :severity="data.isActive ? 'success' : 'secondary'"
+                :value="data.isActive ? 'Active' : 'Inactive'"
               />
             </template>
           </Column>
@@ -87,20 +86,20 @@
             <template #body="{ data }">
               <div class="action-buttons">
                 <Button
+                  v-tooltip.top="'Edit'"
                   icon="pi pi-pencil"
-                  text
                   rounded
                   severity="info"
+                  text
                   @click="openEditDialog(data)"
-                  v-tooltip.top="'Edit'"
                 />
                 <Button
+                  v-tooltip.top="'Delete'"
                   icon="pi pi-trash"
-                  text
                   rounded
                   severity="danger"
+                  text
                   @click="handleDelete(data)"
-                  v-tooltip.top="'Delete'"
                 />
               </div>
             </template>
@@ -113,8 +112,8 @@
     <Dialog
       v-model:visible="dialogVisible"
       :header="editingUser ? 'Edit User' : 'Create User'"
-      :style="{ width: '32rem' }"
       modal
+      :style="{ width: '32rem' }"
     >
       <div class="flex flex-column gap-4">
         <div class="flex flex-column gap-2">
@@ -122,10 +121,10 @@
           <InputText
             id="username"
             v-model="form.username"
+            class="w-full"
             :disabled="!!editingUser"
             :invalid="!!formErrors.username"
             placeholder="Enter username"
-            class="w-full"
           />
           <small v-if="formErrors.username" class="text-red-500">{{ formErrors.username }}</small>
         </div>
@@ -135,10 +134,10 @@
           <InputText
             id="email"
             v-model="form.email"
-            type="email"
+            class="w-full"
             :invalid="!!formErrors.email"
             placeholder="user@example.com"
-            class="w-full"
+            type="email"
           />
           <small v-if="formErrors.email" class="text-red-500">{{ formErrors.email }}</small>
         </div>
@@ -146,11 +145,11 @@
         <div class="grid">
           <div class="col-6 flex flex-column gap-2">
             <label for="firstName">First Name</label>
-            <InputText id="firstName" v-model="form.firstName" placeholder="John" class="w-full" />
+            <InputText id="firstName" v-model="form.firstName" class="w-full" placeholder="John" />
           </div>
           <div class="col-6 flex flex-column gap-2">
             <label for="lastName">Last Name</label>
-            <InputText id="lastName" v-model="form.lastName" placeholder="Doe" class="w-full" />
+            <InputText id="lastName" v-model="form.lastName" class="w-full" placeholder="Doe" />
           </div>
         </div>
 
@@ -159,11 +158,11 @@
           <Password
             id="password"
             v-model="form.password"
-            :invalid="!!formErrors.password"
-            toggleMask
-            placeholder="Minimum 6 characters"
-            fluid
             class="w-full"
+            fluid
+            :invalid="!!formErrors.password"
+            placeholder="Minimum 6 characters"
+            toggle-mask
           />
           <small v-if="formErrors.password" class="text-red-500">{{ formErrors.password }}</small>
         </div>
@@ -174,12 +173,12 @@
             <Select
               id="role"
               v-model="form.role"
-              :options="roleOptions"
-              optionLabel="label"
-              optionValue="value"
-              :invalid="!!formErrors.role"
-              placeholder="Select role"
               class="w-full"
+              :invalid="!!formErrors.role"
+              option-label="label"
+              option-value="value"
+              :options="roleOptions"
+              placeholder="Select role"
             />
             <small v-if="formErrors.role" class="text-red-500">{{ formErrors.role }}</small>
           </div>
@@ -188,12 +187,12 @@
             <Select
               id="department"
               v-model="form.departmentId"
-              :options="departmentOptions"
-              optionLabel="name"
-              optionValue="id"
-              placeholder="Select department"
-              showClear
               class="w-full"
+              option-label="name"
+              option-value="id"
+              :options="departmentOptions"
+              placeholder="Select department"
+              show-clear
             />
           </div>
         </div>
@@ -217,206 +216,204 @@
 </template>
 
 <script setup>
-import { ref, reactive, computed, onMounted } from 'vue'
-import { useUserStore } from '@/stores/user'
-import { useDepartmentStore } from '@/stores/department'
-import { useNotificationStore } from '@/stores/notification'
-import { useConfirmDialog } from '@/composables/useConfirmDialog'
-import { FilterMatchMode } from '@primevue/core/api'
-import DataTable from 'primevue/datatable'
-import Column from 'primevue/column'
-import Card from 'primevue/card'
-import Button from 'primevue/button'
-import InputText from 'primevue/inputtext'
-import Password from 'primevue/password'
-import Select from 'primevue/select'
-import Dialog from 'primevue/dialog'
-import Tag from 'primevue/tag'
-import Avatar from 'primevue/avatar'
-import ToggleSwitch from 'primevue/toggleswitch'
-import IconField from 'primevue/iconfield'
-import InputIcon from 'primevue/inputicon'
+  import { FilterMatchMode } from '@primevue/core/api'
+  import Avatar from 'primevue/avatar'
+  import Button from 'primevue/button'
+  import Card from 'primevue/card'
+  import Column from 'primevue/column'
+  import DataTable from 'primevue/datatable'
+  import Dialog from 'primevue/dialog'
+  import IconField from 'primevue/iconfield'
+  import InputIcon from 'primevue/inputicon'
+  import InputText from 'primevue/inputtext'
+  import Password from 'primevue/password'
+  import Select from 'primevue/select'
+  import Tag from 'primevue/tag'
+  import ToggleSwitch from 'primevue/toggleswitch'
+  import { computed, onMounted, reactive, ref } from 'vue'
+  import { useConfirmDialog } from '@/composables/useConfirmDialog'
+  import { useDepartmentStore } from '@/stores/department'
+  import { useNotificationStore } from '@/stores/notification'
+  import { useUserStore } from '@/stores/user'
 
-const userStore = useUserStore()
-const departmentStore = useDepartmentStore()
-const notificationStore = useNotificationStore()
-const { confirmDelete } = useConfirmDialog()
+  const userStore = useUserStore()
+  const departmentStore = useDepartmentStore()
+  const notificationStore = useNotificationStore()
+  const { confirmDelete } = useConfirmDialog()
 
-const loading = ref(false)
-const saving = ref(false)
-const dialogVisible = ref(false)
-const editingUser = ref(null)
+  const loading = ref(false)
+  const saving = ref(false)
+  const dialogVisible = ref(false)
+  const editingUser = ref(null)
 
-const filters = ref({
-  global: { value: null, matchMode: FilterMatchMode.CONTAINS },
-})
+  const filters = ref({
+    global: { value: null, matchMode: FilterMatchMode.CONTAINS },
+  })
 
-const users = computed(() => userStore.users)
-const departmentOptions = computed(() => departmentStore.departments)
+  const users = computed(() => userStore.users)
+  const departmentOptions = computed(() => departmentStore.departments)
 
-const roleOptions = [
-  { label: 'User', value: 'User' },
-  { label: 'Admin', value: 'Admin' },
-]
+  const roleOptions = [
+    { label: 'user', value: 'user' },
+    { label: 'admin', value: 'admin' },
+  ]
 
-const form = reactive({
-  username: '',
-  email: '',
-  firstName: '',
-  lastName: '',
-  password: '',
-  role: 'User',
-  departmentId: null,
-  isActive: true,
-})
+  const form = reactive({
+    username: '',
+    email: '',
+    firstName: '',
+    lastName: '',
+    password: '',
+    role: 'user',
+    departmentId: null,
+    isActive: true,
+  })
 
-const formErrors = reactive({
-  username: '',
-  email: '',
-  password: '',
-  role: '',
-})
+  const formErrors = reactive({
+    username: '',
+    email: '',
+    password: '',
+    role: '',
+  })
 
-const getInitials = (name) => {
-  return name
-    .split(' ')
-    .map((n) => n[0])
-    .join('')
-    .toUpperCase()
-    .substring(0, 2)
-}
-
-const resetForm = () => {
-  form.username = ''
-  form.email = ''
-  form.firstName = ''
-  form.lastName = ''
-  form.password = ''
-  form.role = 'User'
-  form.departmentId = null
-  form.isActive = true
-  Object.keys(formErrors).forEach((key) => (formErrors[key] = ''))
-}
-
-const openCreateDialog = () => {
-  editingUser.value = null
-  resetForm()
-  dialogVisible.value = true
-}
-
-const openEditDialog = (user) => {
-  editingUser.value = user
-  form.username = user.username
-  form.email = user.email
-  form.firstName = user.firstName || ''
-  form.lastName = user.lastName || ''
-  form.role = user.role
-  form.departmentId = user.departmentId
-  form.isActive = user.isActive
-  Object.keys(formErrors).forEach((key) => (formErrors[key] = ''))
-  dialogVisible.value = true
-}
-
-const closeDialog = () => {
-  dialogVisible.value = false
-  editingUser.value = null
-}
-
-const validate = () => {
-  let valid = true
-  Object.keys(formErrors).forEach((key) => (formErrors[key] = ''))
-
-  if (!form.username.trim()) {
-    formErrors.username = 'Username is required'
-    valid = false
+  function getInitials (name) {
+    return name
+      .split(' ')
+      .map(n => n[0])
+      .join('')
+      .toUpperCase()
+      .slice(0, 2)
   }
 
-  if (!form.email.trim()) {
-    formErrors.email = 'Email is required'
-    valid = false
-  } else if (!/\S+@\S+\.\S+/.test(form.email)) {
-    formErrors.email = 'Invalid email format'
-    valid = false
+  function resetForm () {
+    form.username = ''
+    form.email = ''
+    form.firstName = ''
+    form.lastName = ''
+    form.password = ''
+    form.role = 'user'
+    form.departmentId = null
+    form.isActive = true
+    for (const key of Object.keys(formErrors)) (formErrors[key] = '')
   }
 
-  if (!editingUser.value && !form.password) {
-    formErrors.password = 'Password is required'
-    valid = false
+  function openCreateDialog () {
+    editingUser.value = null
+    resetForm()
+    dialogVisible.value = true
   }
 
-  if (!form.role) {
-    formErrors.role = 'Role is required'
-    valid = false
+  function openEditDialog (user) {
+    editingUser.value = user
+    form.username = user.username
+    form.email = user.email
+    form.firstName = user.firstName || ''
+    form.lastName = user.lastName || ''
+    form.role = user.role
+    form.departmentId = user.departmentId
+    form.isActive = user.isActive
+    for (const key of Object.keys(formErrors)) (formErrors[key] = '')
+    dialogVisible.value = true
   }
 
-  return valid
-}
+  function closeDialog () {
+    dialogVisible.value = false
+    editingUser.value = null
+  }
 
-const handleSubmit = async () => {
-  if (!validate()) return
+  function validate () {
+    let valid = true
+    for (const key of Object.keys(formErrors)) (formErrors[key] = '')
 
-  saving.value = true
-  try {
-    if (editingUser.value) {
-      await userStore.updateUser(editingUser.value.id, {
-        email: form.email,
-        firstName: form.firstName,
-        lastName: form.lastName,
-        role: form.role,
-        departmentId: form.departmentId,
-        isActive: form.isActive,
-      })
-      notificationStore.success('User updated successfully')
-    } else {
-      await userStore.createUser({
-        username: form.username,
-        email: form.email,
-        firstName: form.firstName,
-        lastName: form.lastName,
-        password: form.password,
-        role: form.role,
-        departmentId: form.departmentId,
-      })
-      notificationStore.success('User created successfully')
+    if (!form.username.trim()) {
+      formErrors.username = 'Username is required'
+      valid = false
     }
-    await userStore.fetchUsers()
-    closeDialog()
-  } catch (error) {
-    notificationStore.error(error.response?.data?.message || 'Operation failed')
-  } finally {
-    saving.value = false
-  }
-}
 
-const handleDelete = async (user) => {
-  const confirmed = await confirmDelete(user.username)
-  if (!confirmed) return
+    if (!form.email.trim()) {
+      formErrors.email = 'Email is required'
+      valid = false
+    } else if (!/\S+@\S+\.\S+/.test(form.email)) {
+      formErrors.email = 'Invalid email format'
+      valid = false
+    }
 
-  try {
-    await userStore.deleteUser(user.id)
-    notificationStore.success('User deleted successfully')
-    await userStore.fetchUsers()
-  } catch (error) {
-    notificationStore.error(error.response?.data?.message || 'Delete failed')
-  }
-}
+    if (!editingUser.value && !form.password) {
+      formErrors.password = 'Password is required'
+      valid = false
+    }
 
-onMounted(async () => {
-  loading.value = true
-  try {
-    await Promise.all([userStore.fetchUsers(), departmentStore.fetchDepartments({ isActive: true, pageSize: 1000 })])
-  } finally {
-    loading.value = false
+    if (!form.role) {
+      formErrors.role = 'Role is required'
+      valid = false
+    }
+
+    return valid
   }
-})
+
+  async function handleSubmit () {
+    if (!validate()) return
+
+    saving.value = true
+    try {
+      if (editingUser.value) {
+        await userStore.updateUser(editingUser.value.id, {
+          email: form.email,
+          firstName: form.firstName,
+          lastName: form.lastName,
+          role: form.role,
+          departmentId: form.departmentId,
+          isActive: form.isActive,
+        })
+        notificationStore.success('User updated successfully')
+      } else {
+        await userStore.createUser({
+          username: form.username,
+          email: form.email,
+          firstName: form.firstName,
+          lastName: form.lastName,
+          password: form.password,
+          role: form.role,
+          departmentId: form.departmentId,
+        })
+        notificationStore.success('User created successfully')
+      }
+      await userStore.fetchUsers()
+      closeDialog()
+    } catch (error) {
+      notificationStore.error(error.response?.data?.message || 'Operation failed')
+    } finally {
+      saving.value = false
+    }
+  }
+
+  async function handleDelete (user) {
+    const confirmed = await confirmDelete(user.username)
+    if (!confirmed) return
+
+    try {
+      await userStore.deleteUser(user.id)
+      notificationStore.success('User deleted successfully')
+      await userStore.fetchUsers()
+    } catch (error) {
+      notificationStore.error(error.response?.data?.message || 'Delete failed')
+    }
+  }
+
+  onMounted(async () => {
+    loading.value = true
+    try {
+      await Promise.all([userStore.fetchUsers(), departmentStore.fetchDepartments({ isActive: true, pageSize: 1000 })])
+    } finally {
+      loading.value = false
+    }
+  })
 </script>
 
 <style scoped>
 .users-page {
   padding: 1rem;
 }
-
-
 
 /* Empty state styling */
 .table-empty {
@@ -450,4 +447,3 @@ onMounted(async () => {
   color: var(--p-red-500);
 }
 </style>
-

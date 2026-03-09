@@ -1,168 +1,174 @@
 <script setup>
-import { ref, onMounted, computed, watch } from 'vue'
-import { getAuditLogs } from '@/services/auditLogService'
-import { useNotificationStore } from '@/stores/notification'
-import { useDebounce } from '@/composables/useDebounce'
-import { DateRangePicker } from '@/components'
-import { DEFAULT_PAGE_SIZE, PAGE_SIZE_OPTIONS } from '@/types'
+  import { computed, onMounted, ref, watch } from 'vue'
+  import { DateRangePicker } from '@/components'
+  import { useDebounce } from '@/composables/useDebounce'
+  import { getAuditLogs } from '@/services/auditLogService'
+  import { useNotificationStore } from '@/stores/notification'
+  import { DEFAULT_PAGE_SIZE, PAGE_SIZE_OPTIONS } from '@/types'
 
-const toastStore = useNotificationStore()
+  const toastStore = useNotificationStore()
 
-const loading = ref(false)
-const auditLogs = ref([])
+  const loading = ref(false)
+  const auditLogs = ref([])
 
-// Pagination state
-const pagination = ref({
-  page: 1,
-  pageSize: DEFAULT_PAGE_SIZE,
-  totalItems: 0,
-  totalPages: 0
-})
-const pageSizeOptions = PAGE_SIZE_OPTIONS
-
-// Sort state
-const sortBy = ref([{ key: 'timestamp', order: 'desc' }])
-
-// Search and filters
-const search = ref('')
-const debouncedSearch = useDebounce(search, 300)
-const filters = ref({
-  entityName: null,
-  action: null
-})
-const dateRange = ref({
-  from: '',
-  to: ''
-})
-
-const entityNames = ['User', 'Department', 'UploadedFile']
-const actions = ['Created', 'Updated', 'Deleted']
-
-const headers = [
-  { title: 'Entity', key: 'entityName', sortable: true },
-  { title: 'Entity ID', key: 'entityId', sortable: true },
-  { title: 'Action', key: 'action', sortable: true },
-  { title: 'User ID', key: 'userId', sortable: true },
-  { title: 'Timestamp', key: 'timestamp', sortable: true },
-  { title: 'Details', key: 'actions', sortable: false, align: 'center' }
-]
-
-const hasActiveFilters = computed(() =>
-  search.value ||
-  filters.value.entityName ||
-  filters.value.action ||
-  dateRange.value.from ||
-  dateRange.value.to
-)
-
-async function loadAuditLogs() {
-  loading.value = true
-  try {
-    const sort = sortBy.value[0]
-    const params = {
-      page: pagination.value.page,
-      pageSize: pagination.value.pageSize,
-      sortBy: sort?.key || 'timestamp',
-      sortDir: sort?.order || 'desc'
-    }
-
-    if (debouncedSearch.value) params.search = debouncedSearch.value
-    if (filters.value.entityName) params.entityName = filters.value.entityName
-    if (filters.value.action) params.action = filters.value.action
-    if (dateRange.value.from) params.fromDate = dateRange.value.from
-    if (dateRange.value.to) params.toDate = dateRange.value.to
-
-    const result = await getAuditLogs(params)
-
-    // Handle paginated response
-    if (result.items && result.pagination) {
-      auditLogs.value = result.items
-      pagination.value.totalItems = result.pagination.totalItems
-      pagination.value.totalPages = result.pagination.totalPages
-    } else {
-      // Fallback for non-paginated response
-      auditLogs.value = Array.isArray(result) ? result : []
-    }
-  } catch {
-    toastStore.showError('Failed to load audit logs')
-  } finally {
-    loading.value = false
-  }
-}
-
-function handleTableOptions(options) {
-  if (options.sortBy && options.sortBy.length > 0) {
-    sortBy.value = options.sortBy
-  }
-  loadAuditLogs()
-}
-
-function clearFilters() {
-  search.value = ''
-  filters.value.entityName = null
-  filters.value.action = null
-  dateRange.value = { from: '', to: '' }
-  pagination.value.page = 1
-  loadAuditLogs()
-}
-
-function formatDate(dateString) {
-  if (!dateString) return '-'
-  return new Date(dateString).toLocaleString('en-US', {
-    year: 'numeric',
-    month: 'short',
-    day: 'numeric',
-    hour: '2-digit',
-    minute: '2-digit'
+  // Pagination state
+  const pagination = ref({
+    page: 1,
+    pageSize: DEFAULT_PAGE_SIZE,
+    totalItems: 0,
+    totalPages: 0,
   })
-}
+  const pageSizeOptions = PAGE_SIZE_OPTIONS
 
-function getActionColor(action) {
-  switch (action?.toLowerCase()) {
-    case 'created':
-      return 'success'
-    case 'updated':
-      return 'info'
-    case 'deleted':
-      return 'error'
-    default:
-      return 'secondary'
+  // Sort state
+  const sortBy = ref([{ key: 'createdAt', order: 'desc' }])
+
+  // Search and filters
+  const search = ref('')
+  const debouncedSearch = useDebounce(search, 300)
+  const filters = ref({
+    entityType: null,
+    action: null,
+  })
+  const dateRange = ref({
+    from: '',
+    to: '',
+  })
+
+  const entityNames = ['User', 'Department', 'UploadedFile']
+  const actions = ['Created', 'Updated', 'Deleted']
+
+  const headers = [
+    { title: 'Entity', key: 'entityType', sortable: true },
+    { title: 'Entity ID', key: 'entityId', sortable: true },
+    { title: 'Action', key: 'action', sortable: true },
+    { title: 'User', key: 'userName', sortable: true },
+    { title: 'Date', key: 'createdAt', sortable: true },
+    { title: 'Details', key: 'actions', sortable: false, align: 'center' },
+  ]
+
+  const hasActiveFilters = computed(() =>
+    search.value
+    || filters.value.entityType
+    || filters.value.action
+    || dateRange.value.from
+    || dateRange.value.to,
+  )
+
+  async function loadAuditLogs () {
+    loading.value = true
+    try {
+      const sort = sortBy.value[0]
+      const params = {
+        page: pagination.value.page,
+        pageSize: pagination.value.pageSize,
+        sortBy: sort?.key || 'createdAt',
+        sortOrder: sort?.order || 'desc',
+      }
+
+      if (debouncedSearch.value) params.search = debouncedSearch.value
+      if (filters.value.entityType) params.entityType = filters.value.entityType
+      if (filters.value.action) params.action = filters.value.action
+      if (dateRange.value.from) params.fromDate = dateRange.value.from
+      if (dateRange.value.to) params.toDate = dateRange.value.to
+
+      const result = await getAuditLogs(params)
+
+      // Handle paginated response envelope: { success, data: [...], pagination: {...} }
+      if (result && result.data !== undefined) {
+        auditLogs.value = Array.isArray(result.data) ? result.data : []
+        if (result.pagination) {
+          pagination.value.totalItems = result.pagination.totalItems
+          pagination.value.totalPages = result.pagination.totalPages
+        }
+      } else {
+        // Fallback for non-paginated response
+        auditLogs.value = Array.isArray(result) ? result : []
+      }
+    } catch {
+      toastStore.showError('Failed to load audit logs')
+    } finally {
+      loading.value = false
+    }
   }
-}
 
-function formatJson(jsonString) {
-  if (!jsonString) return null
-  try {
-    return JSON.stringify(JSON.parse(jsonString), null, 2)
-  } catch {
-    return jsonString
+  function handleTableOptions (options) {
+    if (options.sortBy && options.sortBy.length > 0) {
+      sortBy.value = options.sortBy
+    }
+    loadAuditLogs()
   }
-}
 
-// Details dialog
-const detailsDialog = ref(false)
-const selectedLog = ref(null)
+  function clearFilters () {
+    search.value = ''
+    filters.value.entityType = null
+    filters.value.action = null
+    dateRange.value = { from: '', to: '' }
+    pagination.value.page = 1
+    loadAuditLogs()
+  }
 
-function showDetails(log) {
-  selectedLog.value = log
-  detailsDialog.value = true
-}
+  function formatDate (dateString) {
+    if (!dateString) return '-'
+    return new Date(dateString).toLocaleString('en-US', {
+      year: 'numeric',
+      month: 'short',
+      day: 'numeric',
+      hour: '2-digit',
+      minute: '2-digit',
+    })
+  }
 
-// Watch for debounced search changes
-watch(debouncedSearch, () => {
-  pagination.value.page = 1
-  loadAuditLogs()
-})
+  function getActionColor (action) {
+    switch (action?.toLowerCase()) {
+      case 'created': {
+        return 'success'
+      }
+      case 'updated': {
+        return 'info'
+      }
+      case 'deleted': {
+        return 'error'
+      }
+      default: {
+        return 'secondary'
+      }
+    }
+  }
 
-// Watch for date range changes
-watch(dateRange, () => {
-  pagination.value.page = 1
-  loadAuditLogs()
-}, { deep: true })
+  function formatJson (jsonString) {
+    if (!jsonString) return null
+    try {
+      return JSON.stringify(JSON.parse(jsonString), null, 2)
+    } catch {
+      return jsonString
+    }
+  }
 
-onMounted(() => {
-  loadAuditLogs()
-})
+  // Details dialog
+  const detailsDialog = ref(false)
+  const selectedLog = ref(null)
+
+  function showDetails (log) {
+    selectedLog.value = log
+    detailsDialog.value = true
+  }
+
+  // Watch for debounced search changes
+  watch(debouncedSearch, () => {
+    pagination.value.page = 1
+    loadAuditLogs()
+  })
+
+  // Watch for date range changes
+  watch(dateRange, () => {
+    pagination.value.page = 1
+    loadAuditLogs()
+  }, { deep: true })
+
+  onMounted(() => {
+    loadAuditLogs()
+  })
 </script>
 
 <template>
@@ -175,7 +181,7 @@ onMounted(() => {
         <div class="text-body-2 text-medium-emphasis mr-4">
           {{ pagination.totalItems > 0 ? `${pagination.totalItems} records` : '' }}
         </div>
-        <v-btn icon="mdi-refresh" variant="text" @click="loadAuditLogs" :loading="loading" />
+        <v-btn icon="mdi-refresh" :loading="loading" variant="text" @click="loadAuditLogs" />
       </v-card-title>
 
       <v-card-text>
@@ -184,43 +190,43 @@ onMounted(() => {
           <v-col cols="12" md="3">
             <v-text-field
               v-model="search"
-              prepend-inner-icon="mdi-magnify"
-              label="Search..."
+              clearable
               density="compact"
               hide-details
-              clearable
+              label="Search..."
+              prepend-inner-icon="mdi-magnify"
             />
           </v-col>
           <v-col cols="12" md="2">
             <v-select
-              v-model="filters.entityName"
-              :items="entityNames"
-              label="Entity"
+              v-model="filters.entityType"
               clearable
               density="compact"
               hide-details
+              :items="entityNames"
+              label="Entity"
               @update:model-value="() => { pagination.page = 1; loadAuditLogs() }"
             />
           </v-col>
           <v-col cols="12" md="2">
             <v-select
               v-model="filters.action"
-              :items="actions"
-              label="Action"
               clearable
               density="compact"
               hide-details
+              :items="actions"
+              label="Action"
               @update:model-value="() => { pagination.page = 1; loadAuditLogs() }"
             />
           </v-col>
           <v-col cols="12" md="4">
             <DateRangePicker v-model="dateRange" />
           </v-col>
-          <v-col cols="12" md="1" class="d-flex align-center">
+          <v-col class="d-flex align-center" cols="12" md="1">
             <v-btn
               v-if="hasActiveFilters"
-              variant="text"
               size="small"
+              variant="text"
               @click="clearFilters"
             >
               Clear
@@ -233,11 +239,11 @@ onMounted(() => {
           v-model:items-per-page="pagination.pageSize"
           v-model:page="pagination.page"
           v-model:sort-by="sortBy"
+          class="elevation-1"
           :headers="headers"
           :items="auditLogs"
           :items-length="pagination.totalItems"
           :loading="loading"
-          class="elevation-1"
           @update:options="handleTableOptions"
         >
           <template #item.action="{ item }">
@@ -246,12 +252,12 @@ onMounted(() => {
             </v-chip>
           </template>
 
-          <template #item.userId="{ item }">
-            {{ item.userId || '-' }}
+          <template #item.userName="{ item }">
+            {{ item.userName || '-' }}
           </template>
 
-          <template #item.timestamp="{ item }">
-            {{ formatDate(item.timestamp) }}
+          <template #item.createdAt="{ item }">
+            {{ formatDate(item.createdAt) }}
           </template>
 
           <template #item.actions="{ item }">
@@ -265,7 +271,7 @@ onMounted(() => {
 
           <template #no-data>
             <div class="text-center py-8">
-              <v-icon size="64" color="grey-lighten-1">mdi-history</v-icon>
+              <v-icon color="grey-lighten-1" size="64">mdi-history</v-icon>
               <p class="text-grey mt-4">No audit logs found</p>
             </div>
           </template>
@@ -274,18 +280,18 @@ onMounted(() => {
             <div class="d-flex align-center justify-space-between pa-4">
               <v-select
                 v-model="pagination.pageSize"
-                :items="pageSizeOptions"
-                label="Items per page"
                 density="compact"
                 hide-details
+                :items="pageSizeOptions"
+                label="Items per page"
                 style="max-width: 120px"
                 @update:model-value="loadAuditLogs"
               />
               <v-pagination
                 v-model="pagination.page"
+                density="compact"
                 :length="pagination.totalPages"
                 :total-visible="5"
-                density="compact"
                 @update:model-value="loadAuditLogs"
               />
             </div>
@@ -304,51 +310,39 @@ onMounted(() => {
         <v-card-text>
           <v-row>
             <v-col cols="6">
-              <strong>Entity:</strong> {{ selectedLog.entityName }}
+              <strong>Entity:</strong> {{ selectedLog.entityType }}
             </v-col>
             <v-col cols="6">
               <strong>Entity ID:</strong> {{ selectedLog.entityId }}
             </v-col>
             <v-col cols="6">
               <strong>Action:</strong>
-              <v-chip :color="getActionColor(selectedLog.action)" size="small" class="ml-2">
+              <v-chip class="ml-2" :color="getActionColor(selectedLog.action)" size="small">
                 {{ selectedLog.action }}
               </v-chip>
             </v-col>
             <v-col cols="6">
-              <strong>User ID:</strong> {{ selectedLog.userId || '-' }}
+              <strong>User:</strong> {{ selectedLog.userName || '-' }}
             </v-col>
             <v-col cols="12">
-              <strong>Timestamp:</strong> {{ formatDate(selectedLog.timestamp) }}
+              <strong>Date:</strong> {{ formatDate(selectedLog.createdAt) }}
             </v-col>
           </v-row>
 
           <v-divider class="my-4" />
 
-          <v-row v-if="selectedLog.oldValues">
+          <v-row v-if="selectedLog.details">
             <v-col cols="12">
-              <strong>Old Values:</strong>
+              <strong>Details:</strong>
               <v-sheet class="pa-3 mt-2 bg-grey-lighten-4 rounded" style="overflow-x: auto">
-                <pre style="margin: 0; white-space: pre-wrap">{{ formatJson(selectedLog.oldValues) }}</pre>
+                <pre style="margin: 0; white-space: pre-wrap">{{ selectedLog.details }}</pre>
               </v-sheet>
             </v-col>
           </v-row>
 
-          <v-row v-if="selectedLog.newValues">
+          <v-row v-if="selectedLog.ipAddress">
             <v-col cols="12">
-              <strong>New Values:</strong>
-              <v-sheet class="pa-3 mt-2 bg-grey-lighten-4 rounded" style="overflow-x: auto">
-                <pre style="margin: 0; white-space: pre-wrap">{{ formatJson(selectedLog.newValues) }}</pre>
-              </v-sheet>
-            </v-col>
-          </v-row>
-
-          <v-row v-if="selectedLog.affectedColumns">
-            <v-col cols="12">
-              <strong>Affected Columns:</strong>
-              <v-sheet class="pa-3 mt-2 bg-grey-lighten-4 rounded">
-                <pre style="margin: 0">{{ formatJson(selectedLog.affectedColumns) }}</pre>
-              </v-sheet>
+              <strong>IP Address:</strong> {{ selectedLog.ipAddress }}
             </v-col>
           </v-row>
         </v-card-text>

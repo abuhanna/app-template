@@ -1,5 +1,6 @@
 import api from './api'
 import type { LoginCredentials, AuthResponse, User } from '@/types'
+import type { ApiResponse } from '@/types/pagination'
 
 export async function login(credentials: LoginCredentials): Promise<AuthResponse> {
   const response = await api.post<AuthResponse>('/auth/login', credentials)
@@ -10,13 +11,13 @@ export async function logout(): Promise<void> {
   await api.post('/auth/logout')
 }
 
-export async function getProfile(): Promise<User> {
-  const response = await api.get<User>('/auth/profile')
+export async function getProfile(): Promise<ApiResponse<User>> {
+  const response = await api.get<ApiResponse<User>>('/auth/profile')
   return response.data
 }
 
-export async function updateProfile(data: Partial<User>): Promise<User> {
-  const response = await api.put<User>('/auth/profile', data)
+export async function updateProfile(data: Partial<User>): Promise<ApiResponse<User>> {
+  const response = await api.put<ApiResponse<User>>('/auth/profile', data)
   return response.data
 }
 
@@ -31,12 +32,20 @@ export async function forgotPassword(email: string): Promise<void> {
   await api.post('/auth/forgot-password', { email })
 }
 
-export async function resetPassword(token: string, newPassword: string): Promise<void> {
-  await api.post('/auth/reset-password', { token, newPassword })
+export async function resetPassword(
+  token: string,
+  newPassword: string,
+  confirmPassword: string
+): Promise<void> {
+  await api.post('/auth/reset-password', { token, newPassword, confirmPassword })
 }
 
-export async function changePassword(currentPassword: string, newPassword: string): Promise<void> {
-  await api.post('/auth/change-password', { currentPassword, newPassword })
+export async function changePassword(
+  currentPassword: string,
+  newPassword: string,
+  confirmPassword: string
+): Promise<void> {
+  await api.post('/auth/change-password', { currentPassword, newPassword, confirmPassword })
 }
 
 export const authApi = {

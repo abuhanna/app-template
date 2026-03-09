@@ -23,37 +23,37 @@
 </template>
 
 <script setup>
-import { ref, onMounted, onUnmounted } from 'vue'
-import { useRouter } from 'vue-router'
-import { useAuthStore } from '@/stores/auth'
-import { usePersistentNotificationStore } from '@/stores/persistentNotification'
-import AppSidebar from '@/components/AppSidebar.vue'
-import AppHeader from '@/components/AppHeader.vue'
-import AppFooter from '@/components/AppFooter.vue'
-import ConfirmDialog from 'primevue/confirmdialog'
+  import ConfirmDialog from 'primevue/confirmdialog'
+  import { onMounted, onUnmounted, ref } from 'vue'
+  import { useRouter } from 'vue-router'
+  import AppFooter from '@/components/AppFooter.vue'
+  import AppHeader from '@/components/AppHeader.vue'
+  import AppSidebar from '@/components/AppSidebar.vue'
+  import { useAuthStore } from '@/stores/auth'
+  import { usePersistentNotificationStore } from '@/stores/persistentNotification'
 
-const router = useRouter()
-const authStore = useAuthStore()
-const notificationStore = usePersistentNotificationStore()
+  const router = useRouter()
+  const authStore = useAuthStore()
+  const notificationStore = usePersistentNotificationStore()
 
-const sidebarVisible = ref(true)
+  const sidebarVisible = ref(true)
 
-onMounted(() => {
-  // Check authentication
-  if (!authStore.isAuthenticated) {
-    router.push('/login')
-    return
-  }
+  onMounted(() => {
+    // Check authentication
+    if (!authStore.isAuthenticated) {
+      router.push('/login')
+      return
+    }
 
-  // Connect to real-time notifications
-  notificationStore.initSignalR()
-})
+    // Connect to real-time notifications
+    notificationStore.initSignalR()
+  })
 
-onUnmounted(() => {
-  if (notificationStore.disconnect) {
-    notificationStore.disconnect()
-  }
-})
+  onUnmounted(() => {
+    if (notificationStore.disconnect) {
+      notificationStore.disconnect()
+    }
+  })
 </script>
 
 <style scoped>

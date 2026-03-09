@@ -1,9 +1,9 @@
 // src/stores/department.js
 import { defineStore } from 'pinia'
-import { ref, computed } from 'vue'
+import { computed, ref } from 'vue'
 import * as departmentApi from '@/services/departmentApi'
-import { useNotificationStore } from './notification'
 import { DEFAULT_PAGE, DEFAULT_PAGE_SIZE } from '@/types'
+import { useNotificationStore } from './notification'
 
 export const useDepartmentStore = defineStore('department', () => {
   const items = ref([])
@@ -17,7 +17,7 @@ export const useDepartmentStore = defineStore('department', () => {
     totalItems: 0,
     totalPages: 0,
     hasNext: false,
-    hasPrevious: false
+    hasPrevious: false,
   })
 
   // Alias for backward compatibility
@@ -30,9 +30,9 @@ export const useDepartmentStore = defineStore('department', () => {
     try {
       const result = await departmentApi.fetchDepartments(params)
 
-      // Handle paginated response
-      if (result && result.items !== undefined) {
-        items.value = result.items
+      // Handle paginated response envelope: { success, data: [...], pagination: {...} }
+      if (result && result.data !== undefined) {
+        items.value = Array.isArray(result.data) ? result.data : []
         if (result.pagination) {
           pagination.value = {
             page: result.pagination.page,
@@ -40,7 +40,7 @@ export const useDepartmentStore = defineStore('department', () => {
             totalItems: result.pagination.totalItems,
             totalPages: result.pagination.totalPages,
             hasNext: result.pagination.hasNext,
-            hasPrevious: result.pagination.hasPrevious
+            hasPrevious: result.pagination.hasPrevious,
           }
         }
       } else {
@@ -52,7 +52,7 @@ export const useDepartmentStore = defineStore('department', () => {
           totalItems: items.value.length,
           totalPages: 1,
           hasNext: false,
-          hasPrevious: false
+          hasPrevious: false,
         }
       }
 
@@ -66,12 +66,13 @@ export const useDepartmentStore = defineStore('department', () => {
     }
   }
 
-  const fetchDepartment = async (id) => {
+  const fetchDepartment = async id => {
     loading.value = true
     const notificationStore = useNotificationStore()
 
     try {
-      currentItem.value = await departmentApi.fetchDepartment(id)
+      const result = await departmentApi.fetchDepartment(id)
+      currentItem.value = result.data
       return currentItem.value
     } catch (error) {
       const message = error.response?.data?.error?.message || error.response?.data?.message || 'Failed to fetch department'
@@ -82,7 +83,7 @@ export const useDepartmentStore = defineStore('department', () => {
     }
   }
 
-  const createDepartment = async (data) => {
+  const createDepartment = async data => {
     loading.value = true
     const notificationStore = useNotificationStore()
 
@@ -114,7 +115,7 @@ export const useDepartmentStore = defineStore('department', () => {
     }
   }
 
-  const deleteDepartment = async (id) => {
+  const deleteDepartment = async id => {
     loading.value = true
     const notificationStore = useNotificationStore()
 
@@ -137,7 +138,7 @@ export const useDepartmentStore = defineStore('department', () => {
       totalItems: 0,
       totalPages: 0,
       hasNext: false,
-      hasPrevious: false
+      hasPrevious: false,
     }
   }
 
@@ -152,6 +153,6 @@ export const useDepartmentStore = defineStore('department', () => {
     createDepartment,
     updateDepartment,
     deleteDepartment,
-    resetPagination
+    resetPagination,
   }
 })

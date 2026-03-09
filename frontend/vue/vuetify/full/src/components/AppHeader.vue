@@ -34,13 +34,13 @@
           <v-btn
             v-bind="props"
             icon
-            variant="text"
             size="small"
+            variant="text"
           >
             <v-icon>mdi-translate</v-icon>
           </v-btn>
         </template>
-        <v-list density="compact" nav min-width="160">
+        <v-list density="compact" min-width="160" nav>
           <v-list-item
             v-for="lang in localeStore.availableLocales"
             :key="lang.code"
@@ -61,18 +61,18 @@
           <v-btn
             v-bind="props"
             icon
-            variant="text"
             size="small"
+            variant="text"
           >
             <v-icon>{{ themeIcon }}</v-icon>
           </v-btn>
         </template>
-        <v-list density="compact" nav min-width="160">
+        <v-list density="compact" min-width="160" nav>
           <v-list-item
             v-for="option in themeOptions"
             :key="option.value"
-            :prepend-icon="option.icon"
             :active="themeStore.themeMode === option.value"
+            :prepend-icon="option.icon"
             @click="themeStore.setTheme(option.value)"
           >
             <v-list-item-title>{{ option.label }}</v-list-item-title>
@@ -147,8 +147,8 @@
   import NotificationMenu from '@/components/common/NotificationMenu.vue'
   import { useConfirmDialog } from '@/composables/useConfirmDialog'
   import { useAuthStore } from '@/stores/auth'
-  import { useThemeStore } from '@/stores/theme'
   import { useLocaleStore } from '@/stores/locale'
+  import { useThemeStore } from '@/stores/theme'
 
   defineEmits(['toggle-sidebar'])
 

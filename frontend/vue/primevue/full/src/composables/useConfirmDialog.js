@@ -6,7 +6,7 @@
 
 import { useConfirm } from 'primevue/useconfirm'
 
-export function useConfirmDialog() {
+export function useConfirmDialog () {
   const confirm = useConfirm()
 
   const showConfirm = ({
@@ -16,7 +16,7 @@ export function useConfirmDialog() {
     rejectLabel = 'No',
     severity = 'warn',
   }) => {
-    return new Promise((resolve) => {
+    return new Promise(resolve => {
       confirm.require({
         message,
         header: title,

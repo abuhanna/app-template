@@ -1,5 +1,5 @@
 import { defineStore } from 'pinia'
-import { ref, computed } from 'vue'
+import { computed, ref } from 'vue'
 
 export const useThemeStore = defineStore('theme', () => {
   // Theme mode: 'light', 'dark', or 'system'
@@ -15,15 +15,11 @@ export const useThemeStore = defineStore('theme', () => {
 
   // Apply theme class to document
   const applyTheme = () => {
-    if (isDark.value) {
-      document.documentElement.classList.add('app-dark')
-    } else {
-      document.documentElement.classList.remove('app-dark')
-    }
+    document.documentElement.classList.toggle('app-dark', isDark.value)
   }
 
   // Set theme mode
-  const setTheme = (mode) => {
+  const setTheme = mode => {
     themeMode.value = mode
     localStorage.setItem('themeMode', mode)
     applyTheme()

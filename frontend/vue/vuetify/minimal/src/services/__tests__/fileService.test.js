@@ -1,4 +1,7 @@
-import { describe, it, expect, beforeEach, vi } from 'vitest'
+import { beforeEach, describe, expect, it, vi } from 'vitest'
+
+import api from '../api'
+import { fileService } from '../fileService'
 
 vi.mock('../api', () => ({
   default: {
@@ -9,9 +12,6 @@ vi.mock('../api', () => ({
     defaults: { baseURL: 'http://localhost:5100/api' },
   },
 }))
-
-import api from '../api'
-import { fileService } from '../fileService'
 
 describe('File Service', () => {
   beforeEach(() => {

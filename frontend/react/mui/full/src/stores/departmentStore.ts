@@ -12,10 +12,10 @@ interface DepartmentState {
 
   // Actions
   fetchDepartments: (params?: GetDepartmentsParams) => Promise<void>
-  fetchDepartment: (id: string) => Promise<void>
+  fetchDepartment: (id: number) => Promise<void>
   createDepartment: (data: CreateDepartmentRequest) => Promise<Department>
-  updateDepartment: (id: string, data: UpdateDepartmentRequest) => Promise<void>
-  deleteDepartment: (id: string) => Promise<void>
+  updateDepartment: (id: number, data: UpdateDepartmentRequest) => Promise<void>
+  deleteDepartment: (id: number) => Promise<void>
   setSelectedDepartment: (department: Department | null) => void
   clearDepartments: () => void
 }
@@ -31,8 +31,8 @@ export const useDepartmentStore = create<DepartmentState>((set) => ({
     try {
       const result = await departmentApi.getDepartments(params)
       set({
-        departments: result.items,
-        pagination: result.pagination,
+        departments: result.data,
+        pagination: result.pagination ?? null,
         loading: false,
       })
     } catch (error) {
@@ -44,8 +44,8 @@ export const useDepartmentStore = create<DepartmentState>((set) => ({
   fetchDepartment: async (id) => {
     set({ loading: true })
     try {
-      const department = await departmentApi.getDepartment(id)
-      set({ selectedDepartment: department, loading: false })
+      const result = await departmentApi.getDepartment(id)
+      set({ selectedDepartment: result.data, loading: false })
     } catch (error) {
       set({ loading: false })
       throw error
@@ -55,7 +55,8 @@ export const useDepartmentStore = create<DepartmentState>((set) => ({
   createDepartment: async (data) => {
     set({ loading: true })
     try {
-      const department = await departmentApi.createDepartment(data)
+      const result = await departmentApi.createDepartment(data)
+      const department = result.data
       set((state) => ({
         departments: [...state.departments, department],
         loading: false,
@@ -72,7 +73,8 @@ export const useDepartmentStore = create<DepartmentState>((set) => ({
   updateDepartment: async (id, data) => {
     set({ loading: true })
     try {
-      const updatedDepartment = await departmentApi.updateDepartment(id, data)
+      const result = await departmentApi.updateDepartment(id, data)
+      const updatedDepartment = result.data
       set((state) => ({
         departments: state.departments.map((d) => (d.id === id ? updatedDepartment : d)),
         selectedDepartment:

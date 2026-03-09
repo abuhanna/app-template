@@ -77,7 +77,7 @@ router.beforeEach((to, from, next) => {
 
   // Check role-based access control
   // Only Admin role can access admin pages
-  if (isAdminOnlyPage && user?.role !== 'Admin') {
+  if (isAdminOnlyPage && user?.role !== 'admin') {
     const notificationStore = useNotificationStore()
     notificationStore.showError('Access denied. You do not have permission to view this page.')
     console.warn(`Access denied: User ${user?.id} attempted to access ${to.path}`)
@@ -94,7 +94,9 @@ router.onError((err, to) => {
     if (localStorage.getItem('primevue:dynamic-reload')) {
       console.error('Dynamic import error, reloading page did not fix it', err)
     } else {
-      if (import.meta.env.DEV) console.log('Reloading page to fix dynamic import error')
+      if (import.meta.env.DEV) {
+        console.log('Reloading page to fix dynamic import error')
+      }
       localStorage.setItem('primevue:dynamic-reload', 'true')
       location.assign(to.fullPath)
     }

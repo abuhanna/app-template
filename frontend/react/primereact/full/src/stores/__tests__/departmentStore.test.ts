@@ -35,7 +35,8 @@ describe('DepartmentStore', () => {
   describe('fetchDepartments', () => {
     it('updates state on success with pagination', async () => {
       const mockResult = {
-        items: [{ id: '1', code: 'IT', name: 'IT Department', isActive: true }],
+        success: true,
+        data: [{ id: 1, code: 'IT', name: 'IT Department', isActive: true }],
         pagination: {
           page: 1,
           pageSize: 10,
@@ -50,7 +51,7 @@ describe('DepartmentStore', () => {
       await useDepartmentStore.getState().fetchDepartments()
 
       const state = useDepartmentStore.getState()
-      expect(state.departments).toEqual(mockResult.items)
+      expect(state.departments).toEqual(mockResult.data)
       expect(state.pagination).toEqual(mockResult.pagination)
       expect(state.loading).toBe(false)
     })
@@ -65,10 +66,10 @@ describe('DepartmentStore', () => {
 
   describe('fetchDepartment', () => {
     it('updates selectedDepartment', async () => {
-      const mockDept = { id: '1', code: 'IT', name: 'IT Dept', isActive: true }
-      vi.mocked(departmentApi.getDepartment).mockResolvedValue(mockDept as any)
+      const mockDept = { id: 1, code: 'IT', name: 'IT Dept', isActive: true }
+      vi.mocked(departmentApi.getDepartment).mockResolvedValue({ success: true, data: mockDept } as any)
 
-      await useDepartmentStore.getState().fetchDepartment('1')
+      await useDepartmentStore.getState().fetchDepartment(1)
 
       expect(useDepartmentStore.getState().selectedDepartment).toEqual(mockDept)
       expect(useDepartmentStore.getState().loading).toBe(false)
@@ -77,8 +78,8 @@ describe('DepartmentStore', () => {
 
   describe('createDepartment', () => {
     it('calls API and adds department to list', async () => {
-      const newDept = { id: '2', code: 'HR', name: 'HR Dept', isActive: true }
-      vi.mocked(departmentApi.createDepartment).mockResolvedValue(newDept as any)
+      const newDept = { id: 2, code: 'HR', name: 'HR Dept', isActive: true }
+      vi.mocked(departmentApi.createDepartment).mockResolvedValue({ success: true, data: newDept } as any)
 
       const result = await useDepartmentStore.getState().createDepartment({
         code: 'HR',
@@ -94,25 +95,25 @@ describe('DepartmentStore', () => {
     it('calls API and removes department from list', async () => {
       useDepartmentStore.setState({
         departments: [
-          { id: '1', code: 'IT', name: 'IT' } as any,
-          { id: '2', code: 'HR', name: 'HR' } as any,
+          { id: 1, code: 'IT', name: 'IT' } as any,
+          { id: 2, code: 'HR', name: 'HR' } as any,
         ],
       })
       vi.mocked(departmentApi.deleteDepartment).mockResolvedValue(undefined)
 
-      await useDepartmentStore.getState().deleteDepartment('1')
+      await useDepartmentStore.getState().deleteDepartment(1)
 
       const state = useDepartmentStore.getState()
       expect(state.departments).toHaveLength(1)
-      expect(state.departments[0].id).toBe('2')
+      expect(state.departments[0].id).toBe(2)
     })
   })
 
   describe('clearDepartments', () => {
     it('resets state', () => {
       useDepartmentStore.setState({
-        departments: [{ id: '1' } as any],
-        selectedDepartment: { id: '1' } as any,
+        departments: [{ id: 1 } as any],
+        selectedDepartment: { id: 1 } as any,
         pagination: { page: 1 } as any,
       })
 

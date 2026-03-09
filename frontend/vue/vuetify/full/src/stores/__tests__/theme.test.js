@@ -1,5 +1,7 @@
-import { describe, it, expect, beforeEach, vi } from 'vitest'
-import { setActivePinia, createPinia } from 'pinia'
+import { createPinia, setActivePinia } from 'pinia'
+import { beforeEach, describe, expect, it, vi } from 'vitest'
+
+import { useThemeStore } from '../theme'
 
 // Mock window.matchMedia before any store import
 Object.defineProperty(window, 'matchMedia', {
@@ -22,8 +24,6 @@ vi.mock('vuetify', () => ({
     global: { name: { value: 'light' } },
   }),
 }))
-
-import { useThemeStore } from '../theme'
 
 describe('Theme Store', () => {
   beforeEach(() => {

@@ -3,7 +3,7 @@
     <!-- Logo Section -->
     <div class="sidebar-header">
       <div class="logo-container">
-        <i class="pi pi-box logo-icon"></i>
+        <i class="pi pi-box logo-icon" />
         <span v-if="visible" class="logo-text">AppTemplate</span>
       </div>
     </div>
@@ -14,12 +14,12 @@
       <ul class="nav-list">
         <li v-for="item in mainMenuItems" :key="item.path">
           <router-link
-            :to="item.path"
+            v-tooltip.right="{ value: item.label, disabled: visible }"
             class="nav-item"
             :class="{ active: isActive(item.path) }"
-            v-tooltip.right="{ value: item.label, disabled: visible }"
+            :to="item.path"
           >
-            <i :class="item.icon"></i>
+            <i :class="item.icon" />
             <span v-if="visible">{{ item.label }}</span>
           </router-link>
         </li>
@@ -31,12 +31,12 @@
         <ul class="nav-list">
           <li v-for="item in items" :key="item.path">
             <router-link
-              :to="item.path"
+              v-tooltip.right="{ value: item.label, disabled: visible }"
               class="nav-item"
               :class="{ active: isActive(item.path) }"
-              v-tooltip.right="{ value: item.label, disabled: visible }"
+              :to="item.path"
             >
-              <i :class="item.icon"></i>
+              <i :class="item.icon" />
               <span v-if="visible">{{ item.label }}</span>
             </router-link>
           </li>
@@ -47,30 +47,30 @@
 </template>
 
 <script setup>
-import { computed } from 'vue'
-import { useRoute } from 'vue-router'
-import { menuItems } from '@/config/menuConfig'
-import { useAuthStore } from '@/stores/auth'
-import { filterMenuByRole, groupMenuBySection } from '@/utils/menuUtils'
+  import { computed } from 'vue'
+  import { useRoute } from 'vue-router'
+  import { menuItems } from '@/config/menuConfig'
+  import { useAuthStore } from '@/stores/auth'
+  import { filterMenuByRole, groupMenuBySection } from '@/utils/menuUtils'
 
-const visible = defineModel('visible', { default: true })
+  const visible = defineModel('visible', { default: true })
 
-const route = useRoute()
-const authStore = useAuthStore()
+  const route = useRoute()
+  const authStore = useAuthStore()
 
-// Filter and group menu items based on user role
-const filteredItems = computed(() => filterMenuByRole(menuItems, authStore.user?.role))
-const groupedItems = computed(() => groupMenuBySection(filteredItems.value))
+  // Filter and group menu items based on user role
+  const filteredItems = computed(() => filterMenuByRole(menuItems, authStore.user?.role))
+  const groupedItems = computed(() => groupMenuBySection(filteredItems.value))
 
-// Get items without section (main menu) and items with sections
-const mainMenuItems = computed(() => groupedItems.value.get(undefined) || [])
-const sectionEntries = computed(() =>
-  Array.from(groupedItems.value.entries()).filter(([key]) => key !== undefined)
-)
+  // Get items without section (main menu) and items with sections
+  const mainMenuItems = computed(() => groupedItems.value.get(undefined) || [])
+  const sectionEntries = computed(() =>
+    Array.from(groupedItems.value.entries()).filter(([key]) => key !== undefined),
+  )
 
-const isActive = (path) => {
-  return route.path === path || route.path.startsWith(path + '/')
-}
+  function isActive (path) {
+    return route.path === path || route.path.startsWith(path + '/')
+  }
 </script>
 
 <style scoped>

@@ -4,21 +4,21 @@
  * Bootstraps Vuetify and other plugins then mounts the App`
  */
 
-// Environment validation (fail-fast)
-import { validateEnvironment } from '@/utils/envValidator'
-validateEnvironment()
-
 // Composables
 import { createApp } from 'vue'
 
 // Plugins
 import { registerPlugins } from '@/plugins'
 
+// Environment validation (fail-fast)
+import { validateEnvironment } from '@/utils/envValidator'
+
 // Components
 import App from './App.vue'
 
 // Styles
 import 'unfonts.css'
+validateEnvironment()
 
 const app = createApp(App)
 

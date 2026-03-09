@@ -12,9 +12,9 @@ import api from './api'
  * @property {number} [page] - Page number (1-indexed)
  * @property {number} [pageSize] - Number of items per page
  * @property {string} [sortBy] - Field to sort by
- * @property {SortDirection} [sortDir] - Sort direction ('asc' or 'desc')
+ * @property {SortDirection} [sortOrder] - Sort direction ('asc' or 'desc')
  * @property {string} [search] - Search term
- * @property {string} [entityName] - Filter by entity name
+ * @property {string} [entityType] - Filter by entity type
  * @property {string} [action] - Filter by action type
  * @property {string} [fromDate] - Filter from date (ISO string)
  * @property {string} [toDate] - Filter to date (ISO string)
@@ -25,7 +25,7 @@ import api from './api'
  * @param {GetAuditLogsParams} params - Query parameters
  * @returns {Promise<PagedResult>} Promise with paginated audit logs result
  */
-export async function getAuditLogs(params = {}) {
+export async function getAuditLogs (params = {}) {
   const { data } = await api.get('/audit-logs', { params })
   return data
 }

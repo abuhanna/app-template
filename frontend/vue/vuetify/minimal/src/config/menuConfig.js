@@ -18,14 +18,14 @@ export const menuItems = [
     label: 'Files',
     path: '/files',
     icon: 'mdi-file-multiple',
-    roles: ['Admin'],
+    roles: ['admin'],
     section: 'Administration',
   },
   {
     label: 'Audit Logs',
     path: '/audit-logs',
     icon: 'mdi-history',
-    roles: ['Admin'],
+    roles: ['admin'],
     section: 'Administration',
   },
 ]

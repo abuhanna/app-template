@@ -1,5 +1,5 @@
-import { describe, it, expect, beforeEach } from 'vitest'
-import { setActivePinia, createPinia } from 'pinia'
+import { createPinia, setActivePinia } from 'pinia'
+import { beforeEach, describe, expect, it } from 'vitest'
 import { useNotificationStore } from '../notification'
 
 describe('Notification Store', () => {
@@ -88,8 +88,8 @@ describe('Notification Store', () => {
   it('should use custom timeout when specified', () => {
     const store = useNotificationStore()
 
-    store.showSuccess('Test message', 10000)
+    store.showSuccess('Test message', 10_000)
 
-    expect(store.timeout).toBe(10000)
+    expect(store.timeout).toBe(10_000)
   })
 })

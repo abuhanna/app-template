@@ -1,5 +1,8 @@
-import { describe, it, expect, beforeEach, vi } from 'vitest'
-import { setActivePinia, createPinia } from 'pinia'
+import { createPinia, setActivePinia } from 'pinia'
+import { beforeEach, describe, expect, it, vi } from 'vitest'
+import * as authApi from '@/services/authApi'
+import * as userApi from '@/services/userApi'
+
 import { useUserStore } from '../user'
 
 vi.mock('@/services/userApi', () => ({
@@ -8,6 +11,9 @@ vi.mock('@/services/userApi', () => ({
   createUser: vi.fn(),
   updateUser: vi.fn(),
   deleteUser: vi.fn(),
+}))
+
+vi.mock('@/services/authApi', () => ({
   changePassword: vi.fn(),
 }))
 
@@ -18,8 +24,6 @@ vi.mock('@/stores/notification', () => ({
   }),
 }))
 
-import * as userApi from '@/services/userApi'
-
 describe('User Store', () => {
   beforeEach(() => {
     setActivePinia(createPinia())
@@ -29,7 +33,8 @@ describe('User Store', () => {
   describe('fetchUsers', () => {
     it('updates items and pagination on paginated response', async () => {
       const mockResponse = {
-        items: [{ id: 1, username: 'admin' }, { id: 2, username: 'user1' }],
+        success: true,
+        data: [{ id: 1, username: 'admin' }, { id: 2, username: 'user1' }],
         pagination: {
           page: 1,
           pageSize: 10,
@@ -44,7 +49,7 @@ describe('User Store', () => {
       const store = useUserStore()
       await store.fetchUsers()
 
-      expect(store.items).toEqual(mockResponse.items)
+      expect(store.items).toEqual(mockResponse.data)
       expect(store.pagination.page).toBe(1)
       expect(store.pagination.totalItems).toBe(2)
       expect(store.pagination.totalPages).toBe(1)
@@ -93,7 +98,7 @@ describe('User Store', () => {
   describe('fetchUser', () => {
     it('sets currentItem on success', async () => {
       const mockUser = { id: 1, username: 'admin', email: 'admin@test.com' }
-      vi.mocked(userApi.getUserById).mockResolvedValue(mockUser)
+      vi.mocked(userApi.getUserById).mockResolvedValue({ success: true, data: mockUser })
 
       const store = useUserStore()
       const result = await store.fetchUser(1)
@@ -153,21 +158,22 @@ describe('User Store', () => {
   })
 
   describe('changePassword', () => {
-    it('calls API to change password', async () => {
+    it('calls authApi to change password', async () => {
       const passwordData = { currentPassword: 'old', newPassword: 'new' }
-      vi.mocked(userApi.changePassword).mockResolvedValue(undefined)
+      vi.mocked(authApi.changePassword).mockResolvedValue(undefined)
 
       const store = useUserStore()
-      await store.changePassword(1, passwordData)
+      await store.changePassword(passwordData)
 
-      expect(userApi.changePassword).toHaveBeenCalledWith(1, passwordData)
+      expect(authApi.changePassword).toHaveBeenCalledWith(passwordData)
     })
   })
 
   describe('resetPagination', () => {
     it('resets pagination to defaults', async () => {
       const mockResponse = {
-        items: [{ id: 1 }],
+        success: true,
+        data: [{ id: 1 }],
         pagination: {
           page: 5,
           pageSize: 25,

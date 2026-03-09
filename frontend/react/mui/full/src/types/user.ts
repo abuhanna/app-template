@@ -1,13 +1,15 @@
 export interface User {
-  id: string
+  id: number
   username: string
   email: string
   firstName?: string
   lastName?: string
+  fullName?: string
   role: string
-  departmentId?: string
+  departmentId?: number
   departmentName?: string
   isActive: boolean
+  lastLoginAt?: string
   createdAt: string
   updatedAt?: string
 }
@@ -19,27 +21,21 @@ export interface CreateUserRequest {
   firstName?: string
   lastName?: string
   role: string
-  departmentId?: string
+  departmentId?: number
+  isActive?: boolean
 }
 
 export interface UpdateUserRequest {
-  username?: string
   email?: string
   firstName?: string
   lastName?: string
   role?: string
-  departmentId?: string
+  departmentId?: number
   isActive?: boolean
 }
 
 export interface ChangePasswordRequest {
   currentPassword: string
   newPassword: string
-}
-
-export interface UserListResponse {
-  data: User[]
-  total: number
-  page: number
-  pageSize: number
+  confirmPassword: string
 }

@@ -2,7 +2,7 @@
  * Validates required environment variables on application startup.
  * Throws an error with clear messages if any required variables are missing.
  */
-export function validateEnvironment() {
+export function validateEnvironment () {
   const errors = []
 
   // Required environment variables
@@ -22,10 +22,10 @@ export function validateEnvironment() {
 
   // Throw if any validation errors
   if (errors.length > 0) {
-    const errorMessage = errors.map((e) => `  - ${e}`).join('\n')
+    const errorMessage = errors.map(e => `  - ${e}`).join('\n')
     console.error('Environment validation failed:\n' + errorMessage)
     throw new Error(
-      `Environment validation failed:\n${errorMessage}\n\nPlease check your .env file.`
+      `Environment validation failed:\n${errorMessage}\n\nPlease check your .env file.`,
     )
   }
 }

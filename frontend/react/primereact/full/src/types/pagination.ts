@@ -15,12 +15,19 @@ export interface PaginationMeta {
 }
 
 /**
- * Generic paged result from API
+ * Standard API response envelope
  */
-export interface PagedResult<T> {
-  items: T[]
-  pagination: PaginationMeta
+export interface ApiResponse<T> {
+  success: boolean
+  message: string
+  data: T
+  pagination?: PaginationMeta
 }
+
+/**
+ * Paged result alias for convenience
+ */
+export type PagedResult<T> = ApiResponse<T[]>
 
 /**
  * Sort direction for queries
@@ -34,7 +41,7 @@ export interface PaginationParams {
   page: number
   pageSize: number
   sortBy?: string
-  sortDir?: SortDirection
+  sortOrder?: SortDirection
 }
 
 /**
@@ -44,7 +51,7 @@ export interface PaginationState {
   page: number
   pageSize: number
   sortBy: string
-  sortDir: SortDirection
+  sortOrder: SortDirection
   totalItems: number
   totalPages: number
 }
@@ -54,5 +61,5 @@ export interface PaginationState {
  */
 export const DEFAULT_PAGE = 1
 export const DEFAULT_PAGE_SIZE = 10
-export const DEFAULT_SORT_DIR: SortDirection = 'asc'
+export const DEFAULT_SORT_ORDER: SortDirection = 'asc'
 export const PAGE_SIZE_OPTIONS = [5, 10, 25, 50, 100]

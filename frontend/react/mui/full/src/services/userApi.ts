@@ -3,7 +3,7 @@ import type {
   User,
   CreateUserRequest,
   UpdateUserRequest,
-  PagedResult,
+  ApiResponse,
   SortDirection,
 } from '@/types'
 
@@ -11,44 +11,34 @@ export interface GetUsersParams {
   page?: number
   pageSize?: number
   sortBy?: string
-  sortDir?: SortDirection
+  sortOrder?: SortDirection
   search?: string
   isActive?: boolean
-  departmentId?: string
+  departmentId?: number
 }
 
-export async function getUsers(params: GetUsersParams = {}): Promise<PagedResult<User>> {
-  const response = await api.get<PagedResult<User>>('/users', { params })
+export async function getUsers(params: GetUsersParams = {}): Promise<ApiResponse<User[]>> {
+  const response = await api.get<ApiResponse<User[]>>('/users', { params })
   return response.data
 }
 
-export async function getUser(id: string): Promise<User> {
-  const response = await api.get<User>(`/users/${id}`)
+export async function getUser(id: number): Promise<ApiResponse<User>> {
+  const response = await api.get<ApiResponse<User>>(`/users/${id}`)
   return response.data
 }
 
-export async function createUser(data: CreateUserRequest): Promise<User> {
-  const response = await api.post<User>('/users', data)
+export async function createUser(data: CreateUserRequest): Promise<ApiResponse<User>> {
+  const response = await api.post<ApiResponse<User>>('/users', data)
   return response.data
 }
 
-export async function updateUser(id: string, data: UpdateUserRequest): Promise<User> {
-  const response = await api.put<User>(`/users/${id}`, data)
+export async function updateUser(id: number, data: UpdateUserRequest): Promise<ApiResponse<User>> {
+  const response = await api.put<ApiResponse<User>>(`/users/${id}`, data)
   return response.data
 }
 
-export async function deleteUser(id: string): Promise<void> {
+export async function deleteUser(id: number): Promise<void> {
   await api.delete(`/users/${id}`)
-}
-
-export async function getMyProfile(): Promise<User> {
-  const response = await api.get<User>('/users/me')
-  return response.data
-}
-
-export async function updateMyProfile(data: UpdateUserRequest): Promise<User> {
-  const response = await api.put<User>('/users/me', data)
-  return response.data
 }
 
 export const userApi = {
@@ -57,6 +47,4 @@ export const userApi = {
   createUser,
   updateUser,
   deleteUser,
-  getMyProfile,
-  updateMyProfile,
 }

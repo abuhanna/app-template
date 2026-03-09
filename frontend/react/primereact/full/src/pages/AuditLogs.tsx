@@ -1,5 +1,5 @@
 import { useState, useEffect, useCallback } from 'react'
-import { DataTable } from 'primereact/datatable'
+import { DataTable, DataTablePageEvent, DataTableSortEvent } from 'primereact/datatable'
 import { Column } from 'primereact/column'
 import { Button } from 'primereact/button'
 import { Dialog } from 'primereact/dialog'
@@ -8,13 +8,20 @@ import { Tag } from 'primereact/tag'
 import { Card } from 'primereact/card'
 import { Divider } from 'primereact/divider'
 import { useNotificationStore } from '@/stores/notificationStore'
-import { getAuditLogs, type AuditLog } from '@/services/auditLogService'
+import { getAuditLogs, type AuditLog, type GetAuditLogsParams } from '@/services/auditLogService'
 
 export default function AuditLogs() {
   const showError = useNotificationStore((state) => state.showError)
 
   const [loading, setLoading] = useState(false)
   const [auditLogs, setAuditLogs] = useState<AuditLog[]>([])
+  const [totalItems, setTotalItems] = useState(0)
+
+  // Pagination
+  const [page, setPage] = useState(1)
+  const [pageSize, setPageSize] = useState(10)
+  const [sortBy, setSortBy] = useState('createdAt')
+  const [sortOrder, setSortOrder] = useState<'asc' | 'desc'>('desc')
 
   // Filters
   const [entityFilter, setEntityFilter] = useState<string | null>(null)
@@ -30,21 +37,40 @@ export default function AuditLogs() {
   const loadAuditLogs = useCallback(async () => {
     setLoading(true)
     try {
-      const params: Record<string, string> = {}
-      if (entityFilter) params.entityName = entityFilter
+      const params: GetAuditLogsParams = {
+        page,
+        pageSize,
+        sortBy,
+        sortOrder,
+      }
+      if (entityFilter) params.entityType = entityFilter
       if (actionFilter) params.action = actionFilter
       const result = await getAuditLogs(params)
-      setAuditLogs(result.items || [])
+      setAuditLogs(result.data || [])
+      setTotalItems(result.pagination?.totalItems || 0)
     } catch {
       showError('Failed to load audit logs')
     } finally {
       setLoading(false)
     }
-  }, [entityFilter, actionFilter, showError])
+  }, [page, pageSize, sortBy, sortOrder, entityFilter, actionFilter, showError])
 
   useEffect(() => {
     loadAuditLogs()
   }, [loadAuditLogs])
+
+  const onPageChange = (event: DataTablePageEvent) => {
+    setPage((event.page ?? 0) + 1)
+    setPageSize(event.rows)
+  }
+
+  const onSort = (event: DataTableSortEvent) => {
+    if (event.sortField) {
+      setSortBy(event.sortField as string)
+      setSortOrder(event.sortOrder === 1 ? 'asc' : 'desc')
+      setPage(1)
+    }
+  }
 
   const formatDate = (dateString: string): string => {
     return new Date(dateString).toLocaleString('en-US', {
@@ -69,15 +95,6 @@ export default function AuditLogs() {
     }
   }
 
-  const formatJson = (jsonString: string | null): string | null => {
-    if (!jsonString) return null
-    try {
-      return JSON.stringify(JSON.parse(jsonString), null, 2)
-    } catch {
-      return jsonString
-    }
-  }
-
   const showDetails = (log: AuditLog) => {
     setSelectedLog(log)
     setDetailsVisible(true)
@@ -87,9 +104,9 @@ export default function AuditLogs() {
     <Tag value={log.action} severity={getActionSeverity(log.action)} />
   )
 
-  const timestampTemplate = (log: AuditLog) => formatDate(log.timestamp)
+  const createdAtTemplate = (log: AuditLog) => formatDate(log.createdAt)
 
-  const userIdTemplate = (log: AuditLog) => log.userId || '-'
+  const userNameTemplate = (log: AuditLog) => log.userName || log.userId || '-'
 
   const actionsTemplate = (log: AuditLog) => (
     <Button
@@ -138,7 +155,7 @@ export default function AuditLogs() {
           <Dropdown
             value={entityFilter}
             options={entityOptions}
-            onChange={(e) => setEntityFilter(e.value)}
+            onChange={(e) => { setEntityFilter(e.value); setPage(1) }}
             placeholder="Filter by Entity"
             showClear
             className="w-12rem"
@@ -146,30 +163,36 @@ export default function AuditLogs() {
           <Dropdown
             value={actionFilter}
             options={actionOptions}
-            onChange={(e) => setActionFilter(e.value)}
+            onChange={(e) => { setActionFilter(e.value); setPage(1) }}
             placeholder="Filter by Action"
             showClear
             className="w-12rem"
           />
-          <Button label="Apply" icon="pi pi-filter" onClick={loadAuditLogs} />
         </div>
 
         <DataTable
           value={auditLogs}
           loading={loading}
+          lazy
           paginator
-          rows={10}
+          rows={pageSize}
+          totalRecords={totalItems}
+          first={(page - 1) * pageSize}
+          onPage={onPageChange}
+          onSort={onSort}
+          sortField={sortBy}
+          sortOrder={sortOrder === 'asc' ? 1 : -1}
           rowsPerPageOptions={[5, 10, 25, 50]}
           dataKey="id"
           header={renderHeader()}
           emptyMessage={emptyMessage}
           stripedRows
         >
-          <Column field="entityName" header="Entity" sortable style={{ minWidth: '120px' }} />
+          <Column field="entityType" header="Entity" sortable style={{ minWidth: '120px' }} />
           <Column field="entityId" header="Entity ID" sortable style={{ minWidth: '100px' }} />
-          <Column header="Action" body={actionTemplate} sortable style={{ minWidth: '100px' }} />
-          <Column header="User ID" body={userIdTemplate} sortable style={{ minWidth: '100px' }} />
-          <Column header="Timestamp" body={timestampTemplate} sortable style={{ minWidth: '180px' }} />
+          <Column field="action" header="Action" body={actionTemplate} sortable style={{ minWidth: '100px' }} />
+          <Column header="User" body={userNameTemplate} sortable field="userName" style={{ minWidth: '120px' }} />
+          <Column header="Timestamp" body={createdAtTemplate} sortable field="createdAt" style={{ minWidth: '180px' }} />
           <Column header="Details" body={actionsTemplate} style={{ minWidth: '80px' }} />
         </DataTable>
       </Card>
@@ -187,7 +210,7 @@ export default function AuditLogs() {
           <div className="flex flex-column gap-3">
             <div className="grid">
               <div className="col-6">
-                <strong>Entity:</strong> {selectedLog.entityName}
+                <strong>Entity:</strong> {selectedLog.entityType}
               </div>
               <div className="col-6">
                 <strong>Entity ID:</strong> {selectedLog.entityId}
@@ -197,44 +220,30 @@ export default function AuditLogs() {
                 <Tag value={selectedLog.action} severity={getActionSeverity(selectedLog.action)} />
               </div>
               <div className="col-6">
-                <strong>User ID:</strong> {selectedLog.userId || '-'}
+                <strong>User:</strong> {selectedLog.userName || selectedLog.userId || '-'}
               </div>
-              <div className="col-12">
-                <strong>Timestamp:</strong> {formatDate(selectedLog.timestamp)}
+              <div className="col-6">
+                <strong>Timestamp:</strong> {formatDate(selectedLog.createdAt)}
               </div>
+              {selectedLog.ipAddress && (
+                <div className="col-6">
+                  <strong>IP Address:</strong> {selectedLog.ipAddress}
+                </div>
+              )}
             </div>
 
-            <Divider />
-
-            {selectedLog.oldValues && (
-              <div>
-                <strong>Old Values:</strong>
-                <div className="surface-100 p-3 border-round mt-2" style={{ overflow: 'auto' }}>
-                  <pre style={{ margin: 0, whiteSpace: 'pre-wrap' }}>
-                    {formatJson(selectedLog.oldValues)}
-                  </pre>
+            {selectedLog.details && (
+              <>
+                <Divider />
+                <div>
+                  <strong>Details:</strong>
+                  <div className="surface-100 p-3 border-round mt-2" style={{ overflow: 'auto' }}>
+                    <pre style={{ margin: 0, whiteSpace: 'pre-wrap' }}>
+                      {selectedLog.details}
+                    </pre>
+                  </div>
                 </div>
-              </div>
-            )}
-
-            {selectedLog.newValues && (
-              <div>
-                <strong>New Values:</strong>
-                <div className="surface-100 p-3 border-round mt-2" style={{ overflow: 'auto' }}>
-                  <pre style={{ margin: 0, whiteSpace: 'pre-wrap' }}>
-                    {formatJson(selectedLog.newValues)}
-                  </pre>
-                </div>
-              </div>
-            )}
-
-            {selectedLog.affectedColumns && (
-              <div>
-                <strong>Affected Columns:</strong>
-                <div className="surface-100 p-3 border-round mt-2">
-                  <pre style={{ margin: 0 }}>{formatJson(selectedLog.affectedColumns)}</pre>
-                </div>
-              </div>
+              </>
             )}
           </div>
         )}

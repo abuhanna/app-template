@@ -1,7 +1,7 @@
-import { describe, it, expect, beforeEach, vi } from 'vitest'
 import { shallowMount } from '@vue/test-utils'
 import { createPinia, setActivePinia } from 'pinia'
 import PrimeVue from 'primevue/config'
+import { beforeEach, describe, expect, it, vi } from 'vitest'
 import LoginPage from '../login.vue'
 
 // Provide definePage as a global stub (compile-time macro from unplugin-vue-router)
@@ -26,7 +26,7 @@ describe('Login Page', () => {
     localStorage.clear()
   })
 
-  function mountLogin() {
+  function mountLogin () {
     return shallowMount(LoginPage, {
       global: {
         plugins: [createPinia(), PrimeVue],

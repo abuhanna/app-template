@@ -27,7 +27,6 @@ describe('Auth Store', () => {
       user: null,
       token: null,
       refreshToken: null,
-      refreshTokenExpiresAt: null,
       loading: false,
       isRefreshing: false,
     })
@@ -37,10 +36,14 @@ describe('Auth Store', () => {
   describe('login', () => {
     it('sets token and user on success', async () => {
       const mockResponse = {
-        token: 'new-token',
-        user: { id: 1, username: 'admin', email: 'admin@test.com', role: 'Admin', isActive: true },
-        refreshToken: 'refresh-tok',
-        refreshTokenExpiresAt: '2099-01-01',
+        success: true,
+        message: 'Login successful',
+        data: {
+          accessToken: 'new-token',
+          refreshToken: 'refresh-tok',
+          expiresIn: 900,
+          user: { id: 1, username: 'admin', email: 'admin@test.com', role: 'admin', isActive: true },
+        },
       }
       vi.mocked(authApi.login).mockResolvedValue(mockResponse as any)
 
@@ -54,10 +57,14 @@ describe('Auth Store', () => {
 
     it('sets loading to false after completion', async () => {
       vi.mocked(authApi.login).mockResolvedValue({
-        token: 't',
-        user: { id: 1, username: 'u', email: 'e', role: 'User', isActive: true },
-        refreshToken: 'r',
-        refreshTokenExpiresAt: '2099-01-01',
+        success: true,
+        message: 'Login successful',
+        data: {
+          accessToken: 't',
+          refreshToken: 'r',
+          expiresIn: 900,
+          user: { id: 1, username: 'u', email: 'e', role: 'user', isActive: true },
+        },
       } as any)
 
       await useAuthStore.getState().login({ username: 'u', password: 'p' })
@@ -100,25 +107,18 @@ describe('Auth Store', () => {
       expect(result).toBe(false)
     })
 
-    it('returns false when refresh token expired', async () => {
-      useAuthStore.setState({
-        refreshToken: 'rt',
-        refreshTokenExpiresAt: '2000-01-01T00:00:00Z',
-      })
-      const result = await useAuthStore.getState().refreshTokens()
-      expect(result).toBe(false)
-    })
-
     it('returns true and updates tokens on success', async () => {
       useAuthStore.setState({
         refreshToken: 'rt',
-        refreshTokenExpiresAt: '2099-01-01T00:00:00Z',
       })
       vi.mocked(authApi.refreshToken).mockResolvedValue({
-        token: 'new-access',
-        refreshToken: 'new-refresh',
-        refreshTokenExpiresAt: '2099-02-01',
-        user: { id: 1, username: 'admin', email: 'e', role: 'Admin', isActive: true },
+        success: true,
+        message: 'Token refreshed',
+        data: {
+          accessToken: 'new-access',
+          refreshToken: 'new-refresh',
+          expiresIn: 900,
+        },
       } as any)
 
       const result = await useAuthStore.getState().refreshTokens()
@@ -134,7 +134,6 @@ describe('Auth Store', () => {
         token: 'tok',
         user: { id: 1 } as any,
         refreshToken: 'rt',
-        refreshTokenExpiresAt: '2099-01-01',
       })
 
       useAuthStore.getState().clearAuth()
@@ -143,7 +142,6 @@ describe('Auth Store', () => {
       expect(state.token).toBeNull()
       expect(state.user).toBeNull()
       expect(state.refreshToken).toBeNull()
-      expect(state.refreshTokenExpiresAt).toBeNull()
     })
   })
 
@@ -159,13 +157,13 @@ describe('Auth Store', () => {
   })
 
   describe('isAdmin', () => {
-    it('returns true when user role is Admin', () => {
-      useAuthStore.setState({ user: { id: 1, role: 'Admin' } as any })
+    it('returns true when user role is admin', () => {
+      useAuthStore.setState({ user: { id: 1, role: 'admin' } as any })
       expect(useAuthStore.getState().isAdmin()).toBe(true)
     })
 
-    it('returns false when user role is not Admin', () => {
-      useAuthStore.setState({ user: { id: 1, role: 'User' } as any })
+    it('returns false when user role is not admin', () => {
+      useAuthStore.setState({ user: { id: 1, role: 'user' } as any })
       expect(useAuthStore.getState().isAdmin()).toBe(false)
     })
   })

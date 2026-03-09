@@ -1,13 +1,15 @@
 export interface User {
-  id: string
+  id: number
   username: string
   email: string
   firstName?: string
   lastName?: string
+  fullName?: string
   role: string
-  departmentId?: string
+  departmentId?: number
   departmentName?: string
   isActive: boolean
+  lastLoginAt?: string
   createdAt: string
   updatedAt?: string
 }
@@ -18,10 +20,14 @@ export interface LoginCredentials {
 }
 
 export interface AuthResponse {
-  token: string
-  refreshToken: string
-  refreshTokenExpiresAt: string
-  user: User
+  success: boolean
+  message: string
+  data: {
+    accessToken: string
+    refreshToken: string
+    expiresIn: number
+    user?: User
+  }
 }
 
 export interface RefreshTokenRequest {

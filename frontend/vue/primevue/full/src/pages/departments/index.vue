@@ -1,22 +1,21 @@
 <template>
   <div class="departments-page">
 
-
     <!-- Departments Table -->
     <Card>
       <template #content>
         <DataTable
-          :value="departments"
+          v-model:filters="filters"
+          class="departments-table"
+          data-key="id"
+          filter-display="row"
+          :global-filter-fields="['code', 'name']"
           :loading="loading"
           paginator
+          responsive-layout="scroll"
           :rows="10"
-          :rowsPerPageOptions="[5, 10, 25, 50]"
-          dataKey="id"
-          filterDisplay="row"
-          v-model:filters="filters"
-          :globalFilterFields="['code', 'name']"
-          responsiveLayout="scroll"
-          class="departments-table"
+          :rows-per-page-options="[5, 10, 25, 50]"
+          :value="departments"
         >
           <template #header>
             <div class="flex flex-wrap align-items-center justify-content-between gap-2">
@@ -24,24 +23,24 @@
                 <InputIcon class="pi pi-search" />
                 <InputText
                   v-model="filters['global'].value"
-                  placeholder="Search departments..."
                   class="w-20rem"
+                  placeholder="Search departments..."
                 />
               </IconField>
-              <Button label="Add Department" icon="pi pi-building" @click="openCreateDialog" />
+              <Button icon="pi pi-building" label="Add Department" @click="openCreateDialog" />
             </div>
           </template>
 
           <template #empty>
             <div class="table-empty">
-              <i class="pi pi-building"></i>
+              <i class="pi pi-building" />
               <span>No departments found</span>
             </div>
           </template>
 
           <Column field="code" header="Code" sortable style="min-width: 120px">
             <template #body="{ data }">
-              <Tag :value="data.code" severity="secondary" />
+              <Tag severity="secondary" :value="data.code" />
             </template>
           </Column>
 
@@ -56,8 +55,8 @@
           <Column field="isActive" header="Status" sortable style="min-width: 100px">
             <template #body="{ data }">
               <Tag
-                :value="data.isActive ? 'Active' : 'Inactive'"
                 :severity="data.isActive ? 'success' : 'secondary'"
+                :value="data.isActive ? 'Active' : 'Inactive'"
               />
             </template>
           </Column>
@@ -72,20 +71,20 @@
             <template #body="{ data }">
               <div class="action-buttons">
                 <Button
+                  v-tooltip.top="'Edit'"
                   icon="pi pi-pencil"
-                  text
                   rounded
                   severity="info"
+                  text
                   @click="openEditDialog(data)"
-                  v-tooltip.top="'Edit'"
                 />
                 <Button
+                  v-tooltip.top="'Delete'"
                   icon="pi pi-trash"
-                  text
                   rounded
                   severity="danger"
+                  text
                   @click="handleDelete(data)"
-                  v-tooltip.top="'Delete'"
                 />
               </div>
             </template>
@@ -98,8 +97,8 @@
     <Dialog
       v-model:visible="dialogVisible"
       :header="editingDepartment ? 'Edit Department' : 'Create New Department'"
-      :style="{ width: '32rem' }"
       modal
+      :style="{ width: '32rem' }"
     >
       <div class="flex flex-column gap-3">
         <div class="flex flex-column gap-2 mb-4">
@@ -107,9 +106,9 @@
           <InputText
             id="code"
             v-model="form.code"
+            class="w-full"
             :disabled="!!editingDepartment"
             :invalid="!!formErrors.code"
-            class="w-full"
             placeholder="e.g., IT, HR, FIN"
           />
           <small v-if="formErrors.code" class="text-red-500">{{ formErrors.code }}</small>
@@ -120,8 +119,8 @@
           <InputText
             id="name"
             v-model="form.name"
-            :invalid="!!formErrors.name"
             class="w-full"
+            :invalid="!!formErrors.name"
             placeholder="e.g., Information Technology"
           />
           <small v-if="formErrors.name" class="text-red-500">{{ formErrors.name }}</small>
@@ -132,9 +131,9 @@
           <Textarea
             id="description"
             v-model="form.description"
-            rows="3"
             class="w-full"
             placeholder="Optional description..."
+            rows="3"
           />
         </div>
 
@@ -142,7 +141,6 @@
           <ToggleSwitch id="isActive" v-model="form.isActive" />
           <label for="isActive">Status: {{ form.isActive ? 'Active' : 'Inactive' }}</label>
         </div>
-
 
       </div>
       <template #footer>
@@ -158,163 +156,161 @@
 </template>
 
 <script setup>
-import { ref, reactive, computed, onMounted } from 'vue'
-import { useDepartmentStore } from '@/stores/department'
-import { useNotificationStore } from '@/stores/notification'
-import { useConfirmDialog } from '@/composables/useConfirmDialog'
-import { FilterMatchMode } from '@primevue/core/api'
-import DataTable from 'primevue/datatable'
-import Column from 'primevue/column'
-import Card from 'primevue/card'
-import Button from 'primevue/button'
-import InputText from 'primevue/inputtext'
-import Textarea from 'primevue/textarea'
-import Dialog from 'primevue/dialog'
-import Tag from 'primevue/tag'
-import ToggleSwitch from 'primevue/toggleswitch'
-import IconField from 'primevue/iconfield'
-import InputIcon from 'primevue/inputicon'
+  import { FilterMatchMode } from '@primevue/core/api'
+  import Button from 'primevue/button'
+  import Card from 'primevue/card'
+  import Column from 'primevue/column'
+  import DataTable from 'primevue/datatable'
+  import Dialog from 'primevue/dialog'
+  import IconField from 'primevue/iconfield'
+  import InputIcon from 'primevue/inputicon'
+  import InputText from 'primevue/inputtext'
+  import Tag from 'primevue/tag'
+  import Textarea from 'primevue/textarea'
+  import ToggleSwitch from 'primevue/toggleswitch'
+  import { computed, onMounted, reactive, ref } from 'vue'
+  import { useConfirmDialog } from '@/composables/useConfirmDialog'
+  import { useDepartmentStore } from '@/stores/department'
+  import { useNotificationStore } from '@/stores/notification'
 
-const departmentStore = useDepartmentStore()
-const notificationStore = useNotificationStore()
-const { confirmDelete } = useConfirmDialog()
+  const departmentStore = useDepartmentStore()
+  const notificationStore = useNotificationStore()
+  const { confirmDelete } = useConfirmDialog()
 
-const loading = ref(false)
-const saving = ref(false)
-const dialogVisible = ref(false)
-const editingDepartment = ref(null)
+  const loading = ref(false)
+  const saving = ref(false)
+  const dialogVisible = ref(false)
+  const editingDepartment = ref(null)
 
-const filters = ref({
-  global: { value: null, matchMode: FilterMatchMode.CONTAINS },
-})
-
-const departments = computed(() => departmentStore.departments)
-
-const form = reactive({
-  code: '',
-  name: '',
-  description: '',
-  isActive: true,
-})
-
-const formErrors = reactive({
-  code: '',
-  name: '',
-})
-
-const formatDate = (dateString) => {
-  if (!dateString) return '-'
-  return new Date(dateString).toLocaleDateString('en-US', {
-    year: 'numeric',
-    month: 'short',
-    day: 'numeric',
+  const filters = ref({
+    global: { value: null, matchMode: FilterMatchMode.CONTAINS },
   })
-}
 
-const resetForm = () => {
-  form.code = ''
-  form.name = ''
-  form.description = ''
-  form.isActive = true
-  Object.keys(formErrors).forEach((key) => (formErrors[key] = ''))
-}
+  const departments = computed(() => departmentStore.departments)
 
-const openCreateDialog = () => {
-  editingDepartment.value = null
-  resetForm()
-  dialogVisible.value = true
-}
+  const form = reactive({
+    code: '',
+    name: '',
+    description: '',
+    isActive: true,
+  })
 
-const openEditDialog = (department) => {
-  editingDepartment.value = department
-  form.code = department.code
-  form.name = department.name
-  form.description = department.description || ''
-  form.isActive = department.isActive
-  Object.keys(formErrors).forEach((key) => (formErrors[key] = ''))
-  dialogVisible.value = true
-}
+  const formErrors = reactive({
+    code: '',
+    name: '',
+  })
 
-const closeDialog = () => {
-  dialogVisible.value = false
-  editingDepartment.value = null
-}
-
-const validate = () => {
-  let valid = true
-  Object.keys(formErrors).forEach((key) => (formErrors[key] = ''))
-
-  if (!form.code.trim()) {
-    formErrors.code = 'Code is required'
-    valid = false
+  function formatDate (dateString) {
+    if (!dateString) return '-'
+    return new Date(dateString).toLocaleDateString('en-US', {
+      year: 'numeric',
+      month: 'short',
+      day: 'numeric',
+    })
   }
 
-  if (!form.name.trim()) {
-    formErrors.name = 'Name is required'
-    valid = false
+  function resetForm () {
+    form.code = ''
+    form.name = ''
+    form.description = ''
+    form.isActive = true
+    for (const key of Object.keys(formErrors)) (formErrors[key] = '')
   }
 
-  return valid
-}
+  function openCreateDialog () {
+    editingDepartment.value = null
+    resetForm()
+    dialogVisible.value = true
+  }
 
-const handleSubmit = async () => {
-  if (!validate()) return
+  function openEditDialog (department) {
+    editingDepartment.value = department
+    form.code = department.code
+    form.name = department.name
+    form.description = department.description || ''
+    form.isActive = department.isActive
+    for (const key of Object.keys(formErrors)) (formErrors[key] = '')
+    dialogVisible.value = true
+  }
 
-  saving.value = true
-  try {
-    if (editingDepartment.value) {
-      await departmentStore.updateDepartment(editingDepartment.value.id, {
-        name: form.name,
-        description: form.description,
-        isActive: form.isActive,
-      })
-      notificationStore.success('Department updated successfully')
-    } else {
-      await departmentStore.createDepartment({
-        code: form.code,
-        name: form.name,
-        description: form.description,
-      })
-      notificationStore.success('Department created successfully')
+  function closeDialog () {
+    dialogVisible.value = false
+    editingDepartment.value = null
+  }
+
+  function validate () {
+    let valid = true
+    for (const key of Object.keys(formErrors)) (formErrors[key] = '')
+
+    if (!form.code.trim()) {
+      formErrors.code = 'Code is required'
+      valid = false
     }
-    await departmentStore.fetchDepartments()
-    closeDialog()
-  } catch (error) {
-    notificationStore.error(error.response?.data?.message || 'Operation failed')
-  } finally {
-    saving.value = false
+
+    if (!form.name.trim()) {
+      formErrors.name = 'Name is required'
+      valid = false
+    }
+
+    return valid
   }
-}
 
-const handleDelete = async (department) => {
-  const confirmed = await confirmDelete(department.name)
-  if (!confirmed) return
+  async function handleSubmit () {
+    if (!validate()) return
 
-  try {
-    await departmentStore.deleteDepartment(department.id)
-    notificationStore.success('Department deleted successfully')
-    await departmentStore.fetchDepartments()
-  } catch {
+    saving.value = true
+    try {
+      if (editingDepartment.value) {
+        await departmentStore.updateDepartment(editingDepartment.value.id, {
+          name: form.name,
+          description: form.description,
+          isActive: form.isActive,
+        })
+        notificationStore.success('Department updated successfully')
+      } else {
+        await departmentStore.createDepartment({
+          code: form.code,
+          name: form.name,
+          description: form.description,
+        })
+        notificationStore.success('Department created successfully')
+      }
+      await departmentStore.fetchDepartments()
+      closeDialog()
+    } catch (error) {
+      notificationStore.error(error.response?.data?.message || 'Operation failed')
+    } finally {
+      saving.value = false
+    }
+  }
+
+  async function handleDelete (department) {
+    const confirmed = await confirmDelete(department.name)
+    if (!confirmed) return
+
+    try {
+      await departmentStore.deleteDepartment(department.id)
+      notificationStore.success('Department deleted successfully')
+      await departmentStore.fetchDepartments()
+    } catch {
     // Error toast handled by store
+    }
   }
-}
 
-onMounted(async () => {
-  loading.value = true
-  try {
-    await departmentStore.fetchDepartments()
-  } finally {
-    loading.value = false
-  }
-})
+  onMounted(async () => {
+    loading.value = true
+    try {
+      await departmentStore.fetchDepartments()
+    } finally {
+      loading.value = false
+    }
+  })
 </script>
 
 <style scoped>
 .departments-page {
   padding: 1rem;
 }
-
-
 
 .table-empty {
   display: flex;

@@ -50,7 +50,7 @@ export default function ResetPassword() {
 
     setLoading(true)
     try {
-      await authApi.resetPassword(token, password)
+      await authApi.resetPassword(token, password, confirmPassword)
       setSuccess(true)
       setTimeout(() => {
         navigate('/login')

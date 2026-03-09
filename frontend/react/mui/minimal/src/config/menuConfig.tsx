@@ -23,14 +23,14 @@ export const menuItems: MenuItem[] = [
     label: 'Files',
     path: '/files',
     icon: <FolderIcon />,
-    roles: ['Admin'],
+    roles: ['admin'],
     section: 'Administration',
   },
   {
     label: 'Audit Logs',
     path: '/audit-logs',
     icon: <HistoryIcon />,
-    roles: ['Admin'],
+    roles: ['admin'],
     section: 'Administration',
   },
 ]

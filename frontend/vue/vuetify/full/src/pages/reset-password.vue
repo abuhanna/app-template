@@ -211,7 +211,7 @@
     } catch (error) {
       console.error('Failed to reset password:', error)
       notificationStore.error(
-        error.response?.data?.message || 'Failed to reset password. The link may have expired.'
+        error.response?.data?.message || 'Failed to reset password. The link may have expired.',
       )
     } finally {
       loading.value = false

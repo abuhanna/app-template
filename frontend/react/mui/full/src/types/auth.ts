@@ -6,10 +6,14 @@ export interface LoginCredentials {
 }
 
 export interface AuthResponse {
-  token: string
-  refreshToken: string
-  refreshTokenExpiresAt: string
-  user: User
+  success: boolean
+  message: string
+  data: {
+    accessToken: string
+    refreshToken: string
+    expiresIn: number
+    user?: User
+  }
 }
 
 export interface RefreshTokenRequest {

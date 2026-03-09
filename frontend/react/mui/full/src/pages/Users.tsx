@@ -41,8 +41,8 @@ export default function Users() {
     password: '',
     firstName: '',
     lastName: '',
-    role: 'User',
-    departmentId: '',
+    role: 'user',
+    departmentId: undefined,
   })
 
   useEffect(() => {
@@ -58,8 +58,8 @@ export default function Users() {
       password: '',
       firstName: '',
       lastName: '',
-      role: 'User',
-      departmentId: '',
+      role: 'user',
+      departmentId: undefined,
     })
     setDialogOpen(true)
   }
@@ -73,7 +73,7 @@ export default function Users() {
       firstName: user.firstName || '',
       lastName: user.lastName || '',
       role: user.role,
-      departmentId: user.departmentId || '',
+      departmentId: user.departmentId,
     })
     setDialogOpen(true)
   }
@@ -86,7 +86,7 @@ export default function Users() {
   const handleSubmit = async () => {
     try {
       if (selectedUser) {
-        const { password, ...updateData } = formData
+        const { password: _password, username: _username, ...updateData } = formData
         await updateUser(selectedUser.id, updateData)
       } else {
         await createUser(formData)
@@ -133,13 +133,13 @@ export default function Users() {
                   <TableRow key={user.id}>
                     <TableCell>{user.username}</TableCell>
                     <TableCell>
-                      {user.firstName} {user.lastName}
+                      {user.fullName || `${user.firstName || ''} ${user.lastName || ''}`.trim() || '-'}
                     </TableCell>
                     <TableCell>{user.email}</TableCell>
                     <TableCell>
                       <Chip
                         label={user.role}
-                        color={user.role === 'Admin' ? 'primary' : 'default'}
+                        color={user.role === 'admin' ? 'primary' : 'default'}
                         size="small"
                       />
                     </TableCell>
@@ -229,8 +229,8 @@ export default function Users() {
                   label="Role"
                   onChange={(e) => setFormData({ ...formData, role: e.target.value })}
                 >
-                  <MenuItem value="User">User</MenuItem>
-                  <MenuItem value="Admin">Admin</MenuItem>
+                  <MenuItem value="user">User</MenuItem>
+                  <MenuItem value="admin">Admin</MenuItem>
                 </Select>
               </FormControl>
             </Grid>
@@ -238,9 +238,9 @@ export default function Users() {
               <FormControl fullWidth>
                 <InputLabel>Department</InputLabel>
                 <Select
-                  value={formData.departmentId}
+                  value={formData.departmentId ?? ''}
                   label="Department"
-                  onChange={(e) => setFormData({ ...formData, departmentId: e.target.value })}
+                  onChange={(e) => setFormData({ ...formData, departmentId: e.target.value ? Number(e.target.value) : undefined })}
                 >
                   <MenuItem value="">None</MenuItem>
                   {(departments || []).map((dept) => (

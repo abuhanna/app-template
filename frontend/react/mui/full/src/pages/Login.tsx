@@ -46,7 +46,7 @@ export default function Login() {
     try {
       await login({ username: username.trim(), password })
       navigate(from, { replace: true })
-    } catch (err) {
+    } catch {
       setError('Invalid username or password')
     }
   }

@@ -1,7 +1,7 @@
 <template>
   <v-container fluid>
     <v-row>
-      <v-col cols="12" class="d-flex justify-end">
+      <v-col class="d-flex justify-end" cols="12">
         <v-btn color="primary" prepend-icon="mdi-plus" @click="openCreateDialog">
           Add Department
         </v-btn>
@@ -12,21 +12,21 @@
       <v-col cols="12" md="6">
         <v-text-field
           v-model="search"
-          prepend-inner-icon="mdi-magnify"
-          label="Search departments..."
           clearable
-          hide-details
           density="compact"
+          hide-details
+          label="Search departments..."
+          prepend-inner-icon="mdi-magnify"
         />
       </v-col>
       <v-col cols="12" md="6">
         <v-select
           v-model="statusFilter"
+          clearable
+          density="compact"
+          hide-details
           :items="statusOptions"
           label="Status"
-          clearable
-          hide-details
-          density="compact"
         />
       </v-col>
     </v-row>
@@ -35,9 +35,9 @@
       <v-col cols="12">
         <v-data-table
           :headers="headers"
+          hover
           :items="filteredDepartments"
           :loading="departmentStore.loading"
-          hover
         >
           <template #item.isActive="{ item }">
             <v-chip :color="item.isActive ? 'success' : 'error'" size="small">
@@ -45,8 +45,14 @@
             </v-chip>
           </template>
           <template #item.actions="{ item }">
-            <v-btn icon="mdi-pencil" variant="text" size="small" @click="openEditDialog(item)" />
-            <v-btn icon="mdi-delete" variant="text" size="small" color="error" @click="confirmDelete(item)" />
+            <v-btn icon="mdi-pencil" size="small" variant="text" @click="openEditDialog(item)" />
+            <v-btn
+              color="error"
+              icon="mdi-delete"
+              size="small"
+              variant="text"
+              @click="confirmDelete(item)"
+            />
           </template>
         </v-data-table>
       </v-col>
@@ -76,8 +82,8 @@
             <v-switch
               v-if="isEditing"
               v-model="form.isActive"
-              label="Active"
               color="success"
+              label="Active"
             />
           </v-form>
         </v-card-text>
@@ -92,130 +98,130 @@
 </template>
 
 <script setup>
-import { useDepartmentStore } from '@/stores/department'
-import { useNotificationStore } from '@/stores/notification'
-import { useConfirmDialog } from '@/composables/useConfirmDialog'
+  import { useConfirmDialog } from '@/composables/useConfirmDialog'
+  import { useDepartmentStore } from '@/stores/department'
+  import { useNotificationStore } from '@/stores/notification'
 
-const departmentStore = useDepartmentStore()
-const notificationStore = useNotificationStore()
-const { confirm } = useConfirmDialog()
+  const departmentStore = useDepartmentStore()
+  const notificationStore = useNotificationStore()
+  const { confirm } = useConfirmDialog()
 
-const search = ref('')
-const statusFilter = ref(null)
-const dialog = ref(false)
-const isEditing = ref(false)
-const saving = ref(false)
-const formRef = ref(null)
-const form = ref({
-  id: null,
-  code: '',
-  name: '',
-  description: '',
-  isActive: true
-})
-
-const headers = [
-  { title: 'Code', key: 'code' },
-  { title: 'Name', key: 'name' },
-  { title: 'Description', key: 'description' },
-  { title: 'Status', key: 'isActive' },
-  { title: 'Actions', key: 'actions', sortable: false, align: 'end' }
-]
-
-const statusOptions = [
-  { title: 'Active', value: true },
-  { title: 'Inactive', value: false }
-]
-
-const filteredDepartments = computed(() => {
-  let result = departmentStore.items
-
-  if (search.value) {
-    const s = search.value.toLowerCase()
-    result = result.filter(d =>
-      d.code?.toLowerCase().includes(s) ||
-      d.name?.toLowerCase().includes(s)
-    )
-  }
-
-  if (statusFilter.value !== null) {
-    result = result.filter(d => d.isActive === statusFilter.value)
-  }
-
-  return result
-})
-
-const openCreateDialog = () => {
-  isEditing.value = false
-  form.value = {
+  const search = ref('')
+  const statusFilter = ref(null)
+  const dialog = ref(false)
+  const isEditing = ref(false)
+  const saving = ref(false)
+  const formRef = ref(null)
+  const form = ref({
     id: null,
     code: '',
     name: '',
     description: '',
-    isActive: true
-  }
-  dialog.value = true
-}
-
-const openEditDialog = (department) => {
-  isEditing.value = true
-  form.value = {
-    id: department.id,
-    code: department.code,
-    name: department.name,
-    description: department.description,
-    isActive: department.isActive
-  }
-  dialog.value = true
-}
-
-const saveDepartment = async () => {
-  const { valid } = await formRef.value.validate()
-  if (!valid) return
-
-  saving.value = true
-  try {
-    if (isEditing.value) {
-      await departmentStore.updateDepartment(form.value.id, {
-        code: form.value.code,
-        name: form.value.name,
-        description: form.value.description,
-        isActive: form.value.isActive
-      })
-      notificationStore.showSuccess('Department updated successfully')
-    } else {
-      await departmentStore.createDepartment(form.value)
-      notificationStore.showSuccess('Department created successfully')
-    }
-    dialog.value = false
-    await departmentStore.fetchDepartments()
-  } catch (error) {
-    notificationStore.showError(error.message || 'Failed to save department')
-  } finally {
-    saving.value = false
-  }
-}
-
-const confirmDelete = async (department) => {
-  const confirmed = await confirm({
-    title: 'Deactivate Department',
-    message: `Are you sure you want to deactivate ${department.name}?`,
-    icon: 'mdi-office-building-remove',
-    color: 'error'
+    isActive: true,
   })
 
-  if (confirmed) {
+  const headers = [
+    { title: 'Code', key: 'code' },
+    { title: 'Name', key: 'name' },
+    { title: 'Description', key: 'description' },
+    { title: 'Status', key: 'isActive' },
+    { title: 'Actions', key: 'actions', sortable: false, align: 'end' },
+  ]
+
+  const statusOptions = [
+    { title: 'Active', value: true },
+    { title: 'Inactive', value: false },
+  ]
+
+  const filteredDepartments = computed(() => {
+    let result = departmentStore.items
+
+    if (search.value) {
+      const s = search.value.toLowerCase()
+      result = result.filter(d =>
+        d.code?.toLowerCase().includes(s)
+        || d.name?.toLowerCase().includes(s),
+      )
+    }
+
+    if (statusFilter.value !== null) {
+      result = result.filter(d => d.isActive === statusFilter.value)
+    }
+
+    return result
+  })
+
+  function openCreateDialog () {
+    isEditing.value = false
+    form.value = {
+      id: null,
+      code: '',
+      name: '',
+      description: '',
+      isActive: true,
+    }
+    dialog.value = true
+  }
+
+  function openEditDialog (department) {
+    isEditing.value = true
+    form.value = {
+      id: department.id,
+      code: department.code,
+      name: department.name,
+      description: department.description,
+      isActive: department.isActive,
+    }
+    dialog.value = true
+  }
+
+  async function saveDepartment () {
+    const { valid } = await formRef.value.validate()
+    if (!valid) return
+
+    saving.value = true
     try {
-      await departmentStore.deleteDepartment(department.id)
-      notificationStore.showSuccess('Department deactivated successfully')
+      if (isEditing.value) {
+        await departmentStore.updateDepartment(form.value.id, {
+          code: form.value.code,
+          name: form.value.name,
+          description: form.value.description,
+          isActive: form.value.isActive,
+        })
+        notificationStore.showSuccess('Department updated successfully')
+      } else {
+        await departmentStore.createDepartment(form.value)
+        notificationStore.showSuccess('Department created successfully')
+      }
+      dialog.value = false
       await departmentStore.fetchDepartments()
-    } catch {
-      // Error toast handled by store
+    } catch (error) {
+      notificationStore.showError(error.message || 'Failed to save department')
+    } finally {
+      saving.value = false
     }
   }
-}
 
-onMounted(async () => {
-  await departmentStore.fetchDepartments()
-})
+  async function confirmDelete (department) {
+    const confirmed = await confirm({
+      title: 'Deactivate Department',
+      message: `Are you sure you want to deactivate ${department.name}?`,
+      icon: 'mdi-office-building-remove',
+      color: 'error',
+    })
+
+    if (confirmed) {
+      try {
+        await departmentStore.deleteDepartment(department.id)
+        notificationStore.showSuccess('Department deactivated successfully')
+        await departmentStore.fetchDepartments()
+      } catch {
+      // Error toast handled by store
+      }
+    }
+  }
+
+  onMounted(async () => {
+    await departmentStore.fetchDepartments()
+  })
 </script>

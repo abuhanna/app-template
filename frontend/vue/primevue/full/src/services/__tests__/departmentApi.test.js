@@ -1,4 +1,13 @@
-import { describe, it, expect, beforeEach, vi } from 'vitest'
+import { beforeEach, describe, expect, it, vi } from 'vitest'
+
+import api from '../api'
+import {
+  createDepartment,
+  deleteDepartment,
+  fetchDepartment,
+  fetchDepartments,
+  updateDepartment,
+} from '../departmentApi'
 
 vi.mock('../api', () => ({
   default: {
@@ -8,15 +17,6 @@ vi.mock('../api', () => ({
     delete: vi.fn(),
   },
 }))
-
-import api from '../api'
-import {
-  fetchDepartments,
-  fetchDepartment,
-  createDepartment,
-  updateDepartment,
-  deleteDepartment,
-} from '../departmentApi'
 
 describe('Department API Service', () => {
   beforeEach(() => {

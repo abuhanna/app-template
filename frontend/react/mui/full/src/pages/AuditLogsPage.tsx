@@ -32,7 +32,7 @@ import {
   History as HistoryIcon,
 } from '@mui/icons-material'
 import { useNotificationStore } from '@/stores/notificationStore'
-import { getAuditLogs, type AuditLog } from '@/services/auditLogService'
+import { getAuditLogs, type AuditLog, type GetAuditLogsParams } from '@/services/auditLogService'
 
 export default function AuditLogsPage() {
   const showError = useNotificationStore((state) => state.showError)
@@ -41,6 +41,7 @@ export default function AuditLogsPage() {
   const [auditLogs, setAuditLogs] = useState<AuditLog[]>([])
   const [page, setPage] = useState(0)
   const [rowsPerPage, setRowsPerPage] = useState(10)
+  const [totalItems, setTotalItems] = useState(0)
 
   // Filters
   const [entityFilter, setEntityFilter] = useState('')
@@ -51,22 +52,26 @@ export default function AuditLogsPage() {
   const [selectedLog, setSelectedLog] = useState<AuditLog | null>(null)
 
   const entityOptions = ['User', 'Department', 'UploadedFile']
-  const actionOptions = ['Created', 'Updated', 'Deleted']
+  const actionOptions = ['create', 'update', 'delete']
 
   const loadAuditLogs = useCallback(async () => {
     setLoading(true)
     try {
-      const params: Record<string, string> = {}
-      if (entityFilter) params.entityName = entityFilter
-      if (actionFilter) params.action = actionFilter
+      const params: GetAuditLogsParams = {
+        page: page + 1,
+        pageSize: rowsPerPage,
+        ...(entityFilter && { entityType: entityFilter }),
+        ...(actionFilter && { action: actionFilter }),
+      }
       const result = await getAuditLogs(params)
-      setAuditLogs(result.items || [])
+      setAuditLogs(result.data || [])
+      setTotalItems(result.pagination?.totalItems ?? 0)
     } catch {
       showError('Failed to load audit logs')
     } finally {
       setLoading(false)
     }
-  }, [entityFilter, actionFilter, showError])
+  }, [entityFilter, actionFilter, page, rowsPerPage, showError])
 
   useEffect(() => {
     loadAuditLogs()
@@ -84,23 +89,14 @@ export default function AuditLogsPage() {
 
   const getActionColor = (action: string): 'success' | 'info' | 'error' | 'default' => {
     switch (action?.toLowerCase()) {
-      case 'created':
+      case 'create':
         return 'success'
-      case 'updated':
+      case 'update':
         return 'info'
-      case 'deleted':
+      case 'delete':
         return 'error'
       default:
         return 'default'
-    }
-  }
-
-  const formatJson = (jsonString: string | null): string | null => {
-    if (!jsonString) return null
-    try {
-      return JSON.stringify(JSON.parse(jsonString), null, 2)
-    } catch {
-      return jsonString
     }
   }
 
@@ -117,8 +113,6 @@ export default function AuditLogsPage() {
     setRowsPerPage(parseInt(event.target.value, 10))
     setPage(0)
   }
-
-  const paginatedLogs = auditLogs.slice(page * rowsPerPage, page * rowsPerPage + rowsPerPage)
 
   return (
     <Box sx={{ p: 3 }}>
@@ -137,11 +131,11 @@ export default function AuditLogsPage() {
           {/* Filters */}
           <Box sx={{ display: 'flex', gap: 2, mb: 3, flexWrap: 'wrap' }}>
             <FormControl size="small" sx={{ minWidth: 150 }}>
-              <InputLabel>Entity</InputLabel>
+              <InputLabel>Entity Type</InputLabel>
               <Select
                 value={entityFilter}
-                label="Entity"
-                onChange={(e) => setEntityFilter(e.target.value)}
+                label="Entity Type"
+                onChange={(e) => { setEntityFilter(e.target.value); setPage(0) }}
               >
                 <MenuItem value="">All</MenuItem>
                 {entityOptions.map((opt) => (
@@ -155,7 +149,7 @@ export default function AuditLogsPage() {
               <Select
                 value={actionFilter}
                 label="Action"
-                onChange={(e) => setActionFilter(e.target.value)}
+                onChange={(e) => { setActionFilter(e.target.value); setPage(0) }}
               >
                 <MenuItem value="">All</MenuItem>
                 {actionOptions.map((opt) => (
@@ -180,32 +174,36 @@ export default function AuditLogsPage() {
                 <Table>
                   <TableHead>
                     <TableRow>
-                      <TableCell>Entity</TableCell>
+                      <TableCell>Entity Type</TableCell>
                       <TableCell>Entity ID</TableCell>
                       <TableCell>Action</TableCell>
-                      <TableCell>User ID</TableCell>
-                      <TableCell>Timestamp</TableCell>
-                      <TableCell align="center">Details</TableCell>
+                      <TableCell>User</TableCell>
+                      <TableCell>Details</TableCell>
+                      <TableCell>Created At</TableCell>
+                      <TableCell align="center">View</TableCell>
                     </TableRow>
                   </TableHead>
                   <TableBody>
-                    {paginatedLogs.length === 0 ? (
+                    {auditLogs.length === 0 ? (
                       <TableRow>
-                        <TableCell colSpan={6} align="center" sx={{ py: 5 }}>
+                        <TableCell colSpan={7} align="center" sx={{ py: 5 }}>
                           <HistoryIcon sx={{ fontSize: 48, color: 'text.disabled', mb: 1 }} />
                           <Typography color="text.secondary">No audit logs found</Typography>
                         </TableCell>
                       </TableRow>
                     ) : (
-                      paginatedLogs.map((log) => (
+                      auditLogs.map((log) => (
                         <TableRow key={log.id}>
-                          <TableCell>{log.entityName}</TableCell>
-                          <TableCell>{log.entityId}</TableCell>
+                          <TableCell>{log.entityType}</TableCell>
+                          <TableCell>{log.entityId || '-'}</TableCell>
                           <TableCell>
                             <Chip label={log.action} color={getActionColor(log.action)} size="small" />
                           </TableCell>
-                          <TableCell>{log.userId || '-'}</TableCell>
-                          <TableCell>{formatDate(log.timestamp)}</TableCell>
+                          <TableCell>{log.userName || log.userId || '-'}</TableCell>
+                          <TableCell sx={{ maxWidth: 200, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+                            {log.details || '-'}
+                          </TableCell>
+                          <TableCell>{formatDate(log.createdAt)}</TableCell>
                           <TableCell align="center">
                             <IconButton size="small" onClick={() => handleShowDetails(log)}>
                               <VisibilityIcon />
@@ -220,7 +218,7 @@ export default function AuditLogsPage() {
               <TablePagination
                 rowsPerPageOptions={[5, 10, 25, 50]}
                 component="div"
-                count={auditLogs.length}
+                count={totalItems}
                 rowsPerPage={rowsPerPage}
                 page={page}
                 onPageChange={handleChangePage}
@@ -238,48 +236,35 @@ export default function AuditLogsPage() {
           {selectedLog && (
             <Box sx={{ display: 'flex', flexDirection: 'column', gap: 2 }}>
               <Box sx={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 2 }}>
-                <Typography><strong>Entity:</strong> {selectedLog.entityName}</Typography>
-                <Typography><strong>Entity ID:</strong> {selectedLog.entityId}</Typography>
+                <Typography><strong>Entity Type:</strong> {selectedLog.entityType}</Typography>
+                <Typography><strong>Entity ID:</strong> {selectedLog.entityId || '-'}</Typography>
                 <Typography>
                   <strong>Action:</strong>{' '}
                   <Chip label={selectedLog.action} color={getActionColor(selectedLog.action)} size="small" />
                 </Typography>
-                <Typography><strong>User ID:</strong> {selectedLog.userId || '-'}</Typography>
+                <Typography><strong>User:</strong> {selectedLog.userName || selectedLog.userId || '-'}</Typography>
                 <Typography sx={{ gridColumn: '1 / -1' }}>
-                  <strong>Timestamp:</strong> {formatDate(selectedLog.timestamp)}
+                  <strong>Created At:</strong> {formatDate(selectedLog.createdAt)}
                 </Typography>
               </Box>
 
               <Divider />
 
-              {selectedLog.oldValues && (
+              {selectedLog.details && (
                 <Box>
-                  <Typography variant="subtitle2" gutterBottom>Old Values:</Typography>
+                  <Typography variant="subtitle2" gutterBottom>Details:</Typography>
                   <Paper sx={{ p: 2, bgcolor: 'grey.100', overflow: 'auto' }}>
                     <pre style={{ margin: 0, whiteSpace: 'pre-wrap' }}>
-                      {formatJson(selectedLog.oldValues)}
+                      {selectedLog.details}
                     </pre>
                   </Paper>
                 </Box>
               )}
 
-              {selectedLog.newValues && (
+              {selectedLog.ipAddress && (
                 <Box>
-                  <Typography variant="subtitle2" gutterBottom>New Values:</Typography>
-                  <Paper sx={{ p: 2, bgcolor: 'grey.100', overflow: 'auto' }}>
-                    <pre style={{ margin: 0, whiteSpace: 'pre-wrap' }}>
-                      {formatJson(selectedLog.newValues)}
-                    </pre>
-                  </Paper>
-                </Box>
-              )}
-
-              {selectedLog.affectedColumns && (
-                <Box>
-                  <Typography variant="subtitle2" gutterBottom>Affected Columns:</Typography>
-                  <Paper sx={{ p: 2, bgcolor: 'grey.100' }}>
-                    <pre style={{ margin: 0 }}>{formatJson(selectedLog.affectedColumns)}</pre>
-                  </Paper>
+                  <Typography variant="subtitle2" gutterBottom>IP Address:</Typography>
+                  <Typography>{selectedLog.ipAddress}</Typography>
                 </Box>
               )}
             </Box>

@@ -5,9 +5,9 @@
       <div v-if="isInitializing" class="loading-screen">
         <div class="loading-content">
           <ProgressSpinner
+            animation-duration=".8s"
+            stroke-width="4"
             style="width: 64px; height: 64px"
-            strokeWidth="4"
-            animationDuration=".8s"
           />
           <p class="loading-text">Loading...</p>
         </div>
@@ -23,51 +23,51 @@
 </template>
 
 <script setup>
-import { onMounted, ref, watch } from 'vue'
-import { useAuthStore } from '@/stores/auth'
-import { useNotificationStore } from '@/stores/notification'
-import { useThemeStore } from '@/stores/theme'
-import { useToast } from 'primevue/usetoast'
-import Toast from 'primevue/toast'
-import ProgressSpinner from 'primevue/progressspinner'
+  import ProgressSpinner from 'primevue/progressspinner'
+  import Toast from 'primevue/toast'
+  import { useToast } from 'primevue/usetoast'
+  import { onMounted, ref, watch } from 'vue'
+  import { useAuthStore } from '@/stores/auth'
+  import { useNotificationStore } from '@/stores/notification'
+  import { useThemeStore } from '@/stores/theme'
 
-const authStore = useAuthStore()
-const notificationStore = useNotificationStore()
-const themeStore = useThemeStore()
-const toast = useToast()
+  const authStore = useAuthStore()
+  const notificationStore = useNotificationStore()
+  const themeStore = useThemeStore()
+  const toast = useToast()
 
-const isInitializing = ref(true)
+  const isInitializing = ref(true)
 
-// Watch for notifications and display toasts
-watch(() => notificationStore.show, (newValue) => {
-  if (newValue) {
-    toast.add({
-      severity: notificationStore.type,
-      summary: notificationStore.type.charAt(0).toUpperCase() + notificationStore.type.slice(1),
-      detail: notificationStore.message,
-      life: notificationStore.timeout
-    })
+  // Watch for notifications and display toasts
+  watch(() => notificationStore.show, newValue => {
+    if (newValue) {
+      toast.add({
+        severity: notificationStore.type,
+        summary: notificationStore.type.charAt(0).toUpperCase() + notificationStore.type.slice(1),
+        detail: notificationStore.message,
+        life: notificationStore.timeout,
+      })
 
-    // Reset show state so it can be triggered again even with same message
-    // Use a small timeout to avoid immediate reset loops if any
-    setTimeout(() => {
+      // Reset show state so it can be triggered again even with same message
+      // Use a small timeout to avoid immediate reset loops if any
+      setTimeout(() => {
         notificationStore.hide()
-    }, 100)
-  }
-})
+      }, 100)
+    }
+  })
 
-onMounted(() => {
-  // Initialize theme (store auto-applies on creation)
-  // Theme is already applied in the store constructor
+  onMounted(() => {
+    // Initialize theme (store auto-applies on creation)
+    // Theme is already applied in the store constructor
 
-  // Initialize auth from localStorage
-  authStore.initAuth()
+    // Initialize auth from localStorage
+    authStore.initAuth()
 
-  // Small delay to ensure smooth transition
-  setTimeout(() => {
-    isInitializing.value = false
-  }, 300)
-})
+    // Small delay to ensure smooth transition
+    setTimeout(() => {
+      isInitializing.value = false
+    }, 300)
+  })
 </script>
 
 <style>

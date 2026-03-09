@@ -1,14 +1,25 @@
 import api from './api'
 
 export default {
-  getMyNotifications (params = {}) {
-    return api.get('/notifications', { params })
+  async getMyNotifications (params = {}) {
+    const response = await api.get('/notifications', { params })
+    return response.data
   },
 
-  markAsRead (id) {
-    return api.put(`/notifications/${id}/read`)
+  async getUnreadCount () {
+    const response = await api.get('/notifications/unread-count')
+    return response.data
   },
-  markAllAsRead () {
-    return api.put('/notifications/read-all')
+
+  async markAsRead (id) {
+    await api.put(`/notifications/${id}/read`)
+  },
+
+  async markAllAsRead () {
+    await api.put('/notifications/read-all')
+  },
+
+  async deleteNotification (id) {
+    await api.delete(`/notifications/${id}`)
   },
 }

@@ -53,7 +53,7 @@ export default function Dashboard() {
   const { users, fetchUsers } = useUserStore()
   const { departments, fetchDepartments } = useDepartmentStore()
 
-  const isAdmin = useMemo(() => user?.role === 'Admin', [user])
+  const isAdmin = useMemo(() => user?.role === 'admin', [user])
 
   const [stats, setStats] = useState<Stats>({
     totalUsers: 0,

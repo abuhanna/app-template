@@ -40,12 +40,20 @@ api.interceptors.request.use(
 
 // Helper to extract error message from response
 const getErrorMessage = (error: AxiosError): string => {
-  const data = error.response?.data as { message?: string; title?: string; errors?: Record<string, string[]>; error?: { message?: string } }
+  const data = error.response?.data as {
+    message?: string
+    title?: string
+    errors?: string[] | Record<string, string[]>
+    error?: { message?: string }
+  }
 
   if (data?.error?.message) return data.error.message
   if (data?.message) return data.message
   if (data?.title) return data.title
-  if (data?.errors) {
+  if (data?.errors && Array.isArray(data.errors)) {
+    return data.errors.join('. ')
+  }
+  if (data?.errors && typeof data.errors === 'object') {
     const firstError = Object.values(data.errors)[0]
     if (firstError?.[0]) return firstError[0]
   }

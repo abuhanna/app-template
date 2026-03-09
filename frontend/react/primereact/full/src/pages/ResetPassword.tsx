@@ -66,14 +66,12 @@ export default function ResetPassword() {
     setError('')
 
     try {
-      await authApi.resetPassword({
-        token,
-        newPassword: password,
-      })
+      await authApi.resetPassword(token, password, confirmPassword)
       setSuccess(true)
-    } catch (err: any) {
+    } catch (err: unknown) {
+      const axiosErr = err as { response?: { data?: { message?: string } } }
       setError(
-        err.response?.data?.message || 'Failed to reset password. The link may have expired.'
+        axiosErr.response?.data?.message || 'Failed to reset password. The link may have expired.'
       )
     } finally {
       setLoading(false)

@@ -6,7 +6,7 @@ import {
   type PaginationMeta,
   DEFAULT_PAGE,
   DEFAULT_PAGE_SIZE,
-  DEFAULT_SORT_DIR,
+  DEFAULT_SORT_ORDER,
   PAGE_SIZE_OPTIONS,
 } from '@/types/pagination'
 
@@ -18,7 +18,7 @@ export interface UsePaginationOptions {
   /** Default sort field */
   defaultSortBy?: string
   /** Default sort direction (default: 'asc') */
-  defaultSortDir?: SortDirection
+  defaultSortOrder?: SortDirection
   /** Sync pagination state with URL query params (default: true) */
   syncWithUrl?: boolean
   /** Query param prefix for URL sync (useful when multiple paginated lists on same page) */
@@ -30,7 +30,7 @@ export interface UsePaginationReturn {
   page: number
   pageSize: number
   sortBy: string
-  sortDir: SortDirection
+  sortOrder: SortDirection
   totalItems: number
 
   // Computed
@@ -43,7 +43,7 @@ export interface UsePaginationReturn {
   // Control functions
   setPage: (page: number) => void
   setPageSize: (pageSize: number) => void
-  setSort: (sortBy: string, sortDir?: SortDirection) => void
+  setSort: (sortBy: string, sortOrder?: SortDirection) => void
   setTotalItems: (total: number) => void
   reset: () => void
   nextPage: () => void
@@ -70,7 +70,7 @@ export interface UsePaginationReturn {
  *   page,
  *   pageSize,
  *   sortBy,
- *   sortDir,
+ *   sortOrder,
  *   totalItems,
  *   totalPages,
  *   hasNext,
@@ -84,18 +84,18 @@ export interface UsePaginationReturn {
  * } = usePagination({
  *   defaultPageSize: 25,
  *   defaultSortBy: 'createdAt',
- *   defaultSortDir: 'desc'
+ *   defaultSortOrder: 'desc'
  * })
  *
  * // Fetch data with pagination params
  * useEffect(() => {
  *   const fetchData = async () => {
  *     const result = await api.getUsers(paginationParams)
- *     setUsers(result.items)
+ *     setUsers(result.data)
  *     setTotalItems(result.pagination.totalItems)
  *   }
  *   fetchData()
- * }, [page, pageSize, sortBy, sortDir])
+ * }, [page, pageSize, sortBy, sortOrder])
  * ```
  */
 export function usePagination(options: UsePaginationOptions = {}): UsePaginationReturn {
@@ -103,7 +103,7 @@ export function usePagination(options: UsePaginationOptions = {}): UsePagination
     defaultPage = DEFAULT_PAGE,
     defaultPageSize = DEFAULT_PAGE_SIZE,
     defaultSortBy = '',
-    defaultSortDir = DEFAULT_SORT_DIR,
+    defaultSortOrder = DEFAULT_SORT_ORDER,
     syncWithUrl = true,
     urlPrefix = '',
   } = options
@@ -138,7 +138,7 @@ export function usePagination(options: UsePaginationOptions = {}): UsePagination
   )
 
   // Helper to parse sort direction
-  const parseQuerySortDir = useCallback(
+  const parseQuerySortOrder = useCallback(
     (paramName: string, defaultValue: SortDirection): SortDirection => {
       const value = searchParams.get(getParamName(paramName))
       if (value === 'asc' || value === 'desc') {
@@ -173,18 +173,18 @@ export function usePagination(options: UsePaginationOptions = {}): UsePagination
     return defaultSortBy
   }
 
-  const getInitialSortDir = (): SortDirection => {
+  const getInitialSortOrder = (): SortDirection => {
     if (syncWithUrl) {
-      return parseQuerySortDir('sortDir', defaultSortDir)
+      return parseQuerySortOrder('sortOrder', defaultSortOrder)
     }
-    return defaultSortDir
+    return defaultSortOrder
   }
 
   // State
   const [page, setPageState] = useState(getInitialPage)
   const [pageSize, setPageSizeState] = useState(getInitialPageSize)
   const [sortBy, setSortByState] = useState(getInitialSortBy)
-  const [sortDir, setSortDirState] = useState<SortDirection>(getInitialSortDir)
+  const [sortOrder, setSortOrderState] = useState<SortDirection>(getInitialSortOrder)
   const [totalItems, setTotalItemsState] = useState(0)
 
   // Computed values
@@ -201,9 +201,9 @@ export function usePagination(options: UsePaginationOptions = {}): UsePagination
       page,
       pageSize,
       ...(sortBy && { sortBy }),
-      ...(sortBy && { sortDir }),
+      ...(sortBy && { sortOrder }),
     }),
-    [page, pageSize, sortBy, sortDir]
+    [page, pageSize, sortBy, sortOrder]
   )
 
   const paginationMeta = useMemo<PaginationMeta>(
@@ -220,7 +220,7 @@ export function usePagination(options: UsePaginationOptions = {}): UsePagination
 
   // URL sync helper
   const updateUrl = useCallback(
-    (newPage: number, newPageSize: number, newSortBy: string, newSortDir: SortDirection) => {
+    (newPage: number, newPageSize: number, newSortBy: string, newSortOrder: SortDirection) => {
       if (!syncWithUrl) return
 
       setSearchParams(
@@ -246,10 +246,10 @@ export function usePagination(options: UsePaginationOptions = {}): UsePagination
             params.delete(getParamName('sortBy'))
           }
 
-          if (newSortBy && newSortDir !== defaultSortDir) {
-            params.set(getParamName('sortDir'), newSortDir)
+          if (newSortBy && newSortOrder !== defaultSortOrder) {
+            params.set(getParamName('sortOrder'), newSortOrder)
           } else {
-            params.delete(getParamName('sortDir'))
+            params.delete(getParamName('sortOrder'))
           }
 
           return params
@@ -257,7 +257,7 @@ export function usePagination(options: UsePaginationOptions = {}): UsePagination
         { replace: true }
       )
     },
-    [syncWithUrl, setSearchParams, getParamName, defaultPage, defaultPageSize, defaultSortBy, defaultSortDir]
+    [syncWithUrl, setSearchParams, getParamName, defaultPage, defaultPageSize, defaultSortBy, defaultSortOrder]
   )
 
   // Control functions
@@ -270,9 +270,9 @@ export function usePagination(options: UsePaginationOptions = {}): UsePagination
         validPage = totalPages
       }
       setPageState(validPage)
-      updateUrl(validPage, pageSize, sortBy, sortDir)
+      updateUrl(validPage, pageSize, sortBy, sortOrder)
     },
-    [totalPages, pageSize, sortBy, sortDir, updateUrl]
+    [totalPages, pageSize, sortBy, sortOrder, updateUrl]
   )
 
   const setPageSize = useCallback(
@@ -285,29 +285,29 @@ export function usePagination(options: UsePaginationOptions = {}): UsePagination
       setPageSizeState(validPageSize)
       // Reset to first page when page size changes
       setPageState(1)
-      updateUrl(1, validPageSize, sortBy, sortDir)
+      updateUrl(1, validPageSize, sortBy, sortOrder)
     },
-    [defaultPageSize, sortBy, sortDir, updateUrl]
+    [defaultPageSize, sortBy, sortOrder, updateUrl]
   )
 
   const setSort = useCallback(
-    (newSortBy: string, newSortDir?: SortDirection) => {
-      let finalSortDir: SortDirection
+    (newSortBy: string, newSortOrder?: SortDirection) => {
+      let finalSortOrder: SortDirection
 
       // If clicking the same column, toggle direction
-      if (sortBy === newSortBy && newSortDir === undefined) {
-        finalSortDir = sortDir === 'asc' ? 'desc' : 'asc'
+      if (sortBy === newSortBy && newSortOrder === undefined) {
+        finalSortOrder = sortOrder === 'asc' ? 'desc' : 'asc'
       } else {
-        finalSortDir = newSortDir ?? 'asc'
+        finalSortOrder = newSortOrder ?? 'asc'
       }
 
       setSortByState(newSortBy)
-      setSortDirState(finalSortDir)
+      setSortOrderState(finalSortOrder)
       // Reset to first page when sort changes
       setPageState(1)
-      updateUrl(1, pageSize, newSortBy, finalSortDir)
+      updateUrl(1, pageSize, newSortBy, finalSortOrder)
     },
-    [sortBy, sortDir, pageSize, updateUrl]
+    [sortBy, sortOrder, pageSize, updateUrl]
   )
 
   const setTotalItems = useCallback(
@@ -328,10 +328,10 @@ export function usePagination(options: UsePaginationOptions = {}): UsePagination
     setPageState(defaultPage)
     setPageSizeState(defaultPageSize)
     setSortByState(defaultSortBy)
-    setSortDirState(defaultSortDir)
+    setSortOrderState(defaultSortOrder)
     setTotalItemsState(0)
-    updateUrl(defaultPage, defaultPageSize, defaultSortBy, defaultSortDir)
-  }, [defaultPage, defaultPageSize, defaultSortBy, defaultSortDir, updateUrl])
+    updateUrl(defaultPage, defaultPageSize, defaultSortBy, defaultSortOrder)
+  }, [defaultPage, defaultPageSize, defaultSortBy, defaultSortOrder, updateUrl])
 
   const nextPage = useCallback(() => {
     if (hasNext) {
@@ -362,26 +362,26 @@ export function usePagination(options: UsePaginationOptions = {}): UsePagination
     const newPage = parseQueryNumber('page', defaultPage)
     const newPageSize = parseQueryNumber('pageSize', defaultPageSize)
     const newSortBy = parseQueryString('sortBy', defaultSortBy)
-    const newSortDir = parseQuerySortDir('sortDir', defaultSortDir)
+    const newSortOrder = parseQuerySortOrder('sortOrder', defaultSortOrder)
 
     if (newPage !== page) setPageState(newPage)
     if (newPageSize !== pageSize) setPageSizeState(newPageSize)
     if (newSortBy !== sortBy) setSortByState(newSortBy)
-    if (newSortDir !== sortDir) setSortDirState(newSortDir)
+    if (newSortOrder !== sortOrder) setSortOrderState(newSortOrder)
   }, [
     searchParams,
     syncWithUrl,
     parseQueryNumber,
     parseQueryString,
-    parseQuerySortDir,
+    parseQuerySortOrder,
     defaultPage,
     defaultPageSize,
     defaultSortBy,
-    defaultSortDir,
+    defaultSortOrder,
     page,
     pageSize,
     sortBy,
-    sortDir,
+    sortOrder,
   ])
 
   return {
@@ -389,7 +389,7 @@ export function usePagination(options: UsePaginationOptions = {}): UsePagination
     page,
     pageSize,
     sortBy,
-    sortDir,
+    sortOrder,
     totalItems,
 
     // Computed

@@ -1,4 +1,7 @@
-import { describe, it, expect, beforeEach, vi } from 'vitest'
+import { beforeEach, describe, expect, it, vi } from 'vitest'
+
+import api from '../api'
+import notificationApi from '../notificationApi'
 
 vi.mock('../api', () => ({
   default: {
@@ -8,9 +11,6 @@ vi.mock('../api', () => ({
     delete: vi.fn(),
   },
 }))
-
-import api from '../api'
-import notificationApi from '../notificationApi'
 
 describe('Notification API Service', () => {
   beforeEach(() => {

@@ -2,9 +2,9 @@
   <div class="login-page">
     <!-- Animated Background -->
     <div class="login-background">
-      <div class="shape shape-1"></div>
-      <div class="shape shape-2"></div>
-      <div class="shape shape-3"></div>
+      <div class="shape shape-1" />
+      <div class="shape shape-2" />
+      <div class="shape shape-3" />
     </div>
 
     <!-- Login Card -->
@@ -13,29 +13,29 @@
         <!-- Logo & Header -->
         <div class="login-header">
           <div class="logo-wrapper">
-            <i class="pi pi-box"></i>
+            <i class="pi pi-box" />
           </div>
           <h1>AppTemplate</h1>
           <p>Welcome back! Please sign in to continue.</p>
         </div>
 
         <!-- Form -->
-        <form @submit.prevent="handleLogin" class="login-form">
-          <Message v-if="error" severity="error" :closable="false" class="mb-4">
+        <form class="login-form" @submit.prevent="handleLogin">
+          <Message v-if="error" class="mb-4" :closable="false" severity="error">
             {{ error }}
           </Message>
 
           <div class="field">
             <label for="username">
-              <i class="pi pi-user"></i>
+              <i class="pi pi-user" />
               Username
             </label>
             <InputText
               id="username"
               v-model="form.username"
-              placeholder="Enter your username"
               :disabled="loading"
               :invalid="!!errors.username"
+              placeholder="Enter your username"
               size="large"
             />
             <small v-if="errors.username" class="p-error">{{ errors.username }}</small>
@@ -43,38 +43,36 @@
 
           <div class="field">
             <label for="password">
-              <i class="pi pi-lock"></i>
+              <i class="pi pi-lock" />
               Password
             </label>
             <Password
               id="password"
               v-model="form.password"
-              placeholder="Enter your password"
               :disabled="loading"
               :feedback="false"
-              toggleMask
+              input-class="w-full"
               :invalid="!!errors.password"
-              inputClass="w-full"
+              placeholder="Enter your password"
               size="large"
+              toggle-mask
             />
             <small v-if="errors.password" class="p-error">{{ errors.password }}</small>
           </div>
 
-
-
           <div class="form-options">
-            <router-link to="/forgot-password" class="forgot-link">
+            <router-link class="forgot-link" to="/forgot-password">
               Forgot password?
             </router-link>
           </div>
 
           <Button
-            type="submit"
-            label="Sign In"
+            class="submit-button"
             icon="pi pi-sign-in"
+            label="Sign In"
             :loading="loading"
             size="large"
-            class="submit-button"
+            type="submit"
           />
         </form>
 
@@ -88,76 +86,76 @@
 </template>
 
 <script setup>
-import { ref, reactive, onMounted } from 'vue'
-import { useRouter } from 'vue-router'
-import { useAuthStore } from '@/stores/auth'
-import InputText from 'primevue/inputtext'
-import Password from 'primevue/password'
-import Button from 'primevue/button'
-import Message from 'primevue/message'
+  import Button from 'primevue/button'
+  import InputText from 'primevue/inputtext'
+  import Message from 'primevue/message'
+  import Password from 'primevue/password'
+  import { onMounted, reactive, ref } from 'vue'
+  import { useRouter } from 'vue-router'
+  import { useAuthStore } from '@/stores/auth'
 
-definePage({
-  meta: {
-    layout: 'blank',
-  },
-})
+  definePage({
+    meta: {
+      layout: 'blank',
+    },
+  })
 
-const router = useRouter()
-const authStore = useAuthStore()
+  const router = useRouter()
+  const authStore = useAuthStore()
 
-const loading = ref(false)
-const error = ref('')
-const form = reactive({
-  username: '',
-  password: '',
-})
-const errors = reactive({
-  username: '',
-  password: '',
-})
+  const loading = ref(false)
+  const error = ref('')
+  const form = reactive({
+    username: '',
+    password: '',
+  })
+  const errors = reactive({
+    username: '',
+    password: '',
+  })
 
-onMounted(() => {
-  if (authStore.isAuthenticated) {
-    router.push('/notifications')
+  onMounted(() => {
+    if (authStore.isAuthenticated) {
+      router.push('/notifications')
+    }
+  })
+
+  function validate () {
+    errors.username = ''
+    errors.password = ''
+    let valid = true
+
+    if (!form.username.trim()) {
+      errors.username = 'Username is required'
+      valid = false
+    }
+
+    if (!form.password) {
+      errors.password = 'Password is required'
+      valid = false
+    }
+
+    return valid
   }
-})
 
-const validate = () => {
-  errors.username = ''
-  errors.password = ''
-  let valid = true
+  async function handleLogin () {
+    if (!validate()) return
 
-  if (!form.username.trim()) {
-    errors.username = 'Username is required'
-    valid = false
+    loading.value = true
+    error.value = ''
+
+    try {
+      await authStore.login({
+        username: form.username,
+        password: form.password,
+      })
+      router.push('/notifications')
+    } catch (error_) {
+      error.value = error_.response?.data?.message || 'Invalid username or password'
+    } finally {
+      loading.value = false
+    }
   }
-
-  if (!form.password) {
-    errors.password = 'Password is required'
-    valid = false
-  }
-
-  return valid
-}
-
-const handleLogin = async () => {
-  if (!validate()) return
-
-  loading.value = true
-  error.value = ''
-
-  try {
-    await authStore.login({
-      username: form.username,
-      password: form.password,
-    })
-    router.push('/notifications')
-  } catch (err) {
-    error.value = err.response?.data?.message || 'Invalid username or password'
-  } finally {
-    loading.value = false
-  }
-}
 </script>
 
 <style scoped>
@@ -232,7 +230,7 @@ const handleLogin = async () => {
   background: rgba(255, 255, 255, 0.95);
   backdrop-filter: blur(20px);
   border-radius: 24px;
-  box-shadow: 
+  box-shadow:
     0 25px 50px -12px rgba(0, 0, 0, 0.4),
     0 0 0 1px rgba(255, 255, 255, 0.1),
     inset 0 1px 0 rgba(255, 255, 255, 0.5);
@@ -358,8 +356,6 @@ const handleLogin = async () => {
 .field :deep(.p-password-mask-toggle:hover) {
   color: #6366f1;
 }
-
-
 
 .form-options {
   display: flex;

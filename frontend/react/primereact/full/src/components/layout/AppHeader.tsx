@@ -87,10 +87,11 @@ export function AppHeader({ onToggleSidebar }: AppHeaderProps) {
   }
 
   const getInitials = () => {
-    if (user?.name) {
-      return user.name
+    const displayName = user?.fullName || `${user?.firstName || ''} ${user?.lastName || ''}`.trim()
+    if (displayName) {
+      return displayName
         .split(' ')
-        .map((n) => n[0])
+        .map((n: string) => n[0])
         .join('')
         .toUpperCase()
         .substring(0, 2)
@@ -100,7 +101,7 @@ export function AppHeader({ onToggleSidebar }: AppHeaderProps) {
 
   const menuItems = [
     {
-      label: user?.name || user?.username,
+      label: user?.fullName || `${user?.firstName || ''} ${user?.lastName || ''}`.trim() || user?.username,
       disabled: true,
       style: { opacity: 1, fontWeight: 'bold' },
     },

@@ -1,5 +1,7 @@
-import { describe, it, expect, beforeEach, vi } from 'vitest'
-import { setActivePinia, createPinia } from 'pinia'
+import { createPinia, setActivePinia } from 'pinia'
+import { beforeEach, describe, expect, it, vi } from 'vitest'
+
+import * as authApi from '@/services/authApi'
 
 vi.mock('@/services/authApi', () => ({
   login: vi.fn(),
@@ -11,8 +13,6 @@ vi.mock('@/router', () => ({
   default: { push: vi.fn() },
 }))
 
-import * as authApi from '@/services/authApi'
-
 describe('Auth Store', () => {
   beforeEach(() => {
     setActivePinia(createPinia())
@@ -20,7 +20,7 @@ describe('Auth Store', () => {
     vi.clearAllMocks()
   })
 
-  async function getStore() {
+  async function getStore () {
     const { useAuthStore } = await import('../auth')
     return useAuthStore()
   }
@@ -51,10 +51,14 @@ describe('Auth Store', () => {
   describe('login', () => {
     it('sets token and user on success', async () => {
       const mockResponse = {
-        token: 'new-token',
-        user: { id: 1, username: 'admin' },
-        refreshToken: 'refresh-tok',
-        refreshTokenExpiresAt: '2099-01-01',
+        success: true,
+        message: 'Login successful',
+        data: {
+          accessToken: 'new-token',
+          refreshToken: 'refresh-tok',
+          expiresIn: 900,
+          user: { id: 1, username: 'admin' },
+        },
       }
       vi.mocked(authApi.login).mockResolvedValue(mockResponse)
 
@@ -68,10 +72,14 @@ describe('Auth Store', () => {
 
     it('stores data in localStorage on success', async () => {
       const mockResponse = {
-        token: 'new-token',
-        user: { id: 1, username: 'admin' },
-        refreshToken: 'refresh-tok',
-        refreshTokenExpiresAt: '2099-01-01',
+        success: true,
+        message: 'Login successful',
+        data: {
+          accessToken: 'new-token',
+          refreshToken: 'refresh-tok',
+          expiresIn: 900,
+          user: { id: 1, username: 'admin' },
+        },
       }
       vi.mocked(authApi.login).mockResolvedValue(mockResponse)
 
@@ -115,24 +123,16 @@ describe('Auth Store', () => {
       expect(result).toBe(false)
     })
 
-    it('returns false when refresh token is expired', async () => {
-      localStorage.setItem('refreshToken', 'rt')
-      localStorage.setItem('refreshTokenExpiresAt', '2000-01-01T00:00:00Z')
-
-      const store = await getStore()
-      const result = await store.refreshTokens()
-      expect(result).toBe(false)
-    })
-
     it('updates tokens on success', async () => {
       localStorage.setItem('refreshToken', 'rt')
-      localStorage.setItem('refreshTokenExpiresAt', '2099-01-01T00:00:00Z')
 
       vi.mocked(authApi.refreshToken).mockResolvedValue({
-        token: 'new-access',
-        refreshToken: 'new-refresh',
-        refreshTokenExpiresAt: '2099-02-01',
-        user: { id: 1, username: 'admin' },
+        success: true,
+        data: {
+          accessToken: 'new-access',
+          refreshToken: 'new-refresh',
+          expiresIn: 900,
+        },
       })
 
       const store = await getStore()
@@ -147,6 +147,7 @@ describe('Auth Store', () => {
     it('resets all state values and clears localStorage', async () => {
       localStorage.setItem('token', 'tok')
       localStorage.setItem('user', '{}')
+      localStorage.setItem('refreshToken', 'rt')
 
       const store = await getStore()
       store.clearAuth()
@@ -154,9 +155,9 @@ describe('Auth Store', () => {
       expect(store.token).toBeNull()
       expect(store.user).toBeNull()
       expect(store.refreshToken).toBeNull()
-      expect(store.refreshTokenExpiresAt).toBeNull()
       expect(localStorage.getItem('token')).toBeNull()
       expect(localStorage.getItem('user')).toBeNull()
+      expect(localStorage.getItem('refreshToken')).toBeNull()
     })
   })
 

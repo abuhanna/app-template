@@ -1,5 +1,7 @@
-import { describe, it, expect, beforeEach, vi } from 'vitest'
-import { setActivePinia, createPinia } from 'pinia'
+import { createPinia, setActivePinia } from 'pinia'
+import { beforeEach, describe, expect, it, vi } from 'vitest'
+import * as departmentApi from '@/services/departmentApi'
+
 import { useDepartmentStore } from '../department'
 
 vi.mock('@/services/departmentApi', () => ({
@@ -17,8 +19,6 @@ vi.mock('@/stores/notification', () => ({
   }),
 }))
 
-import * as departmentApi from '@/services/departmentApi'
-
 describe('Department Store', () => {
   beforeEach(() => {
     setActivePinia(createPinia())
@@ -28,7 +28,8 @@ describe('Department Store', () => {
   describe('fetchDepartments', () => {
     it('updates items and pagination on paginated response', async () => {
       const mockResponse = {
-        items: [{ id: 1, name: 'IT' }, { id: 2, name: 'HR' }],
+        success: true,
+        data: [{ id: 1, name: 'IT' }, { id: 2, name: 'HR' }],
         pagination: {
           page: 1,
           pageSize: 10,
@@ -43,7 +44,7 @@ describe('Department Store', () => {
       const store = useDepartmentStore()
       await store.fetchDepartments()
 
-      expect(store.items).toEqual(mockResponse.items)
+      expect(store.items).toEqual(mockResponse.data)
       expect(store.pagination.totalItems).toBe(2)
     })
 
@@ -72,7 +73,7 @@ describe('Department Store', () => {
   describe('fetchDepartment', () => {
     it('sets currentItem on success', async () => {
       const dept = { id: 1, name: 'IT', code: 'IT' }
-      vi.mocked(departmentApi.fetchDepartment).mockResolvedValue(dept)
+      vi.mocked(departmentApi.fetchDepartment).mockResolvedValue({ success: true, data: dept })
 
       const store = useDepartmentStore()
       const result = await store.fetchDepartment(1)
@@ -133,7 +134,8 @@ describe('Department Store', () => {
   describe('resetPagination', () => {
     it('resets pagination to defaults', async () => {
       const mockResponse = {
-        items: [{ id: 1 }],
+        success: true,
+        data: [{ id: 1 }],
         pagination: {
           page: 3,
           pageSize: 25,

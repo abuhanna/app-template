@@ -17,8 +17,9 @@ interface PersistentNotificationState {
   // Actions
   initConnection: () => Promise<void>
   disconnect: () => void
-  fetchNotifications: (params?: { limit?: number }) => Promise<void>
-  markAsRead: (id: string) => Promise<boolean>
+  fetchNotifications: (params?: { page?: number; pageSize?: number }) => Promise<void>
+  fetchUnreadCount: () => Promise<void>
+  markAsRead: (id: number) => Promise<boolean>
   markAllAsRead: () => Promise<boolean>
   addNotification: (notification: Notification) => void
 }
@@ -54,6 +55,7 @@ export const usePersistentNotificationStore = create<PersistentNotificationState
       socket.on('connect', () => {
         console.log('Socket.io connected')
         get().fetchNotifications()
+        get().fetchUnreadCount()
       })
 
       socket.on('notification', handleNotification)
@@ -66,7 +68,7 @@ export const usePersistentNotificationStore = create<PersistentNotificationState
     } else if (backendType === 'spring') {
       // STOMP over WebSocket for Spring Boot
       const { Client } = await import('@stomp/stompjs')
-      
+
       const wsProtocol = window.location.protocol === 'https:' ? 'wss:' : 'ws:'
       const host = baseUrl.replace(/^https?:\/\//, '').replace(/\/api\/?$/, '')
       const brokerUrl = `${wsProtocol}//${host}/ws`
@@ -83,21 +85,23 @@ export const usePersistentNotificationStore = create<PersistentNotificationState
 
       client.onConnect = () => {
         console.log('STOMP (Spring) connected')
-        
+
         client.subscribe('/user/queue/notifications', message => {
              const notification = JSON.parse(message.body)
              handleNotification(notification)
         })
-        
+
         get().fetchNotifications()
+        get().fetchUnreadCount()
       }
-      
+
       client.onStompError = (frame) => {
         console.error('Broker reported error: ' + frame.headers['message'])
         console.error('Additional details: ' + frame.body)
       }
 
       client.activate()
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
       set({ connection: client as any })
 
     } else {
@@ -115,6 +119,7 @@ export const usePersistentNotificationStore = create<PersistentNotificationState
         await hubConnection.start()
         console.log('SignalR connected')
         await get().fetchNotifications()
+        await get().fetchUnreadCount()
         set({ connection: hubConnection as ConnectionType })
       } catch (error) {
         console.error('SignalR connection error:', error)
@@ -140,18 +145,26 @@ export const usePersistentNotificationStore = create<PersistentNotificationState
     set({ connection: null })
   },
 
-  fetchNotifications: async (params = { limit: 15 }) => {
+  fetchNotifications: async (params = { page: 1, pageSize: 15 }) => {
     set({ loading: true })
     try {
       const response = await notificationApi.getMyNotifications(params)
       set({
         notifications: response.data,
-        unreadCount: response.unreadCount,
         loading: false,
       })
     } catch (error) {
       console.error('Failed to fetch notifications:', error)
       set({ loading: false })
+    }
+  },
+
+  fetchUnreadCount: async () => {
+    try {
+      const response = await notificationApi.getUnreadCount()
+      set({ unreadCount: response.data.count })
+    } catch (error) {
+      console.error('Failed to fetch unread count:', error)
     }
   },
 

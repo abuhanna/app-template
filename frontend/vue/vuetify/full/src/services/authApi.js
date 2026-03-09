@@ -39,3 +39,8 @@ export async function refreshToken (token) {
   const response = await api.post('/auth/refresh', { refreshToken: token })
   return response.data
 }
+
+export async function changePassword (data) {
+  const response = await api.post('/auth/change-password', data)
+  return response.data
+}

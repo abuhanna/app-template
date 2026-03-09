@@ -1,7 +1,7 @@
 import api from './api'
 
 const exportService = {
-  async exportUsers(format = 'xlsx', filters = {}) {
+  async exportUsers (format = 'xlsx', filters = {}) {
     const params = new URLSearchParams({ format, ...filters })
     const response = await api.get(`/export/users?${params}`, {
       responseType: 'blob',
@@ -9,7 +9,7 @@ const exportService = {
     return this.handleDownload(response)
   },
 
-  async exportDepartments(format = 'xlsx', filters = {}) {
+  async exportDepartments (format = 'xlsx', filters = {}) {
     const params = new URLSearchParams({ format, ...filters })
     const response = await api.get(`/export/departments?${params}`, {
       responseType: 'blob',
@@ -17,7 +17,7 @@ const exportService = {
     return this.handleDownload(response)
   },
 
-  async exportAuditLogs(format = 'xlsx', filters = {}) {
+  async exportAuditLogs (format = 'xlsx', filters = {}) {
     const params = new URLSearchParams({ format, ...filters })
     const response = await api.get(`/export/audit-logs?${params}`, {
       responseType: 'blob',
@@ -25,7 +25,15 @@ const exportService = {
     return this.handleDownload(response)
   },
 
-  handleDownload(response) {
+  async exportNotifications (format = 'xlsx', filters = {}) {
+    const params = new URLSearchParams({ format, ...filters })
+    const response = await api.get(`/export/notifications?${params}`, {
+      responseType: 'blob',
+    })
+    return this.handleDownload(response)
+  },
+
+  handleDownload (response) {
     const contentDisposition = response.headers['content-disposition']
     let fileName = 'export'
 
@@ -41,9 +49,9 @@ const exportService = {
     const link = document.createElement('a')
     link.href = url
     link.download = fileName
-    document.body.appendChild(link)
+    document.body.append(link)
     link.click()
-    document.body.removeChild(link)
+    link.remove()
     window.URL.revokeObjectURL(url)
 
     return { success: true, fileName }

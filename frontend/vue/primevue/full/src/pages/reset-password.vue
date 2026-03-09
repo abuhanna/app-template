@@ -2,13 +2,13 @@
   <div class="reset-password-container">
     <div class="reset-password-card">
       <div class="card-header">
-        <i class="pi pi-lock logo-icon"></i>
+        <i class="pi pi-lock logo-icon" />
         <h1 class="card-title">Reset Password</h1>
         <p class="card-subtitle">Enter your new password below.</p>
       </div>
 
-      <form v-if="!success" @submit.prevent="handleSubmit" class="reset-password-form">
-        <Message v-if="error" severity="error" :closable="false">
+      <form v-if="!success" class="reset-password-form" @submit.prevent="handleSubmit">
+        <Message v-if="error" :closable="false" severity="error">
           {{ error }}
         </Message>
 
@@ -17,12 +17,12 @@
           <Password
             id="password"
             v-model="form.password"
-            placeholder="Enter new password"
-            :disabled="loading"
-            toggleMask
-            :invalid="!!errors.password"
-            inputClass="w-full"
             class="w-full"
+            :disabled="loading"
+            input-class="w-full"
+            :invalid="!!errors.password"
+            placeholder="Enter new password"
+            toggle-mask
           />
           <small v-if="errors.password" class="p-error">{{ errors.password }}</small>
         </div>
@@ -32,28 +32,28 @@
           <Password
             id="confirmPassword"
             v-model="form.confirmPassword"
-            placeholder="Confirm new password"
+            class="w-full"
             :disabled="loading"
             :feedback="false"
-            toggleMask
+            input-class="w-full"
             :invalid="!!errors.confirmPassword"
-            inputClass="w-full"
-            class="w-full"
+            placeholder="Confirm new password"
+            toggle-mask
           />
           <small v-if="errors.confirmPassword" class="p-error">{{ errors.confirmPassword }}</small>
         </div>
 
         <Button
-          type="submit"
+          class="w-full"
           label="Reset Password"
           :loading="loading"
-          class="w-full"
           size="large"
+          type="submit"
         />
 
         <div class="back-to-login">
-          <router-link to="/login" class="back-link">
-            <i class="pi pi-arrow-left"></i>
+          <router-link class="back-link" to="/login">
+            <i class="pi pi-arrow-left" />
             Back to Login
           </router-link>
         </div>
@@ -61,14 +61,14 @@
 
       <div v-else class="success-state">
         <div class="success-icon">
-          <i class="pi pi-check-circle"></i>
+          <i class="pi pi-check-circle" />
         </div>
         <h2>Password Reset Successful</h2>
         <p>Your password has been successfully reset. You can now login with your new password.</p>
         <Button
+          class="w-full"
           label="Go to Login"
           @click="$router.push('/login')"
-          class="w-full"
         />
       </div>
     </div>
@@ -76,91 +76,91 @@
 </template>
 
 <script setup>
-import { ref, reactive, onMounted } from 'vue'
-import { useRoute, useRouter } from 'vue-router'
-import authApi from '@/services/authApi'
-import Password from 'primevue/password'
-import Button from 'primevue/button'
-import Message from 'primevue/message'
+  import Button from 'primevue/button'
+  import Message from 'primevue/message'
+  import Password from 'primevue/password'
+  import { onMounted, reactive, ref } from 'vue'
+  import { useRoute, useRouter } from 'vue-router'
+  import authApi from '@/services/authApi'
 
-definePage({
-  meta: {
-    layout: 'blank',
-  },
-})
+  definePage({
+    meta: {
+      layout: 'blank',
+    },
+  })
 
-const route = useRoute()
-const router = useRouter()
+  const route = useRoute()
+  const router = useRouter()
 
-const loading = ref(false)
-const error = ref('')
-const success = ref(false)
-const token = ref('')
+  const loading = ref(false)
+  const error = ref('')
+  const success = ref(false)
+  const token = ref('')
 
-const form = reactive({
-  password: '',
-  confirmPassword: '',
-})
+  const form = reactive({
+    password: '',
+    confirmPassword: '',
+  })
 
-const errors = reactive({
-  password: '',
-  confirmPassword: '',
-})
+  const errors = reactive({
+    password: '',
+    confirmPassword: '',
+  })
 
-onMounted(() => {
-  token.value = route.query.token
-  if (!token.value) {
-    error.value = 'Invalid or missing reset token'
-  }
-})
+  onMounted(() => {
+    token.value = route.query.token
+    if (!token.value) {
+      error.value = 'Invalid or missing reset token'
+    }
+  })
 
-const validate = () => {
-  let valid = true
-  Object.keys(errors).forEach((key) => (errors[key] = ''))
+  function validate () {
+    let valid = true
+    for (const key of Object.keys(errors)) (errors[key] = '')
 
-  if (!form.password) {
-    errors.password = 'Password is required'
-    valid = false
-  } else if (form.password.length < 6) {
-    errors.password = 'Password must be at least 6 characters'
-    valid = false
-  }
+    if (!form.password) {
+      errors.password = 'Password is required'
+      valid = false
+    } else if (form.password.length < 6) {
+      errors.password = 'Password must be at least 6 characters'
+      valid = false
+    }
 
-  if (!form.confirmPassword) {
-    errors.confirmPassword = 'Please confirm your password'
-    valid = false
-  } else if (form.password !== form.confirmPassword) {
-    errors.confirmPassword = 'Passwords do not match'
-    valid = false
-  }
+    if (!form.confirmPassword) {
+      errors.confirmPassword = 'Please confirm your password'
+      valid = false
+    } else if (form.password !== form.confirmPassword) {
+      errors.confirmPassword = 'Passwords do not match'
+      valid = false
+    }
 
-  return valid
-}
-
-const handleSubmit = async () => {
-  if (!validate()) return
-
-  if (!token.value) {
-    error.value = 'Invalid or missing reset token'
-    return
+    return valid
   }
 
-  loading.value = true
-  error.value = ''
+  async function handleSubmit () {
+    if (!validate()) return
 
-  try {
-    await authApi.resetPassword({
-      token: token.value,
-      newPassword: form.password,
-    })
-    success.value = true
-  } catch (err) {
-    error.value =
-      err.response?.data?.message || 'Failed to reset password. The link may have expired.'
-  } finally {
-    loading.value = false
+    if (!token.value) {
+      error.value = 'Invalid or missing reset token'
+      return
+    }
+
+    loading.value = true
+    error.value = ''
+
+    try {
+      await authApi.resetPassword({
+        token: token.value,
+        newPassword: form.password,
+      })
+      success.value = true
+    } catch (error_) {
+      error.value
+        = error_.response?.data?.message || 'Failed to reset password. The link may have expired.'
+    } finally {
+      loading.value = false
+    }
   }
-}
 </script>
 
 <style scoped>

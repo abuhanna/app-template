@@ -1,4 +1,4 @@
-import { describe, it, expect, beforeEach, vi } from 'vitest'
+import { describe, it, expect } from 'vitest'
 import { renderHook, act } from '@testing-library/react'
 import { createElement } from 'react'
 import { MemoryRouter } from 'react-router-dom'
@@ -18,7 +18,7 @@ describe('usePagination', () => {
       expect(result.current.page).toBe(1)
       expect(result.current.pageSize).toBe(10)
       expect(result.current.sortBy).toBe('')
-      expect(result.current.sortDir).toBe('asc')
+      expect(result.current.sortOrder).toBe('asc')
       expect(result.current.totalItems).toBe(0)
       expect(result.current.totalPages).toBe(0)
     })
@@ -30,7 +30,7 @@ describe('usePagination', () => {
             defaultPage: 2,
             defaultPageSize: 25,
             defaultSortBy: 'name',
-            defaultSortDir: 'desc',
+            defaultSortOrder: 'desc',
             syncWithUrl: false,
           }),
         { wrapper }
@@ -39,7 +39,7 @@ describe('usePagination', () => {
       expect(result.current.page).toBe(2)
       expect(result.current.pageSize).toBe(25)
       expect(result.current.sortBy).toBe('name')
-      expect(result.current.sortDir).toBe('desc')
+      expect(result.current.sortOrder).toBe('desc')
     })
   })
 
@@ -114,13 +114,13 @@ describe('usePagination', () => {
       })
 
       expect(result.current.sortBy).toBe('email')
-      expect(result.current.sortDir).toBe('desc')
+      expect(result.current.sortOrder).toBe('desc')
       expect(result.current.page).toBe(1)
     })
 
     it('toggles direction when clicking same column without specifying direction', () => {
       const { result } = renderHook(
-        () => usePagination({ defaultSortBy: 'name', defaultSortDir: 'asc', syncWithUrl: false }),
+        () => usePagination({ defaultSortBy: 'name', defaultSortOrder: 'asc', syncWithUrl: false }),
         { wrapper }
       )
 
@@ -128,13 +128,13 @@ describe('usePagination', () => {
         result.current.setSort('name')
       })
 
-      expect(result.current.sortDir).toBe('desc')
+      expect(result.current.sortOrder).toBe('desc')
 
       act(() => {
         result.current.setSort('name')
       })
 
-      expect(result.current.sortDir).toBe('asc')
+      expect(result.current.sortOrder).toBe('asc')
     })
   })
 
@@ -161,7 +161,7 @@ describe('usePagination', () => {
       expect(result.current.page).toBe(1)
       expect(result.current.pageSize).toBe(10)
       expect(result.current.sortBy).toBe('')
-      expect(result.current.sortDir).toBe('asc')
+      expect(result.current.sortOrder).toBe('asc')
       expect(result.current.totalItems).toBe(0)
     })
   })

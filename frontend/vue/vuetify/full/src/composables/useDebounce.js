@@ -20,11 +20,11 @@ import { ref, watch } from 'vue'
  *   fetchResults(value)
  * })
  */
-export function useDebounce(value, delay = 300) {
+export function useDebounce (value, delay = 300) {
   const debouncedValue = ref(value.value)
   let timeoutId = null
 
-  watch(value, (newValue) => {
+  watch(value, newValue => {
     if (timeoutId) {
       clearTimeout(timeoutId)
     }
@@ -56,7 +56,7 @@ export function useDebounce(value, delay = 300) {
  * // Call normally - will be debounced
  * handleSearch('test')
  */
-export function useDebounceFn(fn, delay = 300) {
+export function useDebounceFn (fn, delay = 300) {
   let timeoutId = null
 
   return (...args) => {

@@ -3,8 +3,8 @@
     <div class="flex justify-content-end mb-3">
       <Button
         v-if="unreadCount > 0"
-        label="Mark all as read"
         icon="pi pi-check"
+        label="Mark all as read"
         severity="secondary"
         @click="handleMarkAllRead"
       />
@@ -17,7 +17,7 @@
         </div>
 
         <div v-else-if="notifications.length === 0" class="flex flex-column align-items-center justify-content-center p-6 text-center text-500 gap-3">
-          <i class="pi pi-inbox text-6xl opacity-50"></i>
+          <i class="pi pi-inbox text-6xl opacity-50" />
           <span class="text-xl font-medium text-600">No notifications</span>
           <p class="m-0">You're all caught up!</p>
         </div>
@@ -30,16 +30,16 @@
             :class="{ 'surface-50': !notification.isRead, 'border-left-3 border-primary-500': !notification.isRead }"
             @click="handleMarkAsRead(notification)"
           >
-            <div 
-                class="flex align-items-center justify-content-center border-round w-3rem h-3rem flex-shrink-0"
-                :class="{
-                    'bg-blue-100 text-blue-600': notification.type === 'info',
-                    'bg-green-100 text-green-600': notification.type === 'success',
-                    'bg-yellow-100 text-yellow-600': notification.type === 'warning',
-                    'bg-red-100 text-red-600': notification.type === 'error'
-                }"
+            <div
+              class="flex align-items-center justify-content-center border-round w-3rem h-3rem flex-shrink-0"
+              :class="{
+                'bg-blue-100 text-blue-600': notification.type === 'info',
+                'bg-green-100 text-green-600': notification.type === 'success',
+                'bg-yellow-100 text-yellow-600': notification.type === 'warning',
+                'bg-red-100 text-red-600': notification.type === 'error'
+              }"
             >
-              <i class="text-xl" :class="getNotificationIcon(notification.type)"></i>
+              <i class="text-xl" :class="getNotificationIcon(notification.type)" />
             </div>
 
             <div class="flex-1 ml-3">
@@ -50,14 +50,14 @@
               <p class="m-0 text-600 line-height-3">{{ notification.message }}</p>
             </div>
 
-            <div class="flex align-items-center ml-3" v-if="!notification.isRead">
-                <Button
-                    icon="pi pi-circle-fill"
-                    text
-                    rounded
-                    class="text-primary-500 w-2rem h-2rem"
-                    v-tooltip.top="'Mark as read'"
-                />
+            <div v-if="!notification.isRead" class="flex align-items-center ml-3">
+              <Button
+                v-tooltip.top="'Mark as read'"
+                class="text-primary-500 w-2rem h-2rem"
+                icon="pi pi-circle-fill"
+                rounded
+                text
+              />
             </div>
           </div>
         </div>
@@ -67,78 +67,78 @@
 </template>
 
 <script setup>
-import { ref, computed, onMounted } from 'vue'
-import { usePersistentNotificationStore } from '@/stores/persistentNotification'
-import { useNotificationStore } from '@/stores/notification'
-import Card from 'primevue/card'
-import Button from 'primevue/button'
-import ProgressSpinner from 'primevue/progressspinner'
+  import Button from 'primevue/button'
+  import Card from 'primevue/card'
+  import ProgressSpinner from 'primevue/progressspinner'
+  import { computed, onMounted, ref } from 'vue'
+  import { useNotificationStore } from '@/stores/notification'
+  import { usePersistentNotificationStore } from '@/stores/persistentNotification'
 
-const persistentNotificationStore = usePersistentNotificationStore()
-const notificationStore = useNotificationStore()
+  const persistentNotificationStore = usePersistentNotificationStore()
+  const notificationStore = useNotificationStore()
 
-const loading = ref(false)
+  const loading = ref(false)
 
-const notifications = computed(() => persistentNotificationStore.notifications)
-const unreadCount = computed(() => persistentNotificationStore.unreadCount)
+  const notifications = computed(() => persistentNotificationStore.notifications)
+  const unreadCount = computed(() => persistentNotificationStore.unreadCount)
 
-const getNotificationIcon = (type) => {
-  const icons = {
-    info: 'pi pi-info-circle',
-    success: 'pi pi-check-circle',
-    warning: 'pi pi-exclamation-triangle',
-    error: 'pi pi-times-circle',
+  function getNotificationIcon (type) {
+    const icons = {
+      info: 'pi pi-info-circle',
+      success: 'pi pi-check-circle',
+      warning: 'pi pi-exclamation-triangle',
+      error: 'pi pi-times-circle',
+    }
+    return icons[type] || 'pi pi-bell'
   }
-  return icons[type] || 'pi pi-bell'
-}
 
-const formatTime = (dateString) => {
-  const date = new Date(dateString)
-  const now = new Date()
-  const diff = now - date
+  function formatTime (dateString) {
+    const date = new Date(dateString)
+    const now = new Date()
+    const diff = now - date
 
-  const minutes = Math.floor(diff / 60000)
-  if (minutes < 1) return 'Just now'
-  if (minutes < 60) return `${minutes} minute${minutes > 1 ? 's' : ''} ago`
+    const minutes = Math.floor(diff / 60_000)
+    if (minutes < 1) return 'Just now'
+    if (minutes < 60) return `${minutes} minute${minutes > 1 ? 's' : ''} ago`
 
-  const hours = Math.floor(minutes / 60)
-  if (hours < 24) return `${hours} hour${hours > 1 ? 's' : ''} ago`
+    const hours = Math.floor(minutes / 60)
+    if (hours < 24) return `${hours} hour${hours > 1 ? 's' : ''} ago`
 
-  const days = Math.floor(hours / 24)
-  if (days < 7) return `${days} day${days > 1 ? 's' : ''} ago`
+    const days = Math.floor(hours / 24)
+    if (days < 7) return `${days} day${days > 1 ? 's' : ''} ago`
 
-  return date.toLocaleDateString('en-US', {
-    year: 'numeric',
-    month: 'short',
-    day: 'numeric',
+    return date.toLocaleDateString('en-US', {
+      year: 'numeric',
+      month: 'short',
+      day: 'numeric',
+    })
+  }
+
+  async function handleMarkAsRead (notification) {
+    try {
+      await persistentNotificationStore.markAsRead(notification.id)
+    } catch {
+      notificationStore.error('Failed to mark notification as read')
+    }
+  }
+
+  async function handleMarkAllRead () {
+    try {
+      await persistentNotificationStore.markAllAsRead()
+      notificationStore.success('All notifications marked as read')
+    } catch {
+      notificationStore.error('Failed to mark all notifications as read')
+    }
+  }
+
+  onMounted(async () => {
+    loading.value = true
+    try {
+      await persistentNotificationStore.fetchNotifications()
+    } finally {
+      loading.value = false
+    }
   })
-}
-
-const handleMarkAsRead = async (notification) => {
-  try {
-    await persistentNotificationStore.markAsRead(notification.id)
-  } catch (error) {
-    notificationStore.error('Failed to mark notification as read')
-  }
-}
-
-const handleMarkAllRead = async () => {
-  try {
-    await persistentNotificationStore.markAllAsRead()
-    notificationStore.success('All notifications marked as read')
-  } catch (error) {
-    notificationStore.error('Failed to mark all notifications as read')
-  }
-}
-
-onMounted(async () => {
-  loading.value = true
-  try {
-    await persistentNotificationStore.fetchNotifications()
-  } finally {
-    loading.value = false
-  }
-})
 </script>
 
 <style scoped>

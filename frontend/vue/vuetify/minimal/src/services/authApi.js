@@ -40,7 +40,7 @@ export async function refreshToken (token) {
   return response.data
 }
 
-export async function changePassword (userId, data) {
-  const response = await api.put(`/users/${userId}/password`, data)
+export async function changePassword (data) {
+  const response = await api.post('/auth/change-password', data)
   return response.data
 }

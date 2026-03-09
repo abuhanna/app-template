@@ -1,11 +1,11 @@
-import { describe, it, expect, beforeEach, vi } from 'vitest'
-import { setActivePinia, createPinia } from 'pinia'
+import { createPinia, setActivePinia } from 'pinia'
+import { beforeEach, describe, expect, it, vi } from 'vitest'
+
+import { useLocaleStore } from '../locale'
 
 vi.mock('@/i18n', () => ({
   setLocale: vi.fn(),
 }))
-
-import { useLocaleStore } from '../locale'
 
 describe('Locale Store', () => {
   beforeEach(() => {

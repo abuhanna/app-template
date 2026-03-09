@@ -1,6 +1,6 @@
-import { describe, it, expect, beforeEach, vi } from 'vitest'
 import { shallowMount } from '@vue/test-utils'
 import { createPinia, setActivePinia } from 'pinia'
+import { beforeEach, describe, expect, it, vi } from 'vitest'
 import { createVuetify } from 'vuetify'
 import LoginPage from '../login.vue'
 
@@ -28,7 +28,7 @@ describe('Login Page', () => {
     localStorage.clear()
   })
 
-  function mountLogin() {
+  function mountLogin () {
     return shallowMount(LoginPage, {
       global: {
         plugins: [vuetify, createPinia()],

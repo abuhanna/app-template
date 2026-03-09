@@ -4,19 +4,19 @@
  * Framework documentation: https://primevue.org
  */
 
-import PrimeVue from 'primevue/config'
-import ToastService from 'primevue/toastservice'
-import ConfirmationService from 'primevue/confirmationservice'
-import Tooltip from 'primevue/tooltip'
-
 // PrimeVue Theme - Aura (modern, clean look)
 import Aura from '@primevue/themes/aura'
+import PrimeVue from 'primevue/config'
+import ConfirmationService from 'primevue/confirmationservice'
+import ToastService from 'primevue/toastservice'
+
+import Tooltip from 'primevue/tooltip'
 
 // PrimeIcons
 import 'primeicons/primeicons.css'
 
 export default {
-  install(app) {
+  install (app) {
     app.use(PrimeVue, {
       theme: {
         preset: Aura,

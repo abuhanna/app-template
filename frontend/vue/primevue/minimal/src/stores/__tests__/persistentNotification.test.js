@@ -1,5 +1,8 @@
-import { describe, it, expect, beforeEach, vi } from 'vitest'
-import { setActivePinia, createPinia } from 'pinia'
+import { createPinia, setActivePinia } from 'pinia'
+import { beforeEach, describe, expect, it, vi } from 'vitest'
+
+import notificationApi from '@/services/notificationApi'
+import { usePersistentNotificationStore } from '../persistentNotification'
 
 vi.stubGlobal('Notification', {
   permission: 'default',
@@ -43,9 +46,6 @@ vi.mock('@/stores/notification', () => ({
   }),
 }))
 
-import notificationApi from '@/services/notificationApi'
-import { usePersistentNotificationStore } from '../persistentNotification'
-
 describe('Persistent Notification Store', () => {
   beforeEach(() => {
     setActivePinia(createPinia())
@@ -72,7 +72,9 @@ describe('Persistent Notification Store', () => {
         { id: 2, title: 'Notification 2', isRead: true },
       ]
       vi.mocked(notificationApi.getMyNotifications).mockResolvedValue({
-        data: { items: mockItems },
+        success: true,
+        data: mockItems,
+        pagination: { page: 1, pageSize: 15, totalItems: 2, totalPages: 1, hasNext: false, hasPrevious: false },
       })
 
       const store = usePersistentNotificationStore()

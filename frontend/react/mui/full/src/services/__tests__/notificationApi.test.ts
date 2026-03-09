@@ -5,13 +5,12 @@ vi.mock('../api', () => ({
     get: vi.fn(),
     post: vi.fn(),
     put: vi.fn(),
-    patch: vi.fn(),
     delete: vi.fn(),
   },
 }))
 
 import api from '../api'
-import { getMyNotifications, markAsRead, markAllAsRead } from '../notificationApi'
+import { getMyNotifications, getUnreadCount, markAsRead, markAllAsRead, deleteNotification } from '../notificationApi'
 
 describe('Notification API', () => {
   beforeEach(() => {
@@ -20,33 +19,55 @@ describe('Notification API', () => {
 
   describe('getMyNotifications', () => {
     it('gets from /notifications with params', async () => {
-      const mockData = { data: [], total: 0, unreadCount: 0 }
+      const mockData = { success: true, data: [], pagination: {} }
       vi.mocked(api.get).mockResolvedValue({ data: mockData })
 
-      const result = await getMyNotifications({ limit: 15 })
+      const result = await getMyNotifications({ page: 1, pageSize: 15 })
 
-      expect(api.get).toHaveBeenCalledWith('/notifications', { params: { limit: 15 } })
+      expect(api.get).toHaveBeenCalledWith('/notifications', { params: { page: 1, pageSize: 15 } })
       expect(result).toEqual(mockData)
     })
   })
 
+  describe('getUnreadCount', () => {
+    it('gets from /notifications/unread-count', async () => {
+      const mockData = { success: true, data: { count: 5 } }
+      vi.mocked(api.get).mockResolvedValue({ data: mockData })
+
+      const result = await getUnreadCount()
+
+      expect(api.get).toHaveBeenCalledWith('/notifications/unread-count')
+      expect(result.data.count).toBe(5)
+    })
+  })
+
   describe('markAsRead', () => {
-    it('patches /notifications/:id/read', async () => {
-      vi.mocked(api.patch).mockResolvedValue({})
+    it('puts /notifications/:id/read', async () => {
+      vi.mocked(api.put).mockResolvedValue({})
 
-      await markAsRead('abc-123')
+      await markAsRead(1)
 
-      expect(api.patch).toHaveBeenCalledWith('/notifications/abc-123/read')
+      expect(api.put).toHaveBeenCalledWith('/notifications/1/read')
     })
   })
 
   describe('markAllAsRead', () => {
-    it('patches /notifications/read-all', async () => {
-      vi.mocked(api.patch).mockResolvedValue({})
+    it('puts /notifications/read-all', async () => {
+      vi.mocked(api.put).mockResolvedValue({})
 
       await markAllAsRead()
 
-      expect(api.patch).toHaveBeenCalledWith('/notifications/read-all')
+      expect(api.put).toHaveBeenCalledWith('/notifications/read-all')
+    })
+  })
+
+  describe('deleteNotification', () => {
+    it('deletes /notifications/:id', async () => {
+      vi.mocked(api.delete).mockResolvedValue({})
+
+      await deleteNotification(1)
+
+      expect(api.delete).toHaveBeenCalledWith('/notifications/1')
     })
   })
 })

@@ -20,17 +20,18 @@ import { useNotificationStore } from '@/stores/notificationStore'
 import type { User, CreateUserRequest, UpdateUserRequest } from '@/types/user'
 
 const roles = [
-  { label: 'User', value: 'User' },
-  { label: 'Admin', value: 'Admin' },
+  { label: 'User', value: 'user' },
+  { label: 'Admin', value: 'admin' },
 ]
 
 interface FormData {
   username: string
   email: string
   password: string
-  name: string
+  firstName: string
+  lastName: string
   role: string
-  departmentId?: string
+  departmentId?: number
   isActive: boolean
 }
 
@@ -61,8 +62,9 @@ export default function Users() {
     username: '',
     email: '',
     password: '',
-    name: '',
-    role: 'User',
+    firstName: '',
+    lastName: '',
+    role: 'user',
     departmentId: undefined,
     isActive: true,
   })
@@ -82,13 +84,17 @@ export default function Users() {
   const onGlobalFilterChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const value = e.target.value
     const _filters = { ...filters }
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     ;(_filters['global'] as any).value = value
     setFilters(_filters)
     setGlobalFilterValue(value)
   }
 
-  const getInitials = (name: string | undefined, username: string): string => {
-    const displayName = name || username
+  const getInitials = (user: User): string => {
+    if (user.firstName && user.lastName) {
+      return `${user.firstName[0]}${user.lastName[0]}`.toUpperCase()
+    }
+    const displayName = user.fullName || user.username
     return displayName
       .split(' ')
       .map((n) => n[0])
@@ -102,8 +108,9 @@ export default function Users() {
       username: '',
       email: '',
       password: '',
-      name: '',
-      role: 'User',
+      firstName: '',
+      lastName: '',
+      role: 'user',
       departmentId: undefined,
       isActive: true,
     })
@@ -121,7 +128,8 @@ export default function Users() {
       username: user.username,
       email: user.email,
       password: '',
-      name: user.name || '',
+      firstName: user.firstName || '',
+      lastName: user.lastName || '',
       role: user.role,
       departmentId: user.departmentId,
       isActive: user.isActive,
@@ -174,21 +182,16 @@ export default function Users() {
     setSaving(true)
     try {
       if (isEditing && selectedUser) {
-        const updateData: UpdateUserRequest = {
-          email: formData.email,
-          name: formData.name,
-          role: formData.role,
-          departmentId: formData.departmentId,
-          isActive: formData.isActive,
-        }
-        await updateUser(selectedUser.id, updateData)
+        const { password: _password, username: _username, ...updateData } = formData
+        await updateUser(selectedUser.id, updateData as UpdateUserRequest)
         showSuccess('User updated successfully')
       } else {
         const createData: CreateUserRequest = {
           username: formData.username,
           email: formData.email,
           password: formData.password,
-          name: formData.name,
+          firstName: formData.firstName,
+          lastName: formData.lastName,
           role: formData.role,
           departmentId: formData.departmentId,
         }
@@ -219,10 +222,14 @@ export default function Users() {
 
   const usernameTemplate = (user: User) => (
     <div className="flex align-items-center gap-3">
-      <Avatar label={getInitials(user.name, user.username)} shape="circle" />
+      <Avatar label={getInitials(user)} shape="circle" />
       <span>{user.username}</span>
     </div>
   )
+
+  const nameTemplate = (user: User) => {
+    return user.fullName || `${user.firstName || ''} ${user.lastName || ''}`.trim() || '-'
+  }
 
   const statusTemplate = (user: User) => (
     <Tag
@@ -232,7 +239,7 @@ export default function Users() {
   )
 
   const roleTemplate = (user: User) => (
-    <Tag value={user.role} severity={user.role === 'Admin' ? 'danger' : 'info'} />
+    <Tag value={user.role} severity={user.role === 'admin' ? 'danger' : 'info'} />
   )
 
   const actionsTemplate = (user: User) => (
@@ -301,7 +308,7 @@ export default function Users() {
           dataKey="id"
           filters={filters}
           filterDisplay="row"
-          globalFilterFields={['username', 'email', 'name', 'role']}
+          globalFilterFields={['username', 'email', 'firstName', 'lastName', 'fullName', 'role']}
           header={renderHeader()}
           emptyMessage={emptyMessage}
           stripedRows
@@ -315,11 +322,10 @@ export default function Users() {
           />
           <Column field="email" header="Email" sortable style={{ minWidth: '200px' }} />
           <Column
-            field="name"
             header="Name"
+            body={nameTemplate}
             sortable
             style={{ minWidth: '150px' }}
-            body={(data) => data.name || '-'}
           />
           <Column
             field="departmentName"
@@ -383,15 +389,27 @@ export default function Users() {
             {formErrors.email && <small className="text-red-500">{formErrors.email}</small>}
           </div>
 
-          <div className="flex flex-column gap-2">
-            <label htmlFor="name">Name</label>
-            <InputText
-              id="name"
-              value={formData.name}
-              onChange={(e) => setFormData({ ...formData, name: e.target.value })}
-              placeholder="Full name"
-              className="w-full"
-            />
+          <div className="grid">
+            <div className="col-6 flex flex-column gap-2">
+              <label htmlFor="firstName">First Name</label>
+              <InputText
+                id="firstName"
+                value={formData.firstName}
+                onChange={(e) => setFormData({ ...formData, firstName: e.target.value })}
+                placeholder="First name"
+                className="w-full"
+              />
+            </div>
+            <div className="col-6 flex flex-column gap-2">
+              <label htmlFor="lastName">Last Name</label>
+              <InputText
+                id="lastName"
+                value={formData.lastName}
+                onChange={(e) => setFormData({ ...formData, lastName: e.target.value })}
+                placeholder="Last name"
+                className="w-full"
+              />
+            </div>
           </div>
 
           {!isEditing && (

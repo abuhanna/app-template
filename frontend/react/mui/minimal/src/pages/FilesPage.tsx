@@ -42,8 +42,9 @@ export function FilesPage() {
   const loadFiles = useCallback(async () => {
     setLoading(true)
     try {
-      const response: any = await fileService.getFiles()
-      setFiles(response.items || [])
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      const response = await fileService.getFiles() as any
+      setFiles(response.data || response.items || response || [])
     } catch {
       showError('Failed to load files')
     } finally {

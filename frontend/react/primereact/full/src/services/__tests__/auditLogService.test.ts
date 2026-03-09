@@ -20,12 +20,13 @@ describe('Audit Log Service', () => {
   describe('getAuditLogs', () => {
     it('gets from /audit-logs with params', async () => {
       const mockData = {
-        items: [{ id: 1, entityName: 'User', action: 'Create', timestamp: '2024-01-01' }],
+        success: true,
+        data: [{ id: 1, entityType: 'User', action: 'Created', createdAt: '2024-01-01' }],
         pagination: { page: 1, pageSize: 10, totalItems: 1, totalPages: 1 },
       }
       vi.mocked(api.get).mockResolvedValue({ data: mockData })
 
-      const params = { page: 1, pageSize: 10, entityName: 'User' }
+      const params = { page: 1, pageSize: 10, entityType: 'User' }
       const result = await getAuditLogs(params)
 
       expect(api.get).toHaveBeenCalledWith('/audit-logs', { params })
@@ -33,7 +34,7 @@ describe('Audit Log Service', () => {
     })
 
     it('gets from /audit-logs with default empty params', async () => {
-      const mockData = { items: [], pagination: {} }
+      const mockData = { success: true, data: [], pagination: {} }
       vi.mocked(api.get).mockResolvedValue({ data: mockData })
 
       const result = await getAuditLogs()

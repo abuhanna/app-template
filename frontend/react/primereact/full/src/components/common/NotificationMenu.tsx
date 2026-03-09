@@ -15,7 +15,7 @@ export function NotificationMenu() {
 
   const recentNotifications = (notifications || []).slice(0, 5)
 
-  const handleNotificationClick = async (id: string) => {
+  const handleNotificationClick = async (id: number) => {
     await markAsRead(id)
   }
 

@@ -1,33 +1,33 @@
 <template>
   <div class="notification-menu">
-    <OverlayBadge :value="unreadCount > 0 ? unreadCount : null" severity="danger">
+    <OverlayBadge severity="danger" :value="unreadCount > 0 ? unreadCount : null">
       <Button
-        type="button"
-        @click="toggleMenu"
-        text
+        class="notification-button"
         rounded
         severity="secondary"
-        class="notification-button"
+        text
+        type="button"
+        @click="toggleMenu"
       >
-        <i class="pi pi-bell" style="font-size: 1.25rem"></i>
+        <i class="pi pi-bell" style="font-size: 1.25rem" />
       </Button>
     </OverlayBadge>
 
-    <Popover ref="notificationPopover" appendTo="body" class="notification-popover">
+    <Popover ref="notificationPopover" append-to="body" class="notification-popover">
       <div class="notification-header">
         <span class="notification-title">Notifications</span>
         <Button
           v-if="unreadCount > 0"
           label="Mark all read"
-          text
           size="small"
+          text
           @click="handleMarkAllRead"
         />
       </div>
 
       <div class="notification-list">
         <div v-if="notifications.length === 0" class="notification-empty">
-          <i class="pi pi-inbox"></i>
+          <i class="pi pi-inbox" />
           <span>No notifications</span>
         </div>
 
@@ -39,7 +39,7 @@
           @click="handleNotificationClick(notification)"
         >
           <div class="notification-icon">
-            <i :class="getNotificationIcon(notification.type)"></i>
+            <i :class="getNotificationIcon(notification.type)" />
           </div>
           <div class="notification-content">
             <span class="notification-item-title">{{ notification.title }}</span>
@@ -50,7 +50,7 @@
       </div>
 
       <div v-if="notifications.length > 0" class="notification-footer">
-        <router-link to="/notifications" class="view-all-link" @click="hideMenu">
+        <router-link class="view-all-link" to="/notifications" @click="hideMenu">
           View all notifications
         </router-link>
       </div>
@@ -59,63 +59,63 @@
 </template>
 
 <script setup>
-import { ref, computed } from 'vue'
-import { usePersistentNotificationStore } from '@/stores/persistentNotification'
-import Button from 'primevue/button'
-import Popover from 'primevue/popover'
-import OverlayBadge from 'primevue/overlaybadge'
+  import Button from 'primevue/button'
+  import OverlayBadge from 'primevue/overlaybadge'
+  import Popover from 'primevue/popover'
+  import { computed, ref } from 'vue'
+  import { usePersistentNotificationStore } from '@/stores/persistentNotification'
 
-const notificationStore = usePersistentNotificationStore()
-const notificationPopover = ref()
+  const notificationStore = usePersistentNotificationStore()
+  const notificationPopover = ref()
 
-const notifications = computed(() => notificationStore.notifications)
-const unreadCount = computed(() => notificationStore.unreadCount)
+  const notifications = computed(() => notificationStore.notifications)
+  const unreadCount = computed(() => notificationStore.unreadCount)
 
-const toggleMenu = (event) => {
-  notificationPopover.value.toggle(event)
-}
-
-const hideMenu = () => {
-  notificationPopover.value.hide()
-}
-
-const getNotificationIcon = (type) => {
-  const icons = {
-    info: 'pi pi-info-circle',
-    success: 'pi pi-check-circle',
-    warning: 'pi pi-exclamation-triangle',
-    error: 'pi pi-times-circle',
+  function toggleMenu (event) {
+    notificationPopover.value.toggle(event)
   }
-  return icons[type] || 'pi pi-bell'
-}
 
-const formatTime = (dateString) => {
-  const date = new Date(dateString)
-  const now = new Date()
-  const diff = now - date
-
-  const minutes = Math.floor(diff / 60000)
-  if (minutes < 1) return 'Just now'
-  if (minutes < 60) return `${minutes}m ago`
-
-  const hours = Math.floor(minutes / 60)
-  if (hours < 24) return `${hours}h ago`
-
-  const days = Math.floor(hours / 24)
-  if (days < 7) return `${days}d ago`
-
-  return date.toLocaleDateString()
-}
-
-const handleNotificationClick = async (notification) => {
-  if (!notification.isRead) {
-    await notificationStore.markAsRead(notification.id)
+  function hideMenu () {
+    notificationPopover.value.hide()
   }
-}
 
-const handleMarkAllRead = async () => {
-  await notificationStore.markAllAsRead()
-}
+  function getNotificationIcon (type) {
+    const icons = {
+      info: 'pi pi-info-circle',
+      success: 'pi pi-check-circle',
+      warning: 'pi pi-exclamation-triangle',
+      error: 'pi pi-times-circle',
+    }
+    return icons[type] || 'pi pi-bell'
+  }
+
+  function formatTime (dateString) {
+    const date = new Date(dateString)
+    const now = new Date()
+    const diff = now - date
+
+    const minutes = Math.floor(diff / 60_000)
+    if (minutes < 1) return 'Just now'
+    if (minutes < 60) return `${minutes}m ago`
+
+    const hours = Math.floor(minutes / 60)
+    if (hours < 24) return `${hours}h ago`
+
+    const days = Math.floor(hours / 24)
+    if (days < 7) return `${days}d ago`
+
+    return date.toLocaleDateString()
+  }
+
+  async function handleNotificationClick (notification) {
+    if (!notification.isRead) {
+      await notificationStore.markAsRead(notification.id)
+    }
+  }
+
+  async function handleMarkAllRead () {
+    await notificationStore.markAllAsRead()
+  }
 </script>
 
 <style scoped>

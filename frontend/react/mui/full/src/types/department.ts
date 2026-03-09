@@ -1,9 +1,10 @@
 export interface Department {
-  id: string
-  name: string
+  id: number
   code: string
+  name: string
   description?: string
   isActive: boolean
+  userCount: number
   createdAt: string
   updatedAt?: string
 }
@@ -19,11 +20,4 @@ export interface UpdateDepartmentRequest {
   code?: string
   description?: string
   isActive?: boolean
-}
-
-export interface DepartmentListResponse {
-  data: Department[]
-  total: number
-  page: number
-  pageSize: number
 }

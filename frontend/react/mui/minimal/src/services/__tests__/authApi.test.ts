@@ -19,7 +19,7 @@ describe('Auth API', () => {
 
   describe('login', () => {
     it('posts credentials to /auth/login', async () => {
-      const mockResponse = { data: { token: 'tok', user: { id: 1 }, refreshToken: 'rt', refreshTokenExpiresAt: '2099-01-01' } }
+      const mockResponse = { data: { success: true, message: 'OK', data: { accessToken: 'tok', refreshToken: 'rt', expiresIn: 3600, user: { id: 1 } } } }
       vi.mocked(api.post).mockResolvedValue(mockResponse)
 
       const result = await login({ username: 'admin', password: 'pass' } as any)
@@ -41,32 +41,32 @@ describe('Auth API', () => {
 
   describe('getProfile', () => {
     it('gets from /auth/profile', async () => {
-      const mockUser = { id: 1, username: 'admin' }
-      vi.mocked(api.get).mockResolvedValue({ data: mockUser })
+      const mockResult = { success: true, message: 'OK', data: { id: 1, username: 'admin' } }
+      vi.mocked(api.get).mockResolvedValue({ data: mockResult })
 
       const result = await getProfile()
 
       expect(api.get).toHaveBeenCalledWith('/auth/profile')
-      expect(result).toEqual(mockUser)
+      expect(result).toEqual(mockResult)
     })
   })
 
   describe('updateProfile', () => {
     it('puts to /auth/profile', async () => {
       const data = { username: 'updated' }
-      const mockUser = { id: 1, username: 'updated' }
-      vi.mocked(api.put).mockResolvedValue({ data: mockUser })
+      const mockResult = { success: true, message: 'OK', data: { id: 1, username: 'updated' } }
+      vi.mocked(api.put).mockResolvedValue({ data: mockResult })
 
       const result = await updateProfile(data as any)
 
       expect(api.put).toHaveBeenCalledWith('/auth/profile', data)
-      expect(result).toEqual(mockUser)
+      expect(result).toEqual(mockResult)
     })
   })
 
   describe('refreshToken', () => {
     it('posts to /auth/refresh with token', async () => {
-      const mockResponse = { data: { token: 'new-tok', refreshToken: 'new-rt' } }
+      const mockResponse = { data: { success: true, message: 'OK', data: { accessToken: 'new-tok', refreshToken: 'new-rt', expiresIn: 3600 } } }
       vi.mocked(api.post).mockResolvedValue(mockResponse)
 
       const result = await refreshToken('old-rt')
@@ -87,22 +87,22 @@ describe('Auth API', () => {
   })
 
   describe('resetPassword', () => {
-    it('posts to /auth/reset-password with token and newPassword', async () => {
+    it('posts to /auth/reset-password with token, newPassword, and confirmPassword', async () => {
       vi.mocked(api.post).mockResolvedValue({})
 
-      await resetPassword('reset-tok', 'NewPass@123')
+      await resetPassword('reset-tok', 'NewPass@123', 'NewPass@123')
 
-      expect(api.post).toHaveBeenCalledWith('/auth/reset-password', { token: 'reset-tok', newPassword: 'NewPass@123' })
+      expect(api.post).toHaveBeenCalledWith('/auth/reset-password', { token: 'reset-tok', newPassword: 'NewPass@123', confirmPassword: 'NewPass@123' })
     })
   })
 
   describe('changePassword', () => {
-    it('posts to /auth/change-password with current and new password', async () => {
+    it('posts to /auth/change-password with current, new, and confirm password', async () => {
       vi.mocked(api.post).mockResolvedValue({})
 
-      await changePassword('OldPass@123', 'NewPass@123')
+      await changePassword('OldPass@123', 'NewPass@123', 'NewPass@123')
 
-      expect(api.post).toHaveBeenCalledWith('/auth/change-password', { currentPassword: 'OldPass@123', newPassword: 'NewPass@123' })
+      expect(api.post).toHaveBeenCalledWith('/auth/change-password', { currentPassword: 'OldPass@123', newPassword: 'NewPass@123', confirmPassword: 'NewPass@123' })
     })
   })
 })

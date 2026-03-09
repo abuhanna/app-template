@@ -1,4 +1,15 @@
-import { describe, it, expect, beforeEach, vi } from 'vitest'
+import { beforeEach, describe, expect, it, vi } from 'vitest'
+
+import api from '../api'
+import {
+  forgotPassword,
+  getProfile,
+  login,
+  logout,
+  refreshToken,
+  resetPassword,
+  updateProfile,
+} from '../authApi'
 
 vi.mock('../api', () => ({
   default: {
@@ -8,17 +19,6 @@ vi.mock('../api', () => ({
     delete: vi.fn(),
   },
 }))
-
-import api from '../api'
-import {
-  login,
-  logout,
-  getProfile,
-  updateProfile,
-  forgotPassword,
-  resetPassword,
-  refreshToken,
-} from '../authApi'
 
 describe('Auth API Service', () => {
   beforeEach(() => {

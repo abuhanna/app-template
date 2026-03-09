@@ -1,10 +1,10 @@
-import { ref, computed, watch } from 'vue'
+import { computed, ref, watch } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import {
   DEFAULT_PAGE,
   DEFAULT_PAGE_SIZE,
-  DEFAULT_SORT_DIR,
-  PAGE_SIZE_OPTIONS
+  DEFAULT_SORT_ORDER,
+  PAGE_SIZE_OPTIONS,
 } from '@/types/pagination'
 
 /**
@@ -44,21 +44,21 @@ import {
  *   defaultSortDir: 'desc'
  * })
  */
-export function usePagination(options = {}) {
+export function usePagination (options = {}) {
   const {
     defaultPage = DEFAULT_PAGE,
     defaultPageSize = DEFAULT_PAGE_SIZE,
     defaultSortBy = '',
-    defaultSortDir = DEFAULT_SORT_DIR,
+    defaultSortDir = DEFAULT_SORT_ORDER,
     syncWithUrl = true,
-    urlPrefix = ''
+    urlPrefix = '',
   } = options
 
   const route = useRoute()
   const router = useRouter()
 
   // Helper to get prefixed param name
-  const getParamName = (name) => {
+  const getParamName = name => {
     return urlPrefix ? `${urlPrefix}_${name}` : name
   }
 
@@ -67,9 +67,11 @@ export function usePagination(options = {}) {
     if (Array.isArray(value)) {
       value = value[0]
     }
-    if (!value) return defaultValue
-    const parsed = parseInt(value, 10)
-    return isNaN(parsed) ? defaultValue : parsed
+    if (!value) {
+      return defaultValue
+    }
+    const parsed = Number.parseInt(value, 10)
+    return Number.isNaN(parsed) ? defaultValue : parsed
   }
 
   // Helper to parse query param as string
@@ -131,7 +133,9 @@ export function usePagination(options = {}) {
 
   // Computed properties
   const totalPages = computed(() => {
-    if (totalItems.value === 0) return 0
+    if (totalItems.value === 0) {
+      return 0
+    }
     return Math.ceil(totalItems.value / pageSize.value)
   })
 
@@ -142,7 +146,7 @@ export function usePagination(options = {}) {
     page: page.value,
     pageSize: pageSize.value,
     ...(sortBy.value && { sortBy: sortBy.value }),
-    ...(sortBy.value && { sortDir: sortDir.value })
+    ...(sortBy.value && { sortOrder: sortDir.value }),
   }))
 
   const paginationMeta = computed(() => ({
@@ -151,26 +155,28 @@ export function usePagination(options = {}) {
     totalItems: totalItems.value,
     totalPages: totalPages.value,
     hasNext: hasNext.value,
-    hasPrevious: hasPrevious.value
+    hasPrevious: hasPrevious.value,
   }))
 
   // URL sync helper
   const updateUrl = () => {
-    if (!syncWithUrl) return
+    if (!syncWithUrl) {
+      return
+    }
 
     const query = { ...route.query }
 
     // Only add non-default values to URL
-    if (page.value !== defaultPage) {
-      query[getParamName('page')] = String(page.value)
-    } else {
+    if (page.value === defaultPage) {
       delete query[getParamName('page')]
+    } else {
+      query[getParamName('page')] = String(page.value)
     }
 
-    if (pageSize.value !== defaultPageSize) {
-      query[getParamName('pageSize')] = String(pageSize.value)
-    } else {
+    if (pageSize.value === defaultPageSize) {
       delete query[getParamName('pageSize')]
+    } else {
+      query[getParamName('pageSize')] = String(pageSize.value)
     }
 
     if (sortBy.value && sortBy.value !== defaultSortBy) {
@@ -189,7 +195,7 @@ export function usePagination(options = {}) {
   }
 
   // Control functions
-  const setPage = (newPage) => {
+  const setPage = newPage => {
     if (newPage < 1) {
       page.value = 1
     } else if (totalPages.value > 0 && newPage > totalPages.value) {
@@ -199,12 +205,12 @@ export function usePagination(options = {}) {
     }
   }
 
-  const setPageSize = (newPageSize) => {
-    if (!PAGE_SIZE_OPTIONS.includes(newPageSize)) {
+  const setPageSize = newPageSize => {
+    if (PAGE_SIZE_OPTIONS.includes(newPageSize)) {
+      pageSize.value = newPageSize
+    } else {
       console.warn(`Invalid page size: ${newPageSize}. Using default.`)
       pageSize.value = defaultPageSize
-    } else {
-      pageSize.value = newPageSize
     }
     // Reset to first page when page size changes
     page.value = 1
@@ -222,7 +228,7 @@ export function usePagination(options = {}) {
     page.value = 1
   }
 
-  const setTotalItems = (total) => {
+  const setTotalItems = total => {
     totalItems.value = total
     // Adjust page if current page exceeds total pages
     if (totalPages.value > 0 && page.value > totalPages.value) {
@@ -269,17 +275,25 @@ export function usePagination(options = {}) {
     // Handle browser back/forward
     watch(
       () => route.query,
-      (newQuery) => {
+      newQuery => {
         const newPage = parseQueryNumber(newQuery[getParamName('page')], defaultPage)
         const newPageSize = parseQueryNumber(newQuery[getParamName('pageSize')], defaultPageSize)
         const newSortBy = parseQueryString(newQuery[getParamName('sortBy')], defaultSortBy)
         const newSortDir = parseQuerySortDir(newQuery[getParamName('sortDir')], defaultSortDir)
 
-        if (newPage !== page.value) page.value = newPage
-        if (newPageSize !== pageSize.value) pageSize.value = newPageSize
-        if (newSortBy !== sortBy.value) sortBy.value = newSortBy
-        if (newSortDir !== sortDir.value) sortDir.value = newSortDir
-      }
+        if (newPage !== page.value) {
+          page.value = newPage
+        }
+        if (newPageSize !== pageSize.value) {
+          pageSize.value = newPageSize
+        }
+        if (newSortBy !== sortBy.value) {
+          sortBy.value = newSortBy
+        }
+        if (newSortDir !== sortDir.value) {
+          sortDir.value = newSortDir
+        }
+      },
     )
   }
 
@@ -310,6 +324,6 @@ export function usePagination(options = {}) {
     lastPage,
 
     // Constants
-    pageSizeOptions: PAGE_SIZE_OPTIONS
+    pageSizeOptions: PAGE_SIZE_OPTIONS,
   }
 }

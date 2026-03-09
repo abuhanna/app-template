@@ -40,10 +40,10 @@ export default function Notifications() {
     usePersistentNotificationStore()
 
   useEffect(() => {
-    fetchNotifications({ limit: 50 })
+    fetchNotifications({ page: 1, pageSize: 50 })
   }, [fetchNotifications])
 
-  const handleMarkAsRead = async (id: string) => {
+  const handleMarkAsRead = async (id: number) => {
     await markAsRead(id)
   }
 

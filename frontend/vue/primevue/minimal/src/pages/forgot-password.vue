@@ -2,15 +2,15 @@
   <div class="forgot-password-container">
     <div class="forgot-password-card">
       <div class="card-header">
-        <i class="pi pi-lock logo-icon"></i>
+        <i class="pi pi-lock logo-icon" />
         <h1 class="card-title">Forgot Password</h1>
         <p class="card-subtitle">
           Enter your email address and we'll send you a link to reset your password.
         </p>
       </div>
 
-      <form v-if="!submitted" @submit.prevent="handleSubmit" class="forgot-password-form">
-        <Message v-if="error" severity="error" :closable="false">
+      <form v-if="!submitted" class="forgot-password-form" @submit.prevent="handleSubmit">
+        <Message v-if="error" :closable="false" severity="error">
           {{ error }}
         </Message>
 
@@ -19,26 +19,26 @@
           <InputText
             id="email"
             v-model="email"
-            type="email"
-            placeholder="Enter your email"
+            class="w-full"
             :disabled="loading"
             :invalid="!!emailError"
-            class="w-full"
+            placeholder="Enter your email"
+            type="email"
           />
           <small v-if="emailError" class="p-error">{{ emailError }}</small>
         </div>
 
         <Button
-          type="submit"
+          class="w-full"
           label="Send Reset Link"
           :loading="loading"
-          class="w-full"
           size="large"
+          type="submit"
         />
 
         <div class="back-to-login">
-          <router-link to="/login" class="back-link">
-            <i class="pi pi-arrow-left"></i>
+          <router-link class="back-link" to="/login">
+            <i class="pi pi-arrow-left" />
             Back to Login
           </router-link>
         </div>
@@ -46,7 +46,7 @@
 
       <div v-else class="success-state">
         <div class="success-icon">
-          <i class="pi pi-check-circle"></i>
+          <i class="pi pi-check-circle" />
         </div>
         <h2>Check Your Email</h2>
         <p>
@@ -54,10 +54,10 @@
           reset link shortly.
         </p>
         <Button
+          class="w-full"
           label="Back to Login"
           severity="secondary"
           @click="$router.push('/login')"
-          class="w-full"
         />
       </div>
     </div>
@@ -65,56 +65,56 @@
 </template>
 
 <script setup>
-import { ref } from 'vue'
-import authApi from '@/services/authApi'
-import InputText from 'primevue/inputtext'
-import Button from 'primevue/button'
-import Message from 'primevue/message'
+  import Button from 'primevue/button'
+  import InputText from 'primevue/inputtext'
+  import Message from 'primevue/message'
+  import { ref } from 'vue'
+  import authApi from '@/services/authApi'
 
-definePage({
-  meta: {
-    layout: 'blank',
-  },
-})
+  definePage({
+    meta: {
+      layout: 'blank',
+    },
+  })
 
-const email = ref('')
-const emailError = ref('')
-const error = ref('')
-const loading = ref(false)
-const submitted = ref(false)
+  const email = ref('')
+  const emailError = ref('')
+  const error = ref('')
+  const loading = ref(false)
+  const submitted = ref(false)
 
-const validate = () => {
-  emailError.value = ''
+  function validate () {
+    emailError.value = ''
 
-  if (!email.value.trim()) {
-    emailError.value = 'Email is required'
-    return false
+    if (!email.value.trim()) {
+      emailError.value = 'Email is required'
+      return false
+    }
+
+    if (!/\S+@\S+\.\S+/.test(email.value)) {
+      emailError.value = 'Invalid email format'
+      return false
+    }
+
+    return true
   }
 
-  if (!/\S+@\S+\.\S+/.test(email.value)) {
-    emailError.value = 'Invalid email format'
-    return false
+  async function handleSubmit () {
+    if (!validate()) return
+
+    loading.value = true
+    error.value = ''
+
+    try {
+      await authApi.forgotPassword(email.value)
+      submitted.value = true
+    } catch {
+      // Don't reveal if email exists or not
+      submitted.value = true
+    } finally {
+      loading.value = false
+    }
   }
-
-  return true
-}
-
-const handleSubmit = async () => {
-  if (!validate()) return
-
-  loading.value = true
-  error.value = ''
-
-  try {
-    await authApi.forgotPassword(email.value)
-    submitted.value = true
-  } catch (err) {
-    // Don't reveal if email exists or not
-    submitted.value = true
-  } finally {
-    loading.value = false
-  }
-}
 </script>
 
 <style scoped>

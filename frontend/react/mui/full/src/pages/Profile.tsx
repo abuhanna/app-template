@@ -12,13 +12,12 @@ import {
   Alert,
 } from '@mui/material'
 import { useAuthStore, useNotificationStore } from '@/stores'
-import * as userApi from '@/services/userApi'
 import * as authApi from '@/services/authApi'
 import { PasswordStrength } from '@/components/common/PasswordStrength'
 
 export default function Profile() {
   const user = useAuthStore((state) => state.user)
-  const setAuthData = useAuthStore((state) => state.setAuthData)
+  const setUser = useAuthStore((state) => state.setUser)
   const showSuccess = useNotificationStore((state) => state.showSuccess)
   const showError = useNotificationStore((state) => state.showError)
 
@@ -40,13 +39,8 @@ export default function Profile() {
     e.preventDefault()
     setLoading(true)
     try {
-      const updatedUser = await userApi.updateMyProfile(profileData)
-      setAuthData({
-        token: useAuthStore.getState().token!,
-        refreshToken: useAuthStore.getState().refreshToken!,
-        refreshTokenExpiresAt: useAuthStore.getState().refreshTokenExpiresAt!,
-        user: updatedUser,
-      })
+      const result = await authApi.updateProfile(profileData)
+      setUser(result.data)
       showSuccess('Profile updated successfully')
     } catch {
       showError('Failed to update profile')
@@ -71,7 +65,11 @@ export default function Profile() {
 
     setLoading(true)
     try {
-      await authApi.changePassword(passwordData.currentPassword, passwordData.newPassword)
+      await authApi.changePassword(
+        passwordData.currentPassword,
+        passwordData.newPassword,
+        passwordData.confirmPassword
+      )
       setPasswordData({ currentPassword: '', newPassword: '', confirmPassword: '' })
       showSuccess('Password changed successfully')
     } catch {
@@ -107,7 +105,7 @@ export default function Profile() {
                 {getInitials()}
               </Avatar>
               <Typography variant="h6">
-                {user?.firstName} {user?.lastName}
+                {user?.fullName || `${user?.firstName || ''} ${user?.lastName || ''}`.trim()}
               </Typography>
               <Typography color="text.secondary">{user?.email}</Typography>
               <Typography color="text.secondary" sx={{ mt: 1 }}>

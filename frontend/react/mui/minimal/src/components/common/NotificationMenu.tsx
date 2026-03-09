@@ -31,7 +31,7 @@ export function NotificationMenu() {
     setAnchorEl(null)
   }
 
-  const handleNotificationClick = async (id: string) => {
+  const handleNotificationClick = async (id: number) => {
     await markAsRead(id)
   }
 

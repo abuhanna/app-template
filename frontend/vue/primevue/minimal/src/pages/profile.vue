@@ -4,59 +4,59 @@
       <!-- Profile Information -->
       <div class="col-12 md:col-8 lg:col-6 mx-auto">
         <Card class="h-full">
-            <template #title>
+          <template #title>
             <div class="flex align-items-center gap-2">
-                <i class="pi pi-user text-primary"></i>
-                <span>Profile Information</span>
+              <i class="pi pi-user text-primary" />
+              <span>Profile Information</span>
             </div>
-            </template>
-            <template #content>
-            <form @submit.prevent="handleUpdateProfile" class="flex flex-column gap-3">
-                <div class="flex flex-column gap-2">
-                <label for="username" class="font-medium">Username</label>
-                <InputText id="username" :value="user?.username" disabled class="w-full" />
+          </template>
+          <template #content>
+            <form class="flex flex-column gap-3" @submit.prevent="handleUpdateProfile">
+              <div class="flex flex-column gap-2">
+                <label class="font-medium" for="username">Username</label>
+                <InputText id="username" class="w-full" disabled :value="user?.username" />
                 <small class="text-color-secondary">Username cannot be changed</small>
-                </div>
+              </div>
 
-                <div class="flex flex-column gap-2">
-                <label for="email" class="font-medium">Email *</label>
+              <div class="flex flex-column gap-2">
+                <label class="font-medium" for="email">Email *</label>
                 <InputText
-                    id="email"
-                    v-model="profileForm.email"
-                    type="email"
-                    :invalid="!!profileErrors.email"
-                    class="w-full"
+                  id="email"
+                  v-model="profileForm.email"
+                  class="w-full"
+                  :invalid="!!profileErrors.email"
+                  type="email"
                 />
                 <small v-if="profileErrors.email" class="text-red-500">{{ profileErrors.email }}</small>
-                </div>
+              </div>
 
-                <div class="flex flex-column gap-2">
-                <label for="name" class="font-medium">Name</label>
+              <div class="flex flex-column gap-2">
+                <label class="font-medium" for="name">Name</label>
                 <InputText id="name" v-model="profileForm.name" class="w-full" />
-                </div>
+              </div>
 
-                <div class="flex flex-column gap-2">
+              <div class="flex flex-column gap-2">
                 <label class="font-medium">Role</label>
                 <div class="flex">
-                    <Tag :value="user?.role" :severity="user?.role === 'Admin' ? 'danger' : 'info'" />
+                  <Tag :severity="user?.role === 'admin' ? 'danger' : 'info'" :value="user?.role" />
                 </div>
-                </div>
+              </div>
 
-                <div class="flex flex-column gap-2">
+              <div class="flex flex-column gap-2">
                 <label class="font-medium">Department</label>
                 <span>{{ user?.departmentName || 'Not assigned' }}</span>
-                </div>
+              </div>
 
-                <div class="mt-2">
+              <div class="mt-2">
                 <Button
-                    type="submit"
-                    label="Update Profile"
-                    :loading="savingProfile"
-                    icon="pi pi-check"
+                  icon="pi pi-check"
+                  label="Update Profile"
+                  :loading="savingProfile"
+                  type="submit"
                 />
-                </div>
+              </div>
             </form>
-            </template>
+          </template>
         </Card>
       </div>
     </div>
@@ -64,70 +64,70 @@
 </template>
 
 <script setup>
-import { ref, reactive, computed, onMounted } from 'vue'
-import { useAuthStore } from '@/stores/auth'
-import { useNotificationStore } from '@/stores/notification'
-import authApi from '@/services/authApi'
-import Card from 'primevue/card'
-import Button from 'primevue/button'
-import InputText from 'primevue/inputtext'
-import Tag from 'primevue/tag'
+  import Button from 'primevue/button'
+  import Card from 'primevue/card'
+  import InputText from 'primevue/inputtext'
+  import Tag from 'primevue/tag'
+  import { computed, onMounted, reactive, ref } from 'vue'
+  import authApi from '@/services/authApi'
+  import { useAuthStore } from '@/stores/auth'
+  import { useNotificationStore } from '@/stores/notification'
 
-const authStore = useAuthStore()
-const notificationStore = useNotificationStore()
+  const authStore = useAuthStore()
+  const notificationStore = useNotificationStore()
 
-const user = computed(() => authStore.user)
+  const user = computed(() => authStore.user)
 
-const savingProfile = ref(false)
+  const savingProfile = ref(false)
 
-const profileForm = reactive({
-  email: '',
-  name: '',
-})
+  const profileForm = reactive({
+    email: '',
+    name: '',
+  })
 
-const profileErrors = reactive({
-  email: '',
-})
+  const profileErrors = reactive({
+    email: '',
+  })
 
-onMounted(() => {
-  if (user.value) {
-    profileForm.email = user.value.email || ''
-    profileForm.name = user.value.name || ''
+  onMounted(() => {
+    if (user.value) {
+      profileForm.email = user.value.email || ''
+      profileForm.name = user.value.name || ''
+    }
+  })
+
+  function validateProfile () {
+    let valid = true
+    profileErrors.email = ''
+
+    if (!profileForm.email.trim()) {
+      profileErrors.email = 'Email is required'
+      valid = false
+    } else if (!/\S+@\S+\.\S+/.test(profileForm.email)) {
+      profileErrors.email = 'Invalid email format'
+      valid = false
+    }
+
+    return valid
   }
-})
 
-const validateProfile = () => {
-  let valid = true
-  profileErrors.email = ''
+  async function handleUpdateProfile () {
+    if (!validateProfile()) return
 
-  if (!profileForm.email.trim()) {
-    profileErrors.email = 'Email is required'
-    valid = false
-  } else if (!/\S+@\S+\.\S+/.test(profileForm.email)) {
-    profileErrors.email = 'Invalid email format'
-    valid = false
+    savingProfile.value = true
+    try {
+      await authApi.updateProfile({
+        email: profileForm.email,
+        name: profileForm.name,
+      })
+      await authStore.fetchProfile()
+      notificationStore.success('Profile updated successfully')
+    } catch (error) {
+      notificationStore.error(error.response?.data?.message || 'Failed to update profile')
+    } finally {
+      savingProfile.value = false
+    }
   }
-
-  return valid
-}
-
-const handleUpdateProfile = async () => {
-  if (!validateProfile()) return
-
-  savingProfile.value = true
-  try {
-    await authApi.updateProfile({
-      email: profileForm.email,
-      name: profileForm.name,
-    })
-    await authStore.fetchProfile()
-    notificationStore.success('Profile updated successfully')
-  } catch (error) {
-    notificationStore.error(error.response?.data?.message || 'Failed to update profile')
-  } finally {
-    savingProfile.value = false
-  }
-}
 </script>
 
 <style scoped>

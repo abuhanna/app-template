@@ -4,15 +4,14 @@
  * Bootstraps PrimeVue and other plugins then mounts the App
  */
 
-// Environment validation (fail-fast)
-import { validateEnvironment } from '@/utils/envValidator'
-validateEnvironment()
-
 // Composables
 import { createApp } from 'vue'
 
 // Plugins
 import { registerPlugins } from '@/plugins'
+
+// Environment validation (fail-fast)
+import { validateEnvironment } from '@/utils/envValidator'
 
 // Components
 import App from './App.vue'
@@ -21,6 +20,7 @@ import App from './App.vue'
 import 'primeicons/primeicons.css'
 // PrimeFlex
 import 'primeflex/primeflex.css'
+validateEnvironment()
 
 const app = createApp(App)
 

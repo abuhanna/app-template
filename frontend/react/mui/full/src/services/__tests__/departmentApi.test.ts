@@ -19,7 +19,7 @@ describe('Department API', () => {
 
   describe('getDepartments', () => {
     it('gets from /departments with params', async () => {
-      const mockData = { items: [], pagination: {} }
+      const mockData = { success: true, data: [], pagination: {} }
       vi.mocked(api.get).mockResolvedValue({ data: mockData })
 
       const params = { page: 1, pageSize: 10 }
@@ -32,20 +32,20 @@ describe('Department API', () => {
 
   describe('getDepartment', () => {
     it('gets from /departments/:id', async () => {
-      const mockDept = { id: '1', code: 'IT', name: 'IT' }
-      vi.mocked(api.get).mockResolvedValue({ data: mockDept })
+      const mockData = { success: true, data: { id: 1, code: 'IT', name: 'IT' } }
+      vi.mocked(api.get).mockResolvedValue({ data: mockData })
 
-      const result = await getDepartment('1')
+      const result = await getDepartment(1)
 
       expect(api.get).toHaveBeenCalledWith('/departments/1')
-      expect(result).toEqual(mockDept)
+      expect(result).toEqual(mockData)
     })
   })
 
   describe('createDepartment', () => {
     it('posts to /departments', async () => {
       const data = { code: 'HR', name: 'HR Dept' }
-      const mockResponse = { id: '2', ...data }
+      const mockResponse = { success: true, data: { id: 2, ...data } }
       vi.mocked(api.post).mockResolvedValue({ data: mockResponse })
 
       const result = await createDepartment(data as any)
@@ -58,10 +58,10 @@ describe('Department API', () => {
   describe('updateDepartment', () => {
     it('puts to /departments/:id', async () => {
       const data = { name: 'Updated Dept' }
-      const mockResponse = { id: '1', code: 'IT', name: 'Updated Dept' }
+      const mockResponse = { success: true, data: { id: 1, code: 'IT', name: 'Updated Dept' } }
       vi.mocked(api.put).mockResolvedValue({ data: mockResponse })
 
-      const result = await updateDepartment('1', data as any)
+      const result = await updateDepartment(1, data as any)
 
       expect(api.put).toHaveBeenCalledWith('/departments/1', data)
       expect(result).toEqual(mockResponse)
@@ -72,7 +72,7 @@ describe('Department API', () => {
     it('deletes /departments/:id', async () => {
       vi.mocked(api.delete).mockResolvedValue({})
 
-      await deleteDepartment('1')
+      await deleteDepartment(1)
 
       expect(api.delete).toHaveBeenCalledWith('/departments/1')
     })

@@ -1,4 +1,13 @@
-import { describe, it, expect, beforeEach, vi } from 'vitest'
+import { beforeEach, describe, expect, it, vi } from 'vitest'
+
+import api from '../api'
+import {
+  createUser,
+  deleteUser,
+  getUserById,
+  getUsers,
+  updateUser,
+} from '../userApi'
 
 vi.mock('../api', () => ({
   default: {
@@ -8,16 +17,6 @@ vi.mock('../api', () => ({
     delete: vi.fn(),
   },
 }))
-
-import api from '../api'
-import {
-  getUsers,
-  getUserById,
-  createUser,
-  updateUser,
-  deleteUser,
-  changePassword,
-} from '../userApi'
 
 describe('User API Service', () => {
   beforeEach(() => {
@@ -73,15 +72,5 @@ describe('User API Service', () => {
     await deleteUser(1)
 
     expect(api.delete).toHaveBeenCalledWith('/users/1')
-  })
-
-  it('changePassword calls api.post with id and password data', async () => {
-    const passwordData = { currentPassword: 'old', newPassword: 'new' }
-    vi.mocked(api.post).mockResolvedValue({ data: {} })
-
-    const result = await changePassword(1, passwordData)
-
-    expect(api.post).toHaveBeenCalledWith('/users/1/change-password', passwordData)
-    expect(result).toEqual({})
   })
 })

@@ -36,6 +36,11 @@ export async function refreshToken (token) {
   return response.data
 }
 
+export async function changePassword (data) {
+  const response = await api.post('/auth/change-password', data)
+  return response.data
+}
+
 // Default export for convenience
 export default {
   login,
@@ -45,4 +50,5 @@ export default {
   forgotPassword,
   resetPassword,
   refreshToken,
+  changePassword,
 }

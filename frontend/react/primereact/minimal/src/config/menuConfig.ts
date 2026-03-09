@@ -16,14 +16,14 @@ export const menuItems: MenuItem[] = [
     label: 'Files',
     path: '/files',
     icon: 'pi pi-file',
-    roles: ['Admin'],
+    roles: ['admin'],
     section: 'Administration',
   },
   {
     label: 'Audit Logs',
     path: '/audit-logs',
     icon: 'pi pi-history',
-    roles: ['Admin'],
+    roles: ['admin'],
     section: 'Administration',
   },
 ]

@@ -1,4 +1,6 @@
-import { describe, it, expect, beforeEach, vi } from 'vitest'
+import { beforeEach, describe, expect, it, vi } from 'vitest'
+
+import { useConfirmDialog } from '../useConfirmDialog'
 
 // Mock PrimeVue's useConfirm
 const mockRequire = vi.fn()
@@ -7,8 +9,6 @@ vi.mock('primevue/useconfirm', () => ({
     require: mockRequire,
   }),
 }))
-
-import { useConfirmDialog } from '../useConfirmDialog'
 
 describe('useConfirmDialog', () => {
   beforeEach(() => {
@@ -30,7 +30,7 @@ describe('useConfirmDialog', () => {
         message: 'Are you sure?',
         icon: 'pi pi-exclamation-triangle',
         acceptClass: 'p-button-danger',
-      })
+      }),
     )
   })
 
@@ -47,12 +47,12 @@ describe('useConfirmDialog', () => {
         acceptLabel: 'Yes',
         rejectLabel: 'No',
         acceptClass: 'p-button-primary',
-      })
+      }),
     )
   })
 
   it('showConfirm resolves true on accept', async () => {
-    mockRequire.mockImplementation((options) => {
+    mockRequire.mockImplementation(options => {
       options.accept()
     })
 
@@ -63,7 +63,7 @@ describe('useConfirmDialog', () => {
   })
 
   it('showConfirm resolves false on reject', async () => {
-    mockRequire.mockImplementation((options) => {
+    mockRequire.mockImplementation(options => {
       options.reject()
     })
 
@@ -86,7 +86,7 @@ describe('useConfirmDialog', () => {
         rejectLabel: 'Cancel',
         icon: 'pi pi-exclamation-triangle',
         acceptClass: 'p-button-danger',
-      })
+      }),
     )
   })
 
@@ -98,7 +98,7 @@ describe('useConfirmDialog', () => {
     expect(mockRequire).toHaveBeenCalledWith(
       expect.objectContaining({
         message: 'Are you sure you want to delete this item? This action cannot be undone.',
-      })
+      }),
     )
   })
 })

@@ -1,27 +1,27 @@
 import api from './api'
-import type { PagedResult, SortDirection } from '@/types'
+import type { ApiResponse, SortDirection } from '@/types'
 
 export interface AuditLog {
   id: number
-  entityName: string
-  entityId: string
   action: string
-  oldValues: string | null
-  newValues: string | null
-  affectedColumns: string | null
-  userId: number | null
-  timestamp: string
+  entityType: string
+  entityId?: string
+  userId?: string
+  userName?: string
+  details?: string
+  ipAddress?: string
+  createdAt: string
 }
 
 export interface GetAuditLogsParams {
   page?: number
   pageSize?: number
   sortBy?: string
-  sortDir?: SortDirection
+  sortOrder?: SortDirection
   search?: string
-  entityName?: string
+  entityType?: string
   entityId?: string
-  userId?: number
+  userId?: string
   action?: string
   fromDate?: string
   toDate?: string
@@ -29,8 +29,8 @@ export interface GetAuditLogsParams {
 
 export async function getAuditLogs(
   params: GetAuditLogsParams = {}
-): Promise<PagedResult<AuditLog>> {
-  const { data } = await api.get<PagedResult<AuditLog>>('/audit-logs', { params })
+): Promise<ApiResponse<AuditLog[]>> {
+  const { data } = await api.get<ApiResponse<AuditLog[]>>('/audit-logs', { params })
   return data
 }
 

@@ -26,7 +26,8 @@ export default function Profile() {
 
   const [profileForm, setProfileForm] = useState({
     email: '',
-    name: '',
+    firstName: '',
+    lastName: '',
   })
   const [profileErrors, setProfileErrors] = useState<ProfileErrors>({ email: '' })
   const [savingProfile, setSavingProfile] = useState(false)
@@ -47,7 +48,8 @@ export default function Profile() {
     if (user) {
       setProfileForm({
         email: user.email || '',
-        name: user.name || '',
+        firstName: user.firstName || '',
+        lastName: user.lastName || '',
       })
     }
   }, [user])
@@ -107,11 +109,12 @@ export default function Profile() {
 
     setSavingProfile(true)
     try {
-      const updatedUser = await authApi.updateProfile({
+      const result = await authApi.updateProfile({
         email: profileForm.email,
-        name: profileForm.name,
+        firstName: profileForm.firstName,
+        lastName: profileForm.lastName,
       })
-      setUser(updatedUser)
+      setUser(result.data)
       showSuccess('Profile updated successfully')
     } catch {
       // Error toast is shown automatically by API interceptor
@@ -126,10 +129,11 @@ export default function Profile() {
 
     setSavingPassword(true)
     try {
-      await authApi.changePassword({
-        currentPassword: passwordForm.currentPassword,
-        newPassword: passwordForm.newPassword,
-      })
+      await authApi.changePassword(
+        passwordForm.currentPassword,
+        passwordForm.newPassword,
+        passwordForm.confirmPassword
+      )
       showSuccess('Password changed successfully')
       setPasswordForm({ currentPassword: '', newPassword: '', confirmPassword: '' })
       setPasswordErrors({ currentPassword: '', newPassword: '', confirmPassword: '' })
@@ -187,23 +191,40 @@ export default function Profile() {
               </div>
 
               <div className="flex flex-column gap-2">
-                <label htmlFor="name" className="font-medium">
-                  Name
+                <label htmlFor="firstName" className="font-medium">
+                  First Name
                 </label>
                 <InputText
-                  id="name"
-                  value={profileForm.name}
-                  onChange={(e) => setProfileForm({ ...profileForm, name: e.target.value })}
+                  id="firstName"
+                  value={profileForm.firstName}
+                  onChange={(e) => setProfileForm({ ...profileForm, firstName: e.target.value })}
                   className="w-full"
                 />
+              </div>
+
+              <div className="flex flex-column gap-2">
+                <label htmlFor="lastName" className="font-medium">
+                  Last Name
+                </label>
+                <InputText
+                  id="lastName"
+                  value={profileForm.lastName}
+                  onChange={(e) => setProfileForm({ ...profileForm, lastName: e.target.value })}
+                  className="w-full"
+                />
+              </div>
+
+              <div className="flex flex-column gap-2">
+                <label className="font-medium">Full Name</label>
+                <span>{user?.fullName || `${user?.firstName || ''} ${user?.lastName || ''}`.trim() || '-'}</span>
               </div>
 
               <div className="flex flex-column gap-2">
                 <label className="font-medium">Role</label>
                 <div className="flex">
                   <Tag
-                    value={user?.role || 'User'}
-                    severity={user?.role === 'Admin' ? 'danger' : 'info'}
+                    value={user?.role || 'user'}
+                    severity={user?.role === 'admin' ? 'danger' : 'info'}
                   />
                 </div>
               </div>

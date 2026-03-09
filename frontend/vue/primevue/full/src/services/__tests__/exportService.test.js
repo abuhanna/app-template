@@ -1,4 +1,7 @@
-import { describe, it, expect, beforeEach, vi } from 'vitest'
+import { beforeEach, describe, expect, it, vi } from 'vitest'
+
+import api from '../api'
+import exportService from '../exportService'
 
 vi.mock('../api', () => ({
   default: {
@@ -8,9 +11,6 @@ vi.mock('../api', () => ({
     delete: vi.fn(),
   },
 }))
-
-import api from '../api'
-import exportService from '../exportService'
 
 describe('Export Service', () => {
   beforeEach(() => {
@@ -30,20 +30,22 @@ describe('Export Service', () => {
     },
   }
 
+  function mockDom () {
+    const mockLink = { href: '', download: '', click: vi.fn(), remove: vi.fn() }
+    vi.spyOn(document, 'createElement').mockReturnValue(mockLink)
+    vi.spyOn(document.body, 'append').mockImplementation(() => {})
+    return mockLink
+  }
+
   it('exportUsers calls api.get with format and filters', async () => {
     vi.mocked(api.get).mockResolvedValue(mockBlobResponse)
-
-    // Mock document methods
-    const mockLink = { href: '', download: '', click: vi.fn() }
-    vi.spyOn(document, 'createElement').mockReturnValue(mockLink)
-    vi.spyOn(document.body, 'appendChild').mockImplementation(() => {})
-    vi.spyOn(document.body, 'removeChild').mockImplementation(() => {})
+    mockDom()
 
     const result = await exportService.exportUsers('xlsx', { search: 'admin' })
 
     expect(api.get).toHaveBeenCalledWith(
       expect.stringContaining('/export/users'),
-      { responseType: 'blob' }
+      { responseType: 'blob' },
     )
     expect(result.success).toBe(true)
     expect(result.fileName).toBe('users.xlsx')
@@ -51,43 +53,45 @@ describe('Export Service', () => {
 
   it('exportDepartments calls api.get with format', async () => {
     vi.mocked(api.get).mockResolvedValue(mockBlobResponse)
-
-    const mockLink = { href: '', download: '', click: vi.fn() }
-    vi.spyOn(document, 'createElement').mockReturnValue(mockLink)
-    vi.spyOn(document.body, 'appendChild').mockImplementation(() => {})
-    vi.spyOn(document.body, 'removeChild').mockImplementation(() => {})
+    mockDom()
 
     const result = await exportService.exportDepartments('csv')
 
     expect(api.get).toHaveBeenCalledWith(
       expect.stringContaining('/export/departments'),
-      { responseType: 'blob' }
+      { responseType: 'blob' },
     )
     expect(result.success).toBe(true)
   })
 
   it('exportAuditLogs calls api.get with format', async () => {
     vi.mocked(api.get).mockResolvedValue(mockBlobResponse)
-
-    const mockLink = { href: '', download: '', click: vi.fn() }
-    vi.spyOn(document, 'createElement').mockReturnValue(mockLink)
-    vi.spyOn(document.body, 'appendChild').mockImplementation(() => {})
-    vi.spyOn(document.body, 'removeChild').mockImplementation(() => {})
+    mockDom()
 
     const result = await exportService.exportAuditLogs('xlsx')
 
     expect(api.get).toHaveBeenCalledWith(
       expect.stringContaining('/export/audit-logs'),
-      { responseType: 'blob' }
+      { responseType: 'blob' },
+    )
+    expect(result.success).toBe(true)
+  })
+
+  it('exportNotifications calls api.get with format', async () => {
+    vi.mocked(api.get).mockResolvedValue(mockBlobResponse)
+    mockDom()
+
+    const result = await exportService.exportNotifications('xlsx')
+
+    expect(api.get).toHaveBeenCalledWith(
+      expect.stringContaining('/export/notifications'),
+      { responseType: 'blob' },
     )
     expect(result.success).toBe(true)
   })
 
   it('handleDownload uses fallback filename when no content-disposition', () => {
-    const mockLink = { href: '', download: '', click: vi.fn() }
-    vi.spyOn(document, 'createElement').mockReturnValue(mockLink)
-    vi.spyOn(document.body, 'appendChild').mockImplementation(() => {})
-    vi.spyOn(document.body, 'removeChild').mockImplementation(() => {})
+    mockDom()
 
     const response = {
       data: new Blob(['data']),

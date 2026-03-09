@@ -6,7 +6,7 @@ interface ExportResult {
 }
 
 const exportService = {
-  async exportUsers(format: string = 'xlsx', filters: Record<string, any> = {}): Promise<ExportResult> {
+  async exportUsers(format: string = 'xlsx', filters: Record<string, unknown> = {}): Promise<ExportResult> {
     const params = new URLSearchParams({ format, ...filters })
     const response = await api.get(`/export/users?${params}`, {
       responseType: 'blob',
@@ -14,7 +14,7 @@ const exportService = {
     return this.handleDownload(response)
   },
 
-  async exportDepartments(format: string = 'xlsx', filters: Record<string, any> = {}): Promise<ExportResult> {
+  async exportDepartments(format: string = 'xlsx', filters: Record<string, unknown> = {}): Promise<ExportResult> {
     const params = new URLSearchParams({ format, ...filters })
     const response = await api.get(`/export/departments?${params}`, {
       responseType: 'blob',
@@ -22,7 +22,7 @@ const exportService = {
     return this.handleDownload(response)
   },
 
-  async exportAuditLogs(format: string = 'xlsx', filters: Record<string, any> = {}): Promise<ExportResult> {
+  async exportAuditLogs(format: string = 'xlsx', filters: Record<string, unknown> = {}): Promise<ExportResult> {
     const params = new URLSearchParams({ format, ...filters })
     const response = await api.get(`/export/audit-logs?${params}`, {
       responseType: 'blob',
@@ -30,6 +30,15 @@ const exportService = {
     return this.handleDownload(response)
   },
 
+  async exportNotifications(format: string = 'xlsx', filters: Record<string, unknown> = {}): Promise<ExportResult> {
+    const params = new URLSearchParams({ format, ...filters })
+    const response = await api.get(`/export/notifications?${params}`, {
+      responseType: 'blob',
+    })
+    return this.handleDownload(response)
+  },
+
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   handleDownload(response: any): ExportResult {
     const contentDisposition = response.headers['content-disposition']
     let fileName = 'export'

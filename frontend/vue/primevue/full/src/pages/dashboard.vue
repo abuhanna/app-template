@@ -6,65 +6,65 @@
     <div class="grid">
       <div class="col-12 md:col-6 lg:col-3">
         <Card class="h-full">
-            <template #content>
+          <template #content>
             <div class="flex align-items-center gap-3">
-                <div class="flex align-items-center justify-content-center w-4rem h-4rem border-round-xl stat-icon users">
-                <i class="pi pi-users text-2xl text-white"></i>
-                </div>
-                <div class="flex flex-column">
+              <div class="flex align-items-center justify-content-center w-4rem h-4rem border-round-xl stat-icon users">
+                <i class="pi pi-users text-2xl text-white" />
+              </div>
+              <div class="flex flex-column">
                 <span class="text-3xl font-bold text-900 line-height-1">{{ stats.totalUsers }}</span>
                 <span class="text-sm text-500 mt-1">Total Users</span>
-                </div>
+              </div>
             </div>
-            </template>
+          </template>
         </Card>
       </div>
 
       <div class="col-12 md:col-6 lg:col-3">
         <Card class="h-full">
-            <template #content>
+          <template #content>
             <div class="flex align-items-center gap-3">
-                <div class="flex align-items-center justify-content-center w-4rem h-4rem border-round-xl stat-icon departments">
-                <i class="pi pi-building text-2xl text-white"></i>
-                </div>
-                <div class="flex flex-column">
+              <div class="flex align-items-center justify-content-center w-4rem h-4rem border-round-xl stat-icon departments">
+                <i class="pi pi-building text-2xl text-white" />
+              </div>
+              <div class="flex flex-column">
                 <span class="text-3xl font-bold text-900 line-height-1">{{ stats.totalDepartments }}</span>
                 <span class="text-sm text-500 mt-1">Departments</span>
-                </div>
+              </div>
             </div>
-            </template>
+          </template>
         </Card>
       </div>
 
       <div class="col-12 md:col-6 lg:col-3">
         <Card class="h-full">
-            <template #content>
+          <template #content>
             <div class="flex align-items-center gap-3">
-                <div class="flex align-items-center justify-content-center w-4rem h-4rem border-round-xl stat-icon active">
-                <i class="pi pi-check-circle text-2xl text-white"></i>
-                </div>
-                <div class="flex flex-column">
+              <div class="flex align-items-center justify-content-center w-4rem h-4rem border-round-xl stat-icon active">
+                <i class="pi pi-check-circle text-2xl text-white" />
+              </div>
+              <div class="flex flex-column">
                 <span class="text-3xl font-bold text-900 line-height-1">{{ stats.activeUsers }}</span>
                 <span class="text-sm text-500 mt-1">Active Users</span>
-                </div>
+              </div>
             </div>
-            </template>
+          </template>
         </Card>
       </div>
 
       <div class="col-12 md:col-6 lg:col-3">
         <Card class="h-full">
-            <template #content>
+          <template #content>
             <div class="flex align-items-center gap-3">
-                <div class="flex align-items-center justify-content-center w-4rem h-4rem border-round-xl stat-icon notifications">
-                <i class="pi pi-bell text-2xl text-white"></i>
-                </div>
-                <div class="flex flex-column">
+              <div class="flex align-items-center justify-content-center w-4rem h-4rem border-round-xl stat-icon notifications">
+                <i class="pi pi-bell text-2xl text-white" />
+              </div>
+              <div class="flex flex-column">
                 <span class="text-3xl font-bold text-900 line-height-1">{{ stats.unreadNotifications }}</span>
                 <span class="text-sm text-500 mt-1">Unread Notifications</span>
-                </div>
+              </div>
             </div>
-            </template>
+          </template>
         </Card>
       </div>
     </div>
@@ -73,61 +73,61 @@
 </template>
 
 <script setup>
-import { ref, computed, onMounted } from 'vue'
-import { useAuthStore } from '@/stores/auth'
-import { usePersistentNotificationStore } from '@/stores/persistentNotification'
-import { useUserStore } from '@/stores/user'
-import { useDepartmentStore } from '@/stores/department'
-import Card from 'primevue/card'
+  import Card from 'primevue/card'
+  import { computed, onMounted, ref } from 'vue'
+  import { useAuthStore } from '@/stores/auth'
+  import { useDepartmentStore } from '@/stores/department'
+  import { usePersistentNotificationStore } from '@/stores/persistentNotification'
+  import { useUserStore } from '@/stores/user'
 
-const authStore = useAuthStore()
-const notificationStore = usePersistentNotificationStore()
-const userStore = useUserStore()
-const departmentStore = useDepartmentStore()
+  const authStore = useAuthStore()
+  const notificationStore = usePersistentNotificationStore()
+  const userStore = useUserStore()
+  const departmentStore = useDepartmentStore()
 
-const isAdmin = computed(() => authStore.user?.role === 'Admin')
+  const isAdmin = computed(() => authStore.user?.role === 'admin')
 
-const stats = ref({
-  totalUsers: 0,
-  totalDepartments: 0,
-  activeUsers: 0,
-  unreadNotifications: 0,
-})
+  const stats = ref({
+    totalUsers: 0,
+    totalDepartments: 0,
+    activeUsers: 0,
+    unreadNotifications: 0,
+  })
 
-const recentNotifications = computed(() => {
-  return notificationStore.notifications.slice(0, 5)
-})
+  const recentNotifications = computed(() => {
+    return notificationStore.notifications.slice(0, 5)
+  })
 
-const formatTime = (dateString) => {
-  const date = new Date(dateString)
-  const now = new Date()
-  const diff = now - date
+  function formatTime (dateString) {
+    const date = new Date(dateString)
+    const now = new Date()
+    const diff = now - date
 
-  const minutes = Math.floor(diff / 60000)
-  if (minutes < 1) return 'Just now'
-  if (minutes < 60) return `${minutes}m ago`
+    const minutes = Math.floor(diff / 60_000)
+    if (minutes < 1) return 'Just now'
+    if (minutes < 60) return `${minutes}m ago`
 
-  const hours = Math.floor(minutes / 60)
-  if (hours < 24) return `${hours}h ago`
+    const hours = Math.floor(minutes / 60)
+    if (hours < 24) return `${hours}h ago`
 
-  const days = Math.floor(hours / 24)
-  if (days < 7) return `${days}d ago`
+    const days = Math.floor(hours / 24)
+    if (days < 7) return `${days}d ago`
 
-  return date.toLocaleDateString()
-}
-
-onMounted(async () => {
-  // Load stats
-  if (isAdmin.value) {
-    await Promise.all([userStore.fetchUsers(), departmentStore.fetchDepartments()])
-
-    stats.value.totalUsers = userStore.users.length
-    stats.value.totalDepartments = departmentStore.departments.length
-    stats.value.activeUsers = userStore.users.filter((u) => u.isActive).length
+    return date.toLocaleDateString()
   }
 
-  stats.value.unreadNotifications = notificationStore.unreadCount
-})
+  onMounted(async () => {
+    // Load stats
+    if (isAdmin.value) {
+      await Promise.all([userStore.fetchUsers(), departmentStore.fetchDepartments()])
+
+      stats.value.totalUsers = userStore.users.length
+      stats.value.totalDepartments = departmentStore.departments.length
+      stats.value.activeUsers = userStore.users.filter(u => u.isActive).length
+    }
+
+    stats.value.unreadNotifications = notificationStore.unreadCount
+  })
 </script>
 
 <style scoped>
@@ -147,7 +147,6 @@ onMounted(async () => {
 .stat-icon.notifications {
   background: linear-gradient(135deg, #43e97b 0%, #38f9d7 100%);
 }
-
 
 .quick-actions-card :deep(.p-card-title) {
   font-size: 1.125rem;

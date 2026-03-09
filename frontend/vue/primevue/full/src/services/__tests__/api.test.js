@@ -1,4 +1,8 @@
-import { describe, it, expect, beforeEach, vi } from 'vitest'
+import { beforeEach, describe, expect, it, vi } from 'vitest'
+
+// We test the api module by importing it and checking interceptor behavior
+// Since the interceptors are set up at import time, we test via the axios instance
+import api from '../api'
 
 vi.mock('@/router', () => ({
   default: {
@@ -6,10 +10,6 @@ vi.mock('@/router', () => ({
     currentRoute: { value: { fullPath: '/dashboard' } },
   },
 }))
-
-// We test the api module by importing it and checking interceptor behavior
-// Since the interceptors are set up at import time, we test via the axios instance
-import api from '../api'
 
 describe('API Service', () => {
   beforeEach(() => {

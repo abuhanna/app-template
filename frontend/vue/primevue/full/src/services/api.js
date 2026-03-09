@@ -1,6 +1,7 @@
 // src/services/api.js
 import axios from 'axios'
 import router from '@/router'
+import { useNotificationStore } from '@/stores/notification'
 
 const api = axios.create({
   baseURL: import.meta.env.VITE_API_BASE_URL || 'http://localhost:5100/api',
@@ -19,7 +20,7 @@ api.interceptors.request.use(
     return config
   },
   error => {
-    return Promise.reject(error)
+    throw error
   },
 )
 
@@ -28,41 +29,105 @@ let isRedirecting = false
 let isRefreshing = false
 let failedQueue = []
 
-const processQueue = (error, token = null) => {
-  failedQueue.forEach(prom => {
+function processQueue (error, token = null) {
+  for (const prom of failedQueue) {
     if (error) {
       prom.reject(error)
     } else {
       prom.resolve(token)
     }
-  })
+  }
   failedQueue = []
+}
+
+function clearAuthStorage () {
+  localStorage.removeItem('token')
+  localStorage.removeItem('user')
+  localStorage.removeItem('refreshToken')
+  localStorage.removeItem('refreshTokenExpiresAt')
+}
+
+function redirectToLogin (currentPath) {
+  if (isRedirecting) {
+    return
+  }
+  isRedirecting = true
+  clearAuthStorage()
+
+  if (currentPath === '/login') {
+    isRedirecting = false
+  } else {
+    router.push({
+      path: '/login',
+      query: { redirect: currentPath },
+    }).finally(() => {
+      setTimeout(() => {
+        isRedirecting = false
+      }, 1000)
+    })
+  }
+}
+
+function getErrorMessage (status, responseData) {
+  const errors = responseData?.errors
+  if (errors && Array.isArray(errors) && errors.length > 0) {
+    return errors.join('. ')
+  }
+  if (responseData?.message) {
+    return responseData.message
+  }
+  switch (status) {
+    case 403: {
+      return 'You don\'t have permission to perform this action.'
+    }
+    case 404: {
+      return 'Resource not found.'
+    }
+    case 422: {
+      return 'Validation error.'
+    }
+    case 500: {
+      return 'Server error. Please try again later.'
+    }
+    default: {
+      return 'An error occurred.'
+    }
+  }
+}
+
+function showErrorToast (message) {
+  try {
+    const notificationStore = useNotificationStore()
+    notificationStore.showError(message)
+  } catch {
+    console.error(message)
+  }
+}
+
+function isAuthUrl (url) {
+  return url?.includes('/auth/login')
+    || url?.includes('/auth/refresh')
+    || url?.includes('/auth/forgot-password')
+    || url?.includes('/auth/reset-password')
 }
 
 // Response interceptor to handle errors and token refresh
 api.interceptors.response.use(
-  response => {
-    return response
-  },
+  response => response,
   async error => {
     const originalRequest = error.config
 
     if (error.response) {
       // Handle 401 Unauthorized (token expired or invalid)
       if (error.response.status === 401 && !originalRequest._retry) {
-        // Don't try to refresh for auth endpoints
-        if (originalRequest.url.includes('/auth/login') ||
-            originalRequest.url.includes('/auth/refresh') ||
-            originalRequest.url.includes('/auth/forgot-password') ||
-            originalRequest.url.includes('/auth/reset-password')) {
-          return Promise.reject(error)
+        if (isAuthUrl(originalRequest.url)) {
+          throw error
         }
 
-        // Don't auto-redirect for external API calls
         const currentPath = router.currentRoute.value.fullPath
-        if (currentPath.startsWith('/external/') ||
-            (originalRequest.url && originalRequest.url.includes('/external/'))) {
-          return Promise.reject(error)
+        if (currentPath.startsWith('/external/')
+          || originalRequest.url?.includes('/external/')) {
+          throw error
         }
 
         // If already refreshing, queue this request
@@ -72,113 +137,61 @@ api.interceptors.response.use(
           }).then(token => {
             originalRequest.headers.Authorization = `Bearer ${token}`
             return api(originalRequest)
-          }).catch(err => {
-            return Promise.reject(err)
           })
         }
 
         originalRequest._retry = true
         isRefreshing = true
 
-        // Try to refresh the token
         const refreshToken = localStorage.getItem('refreshToken')
         if (refreshToken) {
           try {
             const response = await axios.post(
               `${api.defaults.baseURL}/auth/refresh`,
-              { refreshToken: refreshToken },
-              { headers: { 'Content-Type': 'application/json' } }
+              { refreshToken },
+              { headers: { 'Content-Type': 'application/json' } },
             )
 
-            const newToken = response.data.token
-            const newRefreshToken = response.data.refreshToken
+            const newToken = response.data.data.accessToken
+            const newRefreshToken = response.data.data.refreshToken
 
-            // Update stored tokens
             localStorage.setItem('token', newToken)
             localStorage.setItem('refreshToken', newRefreshToken)
-            localStorage.setItem('refreshTokenExpiresAt', response.data.refreshTokenExpiresAt)
-            localStorage.setItem('user', JSON.stringify(response.data.user))
 
-            // Update authorization header
             api.defaults.headers.common.Authorization = `Bearer ${newToken}`
             originalRequest.headers.Authorization = `Bearer ${newToken}`
 
-            // Process queued requests
             processQueue(null, newToken)
             isRefreshing = false
 
-            // Retry original request
             return api(originalRequest)
           } catch (refreshError) {
             processQueue(refreshError, null)
             isRefreshing = false
-
-            // Refresh failed, redirect to login
-            if (!isRedirecting) {
-              isRedirecting = true
-
-              localStorage.removeItem('token')
-              localStorage.removeItem('user')
-              localStorage.removeItem('refreshToken')
-              localStorage.removeItem('refreshTokenExpiresAt')
-
-              if (currentPath !== '/login') {
-                router.push({
-                  path: '/login',
-                  query: { redirect: currentPath },
-                }).finally(() => {
-                  setTimeout(() => {
-                    isRedirecting = false
-                  }, 1000)
-                })
-              } else {
-                isRedirecting = false
-              }
-            }
-
-            return Promise.reject(refreshError)
+            redirectToLogin(currentPath)
+            throw refreshError
           }
         } else {
-          // No refresh token, redirect to login
           isRefreshing = false
-          if (!isRedirecting) {
-            isRedirecting = true
-
-            localStorage.removeItem('token')
-            localStorage.removeItem('user')
-
-            if (currentPath !== '/login') {
-              router.push({
-                path: '/login',
-                query: { redirect: currentPath },
-              }).finally(() => {
-                setTimeout(() => {
-                  isRedirecting = false
-                }, 1000)
-              })
-            } else {
-              isRedirecting = false
-            }
-          }
+          redirectToLogin(currentPath)
         }
       }
 
-      // Handle 403 Forbidden
-      if (error.response.status === 403) {
-        console.error('Access forbidden:', error.response.data)
-      }
-
-      // Handle 500 Server Error
-      if (error.response.status === 500) {
-        console.error('Server error:', error.response.data)
+      // Handle non-401 errors with user-facing messages
+      if (error.response.status !== 401) {
+        const message = getErrorMessage(error.response.status, error.response.data)
+        const isAuthEndpoint = originalRequest?.url?.includes('/auth/')
+        if (!isAuthEndpoint) {
+          showErrorToast(message)
+        }
       }
     } else if (error.request) {
-      console.error('Network error - no response received:', error.request)
+      showErrorToast('Connection failed. Please check your internet.')
     } else {
       console.error('Request error:', error.message)
     }
 
-    return Promise.reject(error)
+    throw error
   },
 )
 

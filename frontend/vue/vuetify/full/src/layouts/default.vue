@@ -3,7 +3,7 @@
     <AppSidebar v-model="drawer" />
     <AppHeader @toggle-sidebar="drawer = !drawer" />
     <v-main>
-      <v-container fluid class="pa-4">
+      <v-container class="pa-4" fluid>
         <Breadcrumbs />
         <router-view />
       </v-container>

@@ -2,8 +2,10 @@ import { describe, it, expect, beforeEach, vi } from 'vitest'
 
 vi.mock('@/services/notificationApi', () => ({
   getMyNotifications: vi.fn(),
+  getUnreadCount: vi.fn(),
   markAsRead: vi.fn(),
   markAllAsRead: vi.fn(),
+  deleteNotification: vi.fn(),
 }))
 
 vi.mock('@microsoft/signalr', () => ({
@@ -63,19 +65,19 @@ describe('PersistentNotificationStore', () => {
   describe('fetchNotifications', () => {
     it('updates state on success', async () => {
       const mockResponse = {
+        success: true,
+        message: 'Notifications retrieved',
         data: [
-          { id: '1', title: 'Test', message: 'msg', type: 'info' as const, isRead: false, createdAt: '2024-01-01', userId: 'u1' },
+          { id: 1, title: 'Test', message: 'msg', type: 'info' as const, isRead: false, createdAt: '2024-01-01' },
         ],
-        total: 1,
-        unreadCount: 1,
+        pagination: { page: 1, pageSize: 15, totalItems: 1, totalPages: 1, hasNext: false, hasPrevious: false },
       }
-      vi.mocked(notificationApi.getMyNotifications).mockResolvedValue(mockResponse)
+      vi.mocked(notificationApi.getMyNotifications).mockResolvedValue(mockResponse as any)
 
       await usePersistentNotificationStore.getState().fetchNotifications()
 
       const state = usePersistentNotificationStore.getState()
       expect(state.notifications).toEqual(mockResponse.data)
-      expect(state.unreadCount).toBe(1)
       expect(state.loading).toBe(false)
     })
 
@@ -90,18 +92,32 @@ describe('PersistentNotificationStore', () => {
     })
   })
 
+  describe('fetchUnreadCount', () => {
+    it('updates unreadCount on success', async () => {
+      vi.mocked(notificationApi.getUnreadCount).mockResolvedValue({
+        success: true,
+        message: '',
+        data: { count: 3 },
+      } as any)
+
+      await usePersistentNotificationStore.getState().fetchUnreadCount()
+
+      expect(usePersistentNotificationStore.getState().unreadCount).toBe(3)
+    })
+  })
+
   describe('markAsRead', () => {
     it('updates local notification state and returns true', async () => {
       usePersistentNotificationStore.setState({
         notifications: [
-          { id: '1', title: 'N1', message: 'm', type: 'info', isRead: false, createdAt: '2024-01-01', userId: 'u1' },
-          { id: '2', title: 'N2', message: 'm', type: 'info', isRead: false, createdAt: '2024-01-01', userId: 'u1' },
-        ],
+          { id: 1, title: 'N1', message: 'm', type: 'info', isRead: false, createdAt: '2024-01-01' },
+          { id: 2, title: 'N2', message: 'm', type: 'info', isRead: false, createdAt: '2024-01-01' },
+        ] as any,
         unreadCount: 2,
       })
       vi.mocked(notificationApi.markAsRead).mockResolvedValue(undefined)
 
-      const result = await usePersistentNotificationStore.getState().markAsRead('1')
+      const result = await usePersistentNotificationStore.getState().markAsRead(1)
 
       expect(result).toBe(true)
       const state = usePersistentNotificationStore.getState()
@@ -113,7 +129,7 @@ describe('PersistentNotificationStore', () => {
     it('returns false on API error', async () => {
       vi.mocked(notificationApi.markAsRead).mockRejectedValue(new Error('Failed'))
 
-      const result = await usePersistentNotificationStore.getState().markAsRead('1')
+      const result = await usePersistentNotificationStore.getState().markAsRead(1)
 
       expect(result).toBe(false)
     })
@@ -123,9 +139,9 @@ describe('PersistentNotificationStore', () => {
     it('marks all notifications as read', async () => {
       usePersistentNotificationStore.setState({
         notifications: [
-          { id: '1', title: 'N1', message: 'm', type: 'info', isRead: false, createdAt: '2024-01-01', userId: 'u1' },
-          { id: '2', title: 'N2', message: 'm', type: 'info', isRead: false, createdAt: '2024-01-01', userId: 'u1' },
-        ],
+          { id: 1, title: 'N1', message: 'm', type: 'info', isRead: false, createdAt: '2024-01-01' },
+          { id: 2, title: 'N2', message: 'm', type: 'info', isRead: false, createdAt: '2024-01-01' },
+        ] as any,
         unreadCount: 2,
       })
       vi.mocked(notificationApi.markAllAsRead).mockResolvedValue(undefined)
@@ -143,26 +159,25 @@ describe('PersistentNotificationStore', () => {
     it('prepends notification to list and increments unreadCount', () => {
       usePersistentNotificationStore.setState({
         notifications: [
-          { id: '1', title: 'Old', message: 'm', type: 'info', isRead: true, createdAt: '2024-01-01', userId: 'u1' },
-        ],
+          { id: 1, title: 'Old', message: 'm', type: 'info', isRead: true, createdAt: '2024-01-01' },
+        ] as any,
         unreadCount: 0,
       })
 
       const newNotification = {
-        id: '2',
+        id: 2,
         title: 'New',
         message: 'new msg',
         type: 'success' as const,
         isRead: false,
         createdAt: '2024-01-02',
-        userId: 'u1',
       }
 
-      usePersistentNotificationStore.getState().addNotification(newNotification)
+      usePersistentNotificationStore.getState().addNotification(newNotification as any)
 
       const state = usePersistentNotificationStore.getState()
       expect(state.notifications).toHaveLength(2)
-      expect(state.notifications[0].id).toBe('2')
+      expect(state.notifications[0].id).toBe(2)
       expect(state.unreadCount).toBe(1)
     })
   })

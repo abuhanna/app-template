@@ -56,8 +56,9 @@ export default function Login() {
     try {
       await login({ username, password })
       navigate('/notifications')
-    } catch (err: any) {
-      setError(err.response?.data?.message || 'Invalid username or password')
+    } catch (err: unknown) {
+      const axiosErr = err as { response?: { data?: { message?: string } } }
+      setError(axiosErr.response?.data?.message || 'Invalid username or password')
     } finally {
       setLoading(false)
     }

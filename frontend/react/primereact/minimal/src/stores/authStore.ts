@@ -8,7 +8,6 @@ interface AuthState {
   user: User | null
   token: string | null
   refreshToken: string | null
-  refreshTokenExpiresAt: string | null
   loading: boolean
   isRefreshing: boolean
 
@@ -31,13 +30,12 @@ export const useAuthStore = create<AuthState>()(
       user: null,
       token: null,
       refreshToken: null,
-      refreshTokenExpiresAt: null,
       loading: false,
       isRefreshing: false,
 
       isAuthenticated: () => !!get().token,
 
-      isAdmin: () => get().user?.role === 'Admin',
+      isAdmin: () => get().user?.role === 'admin',
 
       login: async (credentials) => {
         set({ loading: true })
@@ -46,10 +44,9 @@ export const useAuthStore = create<AuthState>()(
         try {
           const response = await authApi.login(credentials)
           set({
-            token: response.token,
-            user: response.user,
-            refreshToken: response.refreshToken,
-            refreshTokenExpiresAt: response.refreshTokenExpiresAt,
+            token: response.data.accessToken,
+            user: response.data.user ?? null,
+            refreshToken: response.data.refreshToken,
             loading: false,
           })
           notification.showSuccess('Login successful!')
@@ -81,20 +78,13 @@ export const useAuthStore = create<AuthState>()(
         const state = get()
         if (!state.refreshToken || state.isRefreshing) return false
 
-        if (state.refreshTokenExpiresAt) {
-          const expiresAt = new Date(state.refreshTokenExpiresAt)
-          if (expiresAt <= new Date()) return false
-        }
-
         set({ isRefreshing: true })
 
         try {
           const response = await authApi.refreshToken(state.refreshToken)
           set({
-            token: response.token,
-            refreshToken: response.refreshToken,
-            refreshTokenExpiresAt: response.refreshTokenExpiresAt,
-            user: response.user,
+            token: response.data.accessToken,
+            refreshToken: response.data.refreshToken,
             isRefreshing: false,
           })
           return true
@@ -110,16 +100,14 @@ export const useAuthStore = create<AuthState>()(
           token: null,
           user: null,
           refreshToken: null,
-          refreshTokenExpiresAt: null,
         })
       },
 
       setAuthData: (data) => {
         set({
-          token: data.token,
-          user: data.user,
-          refreshToken: data.refreshToken,
-          refreshTokenExpiresAt: data.refreshTokenExpiresAt,
+          token: data.data.accessToken,
+          user: data.data.user ?? get().user,
+          refreshToken: data.data.refreshToken,
         })
       },
 
@@ -133,7 +121,6 @@ export const useAuthStore = create<AuthState>()(
         token: state.token,
         user: state.user,
         refreshToken: state.refreshToken,
-        refreshTokenExpiresAt: state.refreshTokenExpiresAt,
       }),
     }
   )
