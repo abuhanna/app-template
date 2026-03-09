@@ -1,0 +1,21 @@
+version: '3.8'
+services:
+  test-db:
+    image: postgres:15-alpine
+    container_name: apptemplate-test-db
+    environment:
+      POSTGRES_USER: apptemplate
+      POSTGRES_PASSWORD: apptemplate123
+      POSTGRES_DB: apptemplate_test
+    ports:
+      - "5433:5432"       # Port 5433 to avoid conflict with local PostgreSQL
+    volumes:
+      - test-db-data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U apptemplate -d apptemplate_test"]
+      interval: 5s
+      timeout: 3s
+      retries: 5
+
+volumes:
+  test-db-data:
