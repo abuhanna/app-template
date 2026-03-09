@@ -6,22 +6,22 @@ export class RefreshToken {
   @PrimaryGeneratedColumn()
   id: number;
 
-  @Column()
+  @Column({ name: 'user_id' })
   userId: number;
 
   @ManyToOne(() => User)
-  @JoinColumn({ name: 'userId' })
+  @JoinColumn({ name: 'user_id' })
   user: User;
 
   @Column()
   token: string;
 
-  @Column({ type: 'timestamptz' })
+  @Column({ name: 'expires_at', type: 'timestamptz' })
   expiresAt: Date;
 
-  @Column({ default: false })
+  @Column({ name: 'is_revoked', default: false })
   isRevoked: boolean;
 
-  @CreateDateColumn()
+  @CreateDateColumn({ name: 'created_at' })
   createdAt: Date;
 }

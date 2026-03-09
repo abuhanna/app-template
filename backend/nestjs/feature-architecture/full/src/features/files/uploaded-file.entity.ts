@@ -17,10 +17,10 @@ export class UploadedFile {
   @Column({ name: 'file_size', type: 'bigint' })
   fileSize: number;
 
-  @Column({ nullable: true })
+  @Column({ type: 'varchar', nullable: true })
   description: string | null;
 
-  @Column({ nullable: true })
+  @Column({ type: 'varchar', nullable: true })
   category: string | null;
 
   @Column({ name: 'is_public', default: false })
@@ -32,7 +32,7 @@ export class UploadedFile {
   @UpdateDateColumn({ name: 'updated_at' })
   updatedAt: Date;
 
-  @Column({ name: 'created_by', nullable: true })
+  @Column({ name: 'created_by', type: 'varchar', nullable: true })
   createdBy: string | null;
 
   get downloadUrl(): string {

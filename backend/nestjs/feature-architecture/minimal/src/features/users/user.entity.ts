@@ -11,19 +11,19 @@ export class User {
   @Column({ length: 255, unique: true })
   email: string;
 
-  @Column({ name: 'password_hash', length: 500, nullable: true })
+  @Column({ name: 'password_hash', type: 'varchar', length: 500, nullable: true })
   passwordHash: string | null;
 
-  @Column({ name: 'first_name', length: 100, nullable: true })
+  @Column({ name: 'first_name', type: 'varchar', length: 100, nullable: true })
   firstName: string | null;
 
-  @Column({ name: 'last_name', length: 100, nullable: true })
+  @Column({ name: 'last_name', type: 'varchar', length: 100, nullable: true })
   lastName: string | null;
 
   @Column({ length: 20, default: 'user' })
   role: string;
 
-  @Column({ name: 'department_id', nullable: true })
+  @Column({ name: 'department_id', type: 'integer', nullable: true })
   departmentId: number | null;
 
   @Column({ name: 'is_active', default: true })

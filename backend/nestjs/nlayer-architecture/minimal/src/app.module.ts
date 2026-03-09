@@ -12,6 +12,7 @@ import { User } from './entities/user.entity';
 import { UploadedFile } from './entities/uploaded-file.entity';
 import { AuditLog } from './entities/audit-log.entity';
 import { Notification } from './entities/notification.entity';
+import { RefreshToken } from './entities/refresh-token.entity';
 import { AuditSubscriber } from './subscribers/audit.subscriber';
 import { SeedService } from './services/seed.service';
 
@@ -36,8 +37,10 @@ import { SeedService } from './services/seed.service';
       username: process.env.DB_USERNAME || 'postgres',
       password: process.env.DB_PASSWORD || 'postgres',
       database: process.env.DB_NAME || 'apptemplate',
-      entities: [User, UploadedFile, AuditLog, Notification],
-      synchronize: process.env.NODE_ENV !== 'production',
+      entities: [User, UploadedFile, AuditLog, Notification, RefreshToken],
+      migrations: [__dirname + '/migrations/*{.ts,.js}'],
+      synchronize: false,
+      migrationsRun: true,
     }),
     TypeOrmModule.forFeature([User]),
     AuthModule,
