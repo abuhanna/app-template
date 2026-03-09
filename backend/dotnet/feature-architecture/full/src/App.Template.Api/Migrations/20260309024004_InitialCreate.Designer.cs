@@ -12,7 +12,7 @@ using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 namespace App.Template.Api.Migrations
 {
     [DbContext(typeof(AppDbContext))]
-    [Migration("20260220084131_InitialCreate")]
+    [Migration("20260309024004_InitialCreate")]
     partial class InitialCreate
     {
         /// <inheritdoc />
@@ -25,7 +25,7 @@ namespace App.Template.Api.Migrations
 
             NpgsqlModelBuilderExtensions.UseIdentityByDefaultColumns(modelBuilder);
 
-            modelBuilder.Entity("App.Template.Api.Models.Entities.AuditLog", b =>
+            modelBuilder.Entity("App.Template.Api.Common.Entities.AuditLog", b =>
                 {
                     b.Property<long>("Id")
                         .ValueGeneratedOnAdd()
@@ -34,8 +34,9 @@ namespace App.Template.Api.Migrations
 
                     NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<long>("Id"));
 
-                    b.Property<int>("Action")
-                        .HasColumnType("integer")
+                    b.Property<string>("Action")
+                        .IsRequired()
+                        .HasColumnType("text")
                         .HasColumnName("action");
 
                     b.Property<string>("AffectedColumns")
@@ -44,12 +45,14 @@ namespace App.Template.Api.Migrations
 
                     b.Property<string>("EntityId")
                         .IsRequired()
-                        .HasColumnType("text")
+                        .HasMaxLength(50)
+                        .HasColumnType("character varying(50)")
                         .HasColumnName("entity_id");
 
                     b.Property<string>("EntityName")
                         .IsRequired()
-                        .HasColumnType("text")
+                        .HasMaxLength(100)
+                        .HasColumnType("character varying(100)")
                         .HasColumnName("entity_name");
 
                     b.Property<string>("NewValues")
@@ -65,11 +68,15 @@ namespace App.Template.Api.Migrations
                         .HasColumnName("timestamp");
 
                     b.Property<string>("UserId")
-                        .HasColumnType("text")
+                        .HasMaxLength(100)
+                        .HasColumnType("character varying(100)")
                         .HasColumnName("user_id");
 
                     b.HasKey("Id")
                         .HasName("pk_audit_logs");
+
+                    b.HasIndex("EntityId")
+                        .HasDatabaseName("ix_audit_logs_entity_id");
 
                     b.HasIndex("EntityName")
                         .HasDatabaseName("ix_audit_logs_entity_name");
@@ -77,117 +84,13 @@ namespace App.Template.Api.Migrations
                     b.HasIndex("Timestamp")
                         .HasDatabaseName("ix_audit_logs_timestamp");
 
+                    b.HasIndex("UserId")
+                        .HasDatabaseName("ix_audit_logs_user_id");
+
                     b.ToTable("audit_logs", (string)null);
                 });
 
-            modelBuilder.Entity("App.Template.Api.Models.Entities.Department", b =>
-                {
-                    b.Property<long>("Id")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("bigint")
-                        .HasColumnName("id");
-
-                    NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<long>("Id"));
-
-                    b.Property<string>("Code")
-                        .IsRequired()
-                        .HasColumnType("text")
-                        .HasColumnName("code");
-
-                    b.Property<DateTime>("CreatedAt")
-                        .HasColumnType("timestamp with time zone")
-                        .HasColumnName("created_at");
-
-                    b.Property<string>("CreatedBy")
-                        .HasColumnType("text")
-                        .HasColumnName("created_by");
-
-                    b.Property<string>("Description")
-                        .HasColumnType("text")
-                        .HasColumnName("description");
-
-                    b.Property<bool>("IsActive")
-                        .HasColumnType("boolean")
-                        .HasColumnName("is_active");
-
-                    b.Property<string>("Name")
-                        .IsRequired()
-                        .HasColumnType("text")
-                        .HasColumnName("name");
-
-                    b.Property<DateTime?>("UpdatedAt")
-                        .HasColumnType("timestamp with time zone")
-                        .HasColumnName("updated_at");
-
-                    b.Property<string>("UpdatedBy")
-                        .HasColumnType("text")
-                        .HasColumnName("updated_by");
-
-                    b.HasKey("Id")
-                        .HasName("pk_departments");
-
-                    b.HasIndex("Code")
-                        .IsUnique()
-                        .HasDatabaseName("ix_departments_code");
-
-                    b.ToTable("departments", (string)null);
-                });
-
-            modelBuilder.Entity("App.Template.Api.Models.Entities.Notification", b =>
-                {
-                    b.Property<long>("Id")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("bigint")
-                        .HasColumnName("id");
-
-                    NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<long>("Id"));
-
-                    b.Property<DateTime>("CreatedAt")
-                        .HasColumnType("timestamp with time zone")
-                        .HasColumnName("created_at");
-
-                    b.Property<bool>("IsRead")
-                        .HasColumnType("boolean")
-                        .HasColumnName("is_read");
-
-                    b.Property<string>("Message")
-                        .IsRequired()
-                        .HasColumnType("text")
-                        .HasColumnName("message");
-
-                    b.Property<string>("ReferenceId")
-                        .HasColumnType("text")
-                        .HasColumnName("reference_id");
-
-                    b.Property<string>("ReferenceType")
-                        .HasColumnType("text")
-                        .HasColumnName("reference_type");
-
-                    b.Property<string>("Title")
-                        .IsRequired()
-                        .HasColumnType("text")
-                        .HasColumnName("title");
-
-                    b.Property<string>("Type")
-                        .IsRequired()
-                        .HasColumnType("text")
-                        .HasColumnName("type");
-
-                    b.Property<string>("UserId")
-                        .IsRequired()
-                        .HasColumnType("text")
-                        .HasColumnName("user_id");
-
-                    b.HasKey("Id")
-                        .HasName("pk_notifications");
-
-                    b.HasIndex("UserId", "IsRead")
-                        .HasDatabaseName("ix_notifications_user_id_is_read");
-
-                    b.ToTable("notifications", (string)null);
-                });
-
-            modelBuilder.Entity("App.Template.Api.Models.Entities.RefreshToken", b =>
+            modelBuilder.Entity("App.Template.Api.Common.Entities.RefreshToken", b =>
                 {
                     b.Property<long>("Id")
                         .ValueGeneratedOnAdd()
@@ -201,7 +104,8 @@ namespace App.Template.Api.Migrations
                         .HasColumnName("created_at");
 
                     b.Property<string>("CreatedByIp")
-                        .HasColumnType("text")
+                        .HasMaxLength(50)
+                        .HasColumnType("character varying(50)")
                         .HasColumnName("created_by_ip");
 
                     b.Property<DateTime>("ExpiresAt")
@@ -209,7 +113,8 @@ namespace App.Template.Api.Migrations
                         .HasColumnName("expires_at");
 
                     b.Property<string>("ReplacedByToken")
-                        .HasColumnType("text")
+                        .HasMaxLength(255)
+                        .HasColumnType("character varying(255)")
                         .HasColumnName("replaced_by_token");
 
                     b.Property<DateTime?>("RevokedAt")
@@ -217,12 +122,14 @@ namespace App.Template.Api.Migrations
                         .HasColumnName("revoked_at");
 
                     b.Property<string>("RevokedByIp")
-                        .HasColumnType("text")
+                        .HasMaxLength(50)
+                        .HasColumnType("character varying(50)")
                         .HasColumnName("revoked_by_ip");
 
                     b.Property<string>("Token")
                         .IsRequired()
-                        .HasColumnType("text")
+                        .HasMaxLength(255)
+                        .HasColumnType("character varying(255)")
                         .HasColumnName("token");
 
                     b.Property<long>("UserId")
@@ -242,7 +149,65 @@ namespace App.Template.Api.Migrations
                     b.ToTable("refresh_tokens", (string)null);
                 });
 
-            modelBuilder.Entity("App.Template.Api.Models.Entities.UploadedFile", b =>
+            modelBuilder.Entity("App.Template.Api.Features.Departments.Department", b =>
+                {
+                    b.Property<long>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("bigint")
+                        .HasColumnName("id");
+
+                    NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<long>("Id"));
+
+                    b.Property<string>("Code")
+                        .IsRequired()
+                        .HasMaxLength(50)
+                        .HasColumnType("character varying(50)")
+                        .HasColumnName("code");
+
+                    b.Property<DateTime>("CreatedAt")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("created_at");
+
+                    b.Property<string>("CreatedBy")
+                        .HasMaxLength(100)
+                        .HasColumnType("character varying(100)")
+                        .HasColumnName("created_by");
+
+                    b.Property<string>("Description")
+                        .HasMaxLength(500)
+                        .HasColumnType("character varying(500)")
+                        .HasColumnName("description");
+
+                    b.Property<bool>("IsActive")
+                        .HasColumnType("boolean")
+                        .HasColumnName("is_active");
+
+                    b.Property<string>("Name")
+                        .IsRequired()
+                        .HasMaxLength(200)
+                        .HasColumnType("character varying(200)")
+                        .HasColumnName("name");
+
+                    b.Property<DateTime?>("UpdatedAt")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("updated_at");
+
+                    b.Property<string>("UpdatedBy")
+                        .HasMaxLength(100)
+                        .HasColumnType("character varying(100)")
+                        .HasColumnName("updated_by");
+
+                    b.HasKey("Id")
+                        .HasName("pk_departments");
+
+                    b.HasIndex("Code")
+                        .IsUnique()
+                        .HasDatabaseName("ix_departments_code");
+
+                    b.ToTable("departments", (string)null);
+                });
+
+            modelBuilder.Entity("App.Template.Api.Features.Files.UploadedFile", b =>
                 {
                     b.Property<long>("Id")
                         .ValueGeneratedOnAdd()
@@ -252,12 +217,14 @@ namespace App.Template.Api.Migrations
                     NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<long>("Id"));
 
                     b.Property<string>("Category")
-                        .HasColumnType("text")
+                        .HasMaxLength(100)
+                        .HasColumnType("character varying(100)")
                         .HasColumnName("category");
 
                     b.Property<string>("ContentType")
                         .IsRequired()
-                        .HasColumnType("text")
+                        .HasMaxLength(100)
+                        .HasColumnType("character varying(100)")
                         .HasColumnName("content_type");
 
                     b.Property<DateTime>("CreatedAt")
@@ -265,16 +232,19 @@ namespace App.Template.Api.Migrations
                         .HasColumnName("created_at");
 
                     b.Property<string>("CreatedBy")
-                        .HasColumnType("text")
+                        .HasMaxLength(100)
+                        .HasColumnType("character varying(100)")
                         .HasColumnName("created_by");
 
                     b.Property<string>("Description")
-                        .HasColumnType("text")
+                        .HasMaxLength(500)
+                        .HasColumnType("character varying(500)")
                         .HasColumnName("description");
 
                     b.Property<string>("FileName")
                         .IsRequired()
-                        .HasColumnType("text")
+                        .HasMaxLength(255)
+                        .HasColumnType("character varying(255)")
                         .HasColumnName("file_name");
 
                     b.Property<long>("FileSize")
@@ -287,12 +257,14 @@ namespace App.Template.Api.Migrations
 
                     b.Property<string>("OriginalFileName")
                         .IsRequired()
-                        .HasColumnType("text")
+                        .HasMaxLength(255)
+                        .HasColumnType("character varying(255)")
                         .HasColumnName("original_file_name");
 
                     b.Property<string>("StoragePath")
                         .IsRequired()
-                        .HasColumnType("text")
+                        .HasMaxLength(500)
+                        .HasColumnType("character varying(500)")
                         .HasColumnName("storage_path");
 
                     b.Property<DateTime?>("UpdatedAt")
@@ -300,11 +272,18 @@ namespace App.Template.Api.Migrations
                         .HasColumnName("updated_at");
 
                     b.Property<string>("UpdatedBy")
-                        .HasColumnType("text")
+                        .HasMaxLength(100)
+                        .HasColumnType("character varying(100)")
                         .HasColumnName("updated_by");
 
                     b.HasKey("Id")
                         .HasName("pk_uploaded_files");
+
+                    b.HasIndex("Category")
+                        .HasDatabaseName("ix_uploaded_files_category");
+
+                    b.HasIndex("CreatedBy")
+                        .HasDatabaseName("ix_uploaded_files_created_by");
 
                     b.HasIndex("FileName")
                         .IsUnique()
@@ -313,7 +292,66 @@ namespace App.Template.Api.Migrations
                     b.ToTable("uploaded_files", (string)null);
                 });
 
-            modelBuilder.Entity("App.Template.Api.Models.Entities.User", b =>
+            modelBuilder.Entity("App.Template.Api.Features.Notifications.Notification", b =>
+                {
+                    b.Property<long>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("bigint")
+                        .HasColumnName("id");
+
+                    NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<long>("Id"));
+
+                    b.Property<DateTime>("CreatedAt")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("created_at");
+
+                    b.Property<bool>("IsRead")
+                        .HasColumnType("boolean")
+                        .HasColumnName("is_read");
+
+                    b.Property<string>("Message")
+                        .IsRequired()
+                        .HasMaxLength(500)
+                        .HasColumnType("character varying(500)")
+                        .HasColumnName("message");
+
+                    b.Property<string>("ReferenceId")
+                        .HasMaxLength(50)
+                        .HasColumnType("character varying(50)")
+                        .HasColumnName("reference_id");
+
+                    b.Property<string>("ReferenceType")
+                        .HasMaxLength(50)
+                        .HasColumnType("character varying(50)")
+                        .HasColumnName("reference_type");
+
+                    b.Property<string>("Title")
+                        .IsRequired()
+                        .HasMaxLength(200)
+                        .HasColumnType("character varying(200)")
+                        .HasColumnName("title");
+
+                    b.Property<string>("Type")
+                        .IsRequired()
+                        .HasColumnType("text")
+                        .HasColumnName("type");
+
+                    b.Property<string>("UserId")
+                        .IsRequired()
+                        .HasMaxLength(100)
+                        .HasColumnType("character varying(100)")
+                        .HasColumnName("user_id");
+
+                    b.HasKey("Id")
+                        .HasName("pk_notifications");
+
+                    b.HasIndex("UserId", "IsRead")
+                        .HasDatabaseName("ix_notifications_user_id_is_read");
+
+                    b.ToTable("notifications", (string)null);
+                });
+
+            modelBuilder.Entity("App.Template.Api.Features.Users.User", b =>
                 {
                     b.Property<long>("Id")
                         .ValueGeneratedOnAdd()
@@ -327,7 +365,8 @@ namespace App.Template.Api.Migrations
                         .HasColumnName("created_at");
 
                     b.Property<string>("CreatedBy")
-                        .HasColumnType("text")
+                        .HasMaxLength(100)
+                        .HasColumnType("character varying(100)")
                         .HasColumnName("created_by");
 
                     b.Property<long?>("DepartmentId")
@@ -336,7 +375,8 @@ namespace App.Template.Api.Migrations
 
                     b.Property<string>("Email")
                         .IsRequired()
-                        .HasColumnType("text")
+                        .HasMaxLength(255)
+                        .HasColumnType("character varying(255)")
                         .HasColumnName("email");
 
                     b.Property<bool>("IsActive")
@@ -348,12 +388,14 @@ namespace App.Template.Api.Migrations
                         .HasColumnName("last_login_at");
 
                     b.Property<string>("Name")
-                        .HasColumnType("text")
+                        .HasMaxLength(200)
+                        .HasColumnType("character varying(200)")
                         .HasColumnName("name");
 
                     b.Property<string>("PasswordHash")
                         .IsRequired()
-                        .HasColumnType("text")
+                        .HasMaxLength(255)
+                        .HasColumnType("character varying(255)")
                         .HasColumnName("password_hash");
 
                     b.Property<string>("PasswordHistory")
@@ -362,7 +404,8 @@ namespace App.Template.Api.Migrations
                         .HasColumnName("password_history");
 
                     b.Property<string>("PasswordResetToken")
-                        .HasColumnType("text")
+                        .HasMaxLength(100)
+                        .HasColumnType("character varying(100)")
                         .HasColumnName("password_reset_token");
 
                     b.Property<DateTime?>("PasswordResetTokenExpiry")
@@ -370,7 +413,8 @@ namespace App.Template.Api.Migrations
                         .HasColumnName("password_reset_token_expiry");
 
                     b.Property<string>("Role")
-                        .HasColumnType("text")
+                        .HasMaxLength(50)
+                        .HasColumnType("character varying(50)")
                         .HasColumnName("role");
 
                     b.Property<DateTime?>("UpdatedAt")
@@ -378,12 +422,14 @@ namespace App.Template.Api.Migrations
                         .HasColumnName("updated_at");
 
                     b.Property<string>("UpdatedBy")
-                        .HasColumnType("text")
+                        .HasMaxLength(100)
+                        .HasColumnType("character varying(100)")
                         .HasColumnName("updated_by");
 
                     b.Property<string>("Username")
                         .IsRequired()
-                        .HasColumnType("text")
+                        .HasMaxLength(100)
+                        .HasColumnType("character varying(100)")
                         .HasColumnName("username");
 
                     b.HasKey("Id")
@@ -396,6 +442,9 @@ namespace App.Template.Api.Migrations
                         .IsUnique()
                         .HasDatabaseName("ix_users_email");
 
+                    b.HasIndex("PasswordResetToken")
+                        .HasDatabaseName("ix_users_password_reset_token");
+
                     b.HasIndex("Username")
                         .IsUnique()
                         .HasDatabaseName("ix_users_username");
@@ -403,10 +452,10 @@ namespace App.Template.Api.Migrations
                     b.ToTable("users", (string)null);
                 });
 
-            modelBuilder.Entity("App.Template.Api.Models.Entities.RefreshToken", b =>
+            modelBuilder.Entity("App.Template.Api.Common.Entities.RefreshToken", b =>
                 {
-                    b.HasOne("App.Template.Api.Models.Entities.User", "User")
-                        .WithMany("RefreshTokens")
+                    b.HasOne("App.Template.Api.Features.Users.User", "User")
+                        .WithMany()
                         .HasForeignKey("UserId")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired()
@@ -415,9 +464,9 @@ namespace App.Template.Api.Migrations
                     b.Navigation("User");
                 });
 
-            modelBuilder.Entity("App.Template.Api.Models.Entities.User", b =>
+            modelBuilder.Entity("App.Template.Api.Features.Users.User", b =>
                 {
-                    b.HasOne("App.Template.Api.Models.Entities.Department", "Department")
+                    b.HasOne("App.Template.Api.Features.Departments.Department", "Department")
                         .WithMany("Users")
                         .HasForeignKey("DepartmentId")
                         .OnDelete(DeleteBehavior.SetNull)
@@ -426,14 +475,9 @@ namespace App.Template.Api.Migrations
                     b.Navigation("Department");
                 });
 
-            modelBuilder.Entity("App.Template.Api.Models.Entities.Department", b =>
+            modelBuilder.Entity("App.Template.Api.Features.Departments.Department", b =>
                 {
                     b.Navigation("Users");
-                });
-
-            modelBuilder.Entity("App.Template.Api.Models.Entities.User", b =>
-                {
-                    b.Navigation("RefreshTokens");
                 });
 #pragma warning restore 612, 618
         }

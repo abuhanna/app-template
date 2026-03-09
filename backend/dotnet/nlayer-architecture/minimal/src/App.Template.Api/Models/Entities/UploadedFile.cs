@@ -1,9 +1,7 @@
 using System.ComponentModel.DataAnnotations;
-using System.ComponentModel.DataAnnotations.Schema;
 
 namespace App.Template.Api.Models.Entities;
 
-[Table("UploadedFiles")]
 public class UploadedFile : AuditableEntity
 {
     private UploadedFile() { } // EF Core constructor

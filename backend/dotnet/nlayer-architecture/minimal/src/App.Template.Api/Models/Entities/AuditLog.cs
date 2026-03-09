@@ -1,5 +1,3 @@
-using System.ComponentModel.DataAnnotations.Schema;
-
 namespace App.Template.Api.Models.Entities;
 
 public enum AuditAction
@@ -9,7 +7,6 @@ public enum AuditAction
     Deleted
 }
 
-[Table("AuditLogs")]
 public class AuditLog
 {
     private AuditLog() { } // EF Core constructor

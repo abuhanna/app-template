@@ -17,7 +17,7 @@ namespace App.Template.Api.Migrations
         {
 #pragma warning disable 612, 618
             modelBuilder
-                .HasAnnotation("ProductVersion", "8.0.11")
+                .HasAnnotation("ProductVersion", "8.0.22")
                 .HasAnnotation("Relational:MaxIdentifierLength", 63);
 
             NpgsqlModelBuilderExtensions.UseIdentityByDefaultColumns(modelBuilder);
@@ -85,7 +85,7 @@ namespace App.Template.Api.Migrations
                     b.HasIndex("UserId")
                         .HasDatabaseName("ix_audit_logs_user_id");
 
-                    b.ToTable("AuditLogs");
+                    b.ToTable("audit_logs", (string)null);
                 });
 
             modelBuilder.Entity("App.Template.Api.Models.Entities.Notification", b =>
@@ -228,7 +228,7 @@ namespace App.Template.Api.Migrations
                         .IsUnique()
                         .HasDatabaseName("ix_uploaded_files_file_name");
 
-                    b.ToTable("UploadedFiles");
+                    b.ToTable("uploaded_files", (string)null);
                 });
 #pragma warning restore 612, 618
         }

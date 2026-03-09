@@ -13,7 +13,7 @@ namespace App.Template.Api.Migrations
         protected override void Up(MigrationBuilder migrationBuilder)
         {
             migrationBuilder.CreateTable(
-                name: "AuditLogs",
+                name: "audit_logs",
                 columns: table => new
                 {
                     id = table.Column<long>(type: "bigint", nullable: false)
@@ -53,7 +53,7 @@ namespace App.Template.Api.Migrations
                 });
 
             migrationBuilder.CreateTable(
-                name: "UploadedFiles",
+                name: "uploaded_files",
                 columns: table => new
                 {
                     id = table.Column<long>(type: "bigint", nullable: false)
@@ -78,22 +78,22 @@ namespace App.Template.Api.Migrations
 
             migrationBuilder.CreateIndex(
                 name: "ix_audit_logs_entity_id",
-                table: "AuditLogs",
+                table: "audit_logs",
                 column: "entity_id");
 
             migrationBuilder.CreateIndex(
                 name: "ix_audit_logs_entity_name",
-                table: "AuditLogs",
+                table: "audit_logs",
                 column: "entity_name");
 
             migrationBuilder.CreateIndex(
                 name: "ix_audit_logs_timestamp",
-                table: "AuditLogs",
+                table: "audit_logs",
                 column: "timestamp");
 
             migrationBuilder.CreateIndex(
                 name: "ix_audit_logs_user_id",
-                table: "AuditLogs",
+                table: "audit_logs",
                 column: "user_id");
 
             migrationBuilder.CreateIndex(
@@ -103,17 +103,17 @@ namespace App.Template.Api.Migrations
 
             migrationBuilder.CreateIndex(
                 name: "ix_uploaded_files_category",
-                table: "UploadedFiles",
+                table: "uploaded_files",
                 column: "category");
 
             migrationBuilder.CreateIndex(
                 name: "ix_uploaded_files_created_by",
-                table: "UploadedFiles",
+                table: "uploaded_files",
                 column: "created_by");
 
             migrationBuilder.CreateIndex(
                 name: "ix_uploaded_files_file_name",
-                table: "UploadedFiles",
+                table: "uploaded_files",
                 column: "file_name",
                 unique: true);
         }
@@ -122,13 +122,13 @@ namespace App.Template.Api.Migrations
         protected override void Down(MigrationBuilder migrationBuilder)
         {
             migrationBuilder.DropTable(
-                name: "AuditLogs");
+                name: "audit_logs");
 
             migrationBuilder.DropTable(
                 name: "notifications");
 
             migrationBuilder.DropTable(
-                name: "UploadedFiles");
+                name: "uploaded_files");
         }
     }
 }

@@ -31,8 +31,9 @@ namespace App.Template.Api.Migrations
 
                     NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<long>("Id"));
 
-                    b.Property<int>("Action")
-                        .HasColumnType("integer")
+                    b.Property<string>("Action")
+                        .IsRequired()
+                        .HasColumnType("text")
                         .HasColumnName("action");
 
                     b.Property<string>("AffectedColumns")
