@@ -1,2 +1,0 @@
--- Seed data moved to Runtime DataSeeder (AppTemplate.Infrastructure.Seeding.DataSeeder)
--- This file is intentionally empty to preserve version history

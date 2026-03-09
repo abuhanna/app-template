@@ -5,10 +5,14 @@ spring:
   application:
     name: AppTemplate
 
+  jackson:
+    mapper:
+      accept-case-insensitive-enums: true
+
   datasource:
-    url: jdbc:postgresql://${DB_HOST:localhost}:${DB_PORT:5432}/${DB_NAME:apptemplate}
-    username: ${DB_USER:apptemplate}
-    password: ${DB_PASSWORD:apptemplate123}
+    url: jdbc:postgresql://${DB_HOST:localhost}:${DB_PORT:5432}/${DB_NAME:apptemplate_dev}
+    username: ${DB_USER:postgres}
+    password: ${DB_PASSWORD:postgres}
     driver-class-name: org.postgresql.Driver
     hikari:
       maximum-pool-size: 10
@@ -30,27 +34,9 @@ spring:
     locations: classpath:db/migration
     baseline-on-migrate: true
 
-  mail:
-    host: ${MAIL_HOST:localhost}
-    port: ${MAIL_PORT:1025}
-    username: ${MAIL_USERNAME:}
-    password: ${MAIL_PASSWORD:}
-    from: ${MAIL_FROM:noreply@apptemplate.local}
-    properties:
-      mail:
-        smtp:
-          auth: ${MAIL_SMTP_AUTH:false}
-          starttls:
-            enable: ${MAIL_SMTP_STARTTLS:false}
-
 jwt:
   secret: ${JWT_SECRET:your-256-bit-secret-key-minimum-32-characters-long-for-hs256}
-  expiration-ms: ${JWT_EXPIRATION_MS:900000}
-  issuer: ${JWT_ISSUER:AppTemplate}
-  audience: ${JWT_AUDIENCE:AppTemplate}
-
-app:
-  frontend-url: ${FRONTEND_URL:http://localhost:3000}
+  expiration: ${JWT_EXPIRATION:86400000}
 
 springdoc:
   api-docs:
@@ -59,10 +45,19 @@ springdoc:
     path: /swagger-ui.html
     operations-sorter: method
 
+management:
+  endpoints:
+    web:
+      exposure:
+        include: "*"
+  endpoint:
+    health:
+      show-details: always
+
 logging:
   level:
     root: INFO
-    apptemplate: DEBUG
+    com.apptemplate: DEBUG
     org.springframework.security: INFO
     org.hibernate.SQL: WARN
 
@@ -91,4 +86,4 @@ spring:
 logging:
   level:
     root: WARN
-    apptemplate: INFO
+    com.apptemplate: INFO

@@ -12,12 +12,6 @@ spring:
   flyway:
     enabled: false
 
-app:
-  seeding:
-    enabled: false
-
 jwt:
-  secret: your-256-bit-secret-key-minimum-32-characters-long-for-hs256
+  secret: 404E635266556A586E3272357538782F413F4428472B4B6250645367566B5970
   expiration-ms: 900000
-  issuer: AppTemplate
-  audience: AppTemplate
