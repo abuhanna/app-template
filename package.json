@@ -7,7 +7,8 @@
     "prepare": "husky",
     "sync-versions": "npx tsx scripts/sync-versions.ts",
     "check-versions": "npx tsx scripts/check-versions.ts",
-    "check-parity": "npx tsx scripts/check-parity.ts"
+    "check-parity": "npx tsx scripts/check-parity.ts",
+    "integration-test": "npx tsx scripts/integration-test.ts"
   },
   "devDependencies": {
     "@commitlint/cli": "^19.6.1",
