@@ -93,8 +93,10 @@ export async function generateProject(config: ProjectConfig): Promise<void> {
       }
     }
 
-    // Step 3: Rename project namespaces (only for dotnet/spring)
-    if (config.projectName && config.projectName !== 'App.Template') {
+    // Step 3: Rename project namespaces and branding
+    const needsBackendRename = config.projectName && config.projectName !== 'App.Template' && config.projectType !== 'frontend';
+    const needsFrontendRename = config.projectType !== 'backend';
+    if (needsBackendRename || needsFrontendRename) {
       const stepStart = Date.now();
       spinner.start('Configuring project namespace...');
       try {

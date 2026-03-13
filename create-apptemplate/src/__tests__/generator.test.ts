@@ -110,11 +110,24 @@ describe('generateProject', () => {
     expect(renameProject).toHaveBeenCalled();
   });
 
-  it('skips renameProject when projectName is App.Template', async () => {
+  it('still calls renameProject for fullstack App.Template (frontend branding)', async () => {
     const projectDir = path.join(tmpDir, 'no-rename-project');
     const config = createConfig({
       projectPath: projectDir,
       projectName: 'App.Template',
+      projectType: 'fullstack',
+    });
+    await generateProject(config);
+    // renameProject is called because frontend branding rename always runs for fullstack
+    expect(renameProject).toHaveBeenCalled();
+  });
+
+  it('skips renameProject for backend-only with App.Template', async () => {
+    const projectDir = path.join(tmpDir, 'no-rename-backend');
+    const config = createConfig({
+      projectPath: projectDir,
+      projectName: 'App.Template',
+      projectType: 'backend',
     });
     await generateProject(config);
     expect(renameProject).not.toHaveBeenCalled();

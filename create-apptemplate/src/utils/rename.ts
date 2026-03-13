@@ -3,27 +3,49 @@ import fs from 'fs';
 import type { ProjectConfig } from '../types.js';
 
 /**
+ * Convert a kebab/snake-case string to PascalCase
+ */
+function toPascalCase(str: string): string {
+  return str
+    .split(/[-_]+/)
+    .map(part => part.charAt(0).toUpperCase() + part.slice(1).toLowerCase())
+    .join('');
+}
+
+/**
  * Rename project files and update namespaces
- * Only called when config.projectName is set (for dotnet/spring backends)
+ * Called when config.projectName is set (for dotnet/spring/nestjs backends)
+ * or when a frontend is present (to rename UI branding)
  */
 export async function renameProject(projectPath: string, config: ProjectConfig): Promise<void> {
-  if (!config.projectName) return;
+  const newDotName = config.projectName || '';
+  const newNamespace = newDotName.replace(/\./g, '');
 
-  const newDotName = config.projectName;
-  const newNamespace = config.projectName.replace(/\./g, '');
-
-  // Rename backend project files (for .NET)
-  if (config.projectType !== 'frontend' && config.backend === 'dotnet') {
-    await renameDotNetProject(projectPath, config, newDotName, newNamespace);
+  // Rename backend project files (requires projectName)
+  if (newDotName && config.projectType !== 'frontend') {
+    if (config.backend === 'dotnet') {
+      await renameDotNetProject(projectPath, config, newDotName, newNamespace);
+    }
+    if (config.backend === 'spring') {
+      await renameSpringProject(projectPath, config, newDotName);
+    }
+    if (config.backend === 'nestjs') {
+      await renameNestJsProject(projectPath, config, newDotName, newNamespace);
+    }
   }
 
-  // Rename backend project files (for Spring)
-  if (config.projectType !== 'frontend' && config.backend === 'spring') {
-    await renameSpringProject(projectPath, config, newDotName);
+  // Rename frontend project files (uses projectName or derives from directory)
+  if (config.projectType !== 'backend') {
+    const dirName = path.basename(projectPath);
+    const displayName = newNamespace || toPascalCase(dirName);
+    const pkgName = newNamespace ? newNamespace.toLowerCase() : dirName;
+    await renameFrontendProject(projectPath, config, displayName, pkgName);
   }
 
-  // Update common files
-  await updateCommonFiles(projectPath, config, newDotName, newNamespace);
+  // Update common files (requires projectName)
+  if (newDotName) {
+    await updateCommonFiles(projectPath, config, newDotName, newNamespace);
+  }
 }
 
 /**
@@ -56,6 +78,7 @@ async function renameDotNetProject(
     ['src/Presentation/App.Template.WebAPI', `src/Presentation/${newDotName}.WebAPI`],
     ['tests/App.Template.Domain.Tests', `tests/${newDotName}.Domain.Tests`],
     ['tests/App.Template.Application.Tests', `tests/${newDotName}.Application.Tests`],
+    ['tests/App.Template.WebAPI.Tests', `tests/${newDotName}.WebAPI.Tests`],
     // Feature and NLayer architectures (single-project layout)
     ['src/App.Template.Api', `src/${newDotName}.Api`],
     ['tests/App.Template.Api.Tests', `tests/${newDotName}.Api.Tests`],
@@ -203,13 +226,23 @@ async function renameSpringProject(
     if (isClean) {
       // Clean arch packages: apptemplate.api, apptemplate.domain, etc. (no com. prefix)
       return content
+        .replace(/AppTemplate/g, displayName)
         .replace(/apptemplate\.local/g, `${compactName}.local`)
         .replace(/\bapptemplate\b/g, packageName);
     } else {
       // Feature/NLayer packages: com.apptemplate.api.*
-      return content.replace(/com\.apptemplate/g, packageName);
+      return content
+        .replace(/AppTemplate/g, displayName)
+        .replace(/com\.apptemplate/g, packageName);
     }
   });
+
+  // Step 5: Rename AppTemplateApplication.java files (clean arch only)
+  if (isClean) {
+    await renameFilesWithPattern(backendDir, /^AppTemplate(.*)\.java$/, (match) => {
+      return `${displayName}${match[1]}.java`;
+    });
+  }
 
   // Step 4: Rename Java source directories to match the new package structure
   // (Must run after content updates so getAllFiles() can walk original paths)
@@ -231,6 +264,90 @@ async function renameSpringProject(
       renameJavaPackageDir(oldDir, newDir);
     }
   }
+}
+
+/**
+ * Rename NestJS project structure
+ */
+async function renameNestJsProject(
+  projectPath: string,
+  config: ProjectConfig,
+  newDotName: string,
+  newNamespace: string
+): Promise<void> {
+  let backendDir: string;
+  if (config.projectType === 'fullstack') {
+    backendDir = path.join(projectPath, 'backend');
+  } else if (config.placeInRoot) {
+    backendDir = projectPath;
+  } else {
+    backendDir = path.join(projectPath, 'backend');
+  }
+
+  if (!fs.existsSync(backendDir)) return;
+
+  const compactName = newNamespace.toLowerCase(); // acmesalesportal
+  const artifactId = newDotName.toLowerCase().replace(/\./g, '-'); // acme-salesportal
+
+  // Update package.json
+  const pkgPath = path.join(backendDir, 'package.json');
+  if (fs.existsSync(pkgPath)) {
+    let content = fs.readFileSync(pkgPath, 'utf-8');
+    content = content
+      .replace(/apptemplate-backend/g, `${artifactId}-backend`)
+      .replace(/AppTemplate/g, newNamespace);
+    fs.writeFileSync(pkgPath, content);
+  }
+
+  // Update TypeScript source files
+  await updateFileContents(backendDir, ['.ts'], (content) => {
+    return content
+      .replace(/AppTemplate/g, newNamespace)
+      .replace(/App Template/g, newNamespace)
+      .replace(/apptemplate_(\w+)/g, `${compactName}_$1`)
+      .replace(/apptemplate\.local/g, `${compactName}.local`)
+      .replace(/apptemplate\.com/g, `${compactName}.com`)
+      .replace(/'apptemplate'/g, `'${compactName}'`);
+  });
+}
+
+/**
+ * Rename frontend project branding
+ */
+async function renameFrontendProject(
+  projectPath: string,
+  config: ProjectConfig,
+  displayName: string,
+  pkgName: string
+): Promise<void> {
+  let frontendDir: string;
+  if (config.projectType === 'fullstack') {
+    frontendDir = path.join(projectPath, 'frontend');
+  } else if (config.placeInRoot) {
+    frontendDir = projectPath;
+  } else {
+    frontendDir = path.join(projectPath, 'frontend');
+  }
+
+  if (!fs.existsSync(frontendDir)) return;
+
+  // Update package.json name
+  const pkgJsonPath = path.join(frontendDir, 'package.json');
+  if (fs.existsSync(pkgJsonPath)) {
+    let content = fs.readFileSync(pkgJsonPath, 'utf-8');
+    // For fullstack: "acmesalesportal-frontend"; for frontend-only: use dir name as-is
+    const newPkgName = config.projectType === 'fullstack' ? `${pkgName}-frontend` : pkgName;
+    content = content.replace(/apptemplate-frontend/g, newPkgName);
+    fs.writeFileSync(pkgJsonPath, content);
+  }
+
+  // Update UI branding in source files
+  const frontendExts = ['.vue', '.js', '.ts', '.tsx', '.jsx'];
+  await updateFileContents(frontendDir, frontendExts, (content) => {
+    return content
+      .replace(/AppTemplate/g, displayName)
+      .replace(/App Template/g, displayName);
+  });
 }
 
 /**

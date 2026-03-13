@@ -64,7 +64,7 @@ async function main(): Promise<void> {
     const backend = cliArgs.backend || 'dotnet';
     const needsNamespace = projectType !== 'frontend' && (backend === 'dotnet' || backend === 'spring');
 
-    if (cliArgs.projectPath && cliArgs.backend && (!needsNamespace || cliArgs.projectName)) {
+    if (cliArgs.projectPath && (projectType === 'frontend' || cliArgs.backend) && (!needsNamespace || cliArgs.projectName)) {
       // Non-interactive mode - all required options provided
       const frontendFramework = cliArgs.framework || 'vue';
       const architecture = cliArgs.architecture || 'clean';
