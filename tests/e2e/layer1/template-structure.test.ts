@@ -165,3 +165,163 @@ describe('Shared templates', () => {
     });
   });
 });
+
+// ---------- Backend variant-specific structure ----------
+
+describe('Backend variant-specific structure', () => {
+  // Returns paths that should exist ONLY in the full variant (not in minimal)
+  function getFullOnlyPaths(
+    stack: string,
+    arch: string,
+  ): string[] {
+    if (stack === 'dotnet') {
+      if (arch === 'clean') {
+        return [
+          'src/Presentation/App.Template.WebAPI/Controllers/UsersController.cs',
+          'src/Presentation/App.Template.WebAPI/Controllers/DepartmentsController.cs',
+        ];
+      }
+      if (arch === 'feature') {
+        return [
+          'src/App.Template.Api/Features/Users',
+          'src/App.Template.Api/Features/Departments',
+        ];
+      }
+      // nlayer
+      return [
+        'src/App.Template.Api/Controllers/UsersController.cs',
+        'src/App.Template.Api/Controllers/DepartmentsController.cs',
+      ];
+    }
+
+    if (stack === 'spring') {
+      if (arch === 'clean') {
+        return [
+          'api/src/main/java/apptemplate/api/controllers/UsersController.java',
+          'api/src/main/java/apptemplate/api/controllers/DepartmentsController.java',
+        ];
+      }
+      if (arch === 'feature') {
+        // users/ exists in both full and minimal; only departments/ is full-only
+        return [
+          'src/main/java/com/apptemplate/api/features/departments',
+        ];
+      }
+      // nlayer
+      return [
+        'src/main/java/com/apptemplate/api/controller/UserController.java',
+        'src/main/java/com/apptemplate/api/controller/DepartmentController.java',
+      ];
+    }
+
+    if (stack === 'nestjs') {
+      if (arch === 'clean') {
+        // user-management exists in both; only department-management is full-only
+        return ['src/modules/department-management'];
+      }
+      if (arch === 'feature') {
+        return ['src/features/users', 'src/features/departments'];
+      }
+      // nlayer
+      return [
+        'src/controllers/users.controller.ts',
+        'src/controllers/departments.controller.ts',
+      ];
+    }
+
+    return [];
+  }
+
+  const combos = getAllBackendCombos();
+
+  for (const { stack, arch } of combos.filter((c) => c.variant === 'full')) {
+    const label = `${stack}/${arch}`;
+    const fullDir = path.join(REPO_ROOT, 'backend', stack, `${arch}-architecture`, 'full');
+    const minimalDir = path.join(REPO_ROOT, 'backend', stack, `${arch}-architecture`, 'minimal');
+    const fullOnlyPaths = getFullOnlyPaths(stack, arch);
+
+    if (fullOnlyPaths.length === 0) continue;
+
+    describe(label, () => {
+      it('full variant has user/department management', () => {
+        for (const p of fullOnlyPaths) {
+          expect(
+            fs.existsSync(path.join(fullDir, p)),
+            `Expected ${p} to exist in ${label}/full`,
+          ).toBe(true);
+        }
+      });
+
+      it('minimal variant has NO user/department management', () => {
+        for (const p of fullOnlyPaths) {
+          expect(
+            fs.existsSync(path.join(minimalDir, p)),
+            `Expected ${p} to NOT exist in ${label}/minimal`,
+          ).toBe(false);
+        }
+      });
+    });
+  }
+});
+
+// ---------- Frontend variant-specific structure ----------
+
+describe('Frontend variant-specific structure', () => {
+  // Returns page paths that exist ONLY in full variant
+  function getFullOnlyPages(framework: string): string[] {
+    if (framework === 'vue') {
+      return ['dashboard.vue', 'users', 'departments'];
+    }
+    // react
+    return ['Dashboard.tsx', 'Users.tsx', 'Departments.tsx'];
+  }
+
+  const combos = getAllFrontendCombos();
+
+  for (const { framework, ui } of combos.filter((c) => c.variant === 'full')) {
+    const label = `${framework}/${ui}`;
+    const fullPagesDir = path.join(REPO_ROOT, 'frontend', framework, ui, 'full', 'src', 'pages');
+    const minimalPagesDir = path.join(REPO_ROOT, 'frontend', framework, ui, 'minimal', 'src', 'pages');
+    const fullOnlyPages = getFullOnlyPages(framework);
+
+    describe(label, () => {
+      it('full has user and department management pages', () => {
+        for (const page of fullOnlyPages) {
+          expect(
+            fs.existsSync(path.join(fullPagesDir, page)),
+            `Expected ${page} in ${label}/full/src/pages`,
+          ).toBe(true);
+        }
+      });
+
+      it('minimal has NO user or department management pages', () => {
+        for (const page of fullOnlyPages) {
+          expect(
+            fs.existsSync(path.join(minimalPagesDir, page)),
+            `Expected ${page} to NOT exist in ${label}/minimal/src/pages`,
+          ).toBe(false);
+        }
+      });
+
+      it('has package.json with build script', () => {
+        for (const variant of ['full', 'minimal'] as const) {
+          const pkgPath = path.join(REPO_ROOT, 'frontend', framework, ui, variant, 'package.json');
+          const pkg = JSON.parse(fs.readFileSync(pkgPath, 'utf-8'));
+          expect(pkg.scripts?.build, `${label}/${variant} missing build script`).toBeTruthy();
+        }
+      });
+
+      it('has router setup', () => {
+        for (const variant of ['full', 'minimal'] as const) {
+          const routerDir = path.join(
+            REPO_ROOT, 'frontend', framework, ui, variant, 'src', 'router',
+          );
+          expect(
+            fs.existsSync(routerDir),
+            `${label}/${variant} missing src/router/`,
+          ).toBe(true);
+        }
+      });
+    });
+  }
+});
