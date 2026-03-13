@@ -20,7 +20,7 @@ export class AuditLogsController {
   @ResponseMessage('Audit logs retrieved successfully')
   async findAll(
     @Query() query: PaginationQueryDto,
-    @Query('entityType') entityType?: string,
+    @Query('entityName') entityName?: string,
     @Query('entityId') entityId?: string,
     @Query('userId') userId?: string,
     @Query('action') action?: string,
@@ -33,7 +33,7 @@ export class AuditLogsController {
       query.sortBy,
       query.sortOrder,
       query.search,
-      entityType,
+      entityName,
       entityId,
       userId,
       action,

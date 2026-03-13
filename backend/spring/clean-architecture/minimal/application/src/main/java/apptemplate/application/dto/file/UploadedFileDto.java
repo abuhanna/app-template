@@ -22,6 +22,6 @@ public class UploadedFileDto {
     private boolean isPublic;
     private LocalDateTime createdAt;
     private LocalDateTime updatedAt;
-    private Long createdBy;
+    private String createdBy;
     private String downloadUrl;
 }

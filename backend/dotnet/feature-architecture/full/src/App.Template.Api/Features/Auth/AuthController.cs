@@ -54,18 +54,18 @@ public class AuthController : ControllerBase
         var username = User.FindFirstValue(ClaimTypes.Name);
         var email = User.FindFirstValue(ClaimTypes.Email);
         var role = User.FindFirstValue(ClaimTypes.Role);
-        var name = User.FindFirstValue("name");
+        var firstName = User.FindFirstValue("firstName");
+        var lastName = User.FindFirstValue("lastName");
         var departmentId = User.FindFirstValue("departmentId");
 
-        var nameParts = name?.Split(' ', 2) ?? Array.Empty<string>();
         var userInfo = new UserInfoDto
         {
             Id = long.TryParse(userId, out var uid) ? uid : 0,
             Username = username ?? "",
             Email = email ?? "",
-            FirstName = nameParts.Length > 0 ? nameParts[0] : null,
-            LastName = nameParts.Length > 1 ? nameParts[1] : null,
-            FullName = name,
+            FirstName = firstName,
+            LastName = lastName,
+            FullName = $"{firstName} {lastName}".Trim(),
             Role = role,
             DepartmentId = long.TryParse(departmentId, out var did) ? did : null,
             IsActive = true

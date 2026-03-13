@@ -5,18 +5,20 @@ namespace AppTemplate.Domain.Entities;
 public class Notification
 {
     public long Id { get; private set; }
-    public string UserId { get; private set; } = null!;
+    public long UserId { get; private set; }
+    public User User { get; private set; } = null!;
     public string Title { get; private set; } = null!;
     public string Message { get; private set; } = null!;
     public NotificationType Type { get; private set; }
     public string? ReferenceId { get; private set; } // Can be Process ID or Task ID
     public string? ReferenceType { get; private set; } // "Process" or "Task"
     public bool IsRead { get; private set; }
+    public DateTime? ReadAt { get; private set; }
     public DateTime CreatedAt { get; private set; }
 
     private Notification() { }
 
-    public Notification(string userId, string title, string message, NotificationType type, string? referenceId = null, string? referenceType = null)
+    public Notification(long userId, string title, string message, NotificationType type, string? referenceId = null, string? referenceType = null)
     {
         UserId = userId;
         Title = title;
@@ -31,5 +33,6 @@ public class Notification
     public void MarkAsRead()
     {
         IsRead = true;
+        ReadAt = DateTime.UtcNow;
     }
 }

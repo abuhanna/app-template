@@ -59,7 +59,7 @@ describe('AuthController', () => {
 
   describe('me', () => {
     it('should return user info from JWT claims', async () => {
-      const user = { sub: 1, email: 'admin@test.com', username: 'admin', role: 'admin' };
+      const user = { sub: '1', email: 'admin@test.com', username: 'admin', role: 'admin' };
       const result = await controller.me(user);
 
       expect(result).toBeDefined();
@@ -79,11 +79,11 @@ describe('AuthController', () => {
       };
       mockQueryBus.execute.mockResolvedValue(profile);
 
-      const user = { sub: 1, email: 'admin@test.com', username: 'admin', role: 'admin' };
+      const user = { sub: '1', email: 'admin@test.com', username: 'admin', role: 'admin' };
       const result = await controller.getProfile(user);
 
       expect(mockQueryBus.execute).toHaveBeenCalledWith(
-        new GetMyProfileQuery(1),
+        new GetMyProfileQuery('1'),
       );
       expect(result).toEqual(profile);
     });
@@ -101,12 +101,12 @@ describe('AuthController', () => {
       };
       mockCommandBus.execute.mockResolvedValue(updatedProfile);
 
-      const user = { sub: 1, email: 'admin@test.com', username: 'admin', role: 'admin' };
+      const user = { sub: '1', email: 'admin@test.com', username: 'admin', role: 'admin' };
       const dto = { firstName: 'Updated', lastName: 'Name' };
       const result = await controller.updateProfile(user, dto);
 
       expect(mockCommandBus.execute).toHaveBeenCalledWith(
-        new UpdateProfileCommand(1, 'Updated', 'Name'),
+        new UpdateProfileCommand('1', 'Updated', 'Name'),
       );
       expect(result).toEqual(updatedProfile);
     });

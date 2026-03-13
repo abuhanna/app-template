@@ -33,19 +33,19 @@ describe('NotificationsController', () => {
   describe('findAll', () => {
     it('should return paginated notifications for user', async () => {
       const mockPaginatedResult = {
-        data: [{ id: 1, title: 'Test', userId: 1, isRead: false }],
+        data: [{ id: 1, title: 'Test', userId: 'user-1', isRead: false }],
         pagination: { page: 1, pageSize: 10, totalItems: 1, totalPages: 1, hasNext: false, hasPrevious: false },
       };
       mockService.findAllByUser.mockResolvedValue(mockPaginatedResult);
 
       const query = { page: 1, pageSize: 10 } as any;
       const result = await controller.findAll(
-        { user: { userId: 1 } },
+        { user: { userId: 'user-1' } },
         query,
         undefined,
       );
 
-      expect(mockService.findAllByUser).toHaveBeenCalledWith(1, 1, 10, undefined, undefined, false);
+      expect(mockService.findAllByUser).toHaveBeenCalledWith('user-1', 1, 10, undefined, undefined, false);
       expect(result).toEqual(mockPaginatedResult);
     });
   });
@@ -54,9 +54,9 @@ describe('NotificationsController', () => {
     it('should mark notification as read', async () => {
       mockService.markAsRead.mockResolvedValue(undefined);
 
-      await controller.markAsRead(1, { user: { userId: 1 } });
+      await controller.markAsRead(1, { user: { userId: 'user-1' } });
 
-      expect(mockService.markAsRead).toHaveBeenCalledWith(1, 1);
+      expect(mockService.markAsRead).toHaveBeenCalledWith(1, 'user-1');
     });
   });
 });

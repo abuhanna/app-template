@@ -24,10 +24,10 @@ public class Notification {
     private String title;
     private String message;
     private NotificationType type;
-    private String link;
     private String referenceId;
     private String referenceType;
     private boolean read;
+    private LocalDateTime readAt;
     private LocalDateTime createdAt;
 
     /**
@@ -50,5 +50,6 @@ public class Notification {
      */
     public void markAsRead() {
         this.read = true;
+        this.readAt = LocalDateTime.now();
     }
 }

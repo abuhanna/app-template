@@ -45,7 +45,7 @@ public class AuditEntityListener {
 
         try {
             AuditLog auditLog = new AuditLog();
-            auditLog.setEntityType(entity.getClass().getSimpleName());
+            auditLog.setEntityName(entity.getClass().getSimpleName());
             auditLog.setAction(action.toLowerCase());
 
             // Try to extract entity ID via reflection

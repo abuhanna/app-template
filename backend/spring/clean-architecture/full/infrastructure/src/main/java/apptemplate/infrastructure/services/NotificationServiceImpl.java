@@ -53,7 +53,7 @@ public class NotificationServiceImpl implements NotificationService {
     @Override
     @Transactional
     public void notifyAdmins(String title, String message, NotificationType type, String referenceId, String referenceType) {
-        userRepository.findByRole(UserRole.ADMIN.name()).forEach(admin -> {
+        userRepository.findByRole(UserRole.ADMIN).forEach(admin -> {
             notifyUser(admin.getId(), title, message, type, referenceId, referenceType);
         });
     }
@@ -70,8 +70,9 @@ public class NotificationServiceImpl implements NotificationService {
                     "id", notification.getId(),
                     "title", notification.getTitle(),
                     "message", notification.getMessage(),
-                    "type", notification.getType().name(),
-                    "link", notification.getLink() != null ? notification.getLink() : "",
+                    "type", notification.getType().getValue(),
+                    "referenceId", notification.getReferenceId() != null ? notification.getReferenceId() : "",
+                    "referenceType", notification.getReferenceType() != null ? notification.getReferenceType() : "",
                     "isRead", notification.isRead(),
                     "createdAt", notification.getCreatedAt().toString()
             );

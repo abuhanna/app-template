@@ -2,38 +2,44 @@ import { Entity, PrimaryGeneratedColumn, Column, CreateDateColumn, UpdateDateCol
 
 @Entity('uploaded_files')
 export class UploadedFile {
-  @PrimaryGeneratedColumn()
+  @PrimaryGeneratedColumn({ type: 'bigint' })
   id: number;
 
-  @Column({ name: 'file_name' })
+  @Column({ name: 'file_name', type: 'varchar', length: 255, unique: true })
   fileName: string;
 
-  @Column({ name: 'original_file_name' })
+  @Column({ name: 'original_file_name', type: 'varchar', length: 255 })
   originalFileName: string;
 
-  @Column({ name: 'content_type' })
+  @Column({ name: 'content_type', type: 'varchar', length: 100 })
   contentType: string;
 
   @Column({ name: 'file_size', type: 'bigint' })
   fileSize: number;
 
-  @Column({ type: 'varchar', nullable: true })
+  @Column({ name: 'storage_path', type: 'varchar', length: 500, nullable: true })
+  storagePath: string | null;
+
+  @Column({ type: 'varchar', length: 500, nullable: true })
   description: string | null;
 
-  @Column({ type: 'varchar', nullable: true })
+  @Column({ type: 'varchar', length: 100, nullable: true })
   category: string | null;
 
-  @Column({ name: 'is_public', default: false })
+  @Column({ name: 'is_public', type: 'boolean', default: false })
   isPublic: boolean;
 
-  @CreateDateColumn({ name: 'created_at' })
+  @CreateDateColumn({ name: 'created_at', type: 'timestamptz' })
   createdAt: Date;
 
-  @UpdateDateColumn({ name: 'updated_at' })
+  @UpdateDateColumn({ name: 'updated_at', type: 'timestamptz' })
   updatedAt: Date;
 
-  @Column({ name: 'created_by', type: 'varchar', nullable: true })
+  @Column({ name: 'created_by', type: 'varchar', length: 100, nullable: true })
   createdBy: string | null;
+
+  @Column({ name: 'updated_by', type: 'varchar', length: 100, nullable: true })
+  updatedBy: string | null;
 
   get downloadUrl(): string {
     return `/api/files/${this.id}/download`;

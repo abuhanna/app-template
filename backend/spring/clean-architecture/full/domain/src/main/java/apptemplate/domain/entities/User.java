@@ -29,6 +29,7 @@ public class User extends AuditableEntity {
     private String departmentName; // Transient - populated from JPA relationship, not persisted directly
     private boolean active;
     private LocalDateTime lastLoginAt;
+    private String lastLoginIp;
 
     // Password reset fields
     private String passwordResetToken;
@@ -120,6 +121,7 @@ public class User extends AuditableEntity {
 
     public void recordLogin(String ipAddress) {
         this.lastLoginAt = LocalDateTime.now();
+        this.lastLoginIp = ipAddress;
     }
 
     /**

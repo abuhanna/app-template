@@ -7,36 +7,37 @@ export class InitialSchema1700000000000 implements MigrationInterface {
     await queryRunner.query(`
       CREATE TABLE "departments" (
         "id" BIGSERIAL PRIMARY KEY,
-        "name" VARCHAR(255) NOT NULL,
-        "code" VARCHAR(255) NOT NULL UNIQUE,
-        "description" TEXT,
+        "code" VARCHAR(50) NOT NULL UNIQUE,
+        "name" VARCHAR(200) NOT NULL,
+        "description" VARCHAR(500),
         "is_active" BOOLEAN NOT NULL DEFAULT true,
         "created_at" TIMESTAMPTZ NOT NULL DEFAULT now(),
         "updated_at" TIMESTAMPTZ NOT NULL DEFAULT now(),
-        "created_by" BIGINT,
-        "updated_by" BIGINT
+        "created_by" VARCHAR(100),
+        "updated_by" VARCHAR(100)
       )
     `);
 
     await queryRunner.query(`
       CREATE TABLE "users" (
         "id" BIGSERIAL PRIMARY KEY,
+        "username" VARCHAR(100) NOT NULL UNIQUE,
         "email" VARCHAR(255) NOT NULL UNIQUE,
-        "username" VARCHAR(255) NOT NULL UNIQUE,
         "password_hash" VARCHAR(255) NOT NULL,
-        "first_name" VARCHAR(255) NOT NULL,
-        "last_name" VARCHAR(255) NOT NULL,
-        "role" VARCHAR(255) NOT NULL,
+        "first_name" VARCHAR(100) NOT NULL,
+        "last_name" VARCHAR(100) NOT NULL,
+        "role" VARCHAR(50) NOT NULL DEFAULT 'user',
         "department_id" BIGINT REFERENCES "departments"("id") ON DELETE SET NULL,
         "is_active" BOOLEAN NOT NULL DEFAULT true,
         "last_login_at" TIMESTAMPTZ,
-        "password_reset_token" VARCHAR,
+        "last_login_ip" VARCHAR(45),
+        "password_reset_token" VARCHAR(255),
         "password_reset_token_expires_at" TIMESTAMPTZ,
         "password_history" TEXT,
         "created_at" TIMESTAMPTZ NOT NULL DEFAULT now(),
         "updated_at" TIMESTAMPTZ NOT NULL DEFAULT now(),
-        "created_by" BIGINT,
-        "updated_by" BIGINT
+        "created_by" VARCHAR(100),
+        "updated_by" VARCHAR(100)
       )
     `);
     await queryRunner.query(`CREATE INDEX "IDX_users_email" ON "users" ("email")`);
@@ -47,11 +48,11 @@ export class InitialSchema1700000000000 implements MigrationInterface {
       CREATE TABLE "notifications" (
         "id" BIGSERIAL PRIMARY KEY,
         "user_id" BIGINT NOT NULL REFERENCES "users"("id") ON DELETE CASCADE,
-        "title" VARCHAR(255) NOT NULL,
+        "title" VARCHAR(200) NOT NULL,
         "message" TEXT NOT NULL,
-        "type" VARCHAR(255) NOT NULL,
-        "reference_id" VARCHAR,
-        "reference_type" VARCHAR,
+        "type" VARCHAR(50) NOT NULL DEFAULT 'info',
+        "reference_id" VARCHAR(50),
+        "reference_type" VARCHAR(50),
         "is_read" BOOLEAN NOT NULL DEFAULT false,
         "read_at" TIMESTAMPTZ,
         "created_at" TIMESTAMPTZ NOT NULL DEFAULT now()
@@ -63,15 +64,15 @@ export class InitialSchema1700000000000 implements MigrationInterface {
     await queryRunner.query(`
       CREATE TABLE "refresh_tokens" (
         "id" BIGSERIAL PRIMARY KEY,
-        "user_id" BIGINT NOT NULL REFERENCES "users"("id") ON DELETE CASCADE,
         "token" VARCHAR(255) NOT NULL UNIQUE,
+        "user_id" BIGINT NOT NULL REFERENCES "users"("id") ON DELETE CASCADE,
         "expires_at" TIMESTAMPTZ NOT NULL,
-        "device_info" VARCHAR,
-        "ip_address" VARCHAR,
-        "is_revoked" BOOLEAN NOT NULL DEFAULT false,
+        "created_at" TIMESTAMPTZ NOT NULL DEFAULT now(),
         "revoked_at" TIMESTAMPTZ,
-        "replaced_by_token" VARCHAR,
-        "created_at" TIMESTAMPTZ NOT NULL DEFAULT now()
+        "replaced_by_token" VARCHAR(255),
+        "created_by_ip" VARCHAR(45),
+        "revoked_by_ip" VARCHAR(45),
+        "is_revoked" BOOLEAN NOT NULL DEFAULT false
       )
     `);
     await queryRunner.query(`CREATE INDEX "IDX_refresh_tokens_token" ON "refresh_tokens" ("token")`);
@@ -83,16 +84,16 @@ export class InitialSchema1700000000000 implements MigrationInterface {
         "id" BIGSERIAL PRIMARY KEY,
         "file_name" VARCHAR(255) NOT NULL UNIQUE,
         "original_file_name" VARCHAR(255) NOT NULL,
-        "content_type" VARCHAR(255) NOT NULL,
+        "content_type" VARCHAR(100) NOT NULL,
         "file_size" BIGINT NOT NULL,
-        "storage_path" VARCHAR(255) NOT NULL,
-        "description" TEXT,
-        "category" VARCHAR,
+        "storage_path" VARCHAR(500) NOT NULL,
+        "description" VARCHAR(500),
+        "category" VARCHAR(100),
         "is_public" BOOLEAN NOT NULL DEFAULT false,
         "created_at" TIMESTAMPTZ NOT NULL DEFAULT now(),
         "updated_at" TIMESTAMPTZ NOT NULL DEFAULT now(),
-        "created_by" BIGINT,
-        "updated_by" BIGINT
+        "created_by" VARCHAR(100),
+        "updated_by" VARCHAR(100)
       )
     `);
     await queryRunner.query(`CREATE INDEX "IDX_uploaded_files_category" ON "uploaded_files" ("category")`);
@@ -100,21 +101,21 @@ export class InitialSchema1700000000000 implements MigrationInterface {
 
     await queryRunner.query(`
       CREATE TABLE "audit_logs" (
-        "id" SERIAL PRIMARY KEY,
-        "entity_type" VARCHAR(100) NOT NULL,
+        "id" BIGSERIAL PRIMARY KEY,
+        "entity_name" VARCHAR(100) NOT NULL,
         "entity_id" VARCHAR(50),
-        "action" VARCHAR(20) NOT NULL,
-        "user_id" BIGINT,
-        "user_name" VARCHAR(200),
-        "details" TEXT,
-        "ip_address" VARCHAR(50),
+        "action" VARCHAR(50) NOT NULL,
         "old_values" TEXT,
         "new_values" TEXT,
         "affected_columns" TEXT,
+        "user_id" VARCHAR(100),
+        "user_name" VARCHAR(200),
+        "details" TEXT,
+        "ip_address" VARCHAR(45),
         "created_at" TIMESTAMPTZ NOT NULL DEFAULT now()
       )
     `);
-    await queryRunner.query(`CREATE INDEX "IDX_audit_logs_entity_type" ON "audit_logs" ("entity_type")`);
+    await queryRunner.query(`CREATE INDEX "IDX_audit_logs_entity_name" ON "audit_logs" ("entity_name")`);
     await queryRunner.query(`CREATE INDEX "IDX_audit_logs_entity_id" ON "audit_logs" ("entity_id")`);
     await queryRunner.query(`CREATE INDEX "IDX_audit_logs_user_id" ON "audit_logs" ("user_id")`);
     await queryRunner.query(`CREATE INDEX "IDX_audit_logs_created_at" ON "audit_logs" ("created_at")`);

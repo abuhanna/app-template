@@ -1,9 +1,7 @@
 import { Module } from '@nestjs/common';
 import { TypeOrmModule } from '@nestjs/typeorm';
 import { ConfigModule, ConfigService } from '@nestjs/config';
-import { UserOrmEntity } from '../../modules/user-management/infrastructure/persistence/user.orm-entity';
 import { NotificationOrmEntity } from '../../modules/notification/infrastructure/persistence/notification.orm-entity';
-import { RefreshTokenOrmEntity } from '../../modules/auth/infrastructure/persistence/refresh-token.orm-entity';
 import { UploadedFileOrmEntity } from '../../modules/file-management/infrastructure/persistence/uploaded-file.orm-entity';
 import { AuditLogOrmEntity } from '../../modules/audit-log/infrastructure/persistence/audit-log.orm-entity';
 
@@ -20,9 +18,7 @@ import { AuditLogOrmEntity } from '../../modules/audit-log/infrastructure/persis
         password: configService.get<string>('DB_PASSWORD', 'postgres'),
         database: configService.get<string>('DB_NAME', 'apptemplate_dev'),
         entities: [
-          UserOrmEntity,
           NotificationOrmEntity,
-          RefreshTokenOrmEntity,
           UploadedFileOrmEntity,
           AuditLogOrmEntity,
         ],

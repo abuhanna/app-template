@@ -5,26 +5,26 @@ export class UploadedFileOrmEntity {
   @PrimaryGeneratedColumn('increment', { type: 'bigint' })
   id: string;
 
-  @Column({ name: 'file_name', unique: true })
+  @Column({ name: 'file_name', type: 'varchar', length: 255, unique: true })
   fileName: string;
 
-  @Column({ name: 'original_file_name' })
+  @Column({ name: 'original_file_name', type: 'varchar', length: 255 })
   originalFileName: string;
 
-  @Column({ name: 'content_type' })
+  @Column({ name: 'content_type', type: 'varchar', length: 100 })
   contentType: string;
 
   @Column({ name: 'file_size', type: 'bigint' })
   fileSize: string;
 
-  @Column({ name: 'storage_path' })
+  @Column({ name: 'storage_path', type: 'varchar', length: 500 })
   storagePath: string;
 
-  @Column({ type: 'text', nullable: true })
+  @Column({ type: 'varchar', length: 500, nullable: true })
   description: string | null;
 
   @Index()
-  @Column({ type: 'varchar', nullable: true })
+  @Column({ type: 'varchar', length: 100, nullable: true })
   category: string | null;
 
   @Column({ name: 'is_public', default: false })
@@ -33,13 +33,13 @@ export class UploadedFileOrmEntity {
   @CreateDateColumn({ name: 'created_at', type: 'timestamptz' })
   createdAt: Date;
 
-  @UpdateDateColumn({ name: 'updated_at', type: 'timestamptz' })
+  @UpdateDateColumn({ name: 'updated_at', type: 'timestamptz', nullable: true })
   updatedAt: Date;
 
   @Index()
-  @Column({ name: 'created_by', type: 'bigint', nullable: true })
+  @Column({ name: 'created_by', type: 'varchar', length: 100, nullable: true })
   createdBy: string | null;
 
-  @Column({ name: 'updated_by', type: 'bigint', nullable: true })
+  @Column({ name: 'updated_by', type: 'varchar', length: 100, nullable: true })
   updatedBy: string | null;
 }

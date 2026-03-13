@@ -47,7 +47,7 @@ export class AuditSubscriber implements EntitySubscriberInterface<any> {
   ) {
     const audit = new AuditLog();
     audit.action = action;
-    audit.entityType = entityType;
+    audit.entityName = entityType;
     audit.entityId = entityId as string;
     audit.details = details as string;
     // userId and userName require AsyncLocalStorage (CLS) to access from subscriber

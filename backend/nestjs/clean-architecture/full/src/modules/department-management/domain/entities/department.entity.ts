@@ -24,8 +24,8 @@ export class Department {
     public isActive: boolean,
     public createdAt: Date,
     public updatedAt: Date,
-    public createdBy: number | null,
-    public updatedBy: number | null,
+    public createdBy: string | null,
+    public updatedBy: string | null,
     userCount?: number,
   ) {
     this.userCount = userCount ?? 0;
@@ -54,8 +54,8 @@ export class Department {
     isActive: boolean,
     createdAt: Date,
     updatedAt: Date,
-    createdBy: number | null,
-    updatedBy: number | null,
+    createdBy: string | null,
+    updatedBy: string | null,
     userCount?: number,
   ): Department {
     return new Department(

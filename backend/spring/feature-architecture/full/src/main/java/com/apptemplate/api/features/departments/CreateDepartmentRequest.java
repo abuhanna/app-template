@@ -11,7 +11,7 @@ public class CreateDepartmentRequest {
     private String code;
 
     @NotBlank(message = "Name is required")
-    @Size(max = 100, message = "Name must not exceed 100 characters")
+    @Size(max = 200, message = "Name must not exceed 200 characters")
     private String name;
 
     @Size(max = 500, message = "Description must not exceed 500 characters")

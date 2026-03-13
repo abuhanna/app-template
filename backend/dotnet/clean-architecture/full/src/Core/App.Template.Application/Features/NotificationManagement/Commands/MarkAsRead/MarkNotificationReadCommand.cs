@@ -19,7 +19,10 @@ public class MarkNotificationReadCommandHandler : IRequestHandler<MarkNotificati
 
     public async Task<bool> Handle(MarkNotificationReadCommand request, CancellationToken cancellationToken)
     {
-        var userId = _currentUser.UserId ?? throw new UnauthorizedAccessException("User not authenticated");
+        var userIdString = _currentUser.UserId
+            ?? throw new UnauthorizedAccessException("User not authenticated");
+        if (!long.TryParse(userIdString, out var userId))
+            throw new UnauthorizedAccessException("Invalid user ID");
 
         var notification = await _context.Notifications
             .FirstOrDefaultAsync(n => n.Id == request.Id && n.UserId == userId, cancellationToken);

@@ -17,7 +17,7 @@ export class AuditLogsService {
     sortBy?: string,
     sortOrder?: 'asc' | 'desc',
     search?: string,
-    entityType?: string,
+    entityName?: string,
     entityId?: string,
     userId?: string,
     action?: string,
@@ -30,8 +30,8 @@ export class AuditLogsService {
       queryBuilder.andWhere('audit.action = :action', { action });
     }
 
-    if (entityType) {
-      queryBuilder.andWhere('audit.entity_type = :entityType', { entityType });
+    if (entityName) {
+      queryBuilder.andWhere('audit.entity_name = :entityName', { entityName });
     }
 
     if (entityId) {
@@ -52,12 +52,12 @@ export class AuditLogsService {
 
     if (search) {
       queryBuilder.andWhere(
-        '(audit.entity_type ILIKE :search OR audit.action ILIKE :search OR audit.details ILIKE :search)',
+        '(audit.entity_name ILIKE :search OR audit.action ILIKE :search OR audit.details ILIKE :search)',
         { search: `%${search}%` },
       );
     }
 
-    const validSortFields = ['id', 'action', 'entityType', 'createdAt'];
+    const validSortFields = ['id', 'action', 'entityName', 'createdAt'];
     const sortField = sortBy && validSortFields.includes(sortBy) ? sortBy : 'createdAt';
     const direction = sortOrder === 'asc' ? 'ASC' : 'DESC';
     queryBuilder.orderBy(`audit.${sortField}`, direction);
@@ -92,9 +92,12 @@ export class AuditLogsService {
   private mapToResponse(audit: AuditLog): any {
     return {
       id: audit.id,
-      action: audit.action,
-      entityType: audit.entityType,
+      entityName: audit.entityName,
       entityId: audit.entityId || null,
+      action: audit.action,
+      oldValues: audit.oldValues || null,
+      newValues: audit.newValues || null,
+      affectedColumns: audit.affectedColumns || null,
       userId: audit.userId || null,
       userName: audit.userName || null,
       details: audit.details || null,

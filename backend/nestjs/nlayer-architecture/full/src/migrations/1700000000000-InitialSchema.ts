@@ -6,30 +6,38 @@ export class InitialSchema1700000000000 implements MigrationInterface {
   public async up(queryRunner: QueryRunner): Promise<void> {
     await queryRunner.query(`
       CREATE TABLE "departments" (
-        "id" SERIAL PRIMARY KEY,
+        "id" BIGINT GENERATED ALWAYS AS IDENTITY PRIMARY KEY,
         "code" VARCHAR(50) NOT NULL UNIQUE,
-        "name" VARCHAR(100) NOT NULL,
+        "name" VARCHAR(200) NOT NULL,
         "description" VARCHAR(500),
         "is_active" BOOLEAN NOT NULL DEFAULT true,
         "created_at" TIMESTAMPTZ NOT NULL DEFAULT now(),
-        "updated_at" TIMESTAMPTZ NOT NULL DEFAULT now()
+        "updated_at" TIMESTAMPTZ NOT NULL DEFAULT now(),
+        "created_by" VARCHAR(100),
+        "updated_by" VARCHAR(100)
       )
     `);
 
     await queryRunner.query(`
       CREATE TABLE "users" (
-        "id" SERIAL PRIMARY KEY,
-        "username" VARCHAR(50) NOT NULL UNIQUE,
+        "id" BIGINT GENERATED ALWAYS AS IDENTITY PRIMARY KEY,
+        "username" VARCHAR(100) NOT NULL UNIQUE,
         "email" VARCHAR(255) NOT NULL UNIQUE,
-        "password_hash" VARCHAR(500),
+        "password_hash" VARCHAR(255),
         "first_name" VARCHAR(100),
         "last_name" VARCHAR(100),
-        "role" VARCHAR(20) NOT NULL DEFAULT 'user',
-        "department_id" INTEGER REFERENCES "departments"("id") ON DELETE SET NULL,
+        "role" VARCHAR(50) NOT NULL DEFAULT 'user',
+        "department_id" BIGINT REFERENCES "departments"("id") ON DELETE SET NULL,
         "is_active" BOOLEAN NOT NULL DEFAULT true,
         "last_login_at" TIMESTAMPTZ,
+        "last_login_ip" VARCHAR(45),
+        "password_reset_token" VARCHAR(255),
+        "password_reset_token_expires_at" TIMESTAMPTZ,
+        "password_history" TEXT,
         "created_at" TIMESTAMPTZ NOT NULL DEFAULT now(),
-        "updated_at" TIMESTAMPTZ NOT NULL DEFAULT now()
+        "updated_at" TIMESTAMPTZ NOT NULL DEFAULT now(),
+        "created_by" VARCHAR(100),
+        "updated_by" VARCHAR(100)
       )
     `);
     await queryRunner.query(`CREATE INDEX "IDX_users_email" ON "users" ("email")`);
@@ -38,14 +46,15 @@ export class InitialSchema1700000000000 implements MigrationInterface {
 
     await queryRunner.query(`
       CREATE TABLE "notifications" (
-        "id" SERIAL PRIMARY KEY,
-        "user_id" INTEGER NOT NULL REFERENCES "users"("id") ON DELETE CASCADE,
-        "title" VARCHAR(255) NOT NULL,
+        "id" BIGINT GENERATED ALWAYS AS IDENTITY PRIMARY KEY,
+        "user_id" BIGINT NOT NULL REFERENCES "users"("id") ON DELETE CASCADE,
+        "title" VARCHAR(200) NOT NULL,
         "message" TEXT NOT NULL,
-        "type" VARCHAR(255) NOT NULL DEFAULT 'info',
-        "reference_id" VARCHAR,
-        "reference_type" VARCHAR,
+        "type" VARCHAR(50) NOT NULL DEFAULT 'info',
+        "reference_id" VARCHAR(50),
+        "reference_type" VARCHAR(50),
         "is_read" BOOLEAN NOT NULL DEFAULT false,
+        "read_at" TIMESTAMPTZ,
         "created_at" TIMESTAMPTZ NOT NULL DEFAULT now()
       )
     `);
@@ -54,10 +63,14 @@ export class InitialSchema1700000000000 implements MigrationInterface {
 
     await queryRunner.query(`
       CREATE TABLE "refresh_tokens" (
-        "id" SERIAL PRIMARY KEY,
-        "user_id" INTEGER NOT NULL REFERENCES "users"("id") ON DELETE CASCADE,
+        "id" BIGINT GENERATED ALWAYS AS IDENTITY PRIMARY KEY,
+        "user_id" BIGINT NOT NULL REFERENCES "users"("id") ON DELETE CASCADE,
         "token" VARCHAR(255) NOT NULL UNIQUE,
         "expires_at" TIMESTAMPTZ NOT NULL,
+        "revoked_at" TIMESTAMPTZ,
+        "replaced_by_token" VARCHAR(255),
+        "created_by_ip" VARCHAR(45),
+        "revoked_by_ip" VARCHAR(45),
         "is_revoked" BOOLEAN NOT NULL DEFAULT false,
         "created_at" TIMESTAMPTZ NOT NULL DEFAULT now()
       )
@@ -67,31 +80,35 @@ export class InitialSchema1700000000000 implements MigrationInterface {
 
     await queryRunner.query(`
       CREATE TABLE "uploaded_files" (
-        "id" SERIAL PRIMARY KEY,
-        "file_name" VARCHAR(255) NOT NULL,
+        "id" BIGINT GENERATED ALWAYS AS IDENTITY PRIMARY KEY,
+        "file_name" VARCHAR(255) NOT NULL UNIQUE,
         "original_file_name" VARCHAR(255) NOT NULL,
-        "content_type" VARCHAR(255) NOT NULL,
+        "content_type" VARCHAR(100) NOT NULL,
         "file_size" BIGINT NOT NULL,
-        "file_path" VARCHAR(255) NOT NULL,
-        "description" VARCHAR(255),
-        "category" VARCHAR(255),
+        "storage_path" VARCHAR(500) NOT NULL,
+        "description" VARCHAR(500),
+        "category" VARCHAR(100),
         "is_public" BOOLEAN NOT NULL DEFAULT false,
-        "created_by" VARCHAR(255),
         "created_at" TIMESTAMPTZ NOT NULL DEFAULT now(),
-        "updated_at" TIMESTAMPTZ NOT NULL DEFAULT now()
+        "updated_at" TIMESTAMPTZ NOT NULL DEFAULT now(),
+        "created_by" VARCHAR(100),
+        "updated_by" VARCHAR(100)
       )
     `);
 
     await queryRunner.query(`
       CREATE TABLE "audit_logs" (
-        "id" SERIAL PRIMARY KEY,
-        "action" VARCHAR(255) NOT NULL,
-        "entity_type" VARCHAR(255) NOT NULL,
-        "entity_id" VARCHAR(255),
-        "user_id" VARCHAR(255),
-        "user_name" VARCHAR(255),
+        "id" BIGINT GENERATED ALWAYS AS IDENTITY PRIMARY KEY,
+        "entity_name" VARCHAR(100) NOT NULL,
+        "entity_id" VARCHAR(50),
+        "action" VARCHAR(50) NOT NULL,
+        "old_values" TEXT,
+        "new_values" TEXT,
+        "affected_columns" TEXT,
+        "user_id" VARCHAR(100),
+        "user_name" VARCHAR(200),
         "details" TEXT,
-        "ip_address" VARCHAR(255),
+        "ip_address" VARCHAR(45),
         "created_at" TIMESTAMPTZ NOT NULL DEFAULT now()
       )
     `);

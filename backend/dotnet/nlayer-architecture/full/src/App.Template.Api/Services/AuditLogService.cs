@@ -47,10 +47,10 @@ public class AuditLogService : IAuditLogService
         }
 
         if (queryParams.FromDate.HasValue)
-            query = query.Where(a => a.Timestamp >= queryParams.FromDate.Value);
+            query = query.Where(a => a.CreatedAt >= queryParams.FromDate.Value);
 
         if (queryParams.ToDate.HasValue)
-            query = query.Where(a => a.Timestamp <= queryParams.ToDate.Value);
+            query = query.Where(a => a.CreatedAt <= queryParams.ToDate.Value);
 
         query = (queryParams.SortBy?.ToLower(), queryParams.SortOrder.ToLower()) switch
         {
@@ -58,8 +58,8 @@ public class AuditLogService : IAuditLogService
             ("action", _) => query.OrderByDescending(a => a.Action),
             ("entitytype", "asc") => query.OrderBy(a => a.EntityName),
             ("entitytype", _) => query.OrderByDescending(a => a.EntityName),
-            ("createdat", "asc") => query.OrderBy(a => a.Timestamp),
-            _ => query.OrderByDescending(a => a.Timestamp)
+            ("createdat", "asc") => query.OrderBy(a => a.CreatedAt),
+            _ => query.OrderByDescending(a => a.CreatedAt)
         };
 
         var page = queryParams.Page < 1 ? 1 : queryParams.Page;
@@ -72,12 +72,12 @@ public class AuditLogService : IAuditLogService
             EntityType = a.EntityName,
             EntityId = a.EntityId,
             UserId = a.UserId,
-            UserName = null,
+            UserName = a.UserName,
             Details = a.OldValues != null || a.NewValues != null
                 ? $"Old: {a.OldValues ?? "N/A"}, New: {a.NewValues ?? "N/A"}"
-                : null,
-            IpAddress = null,
-            CreatedAt = a.Timestamp
+                : a.Details,
+            IpAddress = a.IpAddress,
+            CreatedAt = a.CreatedAt
         });
 
         return await PagedResult<AuditLogDto>.CreateAsync(dtoQuery, page, pageSize);
@@ -94,12 +94,12 @@ public class AuditLogService : IAuditLogService
                 EntityType = a.EntityName,
                 EntityId = a.EntityId,
                 UserId = a.UserId,
-                UserName = null,
+                UserName = a.UserName,
                 Details = a.OldValues != null || a.NewValues != null
                     ? $"Old: {a.OldValues ?? "N/A"}, New: {a.NewValues ?? "N/A"}"
-                    : null,
-                IpAddress = null,
-                CreatedAt = a.Timestamp
+                    : a.Details,
+                IpAddress = a.IpAddress,
+                CreatedAt = a.CreatedAt
             })
             .FirstOrDefaultAsync();
 

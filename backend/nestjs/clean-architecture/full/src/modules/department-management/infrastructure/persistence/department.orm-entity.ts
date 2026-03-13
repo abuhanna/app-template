@@ -6,13 +6,13 @@ export class DepartmentOrmEntity {
   @PrimaryGeneratedColumn('increment', { type: 'bigint' })
   id: string;
 
-  @Column()
+  @Column({ length: 200 })
   name: string;
 
-  @Column({ unique: true })
+  @Column({ length: 50, unique: true })
   code: string;
 
-  @Column({ type: 'text', nullable: true })
+  @Column({ type: 'varchar', length: 500, nullable: true })
   description: string | null;
 
   @Column({ name: 'is_active', default: true })
@@ -24,10 +24,10 @@ export class DepartmentOrmEntity {
   @UpdateDateColumn({ name: 'updated_at', type: 'timestamptz' })
   updatedAt: Date;
 
-  @Column({ name: 'created_by', type: 'bigint', nullable: true })
+  @Column({ name: 'created_by', type: 'varchar', length: 100, nullable: true })
   createdBy: string | null;
 
-  @Column({ name: 'updated_by', type: 'bigint', nullable: true })
+  @Column({ name: 'updated_by', type: 'varchar', length: 100, nullable: true })
   updatedBy: string | null;
 
   @OneToMany(() => UserOrmEntity, (user) => user.department)

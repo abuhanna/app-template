@@ -32,7 +32,7 @@ export class AuditLogsController {
   })
   async getAuditLogs(@Query() queryDto: GetAuditLogsQueryDto): Promise<PagedResult<AuditLogDto>> {
     const query = new GetAuditLogsQuery(
-      queryDto.entityType,
+      queryDto.entityName,
       queryDto.entityId,
       queryDto.userId,
       queryDto.action,
@@ -61,9 +61,9 @@ export class AuditLogsController {
     return {
       id: log.id,
       action: log.action,
-      entityType: log.entityType,
+      entityName: log.entityName,
       entityId: log.entityId,
-      userId: log.userId !== null ? String(log.userId) : null,
+      userId: log.userId,
       userName: log.userName,
       details: log.details,
       ipAddress: log.ipAddress,

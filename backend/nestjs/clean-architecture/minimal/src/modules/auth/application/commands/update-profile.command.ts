@@ -1,6 +1,6 @@
 export class UpdateProfileCommand {
   constructor(
-    public readonly userId: number,
+    public readonly userId: string,
     public readonly firstName?: string,
     public readonly lastName?: string,
   ) {}

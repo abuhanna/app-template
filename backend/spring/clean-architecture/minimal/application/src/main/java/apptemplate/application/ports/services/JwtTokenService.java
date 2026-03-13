@@ -1,18 +1,10 @@
 package apptemplate.application.ports.services;
 
-import apptemplate.domain.entities.User;
-
-
-
 /**
  * Port interface for JWT token operations.
+ * In minimal variant, tokens come from an external SSO provider and are only validated, not generated.
  */
 public interface JwtTokenService {
-
-    /**
-     * Generates a JWT access token for the user.
-     */
-    String generateToken(User user);
 
     /**
      * Validates a JWT token.
@@ -20,14 +12,19 @@ public interface JwtTokenService {
     boolean validateToken(String token);
 
     /**
-     * Gets the user ID from a token.
+     * Gets the user ID from a token (subject claim, String).
      */
-    Long getUserIdFromToken(String token);
+    String getUserIdFromToken(String token);
 
     /**
      * Gets the username from a token.
      */
     String getUsernameFromToken(String token);
+
+    /**
+     * Gets the email from a token.
+     */
+    String getEmailFromToken(String token);
 
     /**
      * Gets the role from a token.

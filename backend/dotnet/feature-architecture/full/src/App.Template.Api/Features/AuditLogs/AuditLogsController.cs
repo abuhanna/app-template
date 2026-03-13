@@ -5,7 +5,7 @@ using Microsoft.AspNetCore.Mvc;
 
 namespace App.Template.Api.Features.AuditLogs;
 
-[Authorize(Roles = "Admin")]
+[Authorize(Roles = "admin")]
 [ApiController]
 [Route("api/audit-logs")]
 public class AuditLogsController : ControllerBase

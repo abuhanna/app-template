@@ -8,14 +8,10 @@ import { FilesModule } from './features/files/files.module';
 import { HealthModule } from './features/health/health.module';
 import { NotificationsModule } from './features/notifications/notifications.module';
 import { AuditLogsModule } from './features/audit-logs/audit-logs.module';
-import { UsersModule } from './features/users/users.module';
-import { User } from './features/users/user.entity';
 import { UploadedFile } from './features/files/uploaded-file.entity';
 import { AuditLog } from './common/audit/audit-log.entity';
 import { Notification } from './features/notifications/notification.entity';
-import { RefreshToken } from './features/auth/refresh-token.entity';
 import { AuditSubscriber } from './common/audit/audit.subscriber';
-import { SeedService } from './common/seed/seed.service';
 
 @Module({
   imports: [
@@ -38,19 +34,17 @@ import { SeedService } from './common/seed/seed.service';
       username: process.env.DB_USERNAME || 'postgres',
       password: process.env.DB_PASSWORD || 'postgres',
       database: process.env.DB_NAME || 'apptemplate',
-      entities: [User, UploadedFile, AuditLog, Notification, RefreshToken],
+      entities: [UploadedFile, AuditLog, Notification],
       migrations: [__dirname + '/migrations/*{.ts,.js}'],
       synchronize: false,
       migrationsRun: true,
     }),
-    TypeOrmModule.forFeature([User]),
     AuthModule,
     FilesModule,
     HealthModule,
     NotificationsModule,
     AuditLogsModule,
-    UsersModule,
   ],
-  providers: [AuditSubscriber, SeedService],
+  providers: [AuditSubscriber],
 })
 export class AppModule {}

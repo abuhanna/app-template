@@ -10,7 +10,7 @@ import java.time.LocalDateTime;
 
 /**
  * Base entity with audit fields.
- * CreatedAt and UpdatedAt are set by infrastructure layer.
+ * In minimal variant, createdBy/updatedBy are String (from JWT claims, no users table).
  */
 @Getter
 @Setter
@@ -22,14 +22,14 @@ public abstract class AuditableEntity {
     private Long id;
     private LocalDateTime createdAt;
     private LocalDateTime updatedAt;
-    private Long createdBy;
-    private Long updatedBy;
+    private String createdBy;
+    private String updatedBy;
 
     /**
      * Sets audit fields for creation.
      * Called by infrastructure layer on insert.
      */
-    public void setCreatedAudit(Long userId) {
+    public void setCreatedAudit(String userId) {
         this.createdAt = LocalDateTime.now();
         this.createdBy = userId;
         this.updatedAt = this.createdAt;
@@ -40,7 +40,7 @@ public abstract class AuditableEntity {
      * Sets audit fields for update.
      * Called by infrastructure layer on update.
      */
-    public void setUpdatedAudit(Long userId) {
+    public void setUpdatedAudit(String userId) {
         this.updatedAt = LocalDateTime.now();
         this.updatedBy = userId;
     }

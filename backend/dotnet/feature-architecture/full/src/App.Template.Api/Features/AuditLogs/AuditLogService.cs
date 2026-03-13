@@ -47,10 +47,10 @@ public class AuditLogService : IAuditLogService
         }
 
         if (queryParams.FromDate.HasValue)
-            query = query.Where(a => a.Timestamp >= queryParams.FromDate.Value);
+            query = query.Where(a => a.CreatedAt >= queryParams.FromDate.Value);
 
         if (queryParams.ToDate.HasValue)
-            query = query.Where(a => a.Timestamp <= queryParams.ToDate.Value);
+            query = query.Where(a => a.CreatedAt <= queryParams.ToDate.Value);
 
         query = (queryParams.SortBy?.ToLower(), queryParams.SortOrder?.ToLower()) switch
         {
@@ -58,9 +58,9 @@ public class AuditLogService : IAuditLogService
             ("entitytype", _) => query.OrderByDescending(a => a.EntityName),
             ("action", "asc") => query.OrderBy(a => a.Action),
             ("action", _) => query.OrderByDescending(a => a.Action),
-            ("createdat", "asc") => query.OrderBy(a => a.Timestamp),
-            (_, "asc") => query.OrderBy(a => a.Timestamp),
-            _ => query.OrderByDescending(a => a.Timestamp)
+            ("createdat", "asc") => query.OrderBy(a => a.CreatedAt),
+            (_, "asc") => query.OrderBy(a => a.CreatedAt),
+            _ => query.OrderByDescending(a => a.CreatedAt)
         };
 
         var page = queryParams.Page < 1 ? 1 : queryParams.Page;
@@ -73,10 +73,10 @@ public class AuditLogService : IAuditLogService
             EntityId = a.EntityId,
             Action = a.Action.ToString().ToLower(),
             UserId = a.UserId,
-            UserName = null,
-            Details = a.EntityName + " " + a.EntityId + " was " + a.Action.ToString().ToLower(),
-            IpAddress = null,
-            CreatedAt = a.Timestamp
+            UserName = a.UserName,
+            Details = a.Details ?? (a.EntityName + " " + a.EntityId + " was " + a.Action.ToString().ToLower()),
+            IpAddress = a.IpAddress,
+            CreatedAt = a.CreatedAt
         });
 
         return await PagedResult<AuditLogDto>.CreateAsync(dtoQuery, page, pageSize);
@@ -94,10 +94,10 @@ public class AuditLogService : IAuditLogService
             EntityId = log.EntityId,
             Action = log.Action.ToString().ToLower(),
             UserId = log.UserId,
-            UserName = null,
-            Details = log.EntityName + " " + log.EntityId + " was " + log.Action.ToString().ToLower(),
-            IpAddress = null,
-            CreatedAt = log.Timestamp
+            UserName = log.UserName,
+            Details = log.Details ?? (log.EntityName + " " + log.EntityId + " was " + log.Action.ToString().ToLower()),
+            IpAddress = log.IpAddress,
+            CreatedAt = log.CreatedAt
         };
     }
 }

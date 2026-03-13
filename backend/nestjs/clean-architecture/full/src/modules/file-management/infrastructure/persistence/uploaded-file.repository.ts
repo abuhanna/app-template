@@ -69,8 +69,8 @@ export class UploadedFileRepository implements IUploadedFileRepository {
       entity.isPublic,
       entity.createdAt,
       entity.updatedAt,
-      entity.createdBy ? Number(entity.createdBy) : null,
-      entity.updatedBy ? Number(entity.updatedBy) : null,
+      entity.createdBy,
+      entity.updatedBy,
     );
   }
 
@@ -87,8 +87,8 @@ export class UploadedFileRepository implements IUploadedFileRepository {
     entity.description = domain.description;
     entity.category = domain.category;
     entity.isPublic = domain.isPublic;
-    entity.createdBy = domain.createdBy ? String(domain.createdBy) : null;
-    entity.updatedBy = domain.updatedBy ? String(domain.updatedBy) : null;
+    entity.createdBy = domain.createdBy;
+    entity.updatedBy = domain.updatedBy;
     return entity;
   }
 }

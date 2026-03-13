@@ -40,12 +40,13 @@ public class UpdateMyProfileCommandHandler : IRequestHandler<UpdateMyProfileComm
                 throw new InvalidOperationException("Email is already in use");
         }
 
-        // Build the new full name from first/last name parts
-        var newName = BuildFullName(request.FirstName, request.LastName, user.Name);
-
         // Update allowed fields only (name and email)
+        var newFirst = request.FirstName ?? user.FirstName;
+        var newLast = request.LastName ?? user.LastName;
+
         user.Update(
-            name: newName,
+            firstName: newFirst,
+            lastName: newLast,
             email: request.Email ?? user.Email,
             role: user.Role,  // Keep existing role
             departmentId: user.DepartmentId  // Keep existing department
@@ -53,16 +54,14 @@ public class UpdateMyProfileCommandHandler : IRequestHandler<UpdateMyProfileComm
 
         await _context.SaveChangesAsync(cancellationToken);
 
-        var nameParts = user.Name?.Split(' ', 2) ?? Array.Empty<string>();
-
         return new UserDto
         {
             Id = user.Id,
             Username = user.Username,
             Email = user.Email,
-            FirstName = nameParts.Length > 0 ? nameParts[0] : "",
-            LastName = nameParts.Length > 1 ? nameParts[1] : "",
-            FullName = user.Name,
+            FirstName = user.FirstName,
+            LastName = user.LastName,
+            FullName = $"{user.FirstName} {user.LastName}".Trim(),
             Role = user.Role,
             DepartmentId = user.DepartmentId,
             DepartmentName = user.Department?.Name,
@@ -70,18 +69,5 @@ public class UpdateMyProfileCommandHandler : IRequestHandler<UpdateMyProfileComm
             CreatedAt = user.CreatedAt,
             LastLoginAt = user.LastLoginAt
         };
-    }
-
-    private static string BuildFullName(string? firstName, string? lastName, string? currentName)
-    {
-        // If both parts supplied, build new name
-        if (!string.IsNullOrWhiteSpace(firstName) || !string.IsNullOrWhiteSpace(lastName))
-        {
-            var currentParts = currentName?.Split(' ', 2) ?? Array.Empty<string>();
-            var first = !string.IsNullOrWhiteSpace(firstName) ? firstName : (currentParts.Length > 0 ? currentParts[0] : "");
-            var last = !string.IsNullOrWhiteSpace(lastName) ? lastName : (currentParts.Length > 1 ? currentParts[1] : "");
-            return $"{first} {last}".Trim();
-        }
-        return currentName ?? "";
     }
 }

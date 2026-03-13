@@ -8,10 +8,10 @@ export enum AuditAction {
 
 export class AuditLog {
   id: number;
-  entityType: string;
-  entityId: string | null;
+  entityName: string;
+  entityId: string;
   action: AuditAction;
-  userId: number | null;
+  userId: string | null;
   userName: string | null;
   details: string | null;
   ipAddress: string | null;
@@ -25,19 +25,19 @@ export class AuditLog {
   }
 
   static create(
-    entityType: string,
-    entityId: string | null,
+    entityName: string,
+    entityId: string,
     action: AuditAction,
     oldValues: string | null,
     newValues: string | null,
     affectedColumns: string | null,
-    userId: number | null,
+    userId: string | null,
     userName?: string | null,
     details?: string | null,
     ipAddress?: string | null,
   ): AuditLog {
     return new AuditLog({
-      entityType,
+      entityName,
       entityId,
       action,
       oldValues,

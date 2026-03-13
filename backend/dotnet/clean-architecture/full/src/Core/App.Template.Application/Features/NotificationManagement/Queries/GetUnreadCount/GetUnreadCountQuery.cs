@@ -19,7 +19,10 @@ public class GetUnreadCountQueryHandler : IRequestHandler<GetUnreadCountQuery, i
 
     public async Task<int> Handle(GetUnreadCountQuery request, CancellationToken cancellationToken)
     {
-        var userId = _currentUser.UserId ?? throw new UnauthorizedAccessException("User not authenticated");
+        var userIdString = _currentUser.UserId
+            ?? throw new UnauthorizedAccessException("User not authenticated");
+        if (!long.TryParse(userIdString, out var userId))
+            throw new UnauthorizedAccessException("Invalid user ID");
 
         return await _context.Notifications
             .Where(n => n.UserId == userId && !n.IsRead)

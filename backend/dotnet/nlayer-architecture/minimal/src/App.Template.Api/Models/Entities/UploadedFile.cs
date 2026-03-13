@@ -14,7 +14,7 @@ public class UploadedFile : AuditableEntity
     public string FileName { get; private set; } = string.Empty; // GUID-based unique name
 
     [Required]
-    [MaxLength(500)]
+    [MaxLength(255)]
     public string OriginalFileName { get; private set; } = string.Empty;
 
     [Required]
@@ -28,7 +28,7 @@ public class UploadedFile : AuditableEntity
 
     public bool IsPublic { get; private set; }
 
-    [MaxLength(1000)]
+    [MaxLength(500)]
     public string? Description { get; private set; }
 
     [MaxLength(100)]

@@ -2,7 +2,7 @@
 import { NotificationType } from '../enums/notification-type.enum';
 
 export interface CreateNotificationProps {
-  userId: number;
+  userId: string;
   title: string;
   message: string;
   type: NotificationType;
@@ -13,7 +13,7 @@ export interface CreateNotificationProps {
 export class Notification {
   private constructor(
     public readonly id: number,
-    public readonly userId: number,
+    public readonly userId: string,
     public title: string,
     public message: string,
     public type: NotificationType,
@@ -41,7 +41,7 @@ export class Notification {
 
   static reconstitute(
     id: number,
-    userId: number,
+    userId: string,
     title: string,
     message: string,
     type: NotificationType,

@@ -9,10 +9,5 @@ import org.mapstruct.Mapping;
 public interface AuditLogMapper {
 
     @Mapping(target = "action", expression = "java(domain.getAction() != null ? domain.getAction().name().toLowerCase() : null)")
-    @Mapping(target = "entityType", source = "entityName")
-    @Mapping(target = "createdAt", source = "timestamp")
-    @Mapping(target = "userName", expression = "java(domain.getUserId() != null ? domain.getUserId().toString() : null)")
-    @Mapping(target = "details", source = "newValues")
-    @Mapping(target = "ipAddress", ignore = true)
     AuditLogDto toDto(AuditLog domain);
 }

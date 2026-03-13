@@ -2,7 +2,6 @@ import {
   Controller,
   Post,
   Get,
-  Put,
   Body,
   HttpCode,
   HttpStatus,
@@ -32,33 +31,10 @@ export class AuthController {
   @Get('me')
   @UseGuards(AuthGuard('jwt'))
   @ApiBearerAuth('JWT-auth')
-  @ApiOperation({ summary: 'Get current user info from JWT' })
+  @ApiOperation({ summary: 'Get current user info from JWT claims' })
   @ApiResponse({ status: 200, description: 'User info retrieved' })
   @ResponseMessage('User info retrieved')
   async me(@Request() req: any) {
     return this.authService.getMe(req.user);
-  }
-
-  @Get('profile')
-  @UseGuards(AuthGuard('jwt'))
-  @ApiBearerAuth('JWT-auth')
-  @ApiOperation({ summary: 'Get full user profile from database' })
-  @ApiResponse({ status: 200, description: 'Profile retrieved' })
-  @ResponseMessage('Profile retrieved')
-  async getProfile(@Request() req: any) {
-    return this.authService.getProfile(req.user.userId);
-  }
-
-  @Put('profile')
-  @UseGuards(AuthGuard('jwt'))
-  @ApiBearerAuth('JWT-auth')
-  @ApiOperation({ summary: 'Update own profile' })
-  @ApiResponse({ status: 200, description: 'Profile updated' })
-  @ResponseMessage('Profile updated successfully')
-  async updateProfile(
-    @Request() req: any,
-    @Body() dto: { firstName?: string; lastName?: string },
-  ) {
-    return this.authService.updateProfile(req.user.userId, dto);
   }
 }

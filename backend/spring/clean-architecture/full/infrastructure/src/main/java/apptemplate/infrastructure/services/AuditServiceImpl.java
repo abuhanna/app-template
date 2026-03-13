@@ -23,7 +23,7 @@ public class AuditServiceImpl implements AuditService {
 
     @Override
     @Transactional(propagation = Propagation.REQUIRES_NEW)
-    public void logCreate(String entityName, String entityId, Object newValues, Long userId) {
+    public void logCreate(String entityName, String entityId, Object newValues, String userId) {
         try {
             AuditLog auditLog = AuditLog.builder()
                 .entityName(entityName)
@@ -31,7 +31,7 @@ public class AuditServiceImpl implements AuditService {
                 .action(AuditLog.AuditAction.CREATED)
                 .newValues(toJson(newValues))
                 .userId(userId)
-                .timestamp(LocalDateTime.now())
+                .createdAt(LocalDateTime.now())
                 .build();
             auditLogRepository.save(auditLog);
         } catch (Exception e) {
@@ -41,7 +41,7 @@ public class AuditServiceImpl implements AuditService {
 
     @Override
     @Transactional(propagation = Propagation.REQUIRES_NEW)
-    public void logUpdate(String entityName, String entityId, Object oldValues, Object newValues, Long userId) {
+    public void logUpdate(String entityName, String entityId, Object oldValues, Object newValues, String userId) {
         try {
             AuditLog auditLog = AuditLog.builder()
                 .entityName(entityName)
@@ -50,7 +50,7 @@ public class AuditServiceImpl implements AuditService {
                 .oldValues(toJson(oldValues))
                 .newValues(toJson(newValues))
                 .userId(userId)
-                .timestamp(LocalDateTime.now())
+                .createdAt(LocalDateTime.now())
                 .build();
             auditLogRepository.save(auditLog);
         } catch (Exception e) {
@@ -60,7 +60,7 @@ public class AuditServiceImpl implements AuditService {
 
     @Override
     @Transactional(propagation = Propagation.REQUIRES_NEW)
-    public void logDelete(String entityName, String entityId, Object oldValues, Long userId) {
+    public void logDelete(String entityName, String entityId, Object oldValues, String userId) {
         try {
             AuditLog auditLog = AuditLog.builder()
                 .entityName(entityName)
@@ -68,7 +68,7 @@ public class AuditServiceImpl implements AuditService {
                 .action(AuditLog.AuditAction.DELETED)
                 .oldValues(toJson(oldValues))
                 .userId(userId)
-                .timestamp(LocalDateTime.now())
+                .createdAt(LocalDateTime.now())
                 .build();
             auditLogRepository.save(auditLog);
         } catch (Exception e) {

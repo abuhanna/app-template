@@ -1,7 +1,6 @@
 package apptemplate.infrastructure.services;
 
 import apptemplate.application.ports.services.JwtTokenService;
-import apptemplate.domain.entities.User;
 import io.jsonwebtoken.Claims;
 import io.jsonwebtoken.JwtException;
 import io.jsonwebtoken.Jwts;
@@ -11,9 +10,6 @@ import org.springframework.stereotype.Service;
 
 import javax.crypto.SecretKey;
 import java.nio.charset.StandardCharsets;
-import java.util.Date;
-import java.util.HashMap;
-import java.util.Map;
 
 
 @Service
@@ -21,43 +17,13 @@ public class JwtTokenServiceImpl implements JwtTokenService {
 
     private final SecretKey secretKey;
     private final long expirationMs;
-    private final String issuer;
-    private final String audience;
 
     public JwtTokenServiceImpl(
             @Value("${jwt.secret}") String secret,
-            @Value("${jwt.expiration-ms:900000}") long expirationMs,
-            @Value("${jwt.issuer:AppTemplate}") String issuer,
-            @Value("${jwt.audience:AppTemplate}") String audience
+            @Value("${jwt.expiration-ms:900000}") long expirationMs
     ) {
         this.secretKey = Keys.hmacShaKeyFor(secret.getBytes(StandardCharsets.UTF_8));
         this.expirationMs = expirationMs;
-        this.issuer = issuer;
-        this.audience = audience;
-    }
-
-    @Override
-    public String generateToken(User user) {
-        Date now = new Date();
-        Date expiration = new Date(now.getTime() + expirationMs);
-
-        Map<String, Object> claims = new HashMap<>();
-        claims.put("sub", user.getId().toString());
-        claims.put("username", user.getUsername());
-        claims.put("email", user.getEmail());
-        claims.put("role", user.getRole().name());
-        if (user.getDepartmentId() != null) {
-            claims.put("departmentId", user.getDepartmentId().toString());
-        }
-
-        return Jwts.builder()
-                .claims(claims)
-                .issuer(issuer)
-                .audience().add(audience).and()
-                .issuedAt(now)
-                .expiration(expiration)
-                .signWith(secretKey)
-                .compact();
     }
 
     @Override
@@ -74,15 +40,24 @@ public class JwtTokenServiceImpl implements JwtTokenService {
     }
 
     @Override
-    public Long getUserIdFromToken(String token) {
+    public String getUserIdFromToken(String token) {
         Claims claims = getClaims(token);
-        return Long.parseLong(claims.getSubject());
+        // Subject is the user ID (string from external SSO)
+        return claims.getSubject();
     }
 
     @Override
     public String getUsernameFromToken(String token) {
         Claims claims = getClaims(token);
         return claims.get("username", String.class);
+    }
+
+    @Override
+    public String getEmailFromToken(String token) {
+        Claims claims = getClaims(token);
+        String email = claims.get("email", String.class);
+        // Fallback to subject if no email claim
+        return email != null ? email : claims.getSubject();
     }
 
     @Override

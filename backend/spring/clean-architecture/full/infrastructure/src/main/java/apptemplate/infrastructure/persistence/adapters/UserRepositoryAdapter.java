@@ -2,6 +2,7 @@ package apptemplate.infrastructure.persistence.adapters;
 
 import apptemplate.application.ports.repositories.UserRepository;
 import apptemplate.domain.entities.User;
+import apptemplate.domain.enums.UserRole;
 import apptemplate.infrastructure.persistence.entities.UserJpaEntity;
 import apptemplate.infrastructure.persistence.jpa.UserJpaRepository;
 import apptemplate.infrastructure.persistence.mappers.UserEntityMapper;
@@ -56,7 +57,7 @@ public class UserRepositoryAdapter implements UserRepository {
     }
 
     @Override
-    public List<User> findByRole(String role) {
+    public List<User> findByRole(UserRole role) {
         return jpaRepository.findByRole(role).stream()
                 .map(mapper::toDomain)
                 .collect(Collectors.toList());

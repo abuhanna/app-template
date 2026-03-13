@@ -23,27 +23,32 @@ public class UploadedFile {
     @Column(nullable = false)
     private String originalFileName;
 
-    @Column(nullable = false)
+    @Column(nullable = false, length = 100)
     private String contentType;
 
     @Column(nullable = false)
     private Long fileSize;
 
-    @Column(nullable = false)
+    @Column(nullable = false, length = 500)
     private String storagePath;
 
+    @Column(length = 500)
     private String description;
 
+    @Column(length = 100)
     private String category;
 
     @Column(name = "is_public")
     private boolean isPublic = false;
 
-    @Column(name = "created_by")
-    private Long createdBy;
+    @Column(name = "created_by", length = 100)
+    private String createdBy;
+
+    @Column(name = "updated_by", length = 100)
+    private String updatedBy;
 
     @CreationTimestamp
-    @Column(name = "created_at", updatable = false)
+    @Column(name = "created_at", nullable = false, updatable = false)
     private LocalDateTime createdAt;
 
     @UpdateTimestamp

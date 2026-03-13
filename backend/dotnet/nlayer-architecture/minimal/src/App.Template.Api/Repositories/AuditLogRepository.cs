@@ -42,10 +42,10 @@ public class AuditLogRepository : IAuditLogRepository
             query = query.Where(a => a.Action == auditAction);
 
         if (fromDate.HasValue)
-            query = query.Where(a => a.Timestamp >= fromDate.Value);
+            query = query.Where(a => a.CreatedAt >= fromDate.Value);
 
         if (toDate.HasValue)
-            query = query.Where(a => a.Timestamp <= toDate.Value);
+            query = query.Where(a => a.CreatedAt <= toDate.Value);
 
         if (!string.IsNullOrEmpty(search))
             query = query.Where(a => a.EntityName.Contains(search) || a.EntityId.Contains(search));
@@ -58,8 +58,8 @@ public class AuditLogRepository : IAuditLogRepository
             ("userid", _) => query.OrderByDescending(a => a.UserId),
             ("action", "asc") => query.OrderBy(a => a.Action),
             ("action", _) => query.OrderByDescending(a => a.Action),
-            ("createdat", "asc") => query.OrderBy(a => a.Timestamp),
-            _ => query.OrderByDescending(a => a.Timestamp)
+            ("createdat", "asc") => query.OrderBy(a => a.CreatedAt),
+            _ => query.OrderByDescending(a => a.CreatedAt)
         };
 
         var totalItems = await query.CountAsync(ct);
@@ -76,7 +76,7 @@ public class AuditLogRepository : IAuditLogRepository
                 Details = a.OldValues != null || a.NewValues != null
                     ? $"Changed from {a.OldValues ?? "null"} to {a.NewValues ?? "null"}"
                     : null,
-                CreatedAt = a.Timestamp
+                CreatedAt = a.CreatedAt
             })
             .ToListAsync(ct);
 
@@ -110,7 +110,7 @@ public class AuditLogRepository : IAuditLogRepository
             Details = a.OldValues != null || a.NewValues != null
                 ? $"Changed from {a.OldValues ?? "null"} to {a.NewValues ?? "null"}"
                 : null,
-            CreatedAt = a.Timestamp
+            CreatedAt = a.CreatedAt
         };
     }
 }

@@ -46,7 +46,8 @@ public class AuthService {
 
         String firstName = request.getFirstName() != null ? request.getFirstName() : request.getUsername();
         String lastName = request.getLastName() != null ? request.getLastName() : "";
-        user.setFullName(firstName, lastName);
+        user.setFirstName(firstName);
+        user.setLastName(lastName);
 
         User savedUser = userRepository.save(user);
 
@@ -55,7 +56,7 @@ public class AuthService {
         refreshTokenRepository.save(refreshToken);
 
         auditLogService.log("create", "User", savedUser.getId().toString(),
-                savedUser.getId(), savedUser.getUsername(), "User registered", null);
+                savedUser.getId().toString(), savedUser.getUsername(), "User registered", null);
 
         return AuthResponse.of(accessToken, jwtUtils.getExpirationSeconds(), refreshToken.getToken(),
                 mapToUserInfo(savedUser));
@@ -82,7 +83,7 @@ public class AuthService {
         refreshTokenRepository.save(refreshToken);
 
         auditLogService.log("login", "User", user.getId().toString(),
-                user.getId(), user.getUsername(), "User logged in", null);
+                user.getId().toString(), user.getUsername(), "User logged in", null);
 
         return AuthResponse.of(accessToken, jwtUtils.getExpirationSeconds(), refreshToken.getToken(),
                 mapToUserInfo(user));
@@ -123,7 +124,7 @@ public class AuthService {
             User user = userRepository.findById(userId).orElse(null);
             if (user != null) {
                 auditLogService.log("logout", "User", userId.toString(),
-                        userId, user.getUsername(), "User logged out", null);
+                        userId.toString(), user.getUsername(), "User logged out", null);
             }
         }
     }
@@ -145,9 +146,12 @@ public class AuthService {
         User user = userRepository.findById(userId)
                 .orElseThrow(() -> new NotFoundException("User", userId));
 
-        String firstName = request.getFirstName() != null ? request.getFirstName() : user.getFirstName();
-        String lastName = request.getLastName() != null ? request.getLastName() : user.getLastName();
-        user.setFullName(firstName, lastName);
+        if (request.getFirstName() != null) {
+            user.setFirstName(request.getFirstName());
+        }
+        if (request.getLastName() != null) {
+            user.setLastName(request.getLastName());
+        }
 
         User savedUser = userRepository.save(user);
         return mapToUserDto(savedUser);
@@ -171,7 +175,7 @@ public class AuthService {
         userRepository.findByEmail(request.getEmail()).ifPresent(user -> {
             String token = UUID.randomUUID().toString();
             user.setPasswordResetToken(token);
-            user.setPasswordResetTokenExpiry(LocalDateTime.now().plusHours(24));
+            user.setPasswordResetTokenExpiresAt(LocalDateTime.now().plusHours(24));
             userRepository.save(user);
             // In real app, send email with reset link
         });
@@ -185,30 +189,27 @@ public class AuthService {
 
         if (user.getPasswordResetToken() == null ||
             !user.getPasswordResetToken().equals(request.getToken()) ||
-            user.getPasswordResetTokenExpiry() == null ||
-            LocalDateTime.now().isAfter(user.getPasswordResetTokenExpiry())) {
+            user.getPasswordResetTokenExpiresAt() == null ||
+            LocalDateTime.now().isAfter(user.getPasswordResetTokenExpiresAt())) {
             throw new BadRequestException("Invalid or expired reset token");
         }
 
         user.setPasswordHash(passwordEncoder.encode(request.getNewPassword()));
         user.setPasswordResetToken(null);
-        user.setPasswordResetTokenExpiry(null);
+        user.setPasswordResetTokenExpiresAt(null);
         userRepository.save(user);
     }
 
     private UserInfoDto mapToUserInfo(User user) {
-        String departmentName = null;
-        // Department name would be resolved via join or separate query in production
         return UserInfoDto.builder()
                 .id(user.getId())
                 .username(user.getUsername())
                 .email(user.getEmail())
                 .firstName(user.getFirstName())
                 .lastName(user.getLastName())
-                .fullName(user.getName())
+                .fullName(user.getFullName())
                 .role(user.getRole())
                 .departmentId(user.getDepartmentId())
-                .departmentName(departmentName)
                 .isActive(user.isActive())
                 .build();
     }
@@ -220,7 +221,7 @@ public class AuthService {
                 .email(user.getEmail())
                 .firstName(user.getFirstName())
                 .lastName(user.getLastName())
-                .fullName(user.getName())
+                .fullName(user.getFullName())
                 .role(user.getRole())
                 .departmentId(user.getDepartmentId())
                 .isActive(user.isActive())

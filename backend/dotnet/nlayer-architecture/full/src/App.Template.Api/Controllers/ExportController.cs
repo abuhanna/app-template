@@ -70,7 +70,8 @@ public class ExportController : ControllerBase
     [HttpGet("notifications")]
     public async Task<IActionResult> ExportNotifications([FromQuery] string format = "xlsx")
     {
-        var userId = User.FindFirst(System.Security.Claims.ClaimTypes.NameIdentifier)?.Value ?? "";
+        var userIdStr = User.FindFirst(System.Security.Claims.ClaimTypes.NameIdentifier)?.Value ?? "0";
+        var userId = long.Parse(userIdStr);
         var query = new NotificationsQueryParams { Page = 1, PageSize = int.MaxValue };
         var result = await _notificationService.GetNotificationsAsync(userId, query);
         return await ExportData(result.Items, format, "notifications");

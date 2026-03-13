@@ -105,6 +105,15 @@ export class UserRepository implements IUserRepository {
     await this.repository.delete(id.toString());
   }
 
+  private parsePasswordHistory(raw: string | null): string[] {
+    if (!raw) return [];
+    try {
+      return raw.split(',').filter(Boolean);
+    } catch {
+      return [];
+    }
+  }
+
   private toDomain(entity: UserOrmEntity): User {
     return User.reconstitute(
       parseInt(entity.id, 10),
@@ -117,13 +126,14 @@ export class UserRepository implements IUserRepository {
       entity.departmentId ? parseInt(entity.departmentId, 10) : null,
       entity.isActive,
       entity.lastLoginAt,
+      entity.lastLoginIp,
       entity.passwordResetToken,
       entity.passwordResetTokenExpiresAt,
-      entity.passwordHistory || [],
+      this.parsePasswordHistory(entity.passwordHistory),
       entity.createdAt,
       entity.updatedAt,
-      entity.createdBy ? parseInt(entity.createdBy, 10) : null,
-      entity.updatedBy ? parseInt(entity.updatedBy, 10) : null,
+      entity.createdBy,
+      entity.updatedBy,
     );
   }
 
@@ -141,13 +151,14 @@ export class UserRepository implements IUserRepository {
     entity.departmentId = user.departmentId ? user.departmentId.toString() : null;
     entity.isActive = user.isActive;
     entity.lastLoginAt = user.lastLoginAt;
+    entity.lastLoginIp = user.lastLoginIp;
     entity.passwordResetToken = user.passwordResetToken;
     entity.passwordResetTokenExpiresAt = user.passwordResetTokenExpiresAt;
-    entity.passwordHistory = user.passwordHistory;
+    entity.passwordHistory = user.passwordHistory.length > 0 ? user.passwordHistory.join(',') : null;
     entity.createdAt = user.createdAt;
     entity.updatedAt = user.updatedAt;
-    entity.createdBy = user.createdBy ? user.createdBy.toString() : null;
-    entity.updatedBy = user.updatedBy ? user.updatedBy.toString() : null;
+    entity.createdBy = user.createdBy;
+    entity.updatedBy = user.updatedBy;
     return entity;
   }
 }

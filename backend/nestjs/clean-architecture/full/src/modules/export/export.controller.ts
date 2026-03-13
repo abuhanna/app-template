@@ -146,7 +146,7 @@ export class ExportController {
   @Get('audit-logs')
   @ApiOperation({ summary: 'Export audit logs to CSV, Excel, or PDF' })
   @ApiQuery({ name: 'format', required: false, enum: ['csv', 'xlsx', 'pdf'] })
-  @ApiQuery({ name: 'entityType', required: false })
+  @ApiQuery({ name: 'entityName', required: false })
   @ApiQuery({ name: 'action', required: false })
   @ApiQuery({ name: 'fromDate', required: false })
   @ApiQuery({ name: 'toDate', required: false })
@@ -154,7 +154,7 @@ export class ExportController {
   async exportAuditLogs(
     @Res() res: Response,
     @Query('format') format: string = 'xlsx',
-    @Query('entityType') entityType?: string,
+    @Query('entityName') entityName?: string,
     @Query('action') action?: string,
     @Query('fromDate') fromDate?: string,
     @Query('toDate') toDate?: string,
@@ -166,8 +166,8 @@ export class ExportController {
       .orderBy('auditLog.createdAt', 'DESC')
       .take(limit);
 
-    if (entityType) {
-      query.andWhere('auditLog.entityType = :entityType', { entityType });
+    if (entityName) {
+      query.andWhere('auditLog.entityName = :entityName', { entityName });
     }
 
     if (action) {
@@ -186,7 +186,7 @@ export class ExportController {
 
     const exportData = auditLogs.map((log) => ({
       id: log.id,
-      entityType: log.entityType,
+      entityName: log.entityName,
       entityId: log.entityId,
       action: log.action,
       userId: log.userId || '-',
@@ -200,7 +200,7 @@ export class ExportController {
       'audit_logs',
       'Audit Log Report',
       {
-        subtitle: `Entity: ${entityType || 'All'}, Action: ${action || 'All'}`,
+        subtitle: `Entity: ${entityName || 'All'}, Action: ${action || 'All'}`,
         fromDate: fromDate ? new Date(fromDate) : undefined,
         toDate: toDate ? new Date(toDate) : undefined,
         generatedBy: currentUser?.username || 'System',

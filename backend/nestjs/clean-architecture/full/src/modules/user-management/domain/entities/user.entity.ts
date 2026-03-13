@@ -32,13 +32,14 @@ export class User {
     public departmentId: number | null,
     public isActive: boolean,
     public lastLoginAt: Date | null,
+    public lastLoginIp: string | null,
     public passwordResetToken: string | null,
     public passwordResetTokenExpiresAt: Date | null,
     public passwordHistory: string[], // Stores last 5 password hashes
     public createdAt: Date,
     public updatedAt: Date,
-    public createdBy: number | null,
-    public updatedBy: number | null,
+    public createdBy: string | null,
+    public updatedBy: string | null,
   ) {}
 
   static create(props: CreateUserProps): User {
@@ -53,6 +54,7 @@ export class User {
       props.role,
       props.departmentId ?? null,
       true,
+      null,
       null,
       null,
       null,
@@ -75,13 +77,14 @@ export class User {
     departmentId: number | null,
     isActive: boolean,
     lastLoginAt: Date | null,
+    lastLoginIp: string | null,
     passwordResetToken: string | null,
     passwordResetTokenExpiresAt: Date | null,
     passwordHistory: string[],
     createdAt: Date,
     updatedAt: Date,
-    createdBy: number | null,
-    updatedBy: number | null,
+    createdBy: string | null,
+    updatedBy: string | null,
   ): User {
     return new User(
       id,
@@ -94,6 +97,7 @@ export class User {
       departmentId,
       isActive,
       lastLoginAt,
+      lastLoginIp,
       passwordResetToken,
       passwordResetTokenExpiresAt,
       passwordHistory,
@@ -133,8 +137,11 @@ export class User {
     return this.passwordHistory.includes(passwordHash);
   }
 
-  recordLogin(): void {
+  recordLogin(ip?: string): void {
     this.lastLoginAt = new Date();
+    if (ip) {
+      this.lastLoginIp = ip;
+    }
   }
 
   setPasswordResetToken(token: string, expiresInHours: number = 24): void {

@@ -52,12 +52,12 @@ public class GetAuditLogsQueryHandler : IRequestHandler<GetAuditLogsQuery, Paged
 
         if (request.FromDate.HasValue)
         {
-            query = query.Where(a => a.Timestamp >= request.FromDate.Value);
+            query = query.Where(a => a.CreatedAt >= request.FromDate.Value);
         }
 
         if (request.ToDate.HasValue)
         {
-            query = query.Where(a => a.Timestamp <= request.ToDate.Value);
+            query = query.Where(a => a.CreatedAt <= request.ToDate.Value);
         }
 
         // Apply search across multiple fields
@@ -81,8 +81,8 @@ public class GetAuditLogsQueryHandler : IRequestHandler<GetAuditLogsQuery, Paged
             "entityid" => isDescending ? query.OrderByDescending(a => a.EntityId) : query.OrderBy(a => a.EntityId),
             "action" => isDescending ? query.OrderByDescending(a => a.Action) : query.OrderBy(a => a.Action),
             "userid" => isDescending ? query.OrderByDescending(a => a.UserId) : query.OrderBy(a => a.UserId),
-            "createdat" => isDescending ? query.OrderByDescending(a => a.Timestamp) : query.OrderBy(a => a.Timestamp),
-            _ => query.OrderByDescending(a => a.Timestamp) // Default: newest first
+            "createdat" => isDescending ? query.OrderByDescending(a => a.CreatedAt) : query.OrderBy(a => a.CreatedAt),
+            _ => query.OrderByDescending(a => a.CreatedAt) // Default: newest first
         };
 
         // Apply pagination
@@ -96,9 +96,10 @@ public class GetAuditLogsQueryHandler : IRequestHandler<GetAuditLogsQuery, Paged
                 EntityId = a.EntityId,
                 Action = a.Action.ToString(),
                 UserId = a.UserId,
-                UserName = a.UserId,
-                Details = a.NewValues,
-                CreatedAt = a.Timestamp
+                UserName = a.UserName,
+                Details = a.Details,
+                IpAddress = a.IpAddress,
+                CreatedAt = a.CreatedAt
             })
             .ToListAsync(cancellationToken);
 

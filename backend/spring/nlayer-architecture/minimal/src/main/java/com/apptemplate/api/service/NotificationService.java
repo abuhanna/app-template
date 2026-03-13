@@ -24,7 +24,7 @@ public class NotificationService {
     @Transactional(readOnly = true)
     public Page<NotificationDto> getNotifications(boolean unreadOnly, int page, int pageSize,
                                                     String sortBy, String sortOrder) {
-        Long userId = getCurrentUserId();
+        String userId = getCurrentUserId();
         String field = (sortBy != null && !sortBy.isBlank()) ? sortBy : "createdAt";
         Sort sort = "asc".equalsIgnoreCase(sortOrder) ? Sort.by(field).ascending() : Sort.by(field).descending();
         PageRequest pageRequest = PageRequest.of(page - 1, pageSize, sort);
@@ -45,7 +45,7 @@ public class NotificationService {
 
     @Transactional
     public void markAsRead(Long id) {
-        Long userId = getCurrentUserId();
+        String userId = getCurrentUserId();
         Notification notification = notificationRepository.findById(id)
                 .orElseThrow(() -> new NotFoundException("Notification", id));
 
@@ -64,7 +64,7 @@ public class NotificationService {
 
     @Transactional
     public void deleteNotification(Long id) {
-        Long userId = getCurrentUserId();
+        String userId = getCurrentUserId();
         Notification notification = notificationRepository.findById(id)
                 .orElseThrow(() -> new NotFoundException("Notification", id));
 
@@ -88,10 +88,7 @@ public class NotificationService {
                 .build();
     }
 
-    private Long getCurrentUserId() {
-        String email = SecurityContextHolder.getContext().getAuthentication().getName();
-        User user = userRepository.findByEmail(email)
-                .orElseThrow(() -> new NotFoundException("User", "email", email));
-        return user.getId();
+    private String getCurrentUserId() {
+        return SecurityContextHolder.getContext().getAuthentication().getName();
     }
 }

@@ -54,8 +54,8 @@ export class RefreshTokenRepository implements IRefreshTokenRepository {
       parseInt(entity.userId, 10),
       entity.token,
       entity.expiresAt,
-      entity.deviceInfo,
-      entity.ipAddress,
+      entity.createdByIp,
+      entity.revokedByIp,
       entity.isRevoked,
       entity.revokedAt,
       entity.replacedByToken,
@@ -71,8 +71,8 @@ export class RefreshTokenRepository implements IRefreshTokenRepository {
     entity.userId = refreshToken.userId.toString();
     entity.token = refreshToken.token;
     entity.expiresAt = refreshToken.expiresAt;
-    entity.deviceInfo = refreshToken.deviceInfo;
-    entity.ipAddress = refreshToken.ipAddress;
+    entity.createdByIp = refreshToken.createdByIp;
+    entity.revokedByIp = refreshToken.revokedByIp;
     entity.isRevoked = refreshToken.isRevoked;
     entity.revokedAt = refreshToken.revokedAt;
     entity.replacedByToken = refreshToken.replacedByToken;

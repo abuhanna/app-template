@@ -55,11 +55,11 @@ describe('NotificationsController', () => {
       ];
       mockQueryBus.execute.mockResolvedValue(notifications);
 
-      const user = { sub: 1, email: 'admin@test.com', username: 'admin', role: 'Admin' };
+      const user = { sub: '1', email: 'admin@test.com', username: 'admin', role: 'Admin' };
       const result = await controller.findAll(user);
 
       expect(mockQueryBus.execute).toHaveBeenCalledWith(
-        new GetNotificationsQuery(1),
+        new GetNotificationsQuery('1'),
       );
       expect(result).toEqual(notifications);
     });
@@ -67,11 +67,11 @@ describe('NotificationsController', () => {
     it('should return empty array when no notifications exist', async () => {
       mockQueryBus.execute.mockResolvedValue([]);
 
-      const user = { sub: 2, email: 'user@test.com', username: 'user', role: 'User' };
+      const user = { sub: '2', email: 'user@test.com', username: 'user', role: 'User' };
       const result = await controller.findAll(user);
 
       expect(mockQueryBus.execute).toHaveBeenCalledWith(
-        new GetNotificationsQuery(2),
+        new GetNotificationsQuery('2'),
       );
       expect(result).toEqual([]);
     });
@@ -81,11 +81,11 @@ describe('NotificationsController', () => {
     it('should call CommandBus.execute with MarkNotificationReadCommand', async () => {
       mockCommandBus.execute.mockResolvedValue(undefined);
 
-      const user = { sub: 1, email: 'admin@test.com', username: 'admin', role: 'Admin' };
+      const user = { sub: '1', email: 'admin@test.com', username: 'admin', role: 'Admin' };
       const result = await controller.markAsRead(user, 5);
 
       expect(mockCommandBus.execute).toHaveBeenCalledWith(
-        new MarkNotificationReadCommand(5, 1),
+        new MarkNotificationReadCommand(5, '1'),
       );
       expect(result).toEqual({ message: 'Notification marked as read' });
     });
@@ -95,11 +95,11 @@ describe('NotificationsController', () => {
     it('should call CommandBus.execute with MarkAllNotificationsReadCommand', async () => {
       mockCommandBus.execute.mockResolvedValue(undefined);
 
-      const user = { sub: 1, email: 'admin@test.com', username: 'admin', role: 'Admin' };
+      const user = { sub: '1', email: 'admin@test.com', username: 'admin', role: 'Admin' };
       const result = await controller.markAllAsRead(user);
 
       expect(mockCommandBus.execute).toHaveBeenCalledWith(
-        new MarkAllNotificationsReadCommand(1),
+        new MarkAllNotificationsReadCommand('1'),
       );
       expect(result).toEqual({ message: 'All notifications marked as read' });
     });
@@ -109,11 +109,11 @@ describe('NotificationsController', () => {
     it('should call CommandBus.execute with DeleteNotificationCommand', async () => {
       mockCommandBus.execute.mockResolvedValue(undefined);
 
-      const user = { sub: 1, email: 'admin@test.com', username: 'admin', role: 'Admin' };
+      const user = { sub: '1', email: 'admin@test.com', username: 'admin', role: 'Admin' };
       await controller.delete(user, 5);
 
       expect(mockCommandBus.execute).toHaveBeenCalledWith(
-        new DeleteNotificationCommand(5, 1),
+        new DeleteNotificationCommand(5, '1'),
       );
     });
   });

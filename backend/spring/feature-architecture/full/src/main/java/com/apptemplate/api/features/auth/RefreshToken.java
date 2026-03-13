@@ -29,25 +29,30 @@ public class RefreshToken {
     @Column(name = "expires_at", nullable = false)
     private LocalDateTime expiresAt;
 
+    @CreationTimestamp
+    @Column(name = "created_at", updatable = false)
+    private LocalDateTime createdAt;
+
     @Column(name = "revoked_at")
     private LocalDateTime revokedAt;
 
     @Column(name = "replaced_by_token")
     private String replacedByToken;
 
-    @CreationTimestamp
-    @Column(name = "created_at", updatable = false)
-    private LocalDateTime createdAt;
+    @Column(name = "created_by_ip", length = 45)
+    private String createdByIp;
+
+    @Column(name = "revoked_by_ip", length = 45)
+    private String revokedByIp;
+
+    @Column(name = "is_revoked", nullable = false)
+    private boolean isRevoked = false;
 
     public boolean isExpired() {
         return LocalDateTime.now().isAfter(expiresAt);
     }
 
-    public boolean isRevoked() {
-        return revokedAt != null;
-    }
-
     public boolean isActive() {
-        return !isExpired() && !isRevoked();
+        return !isExpired() && !isRevoked && revokedAt == null;
     }
 }

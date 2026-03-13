@@ -1,6 +1,7 @@
 package apptemplate.infrastructure.persistence.entities;
 
 import apptemplate.domain.enums.UserRole;
+import apptemplate.infrastructure.persistence.converters.UserRoleConverter;
 
 import jakarta.persistence.*;
 import lombok.*;
@@ -26,7 +27,7 @@ public class UserJpaEntity {
     @Column(name = "id", updatable = false, nullable = false)
     private Long id;
 
-    @Column(name = "username", nullable = false, unique = true, length = 50)
+    @Column(name = "username", nullable = false, unique = true, length = 100)
     private String username;
 
     @Column(name = "email", nullable = false, unique = true, length = 255)
@@ -41,8 +42,8 @@ public class UserJpaEntity {
     @Column(name = "last_name", length = 100)
     private String lastName;
 
-    @Enumerated(EnumType.STRING)
-    @Column(name = "role", nullable = false, length = 20)
+    @Convert(converter = UserRoleConverter.class)
+    @Column(name = "role", nullable = false, length = 50)
     private UserRole role;
 
     @Column(name = "department_id")
@@ -78,12 +79,12 @@ public class UserJpaEntity {
     private LocalDateTime updatedAt;
 
     @CreatedBy
-    @Column(name = "created_by")
-    private Long createdBy;
+    @Column(name = "created_by", length = 100)
+    private String createdBy;
 
     @LastModifiedBy
-    @Column(name = "updated_by")
-    private Long updatedBy;
+    @Column(name = "updated_by", length = 100)
+    private String updatedBy;
 
     @PrePersist
     protected void onCreate() {

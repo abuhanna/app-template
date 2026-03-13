@@ -15,7 +15,7 @@ public interface AuditLogRepository {
         String search,
         String entityName,
         String entityId,
-        Long userId,
+        String userId,
         String action,
         LocalDateTime fromDate,
         LocalDateTime toDate,

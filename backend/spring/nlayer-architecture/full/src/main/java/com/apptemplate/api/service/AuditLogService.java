@@ -20,11 +20,11 @@ public class AuditLogService {
     private final AuditLogRepository auditLogRepository;
 
     @Transactional(propagation = Propagation.REQUIRES_NEW)
-    public void log(String action, String entityType, String entityId,
-                    Long userId, String userName, String details, String ipAddress) {
+    public void log(String action, String entityName, String entityId,
+                    String userId, String userName, String details, String ipAddress) {
         AuditLog auditLog = new AuditLog();
         auditLog.setAction(action);
-        auditLog.setEntityType(entityType);
+        auditLog.setEntityName(entityName);
         auditLog.setEntityId(entityId);
         auditLog.setUserId(userId);
         auditLog.setUserName(userName);
@@ -33,14 +33,14 @@ public class AuditLogService {
         auditLogRepository.save(auditLog);
     }
 
-    public Page<AuditLogDto> getAuditLogs(String search, String entityType, String action,
-                                           Long userId, int page, int pageSize,
+    public Page<AuditLogDto> getAuditLogs(String search, String entityName, String action,
+                                           String userId, int page, int pageSize,
                                            String sortBy, String sortOrder) {
         Sort sort = buildSort(sortBy, sortOrder, "createdAt");
         Pageable pageable = PageRequest.of(page - 1, pageSize, sort);
 
         Page<AuditLog> auditLogs = auditLogRepository.findAllWithFilters(
-                search, entityType, action, userId, pageable);
+                search, entityName, action, userId, pageable);
 
         return auditLogs.map(this::mapToDto);
     }
@@ -55,10 +55,13 @@ public class AuditLogService {
         return AuditLogDto.builder()
                 .id(auditLog.getId())
                 .action(auditLog.getAction())
-                .entityType(auditLog.getEntityType())
+                .entityName(auditLog.getEntityName())
                 .entityId(auditLog.getEntityId())
                 .userId(auditLog.getUserId())
                 .userName(auditLog.getUserName())
+                .oldValues(auditLog.getOldValues())
+                .newValues(auditLog.getNewValues())
+                .affectedColumns(auditLog.getAffectedColumns())
                 .details(auditLog.getDetails())
                 .ipAddress(auditLog.getIpAddress())
                 .createdAt(auditLog.getCreatedAt())

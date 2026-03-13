@@ -14,16 +14,16 @@ public class Notification {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
-    @Column(name = "user_id", nullable = false)
-    private Long userId;
+    @Column(name = "user_id", nullable = false, length = 100)
+    private String userId;
 
     @Column(nullable = false, length = 200)
     private String title;
 
-    @Column(nullable = false, length = 1000)
+    @Column(nullable = false, columnDefinition = "TEXT")
     private String message;
 
-    @Column(nullable = false, length = 20)
+    @Column(nullable = false, length = 50)
     private String type = "info";
 
     @Column(name = "reference_id", length = 50)
@@ -34,6 +34,9 @@ public class Notification {
 
     @Column(name = "is_read", nullable = false)
     private boolean isRead = false;
+
+    @Column(name = "read_at")
+    private LocalDateTime readAt;
 
     @CreationTimestamp
     @Column(name = "created_at", updatable = false)

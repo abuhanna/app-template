@@ -57,8 +57,8 @@ public class JwtTokenService : IJwtTokenService
             new(ClaimTypes.NameIdentifier, user.Id.ToString()),
             new(ClaimTypes.Name, user.Username),
             new(ClaimTypes.Email, user.Email),
-            new(ClaimTypes.Role, user.Role ?? "User"),
-            new("name", user.Name ?? user.Username)
+            new(ClaimTypes.Role, user.Role ?? "user"),
+            new("name", $"{user.FirstName} {user.LastName}".Trim() is { Length: > 0 } fullName ? fullName : user.Username)
         };
 
         if (user.DepartmentId.HasValue)

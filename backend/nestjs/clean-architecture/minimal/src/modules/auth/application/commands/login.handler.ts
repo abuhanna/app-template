@@ -45,7 +45,7 @@ export class LoginHandler implements ICommandHandler<LoginCommand> {
 
     // Generate tokens
     const tokenPair = await this.jwtTokenService.generateTokens({
-      sub: user.id,
+      sub: String(user.id),
       email: user.email,
       username: user.username,
       role: user.role,
@@ -53,7 +53,7 @@ export class LoginHandler implements ICommandHandler<LoginCommand> {
 
     // Save refresh token
     const refreshToken = RefreshToken.create({
-      userId: user.id,
+      userId: String(user.id),
       token: tokenPair.refreshToken,
       expiresAt: tokenPair.refreshTokenExpiresAt,
     });

@@ -1,44 +1,21 @@
 package apptemplate.infrastructure.seeding;
 
-import apptemplate.application.ports.repositories.UserRepository;
-import apptemplate.domain.entities.User;
-import apptemplate.domain.enums.UserRole;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.boot.CommandLineRunner;
-import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Component;
-import org.springframework.transaction.annotation.Transactional;
 
+/**
+ * Data seeder for minimal variant.
+ * No seed data required since there are no users/departments tables.
+ */
 @Component
-@ConditionalOnProperty(name = "app.seeding.enabled", havingValue = "true", matchIfMissing = true)
+@ConditionalOnProperty(name = "app.seeding.enabled", havingValue = "true", matchIfMissing = false)
+@Slf4j
 public class DataSeeder implements CommandLineRunner {
 
-    private final UserRepository userRepository;
-    private final PasswordEncoder passwordEncoder;
-
-    public DataSeeder(UserRepository userRepository, PasswordEncoder passwordEncoder) {
-        this.userRepository = userRepository;
-        this.passwordEncoder = passwordEncoder;
-    }
-
     @Override
-    @Transactional
     public void run(String... args) throws Exception {
-        seedUsers();
-    }
-
-    private void seedUsers() {
-        if (!userRepository.existsByUsername("admin")) {
-            User admin = new User(
-                 "admin",
-                 "admin@apptemplate.com",
-                 "",
-                 "Admin User",
-                 UserRole.ADMIN,
-                 null
-            );
-
-            userRepository.save(admin);
-        }
+        log.info("Minimal variant: no seed data required (external auth, no users table)");
     }
 }

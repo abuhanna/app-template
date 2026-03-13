@@ -3,16 +3,11 @@ import { Inject, UnauthorizedException } from '@nestjs/common';
 import { ValidateTokenCommand } from './validate-token.command';
 import { ValidateTokenResponseDto } from '../dto/validate-token-response.dto';
 import { UserInfoDto } from '../dto/user-info.dto';
-import { IUserRepository } from '@/modules/user-management/domain/interfaces/user.repository.interface';
-import { User } from '@/modules/user-management/domain/entities/user.entity';
-import { UserRole } from '@/modules/user-management/domain/value-objects/user-role';
 import { IJwtTokenService } from '../../domain/interfaces/jwt-token.service.interface';
 
 @CommandHandler(ValidateTokenCommand)
 export class ValidateTokenHandler implements ICommandHandler<ValidateTokenCommand> {
   constructor(
-    @Inject(IUserRepository)
-    private readonly userRepository: IUserRepository,
     @Inject(IJwtTokenService)
     private readonly jwtTokenService: IJwtTokenService,
   ) {}
@@ -30,32 +25,17 @@ export class ValidateTokenHandler implements ICommandHandler<ValidateTokenComman
       throw new UnauthorizedException('Invalid token payload');
     }
 
-    // Find or create local user from token claims
-    let user = await this.userRepository.findByEmail(payload.email);
-
-    if (!user) {
-      // Auto-create user from external claims
-      user = User.create({
-        email: payload.email,
-        username: payload.username || payload.email.split('@')[0],
-        passwordHash: '', // External auth - no password
-        firstName: payload.firstName || payload.given_name || '',
-        lastName: payload.lastName || payload.family_name || '',
-        role: UserRole.User,
-      });
-      user = await this.userRepository.save(user);
-    }
-
-    if (!user.isActive) {
-      throw new UnauthorizedException('Account is disabled');
-    }
+    // Extract user info from token claims (no local user store in minimal)
+    const userId = String(payload.sub || payload.email);
+    const username = payload.username || payload.email.split('@')[0];
+    const role = payload.role || 'user';
 
     // Generate internal token
     const tokenPair = await this.jwtTokenService.generateTokens({
-      sub: user.id,
-      email: user.email,
-      username: user.username,
-      role: user.role,
+      sub: userId,
+      email: payload.email,
+      username,
+      role,
     });
 
     const expiresIn = Math.floor(
@@ -63,15 +43,13 @@ export class ValidateTokenHandler implements ICommandHandler<ValidateTokenComman
     );
 
     const userInfo = new UserInfoDto({
-      id: user.id,
-      email: user.email,
-      username: user.username,
-      firstName: user.firstName,
-      lastName: user.lastName,
-      fullName: user.fullName,
-      role: user.role,
-      departmentId: user.departmentId,
-      departmentName: null,
+      id: userId,
+      email: payload.email,
+      username,
+      firstName: payload.firstName || payload.given_name || '',
+      lastName: payload.lastName || payload.family_name || '',
+      fullName: `${payload.firstName || payload.given_name || ''} ${payload.lastName || payload.family_name || ''}`.trim(),
+      role,
     });
 
     return new ValidateTokenResponseDto(tokenPair.accessToken, expiresIn, userInfo);

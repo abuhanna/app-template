@@ -3,12 +3,12 @@
 -- ============================================================================
 
 -- Seed General Department
-INSERT INTO departments (code, name, description, is_active, created_at, updated_at)
-VALUES ('GEN', 'General', 'Default department', TRUE, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP)
+INSERT INTO departments (code, name, description, is_active, created_at, created_by)
+VALUES ('GEN', 'General', 'Default department', TRUE, now(), 'system')
 ON CONFLICT (code) DO NOTHING;
 
 -- Seed Admin user (password: Admin@123)
-INSERT INTO users (username, email, password_hash, first_name, last_name, role, department_id, is_active, created_at, updated_at)
+INSERT INTO users (username, email, password_hash, first_name, last_name, role, department_id, is_active, created_at, created_by)
 VALUES (
     'admin',
     'admin@apptemplate.com',
@@ -18,13 +18,13 @@ VALUES (
     'admin',
     (SELECT id FROM departments WHERE code = 'GEN'),
     TRUE,
-    CURRENT_TIMESTAMP,
-    CURRENT_TIMESTAMP
+    now(),
+    'system'
 )
 ON CONFLICT (username) DO NOTHING;
 
 -- Seed Sample user (password: User@123)
-INSERT INTO users (username, email, password_hash, first_name, last_name, role, department_id, is_active, created_at, updated_at)
+INSERT INTO users (username, email, password_hash, first_name, last_name, role, department_id, is_active, created_at, created_by)
 VALUES (
     'johndoe',
     'user@apptemplate.com',
@@ -34,7 +34,7 @@ VALUES (
     'user',
     (SELECT id FROM departments WHERE code = 'GEN'),
     TRUE,
-    CURRENT_TIMESTAMP,
-    CURRENT_TIMESTAMP
+    now(),
+    'system'
 )
 ON CONFLICT (username) DO NOTHING;

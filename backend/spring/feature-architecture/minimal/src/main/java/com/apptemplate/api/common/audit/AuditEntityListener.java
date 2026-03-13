@@ -40,7 +40,7 @@ public class AuditEntityListener {
 
         try {
             AuditLog auditLog = new AuditLog();
-            auditLog.setEntityType(entity.getClass().getSimpleName());
+            auditLog.setEntityName(entity.getClass().getSimpleName());
             auditLog.setAction(action);
 
             // Extract entity ID via reflection
@@ -57,6 +57,11 @@ public class AuditEntityListener {
             if (authentication != null && authentication.isAuthenticated()
                     && !"anonymousUser".equals(authentication.getName())) {
                 auditLog.setUserName(authentication.getName());
+                // Get userId from credentials (set by JwtAuthFilter)
+                Object credentials = authentication.getCredentials();
+                if (credentials instanceof String) {
+                    auditLog.setUserId((String) credentials);
+                }
             }
 
             auditLog.setDetails(action + " " + entity.getClass().getSimpleName());

@@ -17,18 +17,19 @@ public interface AuditLogJpaRepository extends JpaRepository<AuditLogJpaEntity, 
            "(:search IS NULL OR " +
            "    LOWER(a.entityName) LIKE LOWER(CAST(:search AS string)) OR " +
            "    LOWER(a.entityId) LIKE LOWER(CAST(:search AS string)) OR " +
-           "    LOWER(a.action) LIKE LOWER(CAST(:search AS string))) AND " +
+           "    LOWER(a.action) LIKE LOWER(CAST(:search AS string)) OR " +
+           "    LOWER(a.userName) LIKE LOWER(CAST(:search AS string))) AND " +
            "(:entityName IS NULL OR a.entityName = :entityName) AND " +
            "(:entityId IS NULL OR a.entityId = :entityId) AND " +
            "(:userId IS NULL OR a.userId = :userId) AND " +
            "(:action IS NULL OR a.action = :action) AND " +
-           "(CAST(:fromDate AS timestamp) IS NULL OR a.timestamp >= :fromDate) AND " +
-           "(CAST(:toDate AS timestamp) IS NULL OR a.timestamp <= :toDate)")
+           "(CAST(:fromDate AS timestamp) IS NULL OR a.createdAt >= :fromDate) AND " +
+           "(CAST(:toDate AS timestamp) IS NULL OR a.createdAt <= :toDate)")
     Page<AuditLogJpaEntity> findByFilters(
         @Param("search") String search,
         @Param("entityName") String entityName,
         @Param("entityId") String entityId,
-        @Param("userId") Long userId,
+        @Param("userId") String userId,
         @Param("action") String action,
         @Param("fromDate") LocalDateTime fromDate,
         @Param("toDate") LocalDateTime toDate,

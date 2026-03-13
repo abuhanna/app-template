@@ -30,12 +30,12 @@ public class AuditLogsController {
     public ResponseEntity<PagedResponse<AuditLogDto>> getAuditLogs(
             @Parameter(description = "Page number (1-based)") @RequestParam(defaultValue = "1") int page,
             @Parameter(description = "Number of items per page") @RequestParam(defaultValue = "20") int pageSize,
-            @Parameter(description = "Column to sort by (e.g., timestamp, entityName, action)") @RequestParam(required = false) String sortBy,
+            @Parameter(description = "Column to sort by (e.g., createdAt, entityName, action)") @RequestParam(required = false) String sortBy,
             @Parameter(description = "Sort direction: asc or desc") @RequestParam(defaultValue = "desc") String sortOrder,
             @Parameter(description = "Search by entity name, entity ID, action, or username") @RequestParam(required = false) String search,
             @Parameter(description = "Filter by entity name") @RequestParam(required = false) String entityName,
             @Parameter(description = "Filter by entity ID") @RequestParam(required = false) String entityId,
-            @Parameter(description = "Filter by user ID") @RequestParam(required = false) Long userId,
+            @Parameter(description = "Filter by user ID") @RequestParam(required = false) String userId,
             @Parameter(description = "Filter by action") @RequestParam(required = false) String action,
             @Parameter(description = "Filter from date (ISO format)") @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE_TIME) LocalDateTime fromDate,
             @Parameter(description = "Filter to date (ISO format)") @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE_TIME) LocalDateTime toDate

@@ -140,7 +140,7 @@ via degit, mutates namespace/paths, and produces ready-to-run projects.
 ### Backend Cross-Stack Comparison
 | Concern | .NET 8 | Spring Boot 3 | NestJS 10 |
 |---------|--------|---------------|-----------|
-| Language | C# | Java 21 (clean) / 17 (feature/nlayer) | TypeScript |
+| Language | C# | Java 21 | TypeScript |
 | ORM | EF Core 8 | JPA/Hibernate | TypeORM 0.3 |
 | CQRS | MediatR (clean) | Use Cases (clean) | @nestjs/cqrs (clean) |
 | Migrations | EF Core Migrations | Flyway SQL (clean) | TypeORM Migrations |

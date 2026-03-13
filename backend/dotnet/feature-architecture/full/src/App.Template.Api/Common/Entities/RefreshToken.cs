@@ -14,14 +14,15 @@ public class RefreshToken
     public string? ReplacedByToken { get; set; }
     public string? CreatedByIp { get; set; }
     public string? RevokedByIp { get; set; }
+    public bool IsRevoked { get; set; }
 
     public bool IsExpired => DateTime.UtcNow >= ExpiresAt;
-    public bool IsRevoked => RevokedAt != null;
     public bool IsActive => !IsRevoked && !IsExpired;
 
     public void Revoke(string? revokedByIp = null, string? replacedByToken = null)
     {
         RevokedAt = DateTime.UtcNow;
+        IsRevoked = true;
         RevokedByIp = revokedByIp;
         ReplacedByToken = replacedByToken;
     }

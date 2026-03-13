@@ -7,25 +7,25 @@ import {
 } from 'typeorm';
 
 @Entity('audit_logs')
-@Index(['entityType'])
+@Index(['entityName'])
 @Index(['entityId'])
 @Index(['userId'])
 @Index(['createdAt'])
 export class AuditLogOrmEntity {
-  @PrimaryGeneratedColumn()
-  id: number;
+  @PrimaryGeneratedColumn('increment', { type: 'bigint' })
+  id: string;
 
-  @Column({ name: 'entity_type', length: 100 })
-  entityType: string;
+  @Column({ name: 'entity_name', length: 100 })
+  entityName: string;
 
   @Column({ name: 'entity_id', type: 'varchar', length: 50, nullable: true })
   entityId: string | null;
 
-  @Column({ length: 20 })
+  @Column({ length: 50 })
   action: string;
 
-  @Column({ name: 'user_id', type: 'bigint', nullable: true })
-  userId: number | null;
+  @Column({ name: 'user_id', type: 'varchar', length: 100, nullable: true })
+  userId: string | null;
 
   @Column({ name: 'user_name', type: 'varchar', length: 200, nullable: true })
   userName: string | null;
@@ -33,7 +33,7 @@ export class AuditLogOrmEntity {
   @Column({ type: 'text', nullable: true })
   details: string | null;
 
-  @Column({ name: 'ip_address', type: 'varchar', length: 50, nullable: true })
+  @Column({ name: 'ip_address', type: 'varchar', length: 45, nullable: true })
   ipAddress: string | null;
 
   @Column({ name: 'old_values', type: 'text', nullable: true })

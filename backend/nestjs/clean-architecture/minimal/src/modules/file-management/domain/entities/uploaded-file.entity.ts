@@ -28,8 +28,8 @@ export class UploadedFile {
     public isPublic: boolean,
     public createdAt: Date,
     public updatedAt: Date,
-    public createdBy: number | null,
-    public updatedBy: number | null,
+    public createdBy: string | null,
+    public updatedBy: string | null,
   ) {}
 
   static create(props: CreateUploadedFileProps): UploadedFile {
@@ -63,8 +63,8 @@ export class UploadedFile {
     isPublic: boolean,
     createdAt: Date,
     updatedAt: Date,
-    createdBy: number | null,
-    updatedBy: number | null,
+    createdBy: string | null,
+    updatedBy: string | null,
   ): UploadedFile {
     return new UploadedFile(
       id,

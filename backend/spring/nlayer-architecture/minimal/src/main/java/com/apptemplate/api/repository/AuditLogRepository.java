@@ -12,10 +12,10 @@ import java.time.LocalDateTime;
 public interface AuditLogRepository extends JpaRepository<AuditLog, Long> {
 
     @Query("SELECT a FROM AuditLog a WHERE " +
-           "(:search IS NULL OR LOWER(a.entityType) LIKE LOWER(CONCAT('%', :search, '%')) " +
+           "(:search IS NULL OR LOWER(a.entityName) LIKE LOWER(CONCAT('%', :search, '%')) " +
            "  OR LOWER(a.action) LIKE LOWER(CONCAT('%', :search, '%')) " +
            "  OR LOWER(a.userName) LIKE LOWER(CONCAT('%', :search, '%'))) " +
-           "AND (:entityType IS NULL OR a.entityType = :entityType) " +
+           "AND (:entityType IS NULL OR a.entityName = :entityType) " +
            "AND (:action IS NULL OR a.action = :action) " +
            "AND (:userId IS NULL OR CAST(a.userId AS string) = :userId) " +
            "AND (:fromDate IS NULL OR a.createdAt >= :fromDate) " +

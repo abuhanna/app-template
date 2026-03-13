@@ -22,5 +22,6 @@ public class NotificationDto {
     private String referenceType;
     @JsonProperty("isRead")
     private boolean isRead;
+    private LocalDateTime readAt;
     private LocalDateTime createdAt;
 }

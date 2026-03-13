@@ -9,6 +9,8 @@ import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.time.LocalDateTime;
+
 @Service
 @RequiredArgsConstructor
 public class NotificationService {
@@ -18,7 +20,7 @@ public class NotificationService {
     @Transactional(readOnly = true)
     public Page<NotificationDto> getNotifications(boolean unreadOnly, int page, int pageSize,
                                                    String sortBy, String sortOrder) {
-        Long userId = getCurrentUserId();
+        String userId = getCurrentUserId();
         Sort sort = buildSort(sortBy, sortOrder, "createdAt");
         PageRequest pageRequest = PageRequest.of(page - 1, pageSize, sort);
 
@@ -33,7 +35,7 @@ public class NotificationService {
 
     @Transactional(readOnly = true)
     public long getUnreadCount() {
-        Long userId = getCurrentUserId();
+        String userId = getCurrentUserId();
         return notificationRepository.countByUserIdAndIsReadFalse(userId);
     }
 
@@ -42,12 +44,13 @@ public class NotificationService {
         Notification notification = notificationRepository.findById(id)
                 .orElseThrow(() -> new NotFoundException("Notification not found with id " + id));
         notification.setRead(true);
+        notification.setReadAt(LocalDateTime.now());
         notificationRepository.save(notification);
     }
 
     @Transactional
     public void markAllAsRead() {
-        Long userId = getCurrentUserId();
+        String userId = getCurrentUserId();
         notificationRepository.markAllAsReadByUserId(userId);
     }
 
@@ -59,16 +62,16 @@ public class NotificationService {
         notificationRepository.deleteById(id);
     }
 
-    private Long getCurrentUserId() {
+    private String getCurrentUserId() {
         try {
             Object credentials = SecurityContextHolder.getContext().getAuthentication().getCredentials();
-            if (credentials instanceof Long) {
-                return (Long) credentials;
+            if (credentials instanceof String && !"".equals(credentials)) {
+                return (String) credentials;
             }
         } catch (Exception ignored) {
         }
-        // Fallback: look up by email
-        return null;
+        // Fallback: use authentication name
+        return SecurityContextHolder.getContext().getAuthentication().getName();
     }
 
     private Sort buildSort(String sortBy, String sortOrder, String defaultSortBy) {

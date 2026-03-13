@@ -25,7 +25,7 @@ public class UserRepository : IUserRepository
         => await _context.Users.FirstOrDefaultAsync(u => u.Username == username);
 
     public async Task<User?> GetByPasswordResetTokenAsync(string token)
-        => await _context.Users.FirstOrDefaultAsync(u => u.PasswordResetToken == token && u.PasswordResetTokenExpiry > DateTime.UtcNow);
+        => await _context.Users.FirstOrDefaultAsync(u => u.PasswordResetToken == token && u.PasswordResetTokenExpiresAt > DateTime.UtcNow);
 
     public async Task<User> AddAsync(User user)
     {

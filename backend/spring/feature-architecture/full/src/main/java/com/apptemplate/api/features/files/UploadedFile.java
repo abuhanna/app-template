@@ -39,9 +39,6 @@ public class UploadedFile {
     @Column(name = "is_public", nullable = false)
     private boolean isPublic = false;
 
-    @Column(name = "created_by")
-    private Long createdBy;
-
     @CreationTimestamp
     @Column(name = "created_at", updatable = false)
     private LocalDateTime createdAt;
@@ -49,6 +46,12 @@ public class UploadedFile {
     @UpdateTimestamp
     @Column(name = "updated_at")
     private LocalDateTime updatedAt;
+
+    @Column(name = "created_by", length = 100)
+    private String createdBy;
+
+    @Column(name = "updated_by", length = 100)
+    private String updatedBy;
 
     @Transient
     public String getDownloadUrl() {

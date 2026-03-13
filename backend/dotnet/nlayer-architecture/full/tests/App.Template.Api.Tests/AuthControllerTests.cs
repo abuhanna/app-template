@@ -25,7 +25,7 @@ public class AuthControllerTests
         };
     }
 
-    private void SetUserClaims(string userId = "1", string role = "Admin")
+    private void SetUserClaims(string userId = "1", string role = "admin")
     {
         var claims = new[]
         {

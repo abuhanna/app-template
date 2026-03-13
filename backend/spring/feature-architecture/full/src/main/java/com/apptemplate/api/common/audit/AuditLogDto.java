@@ -13,10 +13,13 @@ import java.time.LocalDateTime;
 @AllArgsConstructor
 public class AuditLogDto {
     private Long id;
-    private String action;
-    private String entityType;
+    private String entityName;
     private String entityId;
-    private Long userId;
+    private String action;
+    private String oldValues;
+    private String newValues;
+    private String affectedColumns;
+    private String userId;
     private String userName;
     private String details;
     private String ipAddress;
@@ -25,9 +28,12 @@ public class AuditLogDto {
     public static AuditLogDto fromEntity(AuditLog auditLog) {
         return AuditLogDto.builder()
                 .id(auditLog.getId())
-                .action(auditLog.getAction())
-                .entityType(auditLog.getEntityType())
+                .entityName(auditLog.getEntityName())
                 .entityId(auditLog.getEntityId())
+                .action(auditLog.getAction())
+                .oldValues(auditLog.getOldValues())
+                .newValues(auditLog.getNewValues())
+                .affectedColumns(auditLog.getAffectedColumns())
                 .userId(auditLog.getUserId())
                 .userName(auditLog.getUserName())
                 .details(auditLog.getDetails())

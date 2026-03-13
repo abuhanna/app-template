@@ -24,7 +24,7 @@ public class GetUserNotificationsUseCase {
 
     @Transactional(readOnly = true)
     public Page<NotificationDto> execute(Boolean unreadOnly, Pageable pageable) {
-        Long userId = currentUserService.getCurrentUserId()
+        String userId = currentUserService.getCurrentUserId()
                 .orElseThrow(() -> new AuthenticationException("User not authenticated"));
 
         Page<Notification> notifications = notificationRepository.findByUserId(userId, unreadOnly, pageable);

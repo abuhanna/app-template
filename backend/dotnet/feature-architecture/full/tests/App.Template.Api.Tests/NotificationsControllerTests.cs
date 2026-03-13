@@ -39,7 +39,7 @@ public class NotificationsControllerTests
                 new() { Id = 1, Title = "Test Notification", IsRead = false }
             }
         };
-        _mockNotificationService.Setup(s => s.GetNotificationsAsync("1", queryParams)).ReturnsAsync(notifications);
+        _mockNotificationService.Setup(s => s.GetNotificationsAsync(1L, queryParams)).ReturnsAsync(notifications);
 
         var result = await _controller.GetAll(queryParams);
 
@@ -51,7 +51,7 @@ public class NotificationsControllerTests
     [Fact]
     public async Task GetUnreadCount_ReturnsOk_WithCount()
     {
-        _mockNotificationService.Setup(s => s.GetUnreadCountAsync("1")).ReturnsAsync(5);
+        _mockNotificationService.Setup(s => s.GetUnreadCountAsync(1L)).ReturnsAsync(5);
 
         var result = await _controller.GetUnreadCount();
 
@@ -62,7 +62,7 @@ public class NotificationsControllerTests
     [Fact]
     public async Task MarkAsRead_ReturnsNoContent_WhenSuccessful()
     {
-        _mockNotificationService.Setup(s => s.MarkAsReadAsync(1, "1")).ReturnsAsync(true);
+        _mockNotificationService.Setup(s => s.MarkAsReadAsync(1, 1L)).ReturnsAsync(true);
 
         var result = await _controller.MarkAsRead(1);
 
@@ -72,7 +72,7 @@ public class NotificationsControllerTests
     [Fact]
     public async Task MarkAsRead_ReturnsNotFound_WhenNotificationDoesNotExist()
     {
-        _mockNotificationService.Setup(s => s.MarkAsReadAsync(1, "1")).ReturnsAsync(false);
+        _mockNotificationService.Setup(s => s.MarkAsReadAsync(1, 1L)).ReturnsAsync(false);
 
         var result = await _controller.MarkAsRead(1);
 
@@ -84,7 +84,7 @@ public class NotificationsControllerTests
     [Fact]
     public async Task MarkAllAsRead_ReturnsNoContent()
     {
-        _mockNotificationService.Setup(s => s.MarkAllAsReadAsync("1")).Returns(Task.CompletedTask);
+        _mockNotificationService.Setup(s => s.MarkAllAsReadAsync(1L)).Returns(Task.CompletedTask);
 
         var result = await _controller.MarkAllAsRead();
 
@@ -94,7 +94,7 @@ public class NotificationsControllerTests
     [Fact]
     public async Task Delete_ReturnsNoContent_WhenSuccessful()
     {
-        _mockNotificationService.Setup(s => s.DeleteAsync(1, "1")).ReturnsAsync(true);
+        _mockNotificationService.Setup(s => s.DeleteAsync(1, 1L)).ReturnsAsync(true);
 
         var result = await _controller.Delete(1);
 
@@ -104,7 +104,7 @@ public class NotificationsControllerTests
     [Fact]
     public async Task Delete_ReturnsNotFound_WhenNotificationDoesNotExist()
     {
-        _mockNotificationService.Setup(s => s.DeleteAsync(1, "1")).ReturnsAsync(false);
+        _mockNotificationService.Setup(s => s.DeleteAsync(1, 1L)).ReturnsAsync(false);
 
         var result = await _controller.Delete(1);
 

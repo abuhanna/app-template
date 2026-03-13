@@ -6,7 +6,7 @@ using Microsoft.AspNetCore.Mvc;
 
 namespace App.Template.Api.Controllers;
 
-[Authorize(Roles = "Admin")]
+[Authorize(Roles = "admin")]
 [ApiController]
 [Route("api/audit-logs")]
 public class AuditLogsController : ControllerBase

@@ -53,12 +53,27 @@ public class AuditLog {
     /**
      * User ID of who performed the action
      */
-    private Long userId;
+    private String userId;
+
+    /**
+     * Username of who performed the action
+     */
+    private String userName;
+
+    /**
+     * Additional details about the action
+     */
+    private String details;
+
+    /**
+     * IP address from which the action was performed
+     */
+    private String ipAddress;
 
     /**
      * UTC timestamp when the action occurred
      */
-    private LocalDateTime timestamp;
+    private LocalDateTime createdAt;
 
     public enum AuditAction {
         CREATED,

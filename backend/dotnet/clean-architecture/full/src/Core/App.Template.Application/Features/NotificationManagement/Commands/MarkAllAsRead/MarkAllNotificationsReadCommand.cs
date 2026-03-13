@@ -19,8 +19,10 @@ public class MarkAllNotificationsReadCommandHandler : IRequestHandler<MarkAllNot
 
     public async Task<bool> Handle(MarkAllNotificationsReadCommand request, CancellationToken cancellationToken)
     {
-        var userId = _currentUserService.UserId;
-        if (string.IsNullOrEmpty(userId)) return false;
+        var userIdString = _currentUserService.UserId;
+        if (string.IsNullOrEmpty(userIdString)) return false;
+        if (!long.TryParse(userIdString, out var userId))
+            throw new UnauthorizedAccessException("Invalid user ID");
 
         var notifications = await _context.Notifications
             .Where(n => n.UserId == userId && !n.IsRead)

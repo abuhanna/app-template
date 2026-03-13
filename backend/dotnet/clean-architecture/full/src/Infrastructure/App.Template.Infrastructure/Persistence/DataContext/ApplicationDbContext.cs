@@ -213,7 +213,8 @@ public class ApplicationDbContext : DbContext, IApplicationDbContext
             entity.Property(e => e.Username).IsRequired().HasMaxLength(100);
             entity.Property(e => e.Email).IsRequired().HasMaxLength(255);
             entity.Property(e => e.PasswordHash).IsRequired().HasMaxLength(255);
-            entity.Property(e => e.Name).HasMaxLength(200);
+            entity.Property(e => e.FirstName).HasMaxLength(100);
+            entity.Property(e => e.LastName).HasMaxLength(100);
             entity.Property(e => e.Role).HasMaxLength(50);
             entity.Property(e => e.IsActive).IsRequired();
             entity.Property(e => e.CreatedAt).IsRequired();
@@ -222,8 +223,8 @@ public class ApplicationDbContext : DbContext, IApplicationDbContext
             entity.Property(e => e.UpdatedBy).HasMaxLength(100);
             entity.Property(e => e.LastLoginAt);
             entity.Property(e => e.LastLoginIp).HasMaxLength(45);
-            entity.Property(e => e.PasswordResetToken).HasMaxLength(100);
-            entity.Property(e => e.PasswordResetTokenExpiry);
+            entity.Property(e => e.PasswordResetToken).HasMaxLength(255);
+            entity.Property(e => e.PasswordResetTokenExpiresAt);
 
             entity.Property(e => e.PasswordHistory).HasJsonConversion();
 
@@ -237,16 +238,22 @@ public class ApplicationDbContext : DbContext, IApplicationDbContext
         {
             entity.HasKey(e => e.Id);
             entity.Property(e => e.Id).ValueGeneratedOnAdd();
-            entity.Property(e => e.UserId).IsRequired().HasMaxLength(100);
+            entity.Property(e => e.UserId).IsRequired();
             entity.Property(e => e.Title).IsRequired().HasMaxLength(200);
-            entity.Property(e => e.Message).IsRequired().HasMaxLength(500);
-            entity.Property(e => e.Type).IsRequired().HasConversion<string>();
+            entity.Property(e => e.Message).IsRequired().HasColumnType("text");
+            entity.Property(e => e.Type).IsRequired().HasConversion<string>().HasMaxLength(50);
             entity.Property(e => e.ReferenceId).HasMaxLength(50);
             entity.Property(e => e.ReferenceType).HasMaxLength(50);
             entity.Property(e => e.IsRead).IsRequired();
+            entity.Property(e => e.ReadAt);
             entity.Property(e => e.CreatedAt).IsRequired();
 
             entity.HasIndex(e => new { e.UserId, e.IsRead });
+
+            entity.HasOne(e => e.User)
+                  .WithMany()
+                  .HasForeignKey(e => e.UserId)
+                  .OnDelete(DeleteBehavior.Cascade);
         });
 
         // RefreshToken configuration
@@ -260,8 +267,9 @@ public class ApplicationDbContext : DbContext, IApplicationDbContext
             entity.Property(e => e.CreatedAt).IsRequired();
             entity.Property(e => e.RevokedAt);
             entity.Property(e => e.ReplacedByToken).HasMaxLength(255);
-            entity.Property(e => e.CreatedByIp).HasMaxLength(50);
-            entity.Property(e => e.RevokedByIp).HasMaxLength(50);
+            entity.Property(e => e.CreatedByIp).HasMaxLength(45);
+            entity.Property(e => e.RevokedByIp).HasMaxLength(45);
+            entity.Property(e => e.IsRevoked).IsRequired();
 
             entity.HasIndex(e => e.Token).IsUnique();
             entity.HasIndex(e => e.UserId);
@@ -302,17 +310,20 @@ public class ApplicationDbContext : DbContext, IApplicationDbContext
             entity.Property(e => e.Id).ValueGeneratedOnAdd();
             entity.Property(e => e.EntityName).IsRequired().HasMaxLength(100);
             entity.Property(e => e.EntityId).IsRequired().HasMaxLength(50);
-            entity.Property(e => e.Action).IsRequired().HasConversion<string>();
+            entity.Property(e => e.Action).IsRequired().HasConversion<string>().HasMaxLength(50);
             entity.Property(e => e.OldValues).HasColumnType("text");
             entity.Property(e => e.NewValues).HasColumnType("text");
             entity.Property(e => e.AffectedColumns).HasColumnType("text");
             entity.Property(e => e.UserId).HasMaxLength(100);
-            entity.Property(e => e.Timestamp).IsRequired();
+            entity.Property(e => e.UserName).HasMaxLength(200);
+            entity.Property(e => e.Details).HasColumnType("text");
+            entity.Property(e => e.IpAddress).HasMaxLength(45);
+            entity.Property(e => e.CreatedAt).IsRequired();
 
             entity.HasIndex(e => e.EntityName);
             entity.HasIndex(e => e.EntityId);
             entity.HasIndex(e => e.UserId);
-            entity.HasIndex(e => e.Timestamp);
+            entity.HasIndex(e => e.CreatedAt);
         });
 
         base.OnModelCreating(modelBuilder);

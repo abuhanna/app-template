@@ -224,7 +224,7 @@ public class ExportService {
     private ExportResult exportAuditLogsToExcel(List<AuditLog> auditLogs) {
         try (Workbook workbook = new XSSFWorkbook(); ByteArrayOutputStream out = new ByteArrayOutputStream()) {
             Sheet sheet = workbook.createSheet("Audit Logs");
-            String[] headers = {"ID", "Action", "Entity Type", "Entity ID", "User", "Details", "Created At"};
+            String[] headers = {"ID", "Action", "Entity Name", "Entity ID", "User", "Details", "Created At"};
             Row headerRow = sheet.createRow(0);
             for (int i = 0; i < headers.length; i++) {
                 headerRow.createCell(i).setCellValue(headers[i]);
@@ -234,7 +234,7 @@ public class ExportService {
                 Row row = sheet.createRow(rowIdx++);
                 row.createCell(0).setCellValue(log.getId());
                 row.createCell(1).setCellValue(safe(log.getAction()));
-                row.createCell(2).setCellValue(safe(log.getEntityType()));
+                row.createCell(2).setCellValue(safe(log.getEntityName()));
                 row.createCell(3).setCellValue(safe(log.getEntityId()));
                 row.createCell(4).setCellValue(safe(log.getUserName()));
                 row.createCell(5).setCellValue(safe(log.getDetails()));
@@ -251,9 +251,9 @@ public class ExportService {
     private ExportResult exportAuditLogsToCsv(List<AuditLog> auditLogs) {
         try (ByteArrayOutputStream out = new ByteArrayOutputStream();
              CSVPrinter csvPrinter = new CSVPrinter(new PrintWriter(out), CSVFormat.DEFAULT)) {
-            csvPrinter.printRecord("ID", "Action", "Entity Type", "Entity ID", "User", "Details", "Created At");
+            csvPrinter.printRecord("ID", "Action", "Entity Name", "Entity ID", "User", "Details", "Created At");
             for (AuditLog log : auditLogs) {
-                csvPrinter.printRecord(log.getId(), safe(log.getAction()), safe(log.getEntityType()),
+                csvPrinter.printRecord(log.getId(), safe(log.getAction()), safe(log.getEntityName()),
                         safe(log.getEntityId()), safe(log.getUserName()), safe(log.getDetails()),
                         log.getCreatedAt() != null ? log.getCreatedAt().format(DATE_FORMATTER) : "");
             }
@@ -276,14 +276,14 @@ public class ExportService {
                     .setFontSize(18).setBold());
 
             com.itextpdf.layout.element.Table table = new com.itextpdf.layout.element.Table(7);
-            String[] headers = {"ID", "Action", "Entity Type", "Entity ID", "User", "Details", "Created At"};
+            String[] headers = {"ID", "Action", "Entity Name", "Entity ID", "User", "Details", "Created At"};
             for (String header : headers) {
                 table.addHeaderCell(header);
             }
             for (AuditLog log : auditLogs) {
                 table.addCell(String.valueOf(log.getId()));
                 table.addCell(safe(log.getAction()));
-                table.addCell(safe(log.getEntityType()));
+                table.addCell(safe(log.getEntityName()));
                 table.addCell(safe(log.getEntityId()));
                 table.addCell(safe(log.getUserName()));
                 table.addCell(safe(log.getDetails()));

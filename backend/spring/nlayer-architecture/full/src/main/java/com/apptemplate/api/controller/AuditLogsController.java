@@ -25,18 +25,18 @@ public class AuditLogsController {
     public ResponseEntity<PagedResult<AuditLogDto>> getAuditLogs(
             @Parameter(description = "Page number (1-based)") @RequestParam(defaultValue = "1") int page,
             @Parameter(description = "Number of items per page") @RequestParam(defaultValue = "10") int pageSize,
-            @Parameter(description = "Search in entity type, user name, or details") @RequestParam(required = false) String search,
+            @Parameter(description = "Search in entity name, user name, or details") @RequestParam(required = false) String search,
             @Parameter(description = "Column to sort by") @RequestParam(required = false) String sortBy,
             @Parameter(description = "Sort order: asc or desc") @RequestParam(defaultValue = "desc") String sortOrder,
-            @Parameter(description = "Filter by entity type") @RequestParam(required = false) String entityType,
+            @Parameter(description = "Filter by entity name") @RequestParam(required = false) String entityName,
             @Parameter(description = "Filter by action") @RequestParam(required = false) String action,
-            @Parameter(description = "Filter by user ID") @RequestParam(required = false) Long userId
+            @Parameter(description = "Filter by user ID") @RequestParam(required = false) String userId
     ) {
         page = Math.max(1, page);
         pageSize = Math.min(Math.max(1, pageSize), 100);
 
         Page<AuditLogDto> auditLogs = auditLogService.getAuditLogs(
-                search, entityType, action, userId, page, pageSize, sortBy, sortOrder);
+                search, entityName, action, userId, page, pageSize, sortBy, sortOrder);
         return ResponseEntity.ok(PagedResult.from(auditLogs));
     }
 

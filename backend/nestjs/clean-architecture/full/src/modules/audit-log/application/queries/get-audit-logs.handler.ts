@@ -10,7 +10,7 @@ export class GetAuditLogsHandler implements IQueryHandler<GetAuditLogsQuery> {
 
   async execute(query: GetAuditLogsQuery): Promise<PagedResult<AuditLogDto>> {
     const result = await this.auditLogRepository.findByFiltersPaginated({
-      entityType: query.entityType,
+      entityName: query.entityName,
       entityId: query.entityId,
       userId: query.userId,
       action: query.action,
@@ -26,7 +26,7 @@ export class GetAuditLogsHandler implements IQueryHandler<GetAuditLogsQuery> {
     const auditLogDtos: AuditLogDto[] = result.items.map((log) => ({
       id: log.id,
       action: log.action,
-      entityType: log.entityType,
+      entityName: log.entityName,
       entityId: log.entityId,
       userId: log.userId !== null ? String(log.userId) : null,
       userName: log.userName,

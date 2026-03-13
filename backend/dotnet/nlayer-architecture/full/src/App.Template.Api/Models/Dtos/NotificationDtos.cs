@@ -9,6 +9,7 @@ public class NotificationDto
     public string? ReferenceId { get; set; }
     public string? ReferenceType { get; set; }
     public bool IsRead { get; set; }
+    public DateTime? ReadAt { get; set; }
     public DateTime CreatedAt { get; set; }
 }
 

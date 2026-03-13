@@ -57,21 +57,10 @@ public class UpdateUserCommandHandler : IRequestHandler<UpdateUserCommand, UserD
         }
 
         // Update user
-        var fullName = user.Name;
+        var newFirst = request.FirstName ?? user.FirstName;
+        var newLast = request.LastName ?? user.LastName;
 
-        if (request.FirstName != null || request.LastName != null)
-        {
-             var currentNameParts = user.Name?.Split(' ', 2) ?? Array.Empty<string>();
-             var currentFirst = currentNameParts.Length > 0 ? currentNameParts[0] : "";
-             var currentLast = currentNameParts.Length > 1 ? currentNameParts[1] : "";
-
-             var newFirst = request.FirstName ?? currentFirst;
-             var newLast = request.LastName ?? currentLast;
-
-             fullName = $"{newFirst} {newLast}".Trim();
-        }
-
-        user.Update(fullName, request.Email, request.Role, request.DepartmentId);
+        user.Update(newFirst, newLast, request.Email, request.Role, request.DepartmentId);
 
         if (request.IsActive.HasValue)
         {
@@ -82,18 +71,14 @@ public class UpdateUserCommandHandler : IRequestHandler<UpdateUserCommand, UserD
 
         _logger.LogInformation("User updated successfully: {Username} (ID: {Id})", user.Username, user.Id);
 
-        var nameParts = user.Name?.Split(' ', 2) ?? Array.Empty<string>();
-        var firstName = nameParts.Length > 0 ? nameParts[0] : "";
-        var lastName = nameParts.Length > 1 ? nameParts[1] : "";
-
         return new UserDto
         {
             Id = user.Id,
             Username = user.Username,
             Email = user.Email,
-            FirstName = firstName,
-            LastName = lastName,
-            FullName = user.Name,
+            FirstName = user.FirstName,
+            LastName = user.LastName,
+            FullName = $"{user.FirstName} {user.LastName}".Trim(),
             Role = user.Role,
             DepartmentId = user.DepartmentId,
             DepartmentName = departmentName,

@@ -16,7 +16,7 @@ public class User {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
-    @Column(nullable = false, unique = true, length = 50)
+    @Column(nullable = false, unique = true, length = 100)
     private String username;
 
     @Column(nullable = false, unique = true, length = 255)
@@ -31,7 +31,7 @@ public class User {
     @Column(name = "last_name", length = 100)
     private String lastName;
 
-    @Column(nullable = false, length = 20)
+    @Column(nullable = false, length = 50)
     private String role = "user";
 
     @Column(name = "department_id")
@@ -47,11 +47,17 @@ public class User {
     @Column(name = "last_login_at")
     private LocalDateTime lastLoginAt;
 
+    @Column(name = "last_login_ip", length = 45)
+    private String lastLoginIp;
+
     @Column(name = "password_reset_token")
     private String passwordResetToken;
 
     @Column(name = "password_reset_token_expires_at")
     private LocalDateTime passwordResetTokenExpiresAt;
+
+    @Column(name = "password_history", columnDefinition = "TEXT")
+    private String passwordHistory;
 
     @CreationTimestamp
     @Column(name = "created_at", updatable = false)
@@ -60,6 +66,12 @@ public class User {
     @UpdateTimestamp
     @Column(name = "updated_at")
     private LocalDateTime updatedAt;
+
+    @Column(name = "created_by", length = 100)
+    private String createdBy;
+
+    @Column(name = "updated_by", length = 100)
+    private String updatedBy;
 
     public String getFullName() {
         String first = firstName != null ? firstName : "";

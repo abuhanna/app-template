@@ -111,8 +111,9 @@ public class AuthService : IAuthService
             Username = request.Username,
             Email = request.Email,
             PasswordHash = _passwordHashService.HashPassword(request.Password),
-            Name = $"{request.FirstName} {request.LastName}".Trim(),
-            Role = "User",
+            FirstName = request.FirstName,
+            LastName = request.LastName,
+            Role = "user",
             IsActive = true
         };
 
@@ -137,7 +138,7 @@ public class AuthService : IAuthService
         if (existingToken.IsRevoked)
         {
             var allTokens = await _context.RefreshTokens
-                .Where(rt => rt.UserId == existingToken.UserId && rt.RevokedAt == null)
+                .Where(rt => rt.UserId == existingToken.UserId && !rt.IsRevoked)
                 .ToListAsync();
             foreach (var t in allTokens)
                 t.Revoke();
@@ -208,13 +209,8 @@ public class AuthService : IAuthService
             .FirstOrDefaultAsync(u => u.Id == id)
             ?? throw new KeyNotFoundException("User not found");
 
-        if (request.FirstName != null || request.LastName != null)
-        {
-            var parts = user.Name?.Split(' ', 2) ?? Array.Empty<string>();
-            var curFirst = parts.Length > 0 ? parts[0] : "";
-            var curLast  = parts.Length > 1 ? parts[1] : "";
-            user.Name = $"{request.FirstName ?? curFirst} {request.LastName ?? curLast}".Trim();
-        }
+        if (request.FirstName != null) user.FirstName = request.FirstName;
+        if (request.LastName != null) user.LastName = request.LastName;
 
         await _context.SaveChangesAsync();
         return MapToUserDto(user);
@@ -260,7 +256,7 @@ public class AuthService : IAuthService
         var expiryMinutes = int.Parse(_configuration["App:PasswordResetTokenExpiryMinutes"] ?? "60");
 
         user.PasswordResetToken = resetToken;
-        user.PasswordResetTokenExpiry = DateTime.UtcNow.AddMinutes(expiryMinutes);
+        user.PasswordResetTokenExpiresAt = DateTime.UtcNow.AddMinutes(expiryMinutes);
         await _context.SaveChangesAsync();
 
         var baseUrl = _configuration["App:BaseUrl"] ?? "http://localhost:3000";
@@ -276,7 +272,7 @@ public class AuthService : IAuthService
         var user = await _context.Users
             .FirstOrDefaultAsync(u =>
                 u.PasswordResetToken == request.Token &&
-                u.PasswordResetTokenExpiry > DateTime.UtcNow)
+                u.PasswordResetTokenExpiresAt > DateTime.UtcNow)
             ?? throw new InvalidOperationException("Invalid or expired reset token");
 
         if (user.PasswordHistory.Any(h => _passwordHashService.VerifyPassword(request.NewPassword, h)))
@@ -288,22 +284,21 @@ public class AuthService : IAuthService
 
         user.PasswordHash = _passwordHashService.HashPassword(request.NewPassword);
         user.PasswordResetToken = null;
-        user.PasswordResetTokenExpiry = null;
+        user.PasswordResetTokenExpiresAt = null;
 
         await _context.SaveChangesAsync();
     }
 
     private static UserInfoDto MapToUserInfo(User user)
     {
-        var nameParts = user.Name?.Split(' ', 2) ?? Array.Empty<string>();
         return new UserInfoDto
         {
             Id = user.Id,
             Username = user.Username,
             Email = user.Email,
-            FirstName = nameParts.Length > 0 ? nameParts[0] : null,
-            LastName = nameParts.Length > 1 ? nameParts[1] : null,
-            FullName = user.Name ?? user.Username,
+            FirstName = user.FirstName,
+            LastName = user.LastName,
+            FullName = $"{user.FirstName} {user.LastName}".Trim(),
             Role = user.Role,
             DepartmentId = user.DepartmentId,
             DepartmentName = user.Department?.Name,
@@ -313,15 +308,14 @@ public class AuthService : IAuthService
 
     private static UserDto MapToUserDto(User user)
     {
-        var nameParts = user.Name?.Split(' ', 2) ?? Array.Empty<string>();
         return new UserDto
         {
             Id = user.Id,
             Username = user.Username,
             Email = user.Email,
-            FirstName = nameParts.Length > 0 ? nameParts[0] : "",
-            LastName = nameParts.Length > 1 ? nameParts[1] : "",
-            FullName = user.Name,
+            FirstName = user.FirstName,
+            LastName = user.LastName,
+            FullName = $"{user.FirstName} {user.LastName}".Trim(),
             Role = user.Role,
             DepartmentId = user.DepartmentId,
             DepartmentName = user.Department?.Name,

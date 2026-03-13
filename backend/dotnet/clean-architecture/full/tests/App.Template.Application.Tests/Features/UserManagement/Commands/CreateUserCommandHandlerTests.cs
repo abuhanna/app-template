@@ -79,8 +79,9 @@ public class CreateUserCommandHandlerTests
             username: "existinguser",
             email: "existing@example.com",
             passwordHash: "hash",
-            name: "Existing User",
-            role: "User");
+            firstName: "Existing",
+            lastName: "User",
+            role: "user");
 
         var command = new CreateUserCommand
         {
@@ -108,8 +109,9 @@ public class CreateUserCommandHandlerTests
             username: "differentuser",
             email: "existing@example.com",
             passwordHash: "hash",
-            name: "Different User",
-            role: "User");
+            firstName: "Different",
+            lastName: "User",
+            role: "user");
 
         var command = new CreateUserCommand
         {

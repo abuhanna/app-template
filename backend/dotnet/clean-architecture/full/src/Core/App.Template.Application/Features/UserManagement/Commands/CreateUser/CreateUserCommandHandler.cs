@@ -60,12 +60,12 @@ public class CreateUserCommandHandler : IRequestHandler<CreateUserCommand, UserD
         var passwordHash = _passwordHashService.HashPassword(request.Password);
 
         // Create user
-        var fullName = $"{request.FirstName} {request.LastName}".Trim();
         var user = new User(
             request.Username,
             request.Email,
             passwordHash,
-            fullName,
+            request.FirstName,
+            request.LastName,
             request.Role,
             request.DepartmentId);
 
@@ -74,19 +74,14 @@ public class CreateUserCommandHandler : IRequestHandler<CreateUserCommand, UserD
 
         _logger.LogInformation("User created successfully: {Username} (ID: {Id})", user.Username, user.Id);
 
-        // Split name for DTO
-        var nameParts = user.Name?.Split(' ', 2) ?? Array.Empty<string>();
-        var firstName = nameParts.Length > 0 ? nameParts[0] : "";
-        var lastName = nameParts.Length > 1 ? nameParts[1] : "";
-
         return new UserDto
         {
             Id = user.Id,
             Username = user.Username,
             Email = user.Email,
-            FirstName = firstName,
-            LastName = lastName,
-            FullName = user.Name,
+            FirstName = user.FirstName,
+            LastName = user.LastName,
+            FullName = $"{user.FirstName} {user.LastName}".Trim(),
             Role = user.Role,
             DepartmentId = user.DepartmentId,
             DepartmentName = departmentName,

@@ -61,6 +61,8 @@ public class AuthService : IAuthService
             throw new UnauthorizedAccessException("Invalid credentials");
 
         user.LastLoginAt = DateTime.UtcNow;
+        var ip = _httpContextAccessor.HttpContext?.Connection.RemoteIpAddress?.ToString();
+        if (ip != null) user.LastLoginIp = ip;
         await _userRepository.UpdateAsync(user);
 
         return await CreateLoginResponse(user);
@@ -81,8 +83,9 @@ public class AuthService : IAuthService
             Username = request.Username,
             Email = request.Email,
             PasswordHash = _passwordHashService.HashPassword(request.Password),
-            Name = $"{request.FirstName} {request.LastName}".Trim(),
-            Role = "User",
+            FirstName = request.FirstName,
+            LastName = request.LastName,
+            Role = "user",
             IsActive = true
         };
 
@@ -175,13 +178,8 @@ public class AuthService : IAuthService
         var user = await _userRepository.GetByIdAsync(id)
             ?? throw new KeyNotFoundException("User not found");
 
-        if (request.FirstName != null || request.LastName != null)
-        {
-            var parts = user.Name?.Split(' ', 2) ?? Array.Empty<string>();
-            var curFirst = parts.Length > 0 ? parts[0] : "";
-            var curLast = parts.Length > 1 ? parts[1] : "";
-            user.Name = $"{request.FirstName ?? curFirst} {request.LastName ?? curLast}".Trim();
-        }
+        if (request.FirstName != null) user.FirstName = request.FirstName;
+        if (request.LastName != null) user.LastName = request.LastName;
 
         await _userRepository.UpdateAsync(user);
         return MapToDto(user);
@@ -224,7 +222,7 @@ public class AuthService : IAuthService
 
         var expiryMinutes = int.Parse(_configuration["App:PasswordResetTokenExpiryMinutes"] ?? "60");
         user.PasswordResetToken = token;
-        user.PasswordResetTokenExpiry = DateTime.UtcNow.AddMinutes(expiryMinutes);
+        user.PasswordResetTokenExpiresAt = DateTime.UtcNow.AddMinutes(expiryMinutes);
         await _userRepository.UpdateAsync(user);
 
         var baseUrl = _configuration["App:BaseUrl"] ?? "http://localhost:3000";
@@ -249,7 +247,7 @@ public class AuthService : IAuthService
 
         user.PasswordHash = _passwordHashService.HashPassword(request.NewPassword);
         user.PasswordResetToken = null;
-        user.PasswordResetTokenExpiry = null;
+        user.PasswordResetTokenExpiresAt = null;
         await _userRepository.UpdateAsync(user);
     }
 
@@ -283,15 +281,14 @@ public class AuthService : IAuthService
 
     private static UserInfoDto MapToUserInfo(User user)
     {
-        var nameParts = user.Name?.Split(' ', 2) ?? Array.Empty<string>();
         return new UserInfoDto
         {
             Id = user.Id,
             Username = user.Username,
             Email = user.Email,
-            FirstName = nameParts.Length > 0 ? nameParts[0] : null,
-            LastName = nameParts.Length > 1 ? nameParts[1] : null,
-            FullName = user.Name,
+            FirstName = user.FirstName,
+            LastName = user.LastName,
+            FullName = $"{user.FirstName} {user.LastName}".Trim(),
             Role = user.Role,
             DepartmentId = user.DepartmentId,
             DepartmentName = user.Department?.Name,
@@ -301,15 +298,14 @@ public class AuthService : IAuthService
 
     private static UserDto MapToDto(User user)
     {
-        var nameParts = user.Name?.Split(' ', 2) ?? Array.Empty<string>();
         return new UserDto
         {
             Id = user.Id,
             Username = user.Username,
             Email = user.Email,
-            FirstName = nameParts.Length > 0 ? nameParts[0] : null,
-            LastName = nameParts.Length > 1 ? nameParts[1] : null,
-            FullName = user.Name,
+            FirstName = user.FirstName,
+            LastName = user.LastName,
+            FullName = $"{user.FirstName} {user.LastName}".Trim(),
             Role = user.Role,
             DepartmentId = user.DepartmentId,
             DepartmentName = user.Department?.Name,

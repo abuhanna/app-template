@@ -3,8 +3,7 @@ import { Injectable } from '@nestjs/common';
 import { InjectDataSource } from '@nestjs/typeorm';
 import { AuditLog } from './audit-log.entity';
 
-const TABLE_TO_ENTITY_TYPE: Record<string, string> = {
-  users: 'User',
+const TABLE_TO_ENTITY_NAME: Record<string, string> = {
   uploaded_files: 'File',
   notifications: 'Notification',
 };
@@ -19,25 +18,25 @@ export class AuditSubscriber implements EntitySubscriberInterface<any> {
   }
 
   async afterInsert(event: InsertEvent<any>) {
-    if (event.metadata.tableName === 'audit_logs' || event.metadata.tableName === 'refresh_tokens') return;
+    if (event.metadata.tableName === 'audit_logs') return;
     await this.log(event.manager, 'create', event.metadata.tableName, event.entity);
   }
 
   async afterUpdate(event: UpdateEvent<any>) {
-    if (event.metadata.tableName === 'audit_logs' || event.metadata.tableName === 'refresh_tokens') return;
+    if (event.metadata.tableName === 'audit_logs') return;
     await this.log(event.manager, 'update', event.metadata.tableName, event.entity);
   }
 
   async afterRemove(event: RemoveEvent<any>) {
-    if (event.metadata.tableName === 'audit_logs' || event.metadata.tableName === 'refresh_tokens') return;
+    if (event.metadata.tableName === 'audit_logs') return;
     await this.log(event.manager, 'delete', event.metadata.tableName, event.entity, event.entityId?.toString());
   }
 
   private async log(manager: any, action: string, tableName: string, entity: any, entityId?: string) {
     const audit = new AuditLog();
     audit.action = action;
-    audit.entityType = TABLE_TO_ENTITY_TYPE[tableName] || tableName;
-    audit.entityId = entityId || entity?.id?.toString() || null;
+    audit.entityName = TABLE_TO_ENTITY_NAME[tableName] || tableName;
+    audit.entityId = entityId || entity?.id?.toString() || '';
     audit.details = entity ? JSON.stringify(entity) : null;
     await manager.save(AuditLog, audit);
   }

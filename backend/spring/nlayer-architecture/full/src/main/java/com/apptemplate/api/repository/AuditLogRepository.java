@@ -12,16 +12,16 @@ import org.springframework.stereotype.Repository;
 public interface AuditLogRepository extends JpaRepository<AuditLog, Long> {
 
     @Query("SELECT a FROM AuditLog a WHERE " +
-           "(:search IS NULL OR LOWER(a.entityType) LIKE LOWER(CONCAT('%', :search, '%')) " +
+           "(:search IS NULL OR LOWER(a.entityName) LIKE LOWER(CONCAT('%', :search, '%')) " +
            "OR LOWER(a.userName) LIKE LOWER(CONCAT('%', :search, '%')) " +
            "OR LOWER(a.details) LIKE LOWER(CONCAT('%', :search, '%'))) " +
-           "AND (:entityType IS NULL OR a.entityType = :entityType) " +
+           "AND (:entityName IS NULL OR a.entityName = :entityName) " +
            "AND (:action IS NULL OR a.action = :action) " +
            "AND (:userId IS NULL OR a.userId = :userId)")
     Page<AuditLog> findAllWithFilters(
             @Param("search") String search,
-            @Param("entityType") String entityType,
+            @Param("entityName") String entityName,
             @Param("action") String action,
-            @Param("userId") Long userId,
+            @Param("userId") String userId,
             Pageable pageable);
 }

@@ -110,9 +110,9 @@ public class ExportController {
             @RequestParam(defaultValue = "1000") int limit
     ) {
         // Default sort
-        String sortBy = "timestamp";
+        String sortBy = "createdAt";
         String sortOrder = "desc";
-        
+
         var auditLogs = getAuditLogsUseCase.execute(
             search, entityName, entityId, null, action, fromDate, toDate, 
             1, limit, sortBy, sortOrder

@@ -21,6 +21,7 @@ public class NotificationDto {
     private String referenceType;
     @JsonProperty("isRead")
     private boolean isRead;
+    private LocalDateTime readAt;
     private LocalDateTime createdAt;
 
     public static NotificationDto fromEntity(Notification notification) {
@@ -32,6 +33,7 @@ public class NotificationDto {
                 .referenceId(notification.getReferenceId())
                 .referenceType(notification.getReferenceType())
                 .isRead(notification.isRead())
+                .readAt(notification.getReadAt())
                 .createdAt(notification.getCreatedAt())
                 .build();
     }

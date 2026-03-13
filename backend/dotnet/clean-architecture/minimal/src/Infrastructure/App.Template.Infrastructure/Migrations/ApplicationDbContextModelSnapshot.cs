@@ -33,12 +33,21 @@ namespace AppTemplate.Infrastructure.Migrations
 
                     b.Property<string>("Action")
                         .IsRequired()
-                        .HasColumnType("text")
+                        .HasMaxLength(50)
+                        .HasColumnType("character varying(50)")
                         .HasColumnName("action");
 
                     b.Property<string>("AffectedColumns")
                         .HasColumnType("text")
                         .HasColumnName("affected_columns");
+
+                    b.Property<DateTime>("CreatedAt")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("created_at");
+
+                    b.Property<string>("Details")
+                        .HasColumnType("text")
+                        .HasColumnName("details");
 
                     b.Property<string>("EntityId")
                         .IsRequired()
@@ -52,6 +61,11 @@ namespace AppTemplate.Infrastructure.Migrations
                         .HasColumnType("character varying(100)")
                         .HasColumnName("entity_name");
 
+                    b.Property<string>("IpAddress")
+                        .HasMaxLength(45)
+                        .HasColumnType("character varying(45)")
+                        .HasColumnName("ip_address");
+
                     b.Property<string>("NewValues")
                         .HasColumnType("text")
                         .HasColumnName("new_values");
@@ -60,26 +74,27 @@ namespace AppTemplate.Infrastructure.Migrations
                         .HasColumnType("text")
                         .HasColumnName("old_values");
 
-                    b.Property<DateTime>("Timestamp")
-                        .HasColumnType("timestamp with time zone")
-                        .HasColumnName("timestamp");
-
                     b.Property<string>("UserId")
                         .HasMaxLength(100)
                         .HasColumnType("character varying(100)")
                         .HasColumnName("user_id");
 
+                    b.Property<string>("UserName")
+                        .HasMaxLength(200)
+                        .HasColumnType("character varying(200)")
+                        .HasColumnName("user_name");
+
                     b.HasKey("Id")
                         .HasName("pk_audit_logs");
+
+                    b.HasIndex("CreatedAt")
+                        .HasDatabaseName("ix_audit_logs_created_at");
 
                     b.HasIndex("EntityId")
                         .HasDatabaseName("ix_audit_logs_entity_id");
 
                     b.HasIndex("EntityName")
                         .HasDatabaseName("ix_audit_logs_entity_name");
-
-                    b.HasIndex("Timestamp")
-                        .HasDatabaseName("ix_audit_logs_timestamp");
 
                     b.HasIndex("UserId")
                         .HasDatabaseName("ix_audit_logs_user_id");
@@ -106,9 +121,12 @@ namespace AppTemplate.Infrastructure.Migrations
 
                     b.Property<string>("Message")
                         .IsRequired()
-                        .HasMaxLength(500)
-                        .HasColumnType("character varying(500)")
+                        .HasColumnType("text")
                         .HasColumnName("message");
+
+                    b.Property<DateTime?>("ReadAt")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("read_at");
 
                     b.Property<string>("ReferenceId")
                         .HasMaxLength(50)
@@ -128,7 +146,8 @@ namespace AppTemplate.Infrastructure.Migrations
 
                     b.Property<string>("Type")
                         .IsRequired()
-                        .HasColumnType("text")
+                        .HasMaxLength(50)
+                        .HasColumnType("character varying(50)")
                         .HasColumnName("type");
 
                     b.Property<string>("UserId")

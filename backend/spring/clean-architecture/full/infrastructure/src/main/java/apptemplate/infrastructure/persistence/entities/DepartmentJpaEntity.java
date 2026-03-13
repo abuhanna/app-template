@@ -25,10 +25,10 @@ public class DepartmentJpaEntity {
     @Column(name = "id", updatable = false, nullable = false)
     private Long id;
 
-    @Column(name = "code", nullable = false, unique = true, length = 20)
+    @Column(name = "code", nullable = false, unique = true, length = 50)
     private String code;
 
-    @Column(name = "name", nullable = false, length = 100)
+    @Column(name = "name", nullable = false, length = 200)
     private String name;
 
     @Column(name = "description", length = 500)
@@ -44,12 +44,12 @@ public class DepartmentJpaEntity {
     private LocalDateTime updatedAt;
 
     @CreatedBy
-    @Column(name = "created_by")
-    private Long createdBy;
+    @Column(name = "created_by", length = 100)
+    private String createdBy;
 
     @LastModifiedBy
-    @Column(name = "updated_by")
-    private Long updatedBy;
+    @Column(name = "updated_by", length = 100)
+    private String updatedBy;
 
     @PrePersist
     protected void onCreate() {

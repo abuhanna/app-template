@@ -50,7 +50,8 @@ public class DbSeeder
                     "admin",
                     "admin@apptemplate.com",
                     _passwordHashService.HashPassword("Admin@123"),
-                    "Admin User",
+                    "Admin",
+                    "User",
                     "admin",
                     generalDept.Id
                 );
@@ -59,7 +60,8 @@ public class DbSeeder
                     "johndoe",
                     "user@apptemplate.com",
                     _passwordHashService.HashPassword("User@123"),
-                    "John Doe",
+                    "John",
+                    "Doe",
                     "user",
                     generalDept.Id
                 );

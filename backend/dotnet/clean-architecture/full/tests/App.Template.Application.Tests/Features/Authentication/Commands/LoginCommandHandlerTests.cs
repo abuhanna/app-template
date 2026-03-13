@@ -48,8 +48,9 @@ public class LoginCommandHandlerTests
             username: "admin",
             email: "admin@example.com",
             passwordHash: "hashed_password",
-            name: "Admin User",
-            role: "Admin");
+            firstName: "Admin",
+            lastName: "User",
+            role: "admin");
 
         var users = new List<User> { user };
         var mockUsersDbSet = CreateMockDbSetAsync(users);
@@ -117,8 +118,9 @@ public class LoginCommandHandlerTests
             username: "admin",
             email: "admin@example.com",
             passwordHash: "hashed_password",
-            name: "Admin User",
-            role: "Admin");
+            firstName: "Admin",
+            lastName: "User",
+            role: "admin");
 
         var users = new List<User> { user };
         var mockUsersDbSet = CreateMockDbSetAsync(users);
@@ -147,8 +149,9 @@ public class LoginCommandHandlerTests
             username: "inactiveuser",
             email: "inactive@example.com",
             passwordHash: "hashed_password",
-            name: "Inactive User",
-            role: "User");
+            firstName: "Inactive",
+            lastName: "User",
+            role: "user");
         user.SetActive(false);
 
         var users = new List<User> { user };

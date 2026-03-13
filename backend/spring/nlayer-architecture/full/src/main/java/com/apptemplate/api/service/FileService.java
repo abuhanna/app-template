@@ -65,7 +65,7 @@ public class FileService {
             uploadedFile.setDescription(description);
             uploadedFile.setCategory(category);
             uploadedFile.setPublic(isPublic);
-            uploadedFile.setCreatedBy(getCurrentUserId());
+            uploadedFile.setCreatedBy(getCurrentUsername());
 
             UploadedFile saved = fileRepository.save(uploadedFile);
             return mapToDto(saved);
@@ -131,11 +131,14 @@ public class FileService {
                 .build();
     }
 
-    private Long getCurrentUserId() {
+    private String getCurrentUsername() {
         try {
             Object principal = SecurityContextHolder.getContext().getAuthentication().getPrincipal();
             if (principal instanceof Long) {
-                return (Long) principal;
+                return principal.toString();
+            }
+            if (principal instanceof String) {
+                return (String) principal;
             }
         } catch (Exception ignored) {
         }

@@ -2,30 +2,33 @@ import { Entity, PrimaryGeneratedColumn, Column, CreateDateColumn } from 'typeor
 
 @Entity('notifications')
 export class Notification {
-  @PrimaryGeneratedColumn()
+  @PrimaryGeneratedColumn({ type: 'bigint' })
   id: number;
 
-  @Column({ name: 'user_id' })
-  userId: number;
+  @Column({ name: 'user_id', type: 'varchar', length: 100 })
+  userId: string;
 
-  @Column()
+  @Column({ type: 'varchar', length: 200 })
   title: string;
 
   @Column({ type: 'text' })
   message: string;
 
-  @Column({ default: 'info' })
+  @Column({ type: 'varchar', length: 50, default: 'info' })
   type: string;
 
-  @Column({ name: 'reference_id', nullable: true })
-  referenceId: string;
+  @Column({ name: 'reference_id', type: 'varchar', length: 50, nullable: true })
+  referenceId: string | null;
 
-  @Column({ name: 'reference_type', nullable: true })
-  referenceType: string;
+  @Column({ name: 'reference_type', type: 'varchar', length: 50, nullable: true })
+  referenceType: string | null;
 
   @Column({ name: 'is_read', default: false })
   isRead: boolean;
 
-  @CreateDateColumn({ name: 'created_at' })
+  @Column({ name: 'read_at', type: 'timestamptz', nullable: true })
+  readAt: Date | null;
+
+  @CreateDateColumn({ name: 'created_at', type: 'timestamptz' })
   createdAt: Date;
 }

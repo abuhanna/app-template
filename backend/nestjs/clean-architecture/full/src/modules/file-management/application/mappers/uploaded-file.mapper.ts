@@ -14,7 +14,7 @@ export class UploadedFileMapper {
       isPublic: file.isPublic,
       createdAt: file.createdAt,
       updatedAt: file.updatedAt,
-      createdBy: file.createdBy !== null ? file.createdBy.toString() : null,
+      createdBy: file.createdBy,
       downloadUrl: `/api/files/${file.id}/download`,
     };
   }

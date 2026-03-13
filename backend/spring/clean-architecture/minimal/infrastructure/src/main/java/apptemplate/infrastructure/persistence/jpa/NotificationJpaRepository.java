@@ -20,12 +20,12 @@ public interface NotificationJpaRepository extends JpaRepository<NotificationJpa
            "AND (:unreadOnly IS NULL OR :unreadOnly = false OR n.isRead = false) " +
            "ORDER BY n.createdAt DESC")
     Page<NotificationJpaEntity> findByUserId(
-            @Param("userId") Long userId,
+            @Param("userId") String userId,
             @Param("unreadOnly") Boolean unreadOnly,
             Pageable pageable
     );
 
-    long countByUserIdAndIsReadFalse(Long userId);
+    long countByUserIdAndIsReadFalse(String userId);
 
     @Modifying
     @Query("UPDATE NotificationJpaEntity n SET n.isRead = true, n.readAt = :readAt WHERE n.id = :id")
@@ -33,5 +33,5 @@ public interface NotificationJpaRepository extends JpaRepository<NotificationJpa
 
     @Modifying
     @Query("UPDATE NotificationJpaEntity n SET n.isRead = true, n.readAt = :readAt WHERE n.userId = :userId AND n.isRead = false")
-    void markAllAsRead(@Param("userId") Long userId, @Param("readAt") LocalDateTime readAt);
+    void markAllAsRead(@Param("userId") String userId, @Param("readAt") LocalDateTime readAt);
 }

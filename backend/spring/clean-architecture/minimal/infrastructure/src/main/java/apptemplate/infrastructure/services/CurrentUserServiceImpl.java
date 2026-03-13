@@ -15,22 +15,27 @@ import java.util.Optional;
 public class CurrentUserServiceImpl implements CurrentUserService {
 
     @Override
-    public Optional<Long> getCurrentUserId() {
+    public Optional<String> getCurrentUserId() {
         Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
         if (authentication == null || !authentication.isAuthenticated()) {
             return Optional.empty();
         }
 
-        Object principal = authentication.getPrincipal();
-        if (principal instanceof Long) {
-            return Optional.of((Long) principal);
+        // In minimal variant, the principal or credentials hold a string user ID from JWT claims
+        Object credentials = authentication.getCredentials();
+        if (credentials instanceof String && !"".equals(credentials)) {
+            return Optional.of((String) credentials);
         }
+
+        Object principal = authentication.getPrincipal();
         if (principal instanceof String && !"anonymousUser".equals(principal)) {
-            try {
-                return Optional.of(Long.parseLong((String) principal));
-            } catch (NumberFormatException e) {
-                return Optional.empty();
-            }
+            return Optional.of((String) principal);
+        }
+
+        // Fallback: use the authentication name (typically the email/subject from JWT)
+        String name = authentication.getName();
+        if (name != null && !"anonymousUser".equals(name)) {
+            return Optional.of(name);
         }
 
         return Optional.empty();

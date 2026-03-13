@@ -32,14 +32,14 @@ export class RefreshTokenHandler implements ICommandHandler<RefreshTokenCommand>
     }
 
     // Find user
-    const user = await this.userRepository.findById(existingToken.userId);
+    const user = await this.userRepository.findById(Number(existingToken.userId));
     if (!user || !user.isActive) {
       throw new UnauthorizedException('User not found or disabled');
     }
 
     // Generate new tokens
     const tokenPair = await this.jwtTokenService.generateTokens({
-      sub: user.id,
+      sub: String(user.id),
       email: user.email,
       username: user.username,
       role: user.role,
@@ -50,7 +50,7 @@ export class RefreshTokenHandler implements ICommandHandler<RefreshTokenCommand>
     await this.refreshTokenRepository.save(existingToken);
 
     const newRefreshToken = RefreshToken.create({
-      userId: user.id,
+      userId: String(user.id),
       token: tokenPair.refreshToken,
       expiresAt: tokenPair.refreshTokenExpiresAt,
     });

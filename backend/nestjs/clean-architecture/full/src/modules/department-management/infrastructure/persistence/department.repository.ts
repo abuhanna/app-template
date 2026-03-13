@@ -105,8 +105,8 @@ export class DepartmentRepository implements IDepartmentRepository {
       entity.isActive,
       entity.createdAt,
       entity.updatedAt,
-      entity.createdBy ? parseInt(entity.createdBy, 10) : null,
-      entity.updatedBy ? parseInt(entity.updatedBy, 10) : null,
+      entity.createdBy,
+      entity.updatedBy,
       entity.userCount ?? 0,
     );
   }
@@ -122,8 +122,8 @@ export class DepartmentRepository implements IDepartmentRepository {
     entity.isActive = department.isActive;
     entity.createdAt = department.createdAt;
     entity.updatedAt = department.updatedAt;
-    entity.createdBy = department.createdBy ? department.createdBy.toString() : null;
-    entity.updatedBy = department.updatedBy ? department.updatedBy.toString() : null;
+    entity.createdBy = department.createdBy;
+    entity.updatedBy = department.updatedBy;
     return entity;
   }
 }

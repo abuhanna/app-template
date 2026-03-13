@@ -40,7 +40,7 @@ describe('JwtTokenService', () => {
 
   describe('generateTokens', () => {
     const payload: TokenPayload = {
-      sub: 1,
+      sub: '1',
       email: 'admin@test.com',
       username: 'admin',
       role: 'Admin',
@@ -123,7 +123,7 @@ describe('JwtTokenService', () => {
   describe('verifyAccessToken', () => {
     it('should call jwtService.verify with the token', async () => {
       const expectedPayload: TokenPayload = {
-        sub: 1,
+        sub: '1',
         email: 'admin@test.com',
         username: 'admin',
         role: 'Admin',
@@ -140,7 +140,7 @@ describe('JwtTokenService', () => {
   describe('verifyRefreshToken', () => {
     it('should call jwtService.verify with the token and refresh secret', async () => {
       const expectedPayload: TokenPayload = {
-        sub: 1,
+        sub: '1',
         email: 'admin@test.com',
         username: 'admin',
         role: 'Admin',

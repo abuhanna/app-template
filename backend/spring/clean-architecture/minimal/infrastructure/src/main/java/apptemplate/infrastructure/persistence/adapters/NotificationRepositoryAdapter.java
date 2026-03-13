@@ -28,13 +28,13 @@ public class NotificationRepositoryAdapter implements NotificationRepository {
     }
 
     @Override
-    public Page<Notification> findByUserId(Long userId, Boolean unreadOnly, Pageable pageable) {
+    public Page<Notification> findByUserId(String userId, Boolean unreadOnly, Pageable pageable) {
         return jpaRepository.findByUserId(userId, unreadOnly, pageable)
                 .map(mapper::toDomain);
     }
 
     @Override
-    public long countUnreadByUserId(Long userId) {
+    public long countUnreadByUserId(String userId) {
         return jpaRepository.countByUserIdAndIsReadFalse(userId);
     }
 
@@ -60,7 +60,7 @@ public class NotificationRepositoryAdapter implements NotificationRepository {
 
     @Override
     @Transactional
-    public void markAllAsRead(Long userId) {
+    public void markAllAsRead(String userId) {
         jpaRepository.markAllAsRead(userId, LocalDateTime.now());
     }
 

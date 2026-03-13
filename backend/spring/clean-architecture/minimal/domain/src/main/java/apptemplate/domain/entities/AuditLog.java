@@ -21,7 +21,7 @@ public class AuditLog {
     private Long id;
 
     /**
-     * Name of the entity that was modified (e.g., "User", "Department")
+     * Name of the entity that was modified (e.g., "UploadedFile", "Notification")
      */
     private String entityName;
 
@@ -51,14 +51,29 @@ public class AuditLog {
     private String affectedColumns;
 
     /**
-     * User ID of who performed the action
+     * User ID of who performed the action (from JWT claims)
      */
-    private Long userId;
+    private String userId;
+
+    /**
+     * Display name of the user who performed the action
+     */
+    private String userName;
+
+    /**
+     * Additional details about the action
+     */
+    private String details;
+
+    /**
+     * IP address of the client that performed the action
+     */
+    private String ipAddress;
 
     /**
      * UTC timestamp when the action occurred
      */
-    private LocalDateTime timestamp;
+    private LocalDateTime createdAt;
 
     public enum AuditAction {
         CREATED,

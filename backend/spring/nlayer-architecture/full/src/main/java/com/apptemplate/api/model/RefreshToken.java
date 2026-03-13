@@ -34,6 +34,15 @@ public class RefreshToken {
     @Column(name = "replaced_by_token")
     private String replacedByToken;
 
+    @Column(name = "created_by_ip", length = 45)
+    private String createdByIp;
+
+    @Column(name = "revoked_by_ip", length = 45)
+    private String revokedByIp;
+
+    @Column(name = "is_revoked")
+    private boolean isRevoked = false;
+
     private static final SecureRandom SECURE_RANDOM = new SecureRandom();
     private static final Base64.Encoder BASE64_ENCODER = Base64.getUrlEncoder().withoutPadding();
 
@@ -59,17 +68,14 @@ public class RefreshToken {
         return LocalDateTime.now().isAfter(this.expiresAt);
     }
 
-    public boolean isRevoked() {
-        return this.revokedAt != null;
-    }
-
     public boolean isActive() {
-        return !isRevoked() && !isExpired();
+        return !isRevoked && !isExpired() && this.revokedAt == null;
     }
 
     public void revoke(String replacedByToken) {
         this.revokedAt = LocalDateTime.now();
         this.replacedByToken = replacedByToken;
+        this.isRevoked = true;
     }
 
     public void revoke() {

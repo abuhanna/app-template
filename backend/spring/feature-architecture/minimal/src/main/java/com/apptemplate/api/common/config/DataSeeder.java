@@ -1,33 +1,23 @@
 package com.apptemplate.api.common.config;
 
-import com.apptemplate.api.features.users.User;
-import com.apptemplate.api.features.users.UserRepository;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.boot.CommandLineRunner;
-import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Component;
 
+/**
+ * Data seeder for minimal variant.
+ * No seed data required since there are no users/departments tables.
+ */
 @Component
 @RequiredArgsConstructor
 @ConditionalOnProperty(name = "app.seeding.enabled", havingValue = "true", matchIfMissing = false)
+@Slf4j
 public class DataSeeder implements CommandLineRunner {
-
-    private final UserRepository userRepository;
-    private final PasswordEncoder passwordEncoder;
 
     @Override
     public void run(String... args) {
-        if (userRepository.findByEmail("admin@apptemplate.com").isEmpty()) {
-            User admin = new User();
-            admin.setUsername("admin");
-            admin.setEmail("admin@apptemplate.com");
-            admin.setPasswordHash("");
-            admin.setFirstName("Admin");
-            admin.setLastName("User");
-            admin.setRole("admin");
-            admin.setActive(true);
-            userRepository.save(admin);
-        }
+        log.info("Minimal variant: no seed data required (external auth, no users table)");
     }
 }

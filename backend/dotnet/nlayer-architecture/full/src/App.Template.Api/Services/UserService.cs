@@ -28,7 +28,8 @@ public class UserService : IUserService
             query = query.Where(u =>
                 u.Username.ToLower().Contains(search) ||
                 u.Email.ToLower().Contains(search) ||
-                (u.Name != null && u.Name.ToLower().Contains(search)));
+                (u.FirstName != null && u.FirstName.ToLower().Contains(search)) ||
+                (u.LastName != null && u.LastName.ToLower().Contains(search)));
         }
 
         if (queryParams.IsActive.HasValue)
@@ -43,8 +44,8 @@ public class UserService : IUserService
             ("username", _) => query.OrderBy(u => u.Username),
             ("email", "desc") => query.OrderByDescending(u => u.Email),
             ("email", _) => query.OrderBy(u => u.Email),
-            ("name", "desc") => query.OrderByDescending(u => u.Name),
-            ("name", _) => query.OrderBy(u => u.Name),
+            ("name", "desc") => query.OrderByDescending(u => u.FirstName),
+            ("name", _) => query.OrderBy(u => u.FirstName),
             ("createdat", "desc") => query.OrderByDescending(u => u.CreatedAt),
             ("createdat", _) => query.OrderBy(u => u.CreatedAt),
             _ => query.OrderBy(u => u.Username)
@@ -58,7 +59,9 @@ public class UserService : IUserService
             Id = u.Id,
             Username = u.Username,
             Email = u.Email,
-            FullName = u.Name,
+            FirstName = u.FirstName,
+            LastName = u.LastName,
+            FullName = $"{u.FirstName} {u.LastName}".Trim(),
             Role = u.Role,
             DepartmentId = u.DepartmentId,
             DepartmentName = u.Department != null ? u.Department.Name : null,
@@ -68,16 +71,7 @@ public class UserService : IUserService
             LastLoginAt = u.LastLoginAt
         });
 
-        var result = await PagedResult<UserDto>.CreateAsync(dtoQuery, page, pageSize);
-
-        foreach (var u in result.Items)
-        {
-            var p = u.FullName?.Split(' ', 2) ?? Array.Empty<string>();
-            u.FirstName = p.Length > 0 ? p[0] : "";
-            u.LastName  = p.Length > 1 ? p[1] : "";
-        }
-
-        return result;
+        return await PagedResult<UserDto>.CreateAsync(dtoQuery, page, pageSize);
     }
 
     public async Task<UserDto?> GetUserByIdAsync(long id)
@@ -108,8 +102,9 @@ public class UserService : IUserService
             Username = request.Username,
             Email = request.Email,
             PasswordHash = _passwordHashService.HashPassword(request.Password),
-            Name = $"{request.FirstName} {request.LastName}".Trim(),
-            Role = request.Role ?? "User",
+            FirstName = request.FirstName,
+            LastName = request.LastName,
+            Role = request.Role ?? "user",
             DepartmentId = request.DepartmentId,
             IsActive = request.IsActive
         };
@@ -131,14 +126,8 @@ public class UserService : IUserService
             user.Email = request.Email;
         }
 
-        if (request.FirstName != null || request.LastName != null)
-        {
-            var parts = user.Name?.Split(' ', 2) ?? Array.Empty<string>();
-            var curFirst = parts.Length > 0 ? parts[0] : "";
-            var curLast  = parts.Length > 1 ? parts[1] : "";
-            user.Name = $"{request.FirstName ?? curFirst} {request.LastName ?? curLast}".Trim();
-        }
-
+        if (request.FirstName != null) user.FirstName = request.FirstName;
+        if (request.LastName != null) user.LastName = request.LastName;
         if (request.Role != null) user.Role = request.Role;
 
         if (request.DepartmentId.HasValue)
@@ -191,15 +180,14 @@ public class UserService : IUserService
 
     private static UserDto MapToDto(User user)
     {
-        var nameParts = user.Name?.Split(' ', 2) ?? Array.Empty<string>();
         return new UserDto
         {
             Id = user.Id,
             Username = user.Username,
             Email = user.Email,
-            FirstName = nameParts.Length > 0 ? nameParts[0] : "",
-            LastName  = nameParts.Length > 1 ? nameParts[1] : "",
-            FullName  = user.Name,
+            FirstName = user.FirstName,
+            LastName = user.LastName,
+            FullName = $"{user.FirstName} {user.LastName}".Trim(),
             Role = user.Role,
             DepartmentId = user.DepartmentId,
             DepartmentName = user.Department?.Name,

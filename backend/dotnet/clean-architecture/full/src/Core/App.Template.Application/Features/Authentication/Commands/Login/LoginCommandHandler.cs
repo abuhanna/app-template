@@ -101,10 +101,6 @@ public class LoginCommandHandler : IRequestHandler<LoginCommand, LoginResponseDt
 
         _logger.LogInformation("Login successful for user: {Username}", request.Username);
 
-        var nameParts = user.Name?.Split(' ', 2) ?? Array.Empty<string>();
-        var firstName = nameParts.Length > 0 ? nameParts[0] : null;
-        var lastName = nameParts.Length > 1 ? nameParts[1] : null;
-
         return new LoginResponseDto
         {
             AccessToken = token,
@@ -115,9 +111,9 @@ public class LoginCommandHandler : IRequestHandler<LoginCommand, LoginResponseDt
                 Id = user.Id,
                 Username = user.Username,
                 Email = user.Email,
-                FirstName = firstName,
-                LastName = lastName,
-                FullName = user.Name,
+                FirstName = user.FirstName,
+                LastName = user.LastName,
+                FullName = $"{user.FirstName} {user.LastName}".Trim(),
                 IsActive = user.IsActive,
                 Role = user.Role,
                 DepartmentId = user.DepartmentId,

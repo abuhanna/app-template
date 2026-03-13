@@ -15,25 +15,34 @@ public class AuditLog {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
-    @Column(nullable = false, length = 50)
-    private String action; // create, update, delete, login, logout
+    @Column(name = "entity_name", nullable = false, length = 100)
+    private String entityName;
 
-    @Column(name = "entity_type", length = 100)
-    private String entityType; // User, Department, File, Notification
-
-    @Column(name = "entity_id")
+    @Column(name = "entity_id", nullable = false, length = 50)
     private String entityId;
 
-    @Column(name = "user_id")
-    private Long userId;
+    @Column(nullable = false, length = 50)
+    private String action;
 
-    @Column(name = "user_name")
+    @Column(name = "old_values", columnDefinition = "TEXT")
+    private String oldValues;
+
+    @Column(name = "new_values", columnDefinition = "TEXT")
+    private String newValues;
+
+    @Column(name = "affected_columns", columnDefinition = "TEXT")
+    private String affectedColumns;
+
+    @Column(name = "user_id", length = 100)
+    private String userId;
+
+    @Column(name = "user_name", length = 200)
     private String userName;
 
     @Column(columnDefinition = "TEXT")
     private String details;
 
-    @Column(name = "ip_address", length = 50)
+    @Column(name = "ip_address", length = 45)
     private String ipAddress;
 
     @CreationTimestamp

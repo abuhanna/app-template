@@ -11,7 +11,7 @@ namespace AppTemplate.WebAPI.Controllers;
 /// <summary>
 /// Audit log management endpoints (Admin only)
 /// </summary>
-[Authorize(Roles = "Admin")]
+[Authorize(Roles = "admin")]
 [ApiController]
 [Route("api/audit-logs")]
 public class AuditLogsController : ControllerBase

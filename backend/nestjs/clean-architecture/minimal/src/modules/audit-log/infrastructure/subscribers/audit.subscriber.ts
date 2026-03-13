@@ -120,7 +120,7 @@ export class AuditSubscriber implements EntitySubscriberInterface {
   }
 
   private async logAudit(
-    entityType: string,
+    entityName: string,
     entityId: string,
     action: AuditAction,
     oldValues: any,
@@ -128,7 +128,7 @@ export class AuditSubscriber implements EntitySubscriberInterface {
   ): Promise<void> {
     try {
       const auditLog = new AuditLogOrmEntity();
-      auditLog.entityType = entityType;
+      auditLog.entityName = entityName;
       auditLog.entityId = entityId;
       auditLog.action = action;
       auditLog.oldValues = oldValues ? JSON.stringify(this.sanitizeForJson(oldValues)) : null;
@@ -136,7 +136,7 @@ export class AuditSubscriber implements EntitySubscriberInterface {
 
       // Get User ID from CLS
       const user = this.cls.get('user');
-      auditLog.userId = user ? user.id : null;
+      auditLog.userId = user ? String(user.sub || user.id) : null;
       auditLog.userName = user ? (user.username || user.email || null) : null;
 
       auditLog.createdAt = new Date();
@@ -145,7 +145,7 @@ export class AuditSubscriber implements EntitySubscriberInterface {
       await this.dataSource.getRepository(AuditLogOrmEntity).save(auditLog);
     } catch (error) {
       this.logger.warn(
-        `Failed to log ${action} audit for ${entityType} ${entityId}: ${error.message}`,
+        `Failed to log ${action} audit for ${entityName} ${entityId}: ${error.message}`,
       );
     }
   }

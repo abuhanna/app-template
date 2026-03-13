@@ -43,6 +43,10 @@ public class RefreshTokenJpaEntity {
     @Column(name = "replaced_by_token")
     private String replacedByToken;
 
+    @Column(name = "is_revoked", nullable = false)
+    @Builder.Default
+    private boolean isRevoked = false;
+
     @Column(name = "created_at", nullable = false, updatable = false)
     private LocalDateTime createdAt;
 

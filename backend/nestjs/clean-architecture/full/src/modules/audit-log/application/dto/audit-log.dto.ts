@@ -10,7 +10,7 @@ export class AuditLogDto {
   action: string;
 
   @ApiProperty()
-  entityType: string;
+  entityName: string;
 
   @ApiPropertyOptional()
   entityId: string | null;
@@ -35,7 +35,7 @@ export class GetAuditLogsQueryDto {
   @ApiPropertyOptional()
   @IsOptional()
   @IsString()
-  entityType?: string;
+  entityName?: string;
 
   @ApiPropertyOptional()
   @IsOptional()

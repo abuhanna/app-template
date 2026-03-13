@@ -25,7 +25,7 @@ public class NotificationService : INotificationService
     }
 
     public async Task NotifyUserAsync(
-        string userId,
+        long userId,
         string title,
         string message,
         NotificationType type,
@@ -41,7 +41,7 @@ public class NotificationService : INotificationService
             await _context.SaveChangesAsync(cancellationToken);
 
             // Broadcast to SignalR Hub
-            await _hubContext.Clients.User(userId).SendAsync("ReceiveNotification", new
+            await _hubContext.Clients.User(userId.ToString()).SendAsync("ReceiveNotification", new
             {
                 notification.Id,
                 notification.Title,
@@ -75,8 +75,8 @@ public class NotificationService : INotificationService
         {
             // Get all active admin users
             var adminUserIds = await _context.Users
-                .Where(u => u.Role == "Admin" && u.IsActive)
-                .Select(u => u.Id.ToString())
+                .Where(u => u.Role == "admin" && u.IsActive)
+                .Select(u => u.Id)
                 .ToListAsync(cancellationToken);
 
             if (adminUserIds.Count == 0)

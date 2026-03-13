@@ -18,7 +18,7 @@ public class MarkAllNotificationsAsReadUseCase {
 
     @Transactional
     public void execute() {
-        Long userId = currentUserService.getCurrentUserId()
+        String userId = currentUserService.getCurrentUserId()
                 .orElseThrow(() -> new AuthenticationException("User not authenticated"));
 
         notificationRepository.markAllAsRead(userId);

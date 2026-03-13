@@ -1,7 +1,7 @@
 
 
 export interface CreateRefreshTokenProps {
-  userId: number;
+  userId: string;
   token: string;
   expiresAt: Date;
   deviceInfo?: string | null;
@@ -11,7 +11,7 @@ export interface CreateRefreshTokenProps {
 export class RefreshToken {
   private constructor(
     public readonly id: number,
-    public readonly userId: number,
+    public readonly userId: string,
     public readonly token: string,
     public readonly expiresAt: Date,
     public deviceInfo: string | null,
@@ -39,7 +39,7 @@ export class RefreshToken {
 
   static reconstitute(
     id: number,
-    userId: number,
+    userId: string,
     token: string,
     expiresAt: Date,
     deviceInfo: string | null,

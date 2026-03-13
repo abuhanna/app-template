@@ -15,10 +15,13 @@ public class AuditLogDto {
 
     private Long id;
     private String action;
-    private String entityType;
+    private String entityName;
     private String entityId;
-    private Long userId;
+    private String userId;
     private String userName;
+    private String oldValues;
+    private String newValues;
+    private String affectedColumns;
     private String details;
     private String ipAddress;
     private LocalDateTime createdAt;

@@ -9,10 +9,12 @@ import org.springframework.stereotype.Component;
 
 import javax.crypto.SecretKey;
 import java.util.Date;
-import java.util.HashMap;
-import java.util.Map;
 import java.util.function.Function;
 
+/**
+ * JWT utilities for minimal variant (external auth).
+ * Tokens are validated but not generated -- they come from the external SSO provider.
+ */
 @Component
 public class JwtUtils {
 
@@ -29,8 +31,19 @@ public class JwtUtils {
         return extractClaim(token, Claims::getSubject);
     }
 
-    public Long extractUserId(String token) {
-        return extractClaim(token, claims -> claims.get("userId", Long.class));
+    public String extractUserId(String token) {
+        // In minimal variant, userId is a String from JWT claims
+        String userId = extractClaim(token, claims -> claims.get("userId", String.class));
+        if (userId == null) {
+            // Fallback: try as Long (backward compatibility)
+            Long userIdLong = extractClaim(token, claims -> claims.get("userId", Long.class));
+            if (userIdLong != null) {
+                return userIdLong.toString();
+            }
+            // Last fallback: use subject
+            return extractClaim(token, Claims::getSubject);
+        }
+        return userId;
     }
 
     public String extractRole(String token) {
@@ -42,32 +55,12 @@ public class JwtUtils {
         return claimsResolver.apply(claims);
     }
 
-    public String generateToken(String email, Long userId, String role, Long departmentId) {
-        Map<String, Object> extraClaims = new HashMap<>();
-        extraClaims.put("userId", userId);
-        extraClaims.put("role", role);
-        if (departmentId != null) {
-            extraClaims.put("departmentId", departmentId);
-        }
-        return buildToken(extraClaims, email, jwtExpirationSeconds * 1000);
-    }
-
     public long getExpirationSeconds() {
         return jwtExpirationSeconds;
     }
 
     public int getRefreshExpirationDays() {
         return refreshExpirationDays;
-    }
-
-    private String buildToken(Map<String, Object> extraClaims, String subject, long expirationMillis) {
-        return Jwts.builder()
-                .claims(extraClaims)
-                .subject(subject)
-                .issuedAt(new Date(System.currentTimeMillis()))
-                .expiration(new Date(System.currentTimeMillis() + expirationMillis))
-                .signWith(getSignInKey())
-                .compact();
     }
 
     public boolean isTokenValid(String token, String email) {

@@ -56,12 +56,12 @@ public class UploadedFileJpaEntity {
     private LocalDateTime updatedAt;
 
     @CreatedBy
-    @Column(name = "created_by")
-    private Long createdBy;
+    @Column(name = "created_by", length = 100)
+    private String createdBy;
 
     @LastModifiedBy
-    @Column(name = "updated_by")
-    private Long updatedBy;
+    @Column(name = "updated_by", length = 100)
+    private String updatedBy;
 
     @PrePersist
     protected void onCreate() {

@@ -76,16 +76,16 @@ export class FilesService {
     }
 
     const storedFileName = `${Date.now()}-${file.originalname}`;
-    const filePath = path.join(uploadDir, storedFileName);
+    const storagePath = path.join(uploadDir, storedFileName);
 
-    fs.writeFileSync(filePath, file.buffer);
+    fs.writeFileSync(storagePath, file.buffer);
 
     const newFile = this.filesRepository.create({
       fileName: storedFileName,
       originalFileName: file.originalname,
       contentType: file.mimetype,
       fileSize: file.size,
-      filePath: filePath,
+      storagePath: storagePath,
       description: description ?? undefined,
       category: category ?? undefined,
       isPublic: isPublic ?? false,
@@ -106,11 +106,11 @@ export class FilesService {
 
   async getFile(id: number): Promise<{ file: StreamableFile; contentType: string; fileName: string }> {
     const fileRecord = await this.filesRepository.findOneBy({ id });
-    if (!fileRecord || !fs.existsSync(fileRecord.filePath)) {
+    if (!fileRecord || !fs.existsSync(fileRecord.storagePath)) {
       throw new NotFoundException('File not found');
     }
 
-    const file = fs.createReadStream(fileRecord.filePath);
+    const file = fs.createReadStream(fileRecord.storagePath);
     return {
       file: new StreamableFile(file),
       contentType: fileRecord.contentType,
@@ -124,8 +124,8 @@ export class FilesService {
       throw new NotFoundException('File not found');
     }
 
-    if (fs.existsSync(fileRecord.filePath)) {
-      fs.unlinkSync(fileRecord.filePath);
+    if (fs.existsSync(fileRecord.storagePath)) {
+      fs.unlinkSync(fileRecord.storagePath);
     }
 
     await this.filesRepository.remove(fileRecord);

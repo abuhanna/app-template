@@ -32,7 +32,10 @@ public class GetNotificationsQueryHandler : IRequestHandler<GetNotificationsQuer
 
     public async Task<PagedResult<NotificationDto>> Handle(GetNotificationsQuery request, CancellationToken cancellationToken)
     {
-        var userId = _currentUser.UserId ?? throw new UnauthorizedAccessException("User not authenticated");
+        var userIdString = _currentUser.UserId
+            ?? throw new UnauthorizedAccessException("User not authenticated");
+        if (!long.TryParse(userIdString, out var userId))
+            throw new UnauthorizedAccessException("Invalid user ID");
 
         var query = _context.Notifications
             .Where(n => n.UserId == userId);

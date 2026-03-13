@@ -20,12 +20,15 @@ namespace AppTemplate.Infrastructure.Migrations
                         .Annotation("Npgsql:ValueGenerationStrategy", NpgsqlValueGenerationStrategy.IdentityByDefaultColumn),
                     entity_name = table.Column<string>(type: "character varying(100)", maxLength: 100, nullable: false),
                     entity_id = table.Column<string>(type: "character varying(50)", maxLength: 50, nullable: false),
-                    action = table.Column<string>(type: "text", nullable: false),
+                    action = table.Column<string>(type: "character varying(50)", maxLength: 50, nullable: false),
                     old_values = table.Column<string>(type: "text", nullable: true),
                     new_values = table.Column<string>(type: "text", nullable: true),
                     affected_columns = table.Column<string>(type: "text", nullable: true),
                     user_id = table.Column<string>(type: "character varying(100)", maxLength: 100, nullable: true),
-                    timestamp = table.Column<DateTime>(type: "timestamp with time zone", nullable: false)
+                    user_name = table.Column<string>(type: "character varying(200)", maxLength: 200, nullable: true),
+                    details = table.Column<string>(type: "text", nullable: true),
+                    ip_address = table.Column<string>(type: "character varying(45)", maxLength: 45, nullable: true),
+                    created_at = table.Column<DateTime>(type: "timestamp with time zone", nullable: false)
                 },
                 constraints: table =>
                 {
@@ -50,26 +53,6 @@ namespace AppTemplate.Infrastructure.Migrations
                 constraints: table =>
                 {
                     table.PrimaryKey("pk_departments", x => x.id);
-                });
-
-            migrationBuilder.CreateTable(
-                name: "notifications",
-                columns: table => new
-                {
-                    id = table.Column<long>(type: "bigint", nullable: false)
-                        .Annotation("Npgsql:ValueGenerationStrategy", NpgsqlValueGenerationStrategy.IdentityByDefaultColumn),
-                    user_id = table.Column<string>(type: "character varying(100)", maxLength: 100, nullable: false),
-                    title = table.Column<string>(type: "character varying(200)", maxLength: 200, nullable: false),
-                    message = table.Column<string>(type: "character varying(500)", maxLength: 500, nullable: false),
-                    type = table.Column<string>(type: "text", nullable: false),
-                    reference_id = table.Column<string>(type: "character varying(50)", maxLength: 50, nullable: true),
-                    reference_type = table.Column<string>(type: "character varying(50)", maxLength: 50, nullable: true),
-                    is_read = table.Column<bool>(type: "boolean", nullable: false),
-                    created_at = table.Column<DateTime>(type: "timestamp with time zone", nullable: false)
-                },
-                constraints: table =>
-                {
-                    table.PrimaryKey("pk_notifications", x => x.id);
                 });
 
             migrationBuilder.CreateTable(
@@ -105,14 +88,15 @@ namespace AppTemplate.Infrastructure.Migrations
                     username = table.Column<string>(type: "character varying(100)", maxLength: 100, nullable: false),
                     email = table.Column<string>(type: "character varying(255)", maxLength: 255, nullable: false),
                     password_hash = table.Column<string>(type: "character varying(255)", maxLength: 255, nullable: false),
-                    name = table.Column<string>(type: "character varying(200)", maxLength: 200, nullable: true),
+                    first_name = table.Column<string>(type: "character varying(100)", maxLength: 100, nullable: true),
+                    last_name = table.Column<string>(type: "character varying(100)", maxLength: 100, nullable: true),
                     role = table.Column<string>(type: "character varying(50)", maxLength: 50, nullable: true),
                     department_id = table.Column<long>(type: "bigint", nullable: true),
                     is_active = table.Column<bool>(type: "boolean", nullable: false),
                     last_login_at = table.Column<DateTime>(type: "timestamp with time zone", nullable: true),
                     last_login_ip = table.Column<string>(type: "character varying(45)", maxLength: 45, nullable: true),
-                    password_reset_token = table.Column<string>(type: "character varying(100)", maxLength: 100, nullable: true),
-                    password_reset_token_expiry = table.Column<DateTime>(type: "timestamp with time zone", nullable: true),
+                    password_reset_token = table.Column<string>(type: "character varying(255)", maxLength: 255, nullable: true),
+                    password_reset_token_expires_at = table.Column<DateTime>(type: "timestamp with time zone", nullable: true),
                     password_history = table.Column<string>(type: "text", nullable: false),
                     created_at = table.Column<DateTime>(type: "timestamp with time zone", nullable: false),
                     updated_at = table.Column<DateTime>(type: "timestamp with time zone", nullable: true),
@@ -131,6 +115,33 @@ namespace AppTemplate.Infrastructure.Migrations
                 });
 
             migrationBuilder.CreateTable(
+                name: "notifications",
+                columns: table => new
+                {
+                    id = table.Column<long>(type: "bigint", nullable: false)
+                        .Annotation("Npgsql:ValueGenerationStrategy", NpgsqlValueGenerationStrategy.IdentityByDefaultColumn),
+                    user_id = table.Column<long>(type: "bigint", nullable: false),
+                    title = table.Column<string>(type: "character varying(200)", maxLength: 200, nullable: false),
+                    message = table.Column<string>(type: "text", nullable: false),
+                    type = table.Column<string>(type: "character varying(50)", maxLength: 50, nullable: false),
+                    reference_id = table.Column<string>(type: "character varying(50)", maxLength: 50, nullable: true),
+                    reference_type = table.Column<string>(type: "character varying(50)", maxLength: 50, nullable: true),
+                    is_read = table.Column<bool>(type: "boolean", nullable: false),
+                    read_at = table.Column<DateTime>(type: "timestamp with time zone", nullable: true),
+                    created_at = table.Column<DateTime>(type: "timestamp with time zone", nullable: false)
+                },
+                constraints: table =>
+                {
+                    table.PrimaryKey("pk_notifications", x => x.id);
+                    table.ForeignKey(
+                        name: "fk_notifications_users_user_id",
+                        column: x => x.user_id,
+                        principalTable: "users",
+                        principalColumn: "id",
+                        onDelete: ReferentialAction.Cascade);
+                });
+
+            migrationBuilder.CreateTable(
                 name: "refresh_tokens",
                 columns: table => new
                 {
@@ -142,8 +153,9 @@ namespace AppTemplate.Infrastructure.Migrations
                     created_at = table.Column<DateTime>(type: "timestamp with time zone", nullable: false),
                     revoked_at = table.Column<DateTime>(type: "timestamp with time zone", nullable: true),
                     replaced_by_token = table.Column<string>(type: "character varying(255)", maxLength: 255, nullable: true),
-                    created_by_ip = table.Column<string>(type: "character varying(50)", maxLength: 50, nullable: true),
-                    revoked_by_ip = table.Column<string>(type: "character varying(50)", maxLength: 50, nullable: true)
+                    created_by_ip = table.Column<string>(type: "character varying(45)", maxLength: 45, nullable: true),
+                    revoked_by_ip = table.Column<string>(type: "character varying(45)", maxLength: 45, nullable: true),
+                    is_revoked = table.Column<bool>(type: "boolean", nullable: false)
                 },
                 constraints: table =>
                 {
@@ -157,6 +169,11 @@ namespace AppTemplate.Infrastructure.Migrations
                 });
 
             migrationBuilder.CreateIndex(
+                name: "ix_audit_logs_created_at",
+                table: "audit_logs",
+                column: "created_at");
+
+            migrationBuilder.CreateIndex(
                 name: "ix_audit_logs_entity_id",
                 table: "audit_logs",
                 column: "entity_id");
@@ -165,11 +182,6 @@ namespace AppTemplate.Infrastructure.Migrations
                 name: "ix_audit_logs_entity_name",
                 table: "audit_logs",
                 column: "entity_name");
-
-            migrationBuilder.CreateIndex(
-                name: "ix_audit_logs_timestamp",
-                table: "audit_logs",
-                column: "timestamp");
 
             migrationBuilder.CreateIndex(
                 name: "ix_audit_logs_user_id",

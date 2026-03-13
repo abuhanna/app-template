@@ -8,14 +8,13 @@ describe('NotificationsController', () => {
 
   const mockNotification = {
     id: 1,
-    userId: 1,
+    userId: 'user-1',
     title: 'Test',
     message: 'Test message',
     type: 'info',
     isRead: false,
     readAt: null,
     createdAt: new Date(),
-    updatedAt: new Date(),
   };
 
   const mockPaginatedResult = {
@@ -59,26 +58,26 @@ describe('NotificationsController', () => {
     it('should return paginated notifications for the user', async () => {
       const query = { page: 1, pageSize: 10 };
       const result = await controller.findAll(
-        { user: { userId: 1 } },
+        { user: { userId: 'user-1' } },
         query as any,
         undefined,
       );
-      expect(service.findAll).toHaveBeenCalledWith(1, query, undefined);
+      expect(service.findAll).toHaveBeenCalledWith('user-1', query, undefined);
       expect(result).toEqual(mockPaginatedResult);
     });
   });
 
   describe('markAsRead', () => {
     it('should mark notification as read', async () => {
-      await controller.markAsRead(1, { user: { userId: 1 } });
-      expect(service.markAsRead).toHaveBeenCalledWith(1, 1);
+      await controller.markAsRead(1, { user: { userId: 'user-1' } });
+      expect(service.markAsRead).toHaveBeenCalledWith(1, 'user-1');
     });
   });
 
   describe('delete', () => {
     it('should delete a notification', async () => {
-      await controller.delete(1, { user: { userId: 1 } });
-      expect(service.delete).toHaveBeenCalledWith(1, 1);
+      await controller.delete(1, { user: { userId: 'user-1' } });
+      expect(service.delete).toHaveBeenCalledWith(1, 'user-1');
     });
   });
 });

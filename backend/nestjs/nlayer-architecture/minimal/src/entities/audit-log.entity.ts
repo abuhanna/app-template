@@ -2,30 +2,39 @@ import { Entity, PrimaryGeneratedColumn, Column, CreateDateColumn } from 'typeor
 
 @Entity('audit_logs')
 export class AuditLog {
-  @PrimaryGeneratedColumn()
+  @PrimaryGeneratedColumn({ type: 'bigint' })
   id: number;
 
-  @Column()
-  action: string; // create, update, delete, login, logout
+  @Column({ name: 'entity_name', length: 100 })
+  entityName: string;
 
-  @Column({ name: 'entity_type' })
-  entityType: string; // User, Department, File, Notification
-
-  @Column({ name: 'entity_id', nullable: true })
+  @Column({ name: 'entity_id', length: 50 })
   entityId: string;
 
-  @Column({ name: 'user_id', nullable: true })
+  @Column({ length: 50 })
+  action: string;
+
+  @Column({ name: 'old_values', type: 'text', nullable: true })
+  oldValues: string;
+
+  @Column({ name: 'new_values', type: 'text', nullable: true })
+  newValues: string;
+
+  @Column({ name: 'affected_columns', type: 'text', nullable: true })
+  affectedColumns: string;
+
+  @Column({ name: 'user_id', length: 100, nullable: true })
   userId: string;
 
-  @Column({ name: 'user_name', nullable: true })
+  @Column({ name: 'user_name', length: 200, nullable: true })
   userName: string;
 
   @Column({ type: 'text', nullable: true })
   details: string;
 
-  @Column({ name: 'ip_address', nullable: true })
+  @Column({ name: 'ip_address', length: 45, nullable: true })
   ipAddress: string;
 
-  @CreateDateColumn({ name: 'created_at' })
+  @CreateDateColumn({ name: 'created_at', type: 'timestamptz' })
   createdAt: Date;
 }

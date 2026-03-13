@@ -242,13 +242,13 @@ public class AuthService {
         return tokenValue;
     }
 
-    private void logAudit(String action, String entityType, String entityId, Long userId, String userName) {
+    private void logAudit(String action, String entityName, String entityId, Long userId, String userName) {
         try {
             AuditLog auditLog = new AuditLog();
             auditLog.setAction(action);
-            auditLog.setEntityType(entityType);
+            auditLog.setEntityName(entityName);
             auditLog.setEntityId(entityId);
-            auditLog.setUserId(userId);
+            auditLog.setUserId(userId != null ? userId.toString() : null);
             auditLog.setUserName(userName);
             auditLogRepository.save(auditLog);
         } catch (Exception e) {

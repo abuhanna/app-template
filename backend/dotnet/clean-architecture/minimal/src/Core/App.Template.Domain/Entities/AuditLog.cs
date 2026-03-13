@@ -43,9 +43,24 @@ public class AuditLog
     public string? UserId { get; private set; }
 
     /// <summary>
+    /// Display name of the user who performed the action
+    /// </summary>
+    public string? UserName { get; private set; }
+
+    /// <summary>
+    /// Human-readable details about the action
+    /// </summary>
+    public string? Details { get; private set; }
+
+    /// <summary>
+    /// IP address of the client that performed the action
+    /// </summary>
+    public string? IpAddress { get; private set; }
+
+    /// <summary>
     /// UTC timestamp when the action occurred
     /// </summary>
-    public DateTime Timestamp { get; private set; }
+    public DateTime CreatedAt { get; private set; }
 
     private AuditLog() { }
 
@@ -56,7 +71,10 @@ public class AuditLog
         string? oldValues,
         string? newValues,
         string? affectedColumns,
-        string? userId)
+        string? userId,
+        string? userName = null,
+        string? details = null,
+        string? ipAddress = null)
     {
         return new AuditLog
         {
@@ -67,7 +85,10 @@ public class AuditLog
             NewValues = newValues,
             AffectedColumns = affectedColumns,
             UserId = userId,
-            Timestamp = DateTime.UtcNow
+            UserName = userName,
+            Details = details,
+            IpAddress = ipAddress,
+            CreatedAt = DateTime.UtcNow
         };
     }
 }

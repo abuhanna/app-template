@@ -1,17 +1,12 @@
-import { Entity, PrimaryGeneratedColumn, Column, CreateDateColumn, ManyToOne, JoinColumn } from 'typeorm';
-import { UserOrmEntity } from '@/modules/user-management/infrastructure/persistence/user.orm-entity';
+import { Entity, PrimaryGeneratedColumn, Column, CreateDateColumn } from 'typeorm';
 
 @Entity('refresh_tokens')
 export class RefreshTokenOrmEntity {
   @PrimaryGeneratedColumn('increment', { type: 'bigint' })
   id: string;
 
-  @Column({ name: 'user_id', type: 'bigint' })
+  @Column({ name: 'user_id', type: 'varchar', length: 100 })
   userId: string;
-
-  @ManyToOne(() => UserOrmEntity)
-  @JoinColumn({ name: 'user_id' })
-  user?: UserOrmEntity;
 
   @Column({ unique: true })
   token: string;

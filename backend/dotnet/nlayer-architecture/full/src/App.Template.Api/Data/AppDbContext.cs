@@ -25,10 +25,26 @@ public class AppDbContext : DbContext
     {
         base.OnModelCreating(modelBuilder);
 
+        // User configuration
         modelBuilder.Entity<User>(entity =>
         {
+            entity.Property(e => e.Username).IsRequired().HasMaxLength(100);
+            entity.Property(e => e.Email).IsRequired().HasMaxLength(255);
+            entity.Property(e => e.PasswordHash).IsRequired().HasMaxLength(255);
+            entity.Property(e => e.FirstName).HasMaxLength(100);
+            entity.Property(e => e.LastName).HasMaxLength(100);
+            entity.Property(e => e.Role).HasMaxLength(50);
+            entity.Property(e => e.IsActive).IsRequired();
+            entity.Property(e => e.CreatedAt).IsRequired();
+            entity.Property(e => e.CreatedBy).HasMaxLength(100);
+            entity.Property(e => e.UpdatedBy).HasMaxLength(100);
+            entity.Property(e => e.LastLoginIp).HasMaxLength(45);
+            entity.Property(e => e.PasswordResetToken).HasMaxLength(255);
+
             entity.HasIndex(e => e.Username).IsUnique();
             entity.HasIndex(e => e.Email).IsUnique();
+            entity.HasIndex(e => e.PasswordResetToken);
+
             entity.Property(e => e.PasswordHistory)
                 .HasConversion(
                     v => JsonSerializer.Serialize(v, (JsonSerializerOptions?)null),
@@ -39,8 +55,17 @@ public class AppDbContext : DbContext
                         c => c.ToList()));
         });
 
+        // Department configuration
         modelBuilder.Entity<Department>(entity =>
         {
+            entity.Property(e => e.Code).IsRequired().HasMaxLength(50);
+            entity.Property(e => e.Name).IsRequired().HasMaxLength(200);
+            entity.Property(e => e.Description).HasMaxLength(500);
+            entity.Property(e => e.IsActive).IsRequired();
+            entity.Property(e => e.CreatedAt).IsRequired();
+            entity.Property(e => e.CreatedBy).HasMaxLength(100);
+            entity.Property(e => e.UpdatedBy).HasMaxLength(100);
+
             entity.HasIndex(e => e.Code).IsUnique();
             entity.HasMany(d => d.Users)
                 .WithOne(u => u.Department)
@@ -48,31 +73,86 @@ public class AppDbContext : DbContext
                 .OnDelete(DeleteBehavior.SetNull);
         });
 
+        // RefreshToken configuration
         modelBuilder.Entity<RefreshToken>(entity =>
         {
+            entity.Property(e => e.Token).IsRequired().HasMaxLength(255);
+            entity.Property(e => e.ExpiresAt).IsRequired();
+            entity.Property(e => e.CreatedAt).IsRequired();
+            entity.Property(e => e.ReplacedByToken).HasMaxLength(255);
+            entity.Property(e => e.CreatedByIp).HasMaxLength(45);
+            entity.Property(e => e.RevokedByIp).HasMaxLength(45);
+            entity.Property(e => e.IsRevoked).IsRequired();
+
             entity.HasIndex(e => e.Token).IsUnique();
+            entity.HasIndex(e => e.UserId);
+
             entity.HasOne(rt => rt.User)
                 .WithMany(u => u.RefreshTokens)
                 .HasForeignKey(rt => rt.UserId)
                 .OnDelete(DeleteBehavior.Cascade);
         });
 
+        // Notification configuration
         modelBuilder.Entity<Notification>(entity =>
         {
+            entity.Property(e => e.UserId).IsRequired();
+            entity.Property(e => e.Title).IsRequired().HasMaxLength(200);
+            entity.Property(e => e.Message).IsRequired().HasColumnType("text");
+            entity.Property(e => e.Type).IsRequired().HasConversion<string>().HasMaxLength(50);
+            entity.Property(e => e.ReferenceId).HasMaxLength(50);
+            entity.Property(e => e.ReferenceType).HasMaxLength(50);
+            entity.Property(e => e.IsRead).IsRequired();
+            entity.Property(e => e.ReadAt);
+            entity.Property(e => e.CreatedAt).IsRequired();
+
             entity.HasIndex(e => new { e.UserId, e.IsRead });
-            entity.Property(e => e.Type).HasConversion<string>();
+
+            entity.HasOne(e => e.User)
+                .WithMany()
+                .HasForeignKey(e => e.UserId)
+                .OnDelete(DeleteBehavior.Cascade);
         });
 
+        // UploadedFile configuration
         modelBuilder.Entity<UploadedFile>(entity =>
         {
+            entity.Property(e => e.FileName).IsRequired().HasMaxLength(255);
+            entity.Property(e => e.OriginalFileName).IsRequired().HasMaxLength(255);
+            entity.Property(e => e.ContentType).IsRequired().HasMaxLength(100);
+            entity.Property(e => e.FileSize).IsRequired();
+            entity.Property(e => e.StoragePath).IsRequired().HasMaxLength(500);
+            entity.Property(e => e.Description).HasMaxLength(500);
+            entity.Property(e => e.Category).HasMaxLength(100);
+            entity.Property(e => e.IsPublic).IsRequired();
+            entity.Property(e => e.CreatedAt).IsRequired();
+            entity.Property(e => e.CreatedBy).HasMaxLength(100);
+            entity.Property(e => e.UpdatedBy).HasMaxLength(100);
+
             entity.HasIndex(e => e.FileName).IsUnique();
+            entity.HasIndex(e => e.Category);
+            entity.HasIndex(e => e.CreatedBy);
         });
 
+        // AuditLog configuration
         modelBuilder.Entity<AuditLog>(entity =>
         {
+            entity.Property(e => e.EntityName).IsRequired().HasMaxLength(100);
+            entity.Property(e => e.EntityId).IsRequired().HasMaxLength(50);
+            entity.Property(e => e.Action).IsRequired().HasConversion<string>().HasMaxLength(50);
+            entity.Property(e => e.OldValues).HasColumnType("text");
+            entity.Property(e => e.NewValues).HasColumnType("text");
+            entity.Property(e => e.AffectedColumns).HasColumnType("text");
+            entity.Property(e => e.UserId).HasMaxLength(100);
+            entity.Property(e => e.UserName).HasMaxLength(200);
+            entity.Property(e => e.Details).HasColumnType("text");
+            entity.Property(e => e.IpAddress).HasMaxLength(45);
+            entity.Property(e => e.CreatedAt).IsRequired();
+
             entity.HasIndex(e => e.EntityName);
-            entity.HasIndex(e => e.Timestamp);
-            entity.Property(e => e.Action).HasConversion<string>();
+            entity.HasIndex(e => e.EntityId);
+            entity.HasIndex(e => e.UserId);
+            entity.HasIndex(e => e.CreatedAt);
         });
     }
 
@@ -212,7 +292,7 @@ internal class AuditEntry
             NewValues = NewValues.Count == 0 ? null : JsonSerializer.Serialize(NewValues),
             AffectedColumns = AffectedColumns.Count == 0 ? null : string.Join(",", AffectedColumns),
             UserId = UserId,
-            Timestamp = DateTime.UtcNow
+            CreatedAt = DateTime.UtcNow
         };
     }
 }

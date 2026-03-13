@@ -29,6 +29,7 @@ public class RefreshToken {
     private String replacedByToken;
     private String createdByIp;
     private String revokedByIp;
+    private boolean isRevoked;
 
     private static final SecureRandom SECURE_RANDOM = new SecureRandom();
     private static final Base64.Encoder BASE64_ENCODER = Base64.getUrlEncoder().withoutPadding();
@@ -75,7 +76,7 @@ public class RefreshToken {
      * Checks if the token is revoked.
      */
     public boolean isRevoked() {
-        return this.revokedAt != null;
+        return this.isRevoked || this.revokedAt != null;
     }
 
     /**
@@ -92,6 +93,7 @@ public class RefreshToken {
         this.revokedAt = LocalDateTime.now();
         this.revokedByIp = revokedByIp;
         this.replacedByToken = replacedByToken;
+        this.isRevoked = true;
     }
 
     /**

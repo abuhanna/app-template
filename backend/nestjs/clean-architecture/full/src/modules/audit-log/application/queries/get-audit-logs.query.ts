@@ -2,7 +2,7 @@ import { IQuery } from '@nestjs/cqrs';
 
 export class GetAuditLogsQuery implements IQuery {
   constructor(
-    public readonly entityType?: string,
+    public readonly entityName?: string,
     public readonly entityId?: string,
     public readonly userId?: string,
     public readonly action?: string,

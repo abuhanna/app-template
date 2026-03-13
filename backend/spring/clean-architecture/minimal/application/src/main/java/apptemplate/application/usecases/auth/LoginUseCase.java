@@ -2,83 +2,48 @@ package apptemplate.application.usecases.auth;
 
 import apptemplate.application.dto.auth.LoginRequest;
 import apptemplate.application.dto.auth.LoginResponse;
-import apptemplate.application.mappers.UserMapper;
-import apptemplate.application.ports.repositories.RefreshTokenRepository;
-import apptemplate.application.ports.repositories.UserRepository;
-import apptemplate.application.ports.services.CurrentUserService;
+import apptemplate.application.dto.auth.UserInfoResponse;
 import apptemplate.application.ports.services.JwtTokenService;
-import apptemplate.application.ports.services.PasswordService;
-import apptemplate.domain.entities.RefreshToken;
-import apptemplate.domain.entities.User;
 import apptemplate.domain.exceptions.AuthenticationException;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
-import org.springframework.transaction.annotation.Transactional;
 
-import java.time.LocalDateTime;
-
+/**
+ * Validates an external SSO token and returns user info from JWT claims.
+ * In minimal variant, there is no users table -- all user info comes from JWT claims.
+ */
 @Service
 @RequiredArgsConstructor
 public class LoginUseCase {
 
-    private final UserRepository userRepository;
-    private final RefreshTokenRepository refreshTokenRepository;
-    private final PasswordService passwordService;
     private final JwtTokenService jwtTokenService;
-    private final CurrentUserService currentUserService;
-    private final UserMapper userMapper;
 
-    @Transactional
     public LoginResponse execute(LoginRequest request) {
-        String identifier = request.getUsername();
-        if (identifier == null || identifier.isEmpty()) {
-            identifier = request.getEmail();
-        }
-        
-        if (identifier == null || identifier.isEmpty()) {
-            throw new AuthenticationException("Username or email is required");
+        String token = request.getToken();
+        if (token == null || token.isBlank()) {
+            throw new AuthenticationException("Token is required");
         }
 
-        String finalIdentifier = identifier;
-
-        // Find user by username or email
-        User user = userRepository.findByUsername(finalIdentifier)
-                .or(() -> userRepository.findByEmail(finalIdentifier))
-                .orElseThrow(() -> new AuthenticationException("Invalid username or password"));
-
-        // Verify password
-        if (!passwordService.verifyPassword(request.getPassword(), user.getPasswordHash())) {
-            throw new AuthenticationException("Invalid username or password");
+        if (!jwtTokenService.validateToken(token)) {
+            throw new AuthenticationException("Invalid or expired token");
         }
 
-        // Check if user is active
-        if (!user.isActive()) {
-            throw new AuthenticationException("User account is disabled");
-        }
+        String userId = jwtTokenService.getUserIdFromToken(token);
+        String username = jwtTokenService.getUsernameFromToken(token);
+        String email = jwtTokenService.getEmailFromToken(token);
+        String role = jwtTokenService.getRoleFromToken(token);
 
-        // Record login
-        String ipAddress = currentUserService.getClientIpAddress();
-        user.recordLogin(ipAddress);
-        userRepository.save(user);
-
-        // Generate tokens
-        String accessToken = jwtTokenService.generateToken(user);
-
-        // Create and save refresh token
-        RefreshToken refreshToken = RefreshToken.builder()
-                .token(generateRefreshTokenValue())
-                .userId(user.getId())
-                .expiresAt(LocalDateTime.now().plusDays(7))
-                .createdByIp(ipAddress)
+        UserInfoResponse userInfo = UserInfoResponse.builder()
+                .userId(userId)
+                .username(username != null ? username : email)
+                .email(email)
+                .role(role)
                 .build();
-        refreshTokenRepository.save(refreshToken);
 
-        return LoginResponse.of(accessToken, jwtTokenService.getExpirationSeconds(),
-                refreshToken.getToken(), userMapper.toUserInfoResponse(user));
-    }
-
-    private String generateRefreshTokenValue() {
-        return java.util.UUID.randomUUID().toString().replace("-", "") +
-               java.util.UUID.randomUUID().toString().replace("-", "");
+        return LoginResponse.builder()
+                .accessToken(token)
+                .expiresIn(jwtTokenService.getExpirationSeconds())
+                .user(userInfo)
+                .build();
     }
 }

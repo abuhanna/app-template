@@ -85,6 +85,7 @@ export class FilesService {
       originalFileName: file.originalname,
       contentType: file.mimetype,
       fileSize: file.size,
+      storagePath: filePath,
       description: description || null,
       category: category || null,
       isPublic: isPublic || false,

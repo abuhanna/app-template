@@ -25,7 +25,7 @@ public class AuthControllerTests
         };
     }
 
-    private void SetUserClaims(string userId = "1", string role = "Admin")
+    private void SetUserClaims(string userId = "1", string role = "admin")
     {
         var claims = new[]
         {
@@ -33,7 +33,8 @@ public class AuthControllerTests
             new Claim(ClaimTypes.Name, "admin"),
             new Claim(ClaimTypes.Email, "admin@test.com"),
             new Claim(ClaimTypes.Role, role),
-            new Claim("name", "Admin User"),
+            new Claim("firstName", "Admin"),
+            new Claim("lastName", "User"),
             new Claim("departmentId", "1"),
         };
         var identity = new ClaimsIdentity(claims, "TestAuth");

@@ -57,13 +57,13 @@ export class ExportController {
   @ApiResponse({ status: 200, description: 'File download' })
   async exportAuditLogs(
     @Query('format') format: string = 'xlsx',
-    @Query('entityType') entityType?: string,
+    @Query('entityName') entityName?: string,
     @Query('action') action?: string,
     @Query('fromDate') fromDate?: string,
     @Query('toDate') toDate?: string,
     @Res() res?: Response,
   ) {
-    const { buffer, contentType, fileName } = await this.exportService.exportAuditLogs(format, entityType, action, fromDate, toDate);
+    const { buffer, contentType, fileName } = await this.exportService.exportAuditLogs(format, entityName, action, fromDate, toDate);
     res!.set({
       'Content-Type': contentType,
       'Content-Disposition': `attachment; filename="${fileName}"`,

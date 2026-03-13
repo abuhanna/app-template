@@ -55,7 +55,7 @@ public class ExportService {
                 Row row = sheet.createRow(rowIdx++);
                 row.createCell(0).setCellValue(log.getId());
                 row.createCell(1).setCellValue(safe(log.getAction()));
-                row.createCell(2).setCellValue(safe(log.getEntityType()));
+                row.createCell(2).setCellValue(safe(log.getEntityName()));
                 row.createCell(3).setCellValue(safe(log.getEntityId()));
                 row.createCell(4).setCellValue(safe(log.getUserName()));
                 row.createCell(5).setCellValue(safe(log.getDetails()));
@@ -74,7 +74,7 @@ public class ExportService {
              CSVPrinter csvPrinter = new CSVPrinter(new PrintWriter(out), CSVFormat.DEFAULT)) {
             csvPrinter.printRecord("ID", "Action", "Entity Type", "Entity ID", "User", "Details", "Created At");
             for (AuditLog log : auditLogs) {
-                csvPrinter.printRecord(log.getId(), safe(log.getAction()), safe(log.getEntityType()),
+                csvPrinter.printRecord(log.getId(), safe(log.getAction()), safe(log.getEntityName()),
                         safe(log.getEntityId()), safe(log.getUserName()), safe(log.getDetails()),
                         log.getCreatedAt() != null ? log.getCreatedAt().format(DATE_FORMATTER) : "");
             }
@@ -104,7 +104,7 @@ public class ExportService {
             for (AuditLog log : auditLogs) {
                 table.addCell(String.valueOf(log.getId()));
                 table.addCell(safe(log.getAction()));
-                table.addCell(safe(log.getEntityType()));
+                table.addCell(safe(log.getEntityName()));
                 table.addCell(safe(log.getEntityId()));
                 table.addCell(safe(log.getUserName()));
                 table.addCell(safe(log.getDetails()));
@@ -119,7 +119,7 @@ public class ExportService {
     }
 
     // --- Notifications Export ---
-    public ExportResult exportNotifications(String format, Long userId) {
+    public ExportResult exportNotifications(String format, String userId) {
         List<Notification> notifications;
         if (userId != null) {
             notifications = notificationRepository.findByUserIdOrderByCreatedAtDesc(userId,

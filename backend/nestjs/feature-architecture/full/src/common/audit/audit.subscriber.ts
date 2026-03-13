@@ -3,7 +3,7 @@ import { Injectable } from '@nestjs/common';
 import { InjectDataSource } from '@nestjs/typeorm';
 import { AuditLog } from './audit-log.entity';
 
-const TABLE_TO_ENTITY_TYPE: Record<string, string> = {
+const TABLE_TO_ENTITY_NAME: Record<string, string> = {
   users: 'User',
   departments: 'Department',
   uploaded_files: 'File',
@@ -37,7 +37,7 @@ export class AuditSubscriber implements EntitySubscriberInterface<any> {
   private async log(manager: any, action: string, tableName: string, entity: any, entityId?: string) {
     const audit = new AuditLog();
     audit.action = action;
-    audit.entityType = TABLE_TO_ENTITY_TYPE[tableName] || tableName;
+    audit.entityName = TABLE_TO_ENTITY_NAME[tableName] || tableName;
     audit.entityId = entityId || entity?.id?.toString() || null;
     audit.details = entity ? JSON.stringify(entity) : null;
     await manager.save(AuditLog, audit);

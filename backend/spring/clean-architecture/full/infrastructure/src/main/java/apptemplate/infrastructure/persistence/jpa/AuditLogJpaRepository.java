@@ -22,13 +22,13 @@ public interface AuditLogJpaRepository extends JpaRepository<AuditLogJpaEntity, 
            "(:entityId IS NULL OR a.entityId = :entityId) AND " +
            "(:userId IS NULL OR a.userId = :userId) AND " +
            "(:action IS NULL OR a.action = :action) AND " +
-           "(CAST(:fromDate AS timestamp) IS NULL OR a.timestamp >= :fromDate) AND " +
-           "(CAST(:toDate AS timestamp) IS NULL OR a.timestamp <= :toDate)")
+           "(CAST(:fromDate AS timestamp) IS NULL OR a.createdAt >= :fromDate) AND " +
+           "(CAST(:toDate AS timestamp) IS NULL OR a.createdAt <= :toDate)")
     Page<AuditLogJpaEntity> findByFilters(
         @Param("search") String search,
         @Param("entityName") String entityName,
         @Param("entityId") String entityId,
-        @Param("userId") Long userId,
+        @Param("userId") String userId,
         @Param("action") String action,
         @Param("fromDate") LocalDateTime fromDate,
         @Param("toDate") LocalDateTime toDate,

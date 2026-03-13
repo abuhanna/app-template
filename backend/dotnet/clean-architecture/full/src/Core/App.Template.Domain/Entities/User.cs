@@ -5,7 +5,8 @@ public class User : AuditableEntity
     public string Username { get; private set; } = null!;
     public string Email { get; private set; } = null!;
     public string PasswordHash { get; private set; } = null!;
-    public string? Name { get; private set; }
+    public string? FirstName { get; private set; }
+    public string? LastName { get; private set; }
     public string? Role { get; private set; }
     public long? DepartmentId { get; private set; }
     public Department? Department { get; private set; }
@@ -13,27 +14,29 @@ public class User : AuditableEntity
     public DateTime? LastLoginAt { get; private set; }
     public string? LastLoginIp { get; private set; }
     public string? PasswordResetToken { get; private set; }
-    public DateTime? PasswordResetTokenExpiry { get; private set; }
+    public DateTime? PasswordResetTokenExpiresAt { get; private set; }
     public List<string> PasswordHistory { get; private set; } = new();
 
     private User() { }
 
-    public User(string username, string email, string passwordHash, string? name = null, string? role = null, long? departmentId = null)
+    public User(string username, string email, string passwordHash, string? firstName = null, string? lastName = null, string? role = null, long? departmentId = null)
     {
         Username = username;
         Email = email;
         PasswordHash = passwordHash;
-        Name = name;
-        Role = role ?? "User";
+        FirstName = firstName;
+        LastName = lastName;
+        Role = role ?? "user";
         DepartmentId = departmentId;
         IsActive = true;
         // CreatedAt and CreatedBy are set automatically by DbContext
     }
 
-    public void Update(string? name, string? email, string? role, long? departmentId)
+    public void Update(string? firstName, string? lastName, string? email, string? role, long? departmentId)
     {
         if (email != null) Email = email;
-        if (name != null) Name = name;
+        if (firstName != null) FirstName = firstName;
+        if (lastName != null) LastName = lastName;
         if (role != null) Role = role;
         DepartmentId = departmentId;
         // UpdatedAt and UpdatedBy are set automatically by DbContext
@@ -75,21 +78,21 @@ public class User : AuditableEntity
     public void SetPasswordResetToken(string token, DateTime expiry)
     {
         PasswordResetToken = token;
-        PasswordResetTokenExpiry = expiry;
+        PasswordResetTokenExpiresAt = expiry;
         // UpdatedAt and UpdatedBy are set automatically by DbContext
     }
 
     public void ClearPasswordResetToken()
     {
         PasswordResetToken = null;
-        PasswordResetTokenExpiry = null;
+        PasswordResetTokenExpiresAt = null;
         // UpdatedAt and UpdatedBy are set automatically by DbContext
     }
 
     public bool IsPasswordResetTokenValid(string token)
     {
         return PasswordResetToken == token &&
-               PasswordResetTokenExpiry.HasValue &&
-               PasswordResetTokenExpiry.Value > DateTime.UtcNow;
+               PasswordResetTokenExpiresAt.HasValue &&
+               PasswordResetTokenExpiresAt.Value > DateTime.UtcNow;
     }
 }

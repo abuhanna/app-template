@@ -38,7 +38,7 @@ public class AuditEntityListener {
         try {
             AuditLog auditLog = new AuditLog();
             auditLog.setAction(action);
-            auditLog.setEntityType(entity.getClass().getSimpleName());
+            auditLog.setEntityName(entity.getClass().getSimpleName());
 
             // Try to extract ID via reflection
             try {
@@ -56,8 +56,8 @@ public class AuditEntityListener {
                     && !"anonymousUser".equals(authentication.getPrincipal())) {
                 auditLog.setUserName(authentication.getName());
                 Object credentials = authentication.getCredentials();
-                if (credentials instanceof Long) {
-                    auditLog.setUserId((Long) credentials);
+                if (credentials != null) {
+                    auditLog.setUserId(credentials.toString());
                 }
             }
 

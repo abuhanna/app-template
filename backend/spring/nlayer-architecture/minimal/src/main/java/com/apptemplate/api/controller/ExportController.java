@@ -1,7 +1,5 @@
 package com.apptemplate.api.controller;
 
-import com.apptemplate.api.model.User;
-import com.apptemplate.api.repository.UserRepository;
 import com.apptemplate.api.service.ExportService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
@@ -19,7 +17,6 @@ import org.springframework.web.bind.annotation.*;
 public class ExportController {
 
     private final ExportService exportService;
-    private final UserRepository userRepository;
 
     @GetMapping("/audit-logs")
     @Operation(summary = "Export audit logs", description = "Export audit logs to CSV, Excel, or PDF format")
@@ -33,7 +30,7 @@ public class ExportController {
     @Operation(summary = "Export notifications", description = "Export notifications to CSV, Excel, or PDF format")
     public ResponseEntity<byte[]> exportNotifications(
             @RequestParam(defaultValue = "xlsx") String format) {
-        Long userId = getCurrentUserId();
+        String userId = getCurrentUserId();
         ExportService.ExportResult result = exportService.exportNotifications(format, userId);
         return buildResponse(result);
     }
@@ -45,12 +42,9 @@ public class ExportController {
                 .body(result.outputStream().toByteArray());
     }
 
-    private Long getCurrentUserId() {
+    private String getCurrentUserId() {
         try {
-            String email = SecurityContextHolder.getContext().getAuthentication().getName();
-            return userRepository.findByEmail(email)
-                    .map(User::getId)
-                    .orElse(null);
+            return SecurityContextHolder.getContext().getAuthentication().getName();
         } catch (Exception ignored) {
         }
         return null;

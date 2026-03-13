@@ -62,7 +62,7 @@ public class FileService {
             uploadedFile.setDescription(description);
             uploadedFile.setCategory(category);
             uploadedFile.setPublic(isPublic);
-            uploadedFile.setCreatedBy(getCurrentUserId());
+            uploadedFile.setCreatedBy(getCurrentUsername());
 
             UploadedFile saved = fileRepository.save(uploadedFile);
             return UploadedFileDto.fromEntity(saved);
@@ -111,12 +111,9 @@ public class FileService {
         fileRepository.delete(uploadedFile);
     }
 
-    private Long getCurrentUserId() {
+    private String getCurrentUsername() {
         try {
-            Object credentials = SecurityContextHolder.getContext().getAuthentication().getCredentials();
-            if (credentials instanceof Long) {
-                return (Long) credentials;
-            }
+            return SecurityContextHolder.getContext().getAuthentication().getName();
         } catch (Exception ignored) {
         }
         return null;

@@ -22,7 +22,9 @@ public class GetAuditLogsUseCase {
 
     // Map of allowed sort fields to actual entity field names
     private static final java.util.Map<String, String> SORT_FIELD_MAP = java.util.Map.of(
-            "timestamp", "timestamp",
+            "createdAt", "createdAt",
+            "createdat", "createdAt",
+            "timestamp", "createdAt",
             "entityName", "entityName",
             "entityname", "entityName",
             "entityId", "entityId",
@@ -37,7 +39,7 @@ public class GetAuditLogsUseCase {
             String search,
             String entityName,
             String entityId,
-            Long userId,
+            String userId,
             String action,
             LocalDateTime fromDate,
             LocalDateTime toDate,
@@ -69,8 +71,8 @@ public class GetAuditLogsUseCase {
 
     private Sort buildSort(String sortBy, String sortOrder) {
         if (sortBy == null || sortBy.isBlank()) {
-            // Default sort by timestamp descending
-            return Sort.by(Sort.Direction.DESC, "timestamp");
+            // Default sort by createdAt descending
+            return Sort.by(Sort.Direction.DESC, "createdAt");
         }
 
         // Map the sort field to actual entity field

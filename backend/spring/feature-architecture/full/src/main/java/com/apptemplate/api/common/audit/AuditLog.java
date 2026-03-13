@@ -8,7 +8,7 @@ import java.time.LocalDateTime;
 @Data
 @Entity
 @Table(name = "audit_logs", indexes = {
-    @Index(name = "idx_audit_entity_type", columnList = "entity_type"),
+    @Index(name = "idx_audit_entity_name", columnList = "entity_name"),
     @Index(name = "idx_audit_entity_id", columnList = "entity_id"),
     @Index(name = "idx_audit_user_id", columnList = "user_id"),
     @Index(name = "idx_audit_created_at", columnList = "created_at")
@@ -18,19 +18,28 @@ public class AuditLog {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
-    @Column(nullable = false, length = 20)
-    private String action;
+    @Column(name = "entity_name", nullable = false, length = 100)
+    private String entityName;
 
-    @Column(name = "entity_type", nullable = false, length = 100)
-    private String entityType;
-
-    @Column(name = "entity_id", length = 50)
+    @Column(name = "entity_id", nullable = false, length = 50)
     private String entityId;
 
-    @Column(name = "user_id")
-    private Long userId;
+    @Column(nullable = false, length = 50)
+    private String action;
 
-    @Column(name = "user_name", length = 100)
+    @Column(name = "old_values", columnDefinition = "TEXT")
+    private String oldValues;
+
+    @Column(name = "new_values", columnDefinition = "TEXT")
+    private String newValues;
+
+    @Column(name = "affected_columns", columnDefinition = "TEXT")
+    private String affectedColumns;
+
+    @Column(name = "user_id", length = 100)
+    private String userId;
+
+    @Column(name = "user_name", length = 200)
     private String userName;
 
     @Column(columnDefinition = "TEXT")

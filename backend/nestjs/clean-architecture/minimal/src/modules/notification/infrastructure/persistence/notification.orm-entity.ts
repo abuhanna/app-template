@@ -1,31 +1,27 @@
-import { Entity, PrimaryGeneratedColumn, Column, CreateDateColumn, ManyToOne, JoinColumn } from 'typeorm';
-import { UserOrmEntity } from '@/modules/user-management/infrastructure/persistence/user.orm-entity';
+import { Entity, PrimaryGeneratedColumn, Column, CreateDateColumn, Index } from 'typeorm';
 
 @Entity('notifications')
+@Index(['userId', 'isRead'])
 export class NotificationOrmEntity {
   @PrimaryGeneratedColumn('increment', { type: 'bigint' })
   id: string;
 
-  @Column({ name: 'user_id', type: 'bigint' })
+  @Column({ name: 'user_id', type: 'varchar', length: 100 })
   userId: string;
 
-  @ManyToOne(() => UserOrmEntity)
-  @JoinColumn({ name: 'user_id' })
-  user?: UserOrmEntity;
-
-  @Column()
+  @Column({ type: 'varchar', length: 200 })
   title: string;
 
   @Column({ type: 'text' })
   message: string;
 
-  @Column()
+  @Column({ type: 'varchar', length: 50, default: 'info' })
   type: string;
 
-  @Column({ name: 'reference_id', type: 'varchar', nullable: true })
+  @Column({ name: 'reference_id', type: 'varchar', length: 50, nullable: true })
   referenceId: string | null;
 
-  @Column({ name: 'reference_type', type: 'varchar', nullable: true })
+  @Column({ name: 'reference_type', type: 'varchar', length: 50, nullable: true })
   referenceType: string | null;
 
   @Column({ name: 'is_read', default: false })

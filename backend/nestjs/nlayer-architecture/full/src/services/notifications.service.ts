@@ -65,13 +65,14 @@ export class NotificationsService {
       throw new ForbiddenException('You can only access your own notifications');
     }
     notification.isRead = true;
+    notification.readAt = new Date();
     await this.notificationsRepository.save(notification);
   }
 
   async markAllAsRead(userId: number): Promise<void> {
     await this.notificationsRepository.update(
       { userId, isRead: false },
-      { isRead: true },
+      { isRead: true, readAt: new Date() },
     );
   }
 
@@ -95,6 +96,7 @@ export class NotificationsService {
       referenceId: n.referenceId || null,
       referenceType: n.referenceType || null,
       isRead: n.isRead,
+      readAt: n.readAt ? n.readAt.toISOString() : null,
       createdAt: n.createdAt?.toISOString(),
     };
   }

@@ -49,7 +49,8 @@ public class GetUsersQueryHandler : IRequestHandler<GetUsersQuery, PagedResult<U
             query = query.Where(u =>
                 u.Username.ToLower().Contains(search) ||
                 u.Email.ToLower().Contains(search) ||
-                (u.Name != null && u.Name.ToLower().Contains(search)));
+                (u.FirstName != null && u.FirstName.ToLower().Contains(search)) ||
+                (u.LastName != null && u.LastName.ToLower().Contains(search)));
         }
 
         // Get total count before pagination
@@ -63,7 +64,8 @@ public class GetUsersQueryHandler : IRequestHandler<GetUsersQuery, PagedResult<U
             {
                 "username" => isDescending ? query.OrderByDescending(u => u.Username) : query.OrderBy(u => u.Username),
                 "email" => isDescending ? query.OrderByDescending(u => u.Email) : query.OrderBy(u => u.Email),
-                "name" or "fullname" => isDescending ? query.OrderByDescending(u => u.Name) : query.OrderBy(u => u.Name),
+                "name" or "fullname" or "firstname" => isDescending ? query.OrderByDescending(u => u.FirstName) : query.OrderBy(u => u.FirstName),
+                "lastname" => isDescending ? query.OrderByDescending(u => u.LastName) : query.OrderBy(u => u.LastName),
                 "createdat" => isDescending ? query.OrderByDescending(u => u.CreatedAt) : query.OrderBy(u => u.CreatedAt),
                 "lastloginat" => isDescending ? query.OrderByDescending(u => u.LastLoginAt) : query.OrderBy(u => u.LastLoginAt),
                 "isactive" => isDescending ? query.OrderByDescending(u => u.IsActive) : query.OrderBy(u => u.IsActive),
@@ -87,7 +89,9 @@ public class GetUsersQueryHandler : IRequestHandler<GetUsersQuery, PagedResult<U
                 Id = u.Id,
                 Username = u.Username,
                 Email = u.Email,
-                FullName = u.Name,
+                FirstName = u.FirstName,
+                LastName = u.LastName,
+                FullName = (u.FirstName ?? "") + " " + (u.LastName ?? ""),
                 Role = u.Role,
                 DepartmentId = u.DepartmentId,
                 DepartmentName = u.Department != null ? u.Department.Name : null,
@@ -99,14 +103,6 @@ public class GetUsersQueryHandler : IRequestHandler<GetUsersQuery, PagedResult<U
                 LastLoginAt = u.LastLoginAt
             })
             .ToListAsync(cancellationToken);
-
-        // Post-process name splitting
-        foreach (var user in users)
-        {
-            var nameParts = user.FullName?.Split(' ', 2) ?? Array.Empty<string>();
-            user.FirstName = nameParts.Length > 0 ? nameParts[0] : "";
-            user.LastName = nameParts.Length > 1 ? nameParts[1] : "";
-        }
 
         _logger.LogInformation("Successfully fetched {Count} users (page {Page} of {TotalPages})",
             users.Count, request.Page, (int)Math.Ceiling(totalItems / (double)request.PageSize));

@@ -1,7 +1,7 @@
 import { AuditLog } from '../entities/audit-log.entity';
 
 export interface GetAuditLogsFilters {
-  entityType?: string;
+  entityName?: string;
   entityId?: string;
   userId?: string;
   action?: string;

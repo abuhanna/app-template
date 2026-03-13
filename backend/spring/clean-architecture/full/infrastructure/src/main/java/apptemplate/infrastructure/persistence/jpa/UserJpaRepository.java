@@ -8,6 +8,8 @@ import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
 
+import apptemplate.domain.enums.UserRole;
+
 import java.util.List;
 import java.util.Optional;
 
@@ -21,7 +23,7 @@ public interface UserJpaRepository extends JpaRepository<UserJpaEntity, Long> {
 
     Optional<UserJpaEntity> findByPasswordResetToken(String token);
 
-    List<UserJpaEntity> findByRole(String role);
+    List<UserJpaEntity> findByRole(UserRole role);
 
     boolean existsByUsername(String username);
 

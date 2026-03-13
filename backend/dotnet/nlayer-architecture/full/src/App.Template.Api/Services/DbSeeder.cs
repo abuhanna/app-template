@@ -39,7 +39,8 @@ public class DbSeeder
             Username = "admin",
             Email = "admin@apptemplate.com",
             PasswordHash = _passwordHashService.HashPassword("Admin@123"),
-            Name = "Admin User",
+            FirstName = "Admin",
+            LastName = "User",
             Role = "admin",
             DepartmentId = department.Id,
             IsActive = true
@@ -50,7 +51,8 @@ public class DbSeeder
             Username = "johndoe",
             Email = "user@apptemplate.com",
             PasswordHash = _passwordHashService.HashPassword("User@123"),
-            Name = "John Doe",
+            FirstName = "John",
+            LastName = "Doe",
             Role = "user",
             DepartmentId = department.Id,
             IsActive = true

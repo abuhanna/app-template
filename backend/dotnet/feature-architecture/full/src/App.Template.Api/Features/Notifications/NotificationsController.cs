@@ -18,10 +18,13 @@ public class NotificationsController : ControllerBase
         _notificationService = notificationService;
     }
 
+    private long GetUserId() =>
+        long.Parse(User.FindFirstValue(ClaimTypes.NameIdentifier)!);
+
     [HttpGet]
     public async Task<ActionResult<PaginatedResponse<NotificationDto>>> GetAll([FromQuery] NotificationsQueryParams queryParams)
     {
-        var userId = User.FindFirstValue(ClaimTypes.NameIdentifier)!;
+        var userId = GetUserId();
         var result = await _notificationService.GetNotificationsAsync(userId, queryParams);
         return Ok(PaginatedResponse<NotificationDto>.From(result));
     }
@@ -29,7 +32,7 @@ public class NotificationsController : ControllerBase
     [HttpGet("unread-count")]
     public async Task<ActionResult<ApiResponse<object>>> GetUnreadCount()
     {
-        var userId = User.FindFirstValue(ClaimTypes.NameIdentifier)!;
+        var userId = GetUserId();
         var count = await _notificationService.GetUnreadCountAsync(userId);
         return Ok(ApiResponse.Ok<object>(new { count }));
     }
@@ -37,7 +40,7 @@ public class NotificationsController : ControllerBase
     [HttpPut("{id}/read")]
     public async Task<IActionResult> MarkAsRead(long id)
     {
-        var userId = User.FindFirstValue(ClaimTypes.NameIdentifier)!;
+        var userId = GetUserId();
         var result = await _notificationService.MarkAsReadAsync(id, userId);
         if (!result) return NotFound(ApiResponse.Fail("Notification not found"));
         return NoContent();
@@ -46,7 +49,7 @@ public class NotificationsController : ControllerBase
     [HttpPut("read-all")]
     public async Task<IActionResult> MarkAllAsRead()
     {
-        var userId = User.FindFirstValue(ClaimTypes.NameIdentifier)!;
+        var userId = GetUserId();
         await _notificationService.MarkAllAsReadAsync(userId);
         return NoContent();
     }
@@ -54,7 +57,7 @@ public class NotificationsController : ControllerBase
     [HttpDelete("{id}")]
     public async Task<IActionResult> Delete(long id)
     {
-        var userId = User.FindFirstValue(ClaimTypes.NameIdentifier)!;
+        var userId = GetUserId();
         var result = await _notificationService.DeleteAsync(id, userId);
         if (!result) return NotFound(ApiResponse.Fail("Notification not found"));
         return NoContent();

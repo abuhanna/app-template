@@ -12,6 +12,8 @@ import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.time.LocalDateTime;
+
 @Service
 @RequiredArgsConstructor
 public class NotificationService {
@@ -43,6 +45,7 @@ public class NotificationService {
         }
 
         notification.setRead(true);
+        notification.setReadAt(LocalDateTime.now());
         notificationRepository.save(notification);
     }
 
@@ -72,6 +75,7 @@ public class NotificationService {
                 .referenceId(notification.getReferenceId())
                 .referenceType(notification.getReferenceType())
                 .isRead(notification.isRead())
+                .readAt(notification.getReadAt())
                 .createdAt(notification.getCreatedAt())
                 .build();
     }

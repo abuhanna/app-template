@@ -39,8 +39,9 @@ public class JwtTokenGenerator : IJwtTokenGenerator
             new(ClaimTypes.NameIdentifier, user.Id.ToString()),
             new(ClaimTypes.Name, user.Username),
             new(ClaimTypes.Email, user.Email),
-            new(ClaimTypes.Role, user.Role ?? "User"),
-            new("name", user.Name ?? user.Username)
+            new(ClaimTypes.Role, user.Role ?? "user"),
+            new("firstName", user.FirstName ?? ""),
+            new("lastName", user.LastName ?? "")
         };
 
         if (user.DepartmentId.HasValue)

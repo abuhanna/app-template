@@ -45,7 +45,7 @@ describe('AuditLogsController', () => {
         data: [
           {
             id: 1,
-            entityType: 'User',
+            entityName: 'User',
             entityId: '1',
             action: 'UPDATE',
             oldValues: null,
@@ -86,7 +86,7 @@ describe('AuditLogsController', () => {
       mockQueryBus.execute.mockResolvedValue(pagedResult);
 
       const queryDto = {
-        entityType: 'User',
+        entityName: 'User',
         entityId: '42',
         userId: '1',
         action: 'UPDATE',
@@ -101,7 +101,7 @@ describe('AuditLogsController', () => {
       const result = await controller.getAuditLogs(queryDto);
 
       const executedQuery = mockQueryBus.execute.mock.calls[0][0] as GetAuditLogsQuery;
-      expect(executedQuery.entityType).toBe('User');
+      expect(executedQuery.entityName).toBe('User');
       expect(executedQuery.entityId).toBe('42');
       expect(executedQuery.userId).toBe('1');
       expect(executedQuery.action).toBe('UPDATE');
@@ -133,7 +133,7 @@ describe('AuditLogsController', () => {
       const result = await controller.getAuditLogs(queryDto);
 
       const executedQuery = mockQueryBus.execute.mock.calls[0][0] as GetAuditLogsQuery;
-      expect(executedQuery.entityType).toBeUndefined();
+      expect(executedQuery.entityName).toBeUndefined();
       expect(executedQuery.entityId).toBeUndefined();
       expect(executedQuery.userId).toBeUndefined();
       expect(executedQuery.action).toBeUndefined();
@@ -148,9 +148,9 @@ describe('AuditLogsController', () => {
       const log = {
         id: 1,
         action: 'CREATE',
-        entityType: 'User',
+        entityName: 'User',
         entityId: '1',
-        userId: 1,
+        userId: '1',
         userName: 'admin',
         details: 'Created user',
         ipAddress: '127.0.0.1',
@@ -164,7 +164,7 @@ describe('AuditLogsController', () => {
       expect(result).toEqual({
         id: 1,
         action: 'CREATE',
-        entityType: 'User',
+        entityName: 'User',
         entityId: '1',
         userId: '1',
         userName: 'admin',

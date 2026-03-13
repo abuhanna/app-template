@@ -20,7 +20,7 @@ public class MarkNotificationAsReadUseCase {
 
     @Transactional
     public void execute(Long notificationId) {
-        Long userId = currentUserService.getCurrentUserId()
+        String userId = currentUserService.getCurrentUserId()
                 .orElseThrow(() -> new AuthenticationException("User not authenticated"));
 
         Notification notification = notificationRepository.findById(notificationId)

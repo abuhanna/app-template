@@ -1,20 +1,12 @@
 package apptemplate.application.mappers;
 
-import apptemplate.application.dto.auth.UserInfoResponse;
-import apptemplate.domain.entities.User;
 import org.mapstruct.Mapper;
-import org.mapstruct.Mapping;
-import org.mapstruct.factory.Mappers;
 
+/**
+ * User mapper stub. In minimal variant, there is no users table.
+ * User info is obtained directly from JWT claims.
+ */
 @Mapper(componentModel = "spring")
 public interface UserMapper {
-
-    UserMapper INSTANCE = Mappers.getMapper(UserMapper.class);
-
-    @Mapping(target = "role", expression = "java(user.getRole().name().charAt(0) + user.getRole().name().substring(1).toLowerCase())")
-    @Mapping(target = "fullName", source = "name")
-    @Mapping(target = "isActive", source = "active")
-    @Mapping(target = "firstName", expression = "java(user.getName() != null ? user.getName().split(\" \")[0] : \"\")")
-    @Mapping(target = "lastName", expression = "java(user.getName() != null && user.getName().contains(\" \") ? user.getName().substring(user.getName().indexOf(\" \") + 1) : \"\")")
-    UserInfoResponse toUserInfoResponse(User user);
+    // No mappings needed in minimal variant -- user info comes from JWT claims
 }

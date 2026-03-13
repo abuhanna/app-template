@@ -55,10 +55,10 @@ public class AuditLogsController : ControllerBase
             query = query.Where(a => a.Action == auditAction);
 
         if (fromDate.HasValue)
-            query = query.Where(a => a.Timestamp >= fromDate.Value);
+            query = query.Where(a => a.CreatedAt >= fromDate.Value);
 
         if (toDate.HasValue)
-            query = query.Where(a => a.Timestamp <= toDate.Value);
+            query = query.Where(a => a.CreatedAt <= toDate.Value);
 
         if (!string.IsNullOrEmpty(search))
             query = query.Where(a => a.EntityName.Contains(search) || a.EntityId.Contains(search));
@@ -72,8 +72,8 @@ public class AuditLogsController : ControllerBase
             ("userid", _) => query.OrderByDescending(a => a.UserId),
             ("action", "asc") => query.OrderBy(a => a.Action),
             ("action", _) => query.OrderByDescending(a => a.Action),
-            ("createdat", "asc") => query.OrderBy(a => a.Timestamp),
-            _ => query.OrderByDescending(a => a.Timestamp)
+            ("createdat", "asc") => query.OrderBy(a => a.CreatedAt),
+            _ => query.OrderByDescending(a => a.CreatedAt)
         };
 
         var pagedResult = await PagedResult<AuditLogDto>.CreateAsync(
@@ -84,9 +84,10 @@ public class AuditLogsController : ControllerBase
                 EntityId = a.EntityId,
                 Action = a.Action.ToString(),
                 UserId = a.UserId,
-                UserName = a.UserId,
-                Details = a.NewValues ?? a.OldValues,
-                CreatedAt = a.Timestamp
+                UserName = a.UserName ?? a.UserId,
+                Details = a.Details ?? a.NewValues ?? a.OldValues,
+                IpAddress = a.IpAddress,
+                CreatedAt = a.CreatedAt
             }),
             page,
             pageSize);
@@ -109,9 +110,10 @@ public class AuditLogsController : ControllerBase
                 EntityId = a.EntityId,
                 Action = a.Action.ToString(),
                 UserId = a.UserId,
-                UserName = a.UserId,
-                Details = a.NewValues ?? a.OldValues,
-                CreatedAt = a.Timestamp
+                UserName = a.UserName ?? a.UserId,
+                Details = a.Details ?? a.NewValues ?? a.OldValues,
+                IpAddress = a.IpAddress,
+                CreatedAt = a.CreatedAt
             })
             .FirstOrDefaultAsync();
 

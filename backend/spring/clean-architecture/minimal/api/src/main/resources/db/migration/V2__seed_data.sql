@@ -2,17 +2,4 @@
 -- V2: Seed data for AppTemplate (Spring Boot Clean Architecture - Minimal)
 -- ============================================================================
 
--- Seed Admin user (no password — auth is external)
-INSERT INTO users (username, email, password_hash, first_name, last_name, role, is_active, created_at, updated_at)
-VALUES (
-    'admin',
-    'admin@apptemplate.com',
-    '',
-    'Admin',
-    'User',
-    'ADMIN',
-    TRUE,
-    CURRENT_TIMESTAMP,
-    CURRENT_TIMESTAMP
-)
-ON CONFLICT (username) DO NOTHING;
+-- No seed data for minimal variant (external auth, no users table)

@@ -43,7 +43,7 @@ describe('AuditLogsController', () => {
     it('should call QueryBus.execute with GetAuditLogsQuery and basic pagination', async () => {
       const pagedResult = {
         items: [
-          { id: 1, entityType: 'User', entityId: '1', action: 'CREATE', createdAt: new Date() },
+          { id: 1, entityName: 'User', entityId: '1', action: 'CREATE', createdAt: new Date() },
         ],
         total: 1,
         page: 1,
@@ -67,7 +67,7 @@ describe('AuditLogsController', () => {
       mockQueryBus.execute.mockResolvedValue(pagedResult);
 
       const queryDto = {
-        entityType: 'User',
+        entityName: 'User',
         entityId: '5',
         userId: '1',
         action: 'UPDATE',
@@ -105,7 +105,7 @@ describe('AuditLogsController', () => {
       const log = {
         id: 1,
         action: 'CREATE',
-        entityType: 'User',
+        entityName: 'User',
         entityId: '1',
         userId: 1,
         userName: 'admin',
@@ -121,7 +121,7 @@ describe('AuditLogsController', () => {
       expect(result).toEqual({
         id: 1,
         action: 'CREATE',
-        entityType: 'User',
+        entityName: 'User',
         entityId: '1',
         userId: '1',
         userName: 'admin',

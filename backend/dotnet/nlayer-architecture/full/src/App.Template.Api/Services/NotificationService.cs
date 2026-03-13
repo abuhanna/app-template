@@ -10,12 +10,12 @@ namespace App.Template.Api.Services;
 
 public interface INotificationService
 {
-    Task NotifyUserAsync(string userId, string title, string message, NotificationType type, string? referenceId = null, string? referenceType = null);
-    Task<PagedResult<NotificationDto>> GetNotificationsAsync(string userId, NotificationsQueryParams queryParams);
-    Task<int> GetUnreadCountAsync(string userId);
-    Task<bool> MarkAsReadAsync(long id, string userId);
-    Task MarkAllAsReadAsync(string userId);
-    Task<bool> DeleteAsync(long id, string userId);
+    Task NotifyUserAsync(long userId, string title, string message, NotificationType type, string? referenceId = null, string? referenceType = null);
+    Task<PagedResult<NotificationDto>> GetNotificationsAsync(long userId, NotificationsQueryParams queryParams);
+    Task<int> GetUnreadCountAsync(long userId);
+    Task<bool> MarkAsReadAsync(long id, long userId);
+    Task MarkAllAsReadAsync(long userId);
+    Task<bool> DeleteAsync(long id, long userId);
 }
 
 public class NotificationService : INotificationService
@@ -29,7 +29,7 @@ public class NotificationService : INotificationService
         _hubContext = hubContext;
     }
 
-    public async Task NotifyUserAsync(string userId, string title, string message, NotificationType type, string? referenceId = null, string? referenceType = null)
+    public async Task NotifyUserAsync(long userId, string title, string message, NotificationType type, string? referenceId = null, string? referenceType = null)
     {
         var notification = new Notification
         {
@@ -52,13 +52,14 @@ public class NotificationService : INotificationService
             ReferenceId = notification.ReferenceId,
             ReferenceType = notification.ReferenceType,
             IsRead = notification.IsRead,
+            ReadAt = notification.ReadAt,
             CreatedAt = notification.CreatedAt
         };
 
-        await _hubContext.Clients.User(userId).SendAsync("ReceiveNotification", dto);
+        await _hubContext.Clients.User(userId.ToString()).SendAsync("ReceiveNotification", dto);
     }
 
-    public async Task<PagedResult<NotificationDto>> GetNotificationsAsync(string userId, NotificationsQueryParams queryParams)
+    public async Task<PagedResult<NotificationDto>> GetNotificationsAsync(long userId, NotificationsQueryParams queryParams)
     {
         var query = _notificationRepository.GetByUserIdQueryable(userId);
 
@@ -93,20 +94,21 @@ public class NotificationService : INotificationService
             ReferenceId = n.ReferenceId,
             ReferenceType = n.ReferenceType,
             IsRead = n.IsRead,
+            ReadAt = n.ReadAt,
             CreatedAt = n.CreatedAt
         });
 
         return await PagedResult<NotificationDto>.CreateAsync(dtoQuery, page, pageSize);
     }
 
-    public async Task<int> GetUnreadCountAsync(string userId)
+    public async Task<int> GetUnreadCountAsync(long userId)
     {
         return await _notificationRepository.GetByUserIdQueryable(userId)
             .Where(n => !n.IsRead)
             .CountAsync();
     }
 
-    public async Task<bool> MarkAsReadAsync(long id, string userId)
+    public async Task<bool> MarkAsReadAsync(long id, long userId)
     {
         var notification = await _notificationRepository.GetByIdAsync(id, userId);
         if (notification == null) return false;
@@ -116,12 +118,12 @@ public class NotificationService : INotificationService
         return true;
     }
 
-    public async Task MarkAllAsReadAsync(string userId)
+    public async Task MarkAllAsReadAsync(long userId)
     {
         await _notificationRepository.MarkAllAsReadAsync(userId);
     }
 
-    public async Task<bool> DeleteAsync(long id, string userId)
+    public async Task<bool> DeleteAsync(long id, long userId)
     {
         var notification = await _notificationRepository.GetByIdAsync(id, userId);
         if (notification == null) return false;

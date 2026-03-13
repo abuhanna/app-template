@@ -61,7 +61,8 @@ public class UserService {
 
         String firstName = request.getFirstName() != null ? request.getFirstName() : request.getUsername();
         String lastName = request.getLastName() != null ? request.getLastName() : "";
-        user.setFullName(firstName, lastName);
+        user.setFirstName(firstName);
+        user.setLastName(lastName);
 
         User savedUser = userRepository.save(user);
 
@@ -88,10 +89,11 @@ public class UserService {
             }
             user.setEmail(request.getEmail());
         }
-        if (request.getFirstName() != null || request.getLastName() != null) {
-            String firstName = request.getFirstName() != null ? request.getFirstName() : user.getFirstName();
-            String lastName = request.getLastName() != null ? request.getLastName() : user.getLastName();
-            user.setFullName(firstName, lastName);
+        if (request.getFirstName() != null) {
+            user.setFirstName(request.getFirstName());
+        }
+        if (request.getLastName() != null) {
+            user.setLastName(request.getLastName());
         }
         if (request.getRole() != null) {
             user.setRole(request.getRole());
@@ -138,7 +140,7 @@ public class UserService {
                 .email(user.getEmail())
                 .firstName(user.getFirstName())
                 .lastName(user.getLastName())
-                .fullName(user.getName())
+                .fullName(user.getFullName())
                 .role(user.getRole())
                 .departmentId(user.getDepartmentId())
                 .departmentName(departmentName)

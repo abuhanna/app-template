@@ -41,7 +41,7 @@ public class AuditLogService {
         return AuditLogDto.builder()
                 .id(auditLog.getId())
                 .action(auditLog.getAction())
-                .entityType(auditLog.getEntityType())
+                .entityType(auditLog.getEntityName())
                 .entityId(auditLog.getEntityId())
                 .userId(auditLog.getUserId())
                 .userName(auditLog.getUserName())

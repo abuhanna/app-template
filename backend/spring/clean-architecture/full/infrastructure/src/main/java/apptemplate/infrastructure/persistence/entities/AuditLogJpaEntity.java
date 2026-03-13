@@ -9,7 +9,7 @@ import java.time.LocalDateTime;
     @Index(name = "idx_audit_entity_name", columnList = "entity_name"),
     @Index(name = "idx_audit_entity_id", columnList = "entity_id"),
     @Index(name = "idx_audit_user_id", columnList = "user_id"),
-    @Index(name = "idx_audit_timestamp", columnList = "timestamp")
+    @Index(name = "idx_audit_created_at", columnList = "created_at")
 })
 @Getter
 @Setter
@@ -29,7 +29,7 @@ public class AuditLogJpaEntity {
     @Column(name = "entity_id", nullable = false, length = 50)
     private String entityId;
 
-    @Column(name = "action", nullable = false, length = 20)
+    @Column(name = "action", nullable = false, length = 50)
     private String action;
 
     @Column(name = "old_values", columnDefinition = "TEXT")
@@ -41,16 +41,25 @@ public class AuditLogJpaEntity {
     @Column(name = "affected_columns", columnDefinition = "TEXT")
     private String affectedColumns;
 
-    @Column(name = "user_id")
-    private Long userId;
+    @Column(name = "user_id", length = 100)
+    private String userId;
 
-    @Column(name = "timestamp", nullable = false)
-    private LocalDateTime timestamp;
+    @Column(name = "user_name", length = 200)
+    private String userName;
+
+    @Column(name = "details", columnDefinition = "TEXT")
+    private String details;
+
+    @Column(name = "ip_address", length = 45)
+    private String ipAddress;
+
+    @Column(name = "created_at", nullable = false)
+    private LocalDateTime createdAt;
 
     @PrePersist
     protected void onCreate() {
-        if (timestamp == null) {
-            timestamp = LocalDateTime.now();
+        if (createdAt == null) {
+            createdAt = LocalDateTime.now();
         }
     }
 }

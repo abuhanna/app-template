@@ -10,11 +10,11 @@ describe('AuthController', () => {
   const mockValidateTokenResponse = {
     accessToken: 'jwt-token',
     expiresIn: 900,
-    user: { id: 1, username: 'admin', email: 'admin@example.com' },
+    user: { id: 'admin', username: 'admin', email: 'admin@example.com' },
   };
 
   const mockUserInfo = {
-    id: 1,
+    id: 'admin',
     username: 'admin',
     email: 'admin@example.com',
     firstName: 'Admin',
@@ -23,7 +23,6 @@ describe('AuthController', () => {
     role: 'admin',
     departmentId: null,
     departmentName: null,
-    isActive: true,
   };
 
   beforeEach(async () => {
@@ -35,8 +34,6 @@ describe('AuthController', () => {
           useValue: {
             validateToken: jest.fn(),
             getMe: jest.fn(),
-            getProfile: jest.fn(),
-            updateProfile: jest.fn(),
           },
         },
       ],
@@ -75,36 +72,10 @@ describe('AuthController', () => {
     it('should return current user info from JWT payload', async () => {
       (authService.getMe as jest.Mock).mockReturnValue(mockUserInfo);
 
-      const result = await controller.me({ user: { sub: 1, username: 'admin', email: 'admin@example.com', role: 'admin' } });
+      const result = await controller.me({ user: { sub: 'admin', username: 'admin', email: 'admin@example.com', role: 'admin' } });
 
       expect(authService.getMe).toHaveBeenCalled();
       expect(result).toEqual(mockUserInfo);
-    });
-  });
-
-  describe('getProfile', () => {
-    it('should return full user profile from database', async () => {
-      (authService.getProfile as jest.Mock).mockResolvedValue(mockUserInfo);
-
-      const result = await controller.getProfile({ user: { userId: 1 } });
-
-      expect(authService.getProfile).toHaveBeenCalledWith(1);
-      expect(result).toEqual(mockUserInfo);
-    });
-  });
-
-  describe('updateProfile', () => {
-    it('should update and return user profile', async () => {
-      const updatedProfile = { ...mockUserInfo, firstName: 'Updated' };
-      (authService.updateProfile as jest.Mock).mockResolvedValue(updatedProfile);
-
-      const result = await controller.updateProfile(
-        { user: { userId: 1 } },
-        { firstName: 'Updated', lastName: 'User' },
-      );
-
-      expect(authService.updateProfile).toHaveBeenCalledWith(1, { firstName: 'Updated', lastName: 'User' });
-      expect(result).toEqual(updatedProfile);
     });
   });
 });

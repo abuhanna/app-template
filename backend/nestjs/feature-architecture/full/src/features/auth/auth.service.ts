@@ -177,9 +177,10 @@ export class AuthService {
     const user = await this.userService.findByEmail(email);
     if (user) {
       // In production, send email with reset token
-      // For template purposes, just generate and store token
       const resetToken = crypto.randomUUID();
-      // Store reset token in a real implementation
+      user.passwordResetToken = resetToken;
+      user.passwordResetTokenExpiresAt = new Date(Date.now() + 60 * 60 * 1000); // 1 hour
+      await this.userRepository.save(user);
     }
   }
 
@@ -187,9 +188,16 @@ export class AuthService {
     if (dto.newPassword !== dto.confirmPassword) {
       throw new BadRequestException('Passwords do not match');
     }
-    // In a real implementation, validate the token and reset password
-    // For template purposes, throw bad request for invalid token
-    throw new BadRequestException('Invalid or expired token');
+
+    const user = await this.userRepository.findOneBy({ passwordResetToken: dto.token });
+    if (!user || !user.passwordResetTokenExpiresAt || user.passwordResetTokenExpiresAt < new Date()) {
+      throw new BadRequestException('Invalid or expired token');
+    }
+
+    user.passwordHash = await bcrypt.hash(dto.newPassword, 10);
+    user.passwordResetToken = null;
+    user.passwordResetTokenExpiresAt = null;
+    await this.userRepository.save(user);
   }
 
   private async generateAuthResponse(user: User) {

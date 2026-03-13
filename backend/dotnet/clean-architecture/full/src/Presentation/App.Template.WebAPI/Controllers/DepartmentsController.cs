@@ -74,7 +74,7 @@ public class DepartmentsController : ControllerBase
     /// <summary>
     /// Create a new department
     /// </summary>
-    [Authorize(Roles = "Admin")]
+    [Authorize(Roles = "admin")]
     [HttpPost]
     [ProducesResponseType(typeof(ApiResponse<DepartmentDto>), StatusCodes.Status201Created)]
     [ProducesResponseType(StatusCodes.Status400BadRequest)]
@@ -95,7 +95,7 @@ public class DepartmentsController : ControllerBase
     /// <summary>
     /// Update an existing department
     /// </summary>
-    [Authorize(Roles = "Admin")]
+    [Authorize(Roles = "admin")]
     [HttpPut("{id:long}")]
     [ProducesResponseType(typeof(ApiResponse<DepartmentDto>), StatusCodes.Status200OK)]
     [ProducesResponseType(StatusCodes.Status400BadRequest)]
@@ -119,7 +119,7 @@ public class DepartmentsController : ControllerBase
     /// <summary>
     /// Delete (deactivate) a department
     /// </summary>
-    [Authorize(Roles = "Admin")]
+    [Authorize(Roles = "admin")]
     [HttpDelete("{id:long}")]
     [ProducesResponseType(StatusCodes.Status204NoContent)]
     [ProducesResponseType(StatusCodes.Status400BadRequest)]

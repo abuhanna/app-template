@@ -13,7 +13,7 @@ export class NotificationsService {
   ) {}
 
   async findAll(
-    userId: number,
+    userId: string,
     query: PaginationQueryDto,
     unreadOnly?: string,
   ): Promise<PaginatedResult<any>> {
@@ -58,14 +58,14 @@ export class NotificationsService {
     };
   }
 
-  async getUnreadCount(userId: number): Promise<{ count: number }> {
+  async getUnreadCount(userId: string): Promise<{ count: number }> {
     const count = await this.notificationsRepository.count({
       where: { userId, isRead: false },
     });
     return { count };
   }
 
-  async markAsRead(id: number, userId: number): Promise<void> {
+  async markAsRead(id: number, userId: string): Promise<void> {
     const notification = await this.notificationsRepository.findOneBy({ id });
     if (!notification) {
       throw new NotFoundException('Notification not found');
@@ -74,17 +74,18 @@ export class NotificationsService {
       throw new ForbiddenException('You can only access your own notifications');
     }
     notification.isRead = true;
+    notification.readAt = new Date();
     await this.notificationsRepository.save(notification);
   }
 
-  async markAllAsRead(userId: number): Promise<void> {
+  async markAllAsRead(userId: string): Promise<void> {
     await this.notificationsRepository.update(
       { userId, isRead: false },
-      { isRead: true },
+      { isRead: true, readAt: new Date() },
     );
   }
 
-  async delete(id: number, userId: number): Promise<void> {
+  async delete(id: number, userId: string): Promise<void> {
     const notification = await this.notificationsRepository.findOneBy({ id });
     if (!notification) {
       throw new NotFoundException('Notification not found');
@@ -104,6 +105,7 @@ export class NotificationsService {
       referenceId: notification.referenceId || null,
       referenceType: notification.referenceType || null,
       isRead: notification.isRead,
+      readAt: notification.readAt ? notification.readAt.toISOString() : null,
       createdAt: notification.createdAt.toISOString(),
     };
   }

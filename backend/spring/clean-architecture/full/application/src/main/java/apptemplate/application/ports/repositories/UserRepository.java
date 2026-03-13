@@ -1,6 +1,7 @@
 package apptemplate.application.ports.repositories;
 
 import apptemplate.domain.entities.User;
+import apptemplate.domain.enums.UserRole;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 
@@ -25,7 +26,7 @@ public interface UserRepository {
 
     Page<User> findByFilters(String search, Long departmentId, Boolean isActive, Pageable pageable);
 
-    List<User> findByRole(String role);
+    List<User> findByRole(UserRole role);
 
     long countByDepartmentId(Long departmentId);
 

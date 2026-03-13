@@ -19,10 +19,10 @@ public class NotificationRepository : INotificationRepository
         await _context.SaveChangesAsync();
     }
 
-    public IQueryable<Notification> GetByUserIdQueryable(string userId)
+    public IQueryable<Notification> GetByUserIdQueryable(long userId)
         => _context.Notifications.Where(n => n.UserId == userId);
 
-    public async Task<Notification?> GetByIdAsync(long id, string userId)
+    public async Task<Notification?> GetByIdAsync(long id, long userId)
         => await _context.Notifications.FirstOrDefaultAsync(n => n.Id == id && n.UserId == userId);
 
     public async Task UpdateAsync(Notification notification)
@@ -31,11 +31,13 @@ public class NotificationRepository : INotificationRepository
         await _context.SaveChangesAsync();
     }
 
-    public async Task MarkAllAsReadAsync(string userId)
+    public async Task MarkAllAsReadAsync(long userId)
     {
         await _context.Notifications
             .Where(n => n.UserId == userId && !n.IsRead)
-            .ExecuteUpdateAsync(s => s.SetProperty(n => n.IsRead, true));
+            .ExecuteUpdateAsync(s => s
+                .SetProperty(n => n.IsRead, true)
+                .SetProperty(n => n.ReadAt, DateTime.UtcNow));
     }
 
     public async Task DeleteAsync(Notification notification)

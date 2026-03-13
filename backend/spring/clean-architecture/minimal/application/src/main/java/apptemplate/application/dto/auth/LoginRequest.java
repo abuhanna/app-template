@@ -5,15 +5,15 @@ import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
+/**
+ * Request to validate an external SSO token.
+ * In minimal variant, auth is external -- no username/password login.
+ */
 @Data
 @NoArgsConstructor
 @AllArgsConstructor
 public class LoginRequest {
 
-    private String username;
-    
-    private String email;
-
-    @NotBlank(message = "Password is required")
-    private String password;
+    @NotBlank(message = "Token is required")
+    private String token;
 }

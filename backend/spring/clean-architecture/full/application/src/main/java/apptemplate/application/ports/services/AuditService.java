@@ -10,17 +10,17 @@ public interface AuditService {
     /**
      * Log a create operation.
      */
-    void logCreate(String entityName, String entityId, Object newValues, Long userId);
+    void logCreate(String entityName, String entityId, Object newValues, String userId);
 
     /**
      * Log an update operation.
      */
-    void logUpdate(String entityName, String entityId, Object oldValues, Object newValues, Long userId);
+    void logUpdate(String entityName, String entityId, Object oldValues, Object newValues, String userId);
 
     /**
      * Log a delete operation.
      */
-    void logDelete(String entityName, String entityId, Object oldValues, Long userId);
+    void logDelete(String entityName, String entityId, Object oldValues, String userId);
 
     /**
      * Save an audit log entry.

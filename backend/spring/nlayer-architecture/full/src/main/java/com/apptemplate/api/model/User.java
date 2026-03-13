@@ -23,13 +23,16 @@ public class User {
     @Column(nullable = false, unique = true, length = 255)
     private String email;
 
-    @Column(name = "password_hash")
+    @Column(name = "password_hash", nullable = false)
     private String passwordHash;
 
-    @Column(length = 100)
-    private String name;
+    @Column(name = "first_name", length = 100)
+    private String firstName;
 
-    @Column(nullable = false, length = 20)
+    @Column(name = "last_name", length = 100)
+    private String lastName;
+
+    @Column(nullable = false, length = 50)
     private String role = "user";
 
     @Column(name = "department_id")
@@ -41,11 +44,17 @@ public class User {
     @Column(name = "last_login_at")
     private LocalDateTime lastLoginAt;
 
+    @Column(name = "last_login_ip", length = 45)
+    private String lastLoginIp;
+
     @Column(name = "password_reset_token")
     private String passwordResetToken;
 
-    @Column(name = "password_reset_token_expiry")
-    private LocalDateTime passwordResetTokenExpiry;
+    @Column(name = "password_reset_token_expires_at")
+    private LocalDateTime passwordResetTokenExpiresAt;
+
+    @Column(name = "password_history", columnDefinition = "TEXT")
+    private String passwordHistory;
 
     @CreationTimestamp
     @Column(name = "created_at", updatable = false)
@@ -55,32 +64,28 @@ public class User {
     @Column(name = "updated_at")
     private LocalDateTime updatedAt;
 
-    /**
-     * Gets the first name derived from the name field.
-     */
-    public String getFirstName() {
-        if (name == null) return "";
-        String[] parts = name.split(" ", 2);
-        return parts[0];
-    }
+    @Column(name = "created_by", length = 100)
+    private String createdBy;
+
+    @Column(name = "updated_by", length = 100)
+    private String updatedBy;
 
     /**
-     * Gets the last name derived from the name field.
+     * Gets the full name by combining first name and last name.
      */
-    public String getLastName() {
-        if (name == null || !name.contains(" ")) return "";
-        return name.substring(name.indexOf(" ") + 1);
-    }
-
-    /**
-     * Sets first name and last name by combining them into the name field.
-     */
-    public void setFullName(String firstName, String lastName) {
+    public String getFullName() {
         if (firstName != null && lastName != null && !lastName.isEmpty()) {
-            this.name = firstName + " " + lastName;
-        } else if (firstName != null) {
-            this.name = firstName;
+            return firstName + " " + lastName;
         }
+        return firstName != null ? firstName : "";
+    }
+
+    /**
+     * Records user login timestamp and IP.
+     */
+    public void recordLogin(String ipAddress) {
+        this.lastLoginAt = LocalDateTime.now();
+        this.lastLoginIp = ipAddress;
     }
 
     /**

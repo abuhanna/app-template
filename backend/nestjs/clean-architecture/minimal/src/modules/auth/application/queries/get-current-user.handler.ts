@@ -12,21 +12,21 @@ export class GetCurrentUserHandler implements IQueryHandler<GetCurrentUserQuery>
   ) {}
 
   async execute(query: GetCurrentUserQuery): Promise<UserInfoDto> {
-    const user = await this.userRepository.findById(query.userId);
+    const user = await this.userRepository.findById(Number(query.userId));
 
     if (!user) {
       throw new NotFoundException('User not found');
     }
 
     return new UserInfoDto({
-      id: user.id,
+      id: String(user.id),
       email: user.email,
       username: user.username,
       firstName: user.firstName,
       lastName: user.lastName,
       fullName: user.fullName,
       role: user.role,
-      departmentId: user.departmentId,
+      departmentId: user.departmentId ? String(user.departmentId) : null,
       departmentName: null,
     });
   }

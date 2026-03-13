@@ -14,6 +14,7 @@ public class Notification
     public string? ReferenceId { get; private set; }
     public string? ReferenceType { get; private set; }
     public bool IsRead { get; private set; }
+    public DateTime? ReadAt { get; private set; }
     public DateTime CreatedAt { get; private set; }
 
     public Notification(
@@ -37,5 +38,6 @@ public class Notification
     public void MarkAsRead()
     {
         IsRead = true;
+        ReadAt = DateTime.UtcNow;
     }
 }

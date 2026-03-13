@@ -22,12 +22,12 @@ export class AuditLogRepository implements IAuditLogRepository {
   }
 
   async findByFilters(filters: GetAuditLogsFilters): Promise<AuditLog[]> {
-    const { entityType, entityId, userId, action, fromDate, toDate, page = 1, pageSize = 10 } = filters;
+    const { entityName, entityId, userId, action, fromDate, toDate, page = 1, pageSize = 10 } = filters;
 
     const queryBuilder = this.repository.createQueryBuilder('audit');
 
-    if (entityType) {
-      queryBuilder.andWhere('audit.entityType = :entityType', { entityType });
+    if (entityName) {
+      queryBuilder.andWhere('audit.entityName = :entityName', { entityName });
     }
 
     if (entityId) {
@@ -62,7 +62,7 @@ export class AuditLogRepository implements IAuditLogRepository {
 
   async findByFiltersPaginated(filters: GetAuditLogsFilters): Promise<AuditLogPaginatedResult> {
     const {
-      entityType,
+      entityName,
       entityId,
       userId,
       action,
@@ -77,8 +77,8 @@ export class AuditLogRepository implements IAuditLogRepository {
 
     const queryBuilder = this.repository.createQueryBuilder('audit');
 
-    if (entityType) {
-      queryBuilder.andWhere('audit.entityType = :entityType', { entityType });
+    if (entityName) {
+      queryBuilder.andWhere('audit.entityName = :entityName', { entityName });
     }
 
     if (entityId) {
@@ -104,16 +104,16 @@ export class AuditLogRepository implements IAuditLogRepository {
     // Apply search filter
     if (search) {
       queryBuilder.andWhere(
-        '(audit.entityType ILIKE :search OR audit.entityId ILIKE :search OR audit.action ILIKE :search OR audit.userName ILIKE :search OR audit.details ILIKE :search)',
+        '(audit.entityName ILIKE :search OR audit.entityId ILIKE :search OR audit.action ILIKE :search OR audit.userName ILIKE :search OR audit.details ILIKE :search)',
         { search: `%${search}%` },
       );
     }
 
     // Apply sorting
-    const validSortFields = ['id', 'entityType', 'entityId', 'action', 'userId', 'createdAt'];
+    const validSortFields = ['id', 'entityName', 'entityId', 'action', 'userId', 'createdAt'];
     const sortFieldMap: Record<string, string> = {
       id: 'audit.id',
-      entityType: 'audit.entityType',
+      entityName: 'audit.entityName',
       entityId: 'audit.entityId',
       action: 'audit.action',
       userId: 'audit.userId',
@@ -149,7 +149,7 @@ export class AuditLogRepository implements IAuditLogRepository {
   private toDomain(entity: AuditLogOrmEntity): AuditLog {
     return new AuditLog({
       id: entity.id,
-      entityType: entity.entityType,
+      entityName: entity.entityName,
       entityId: entity.entityId,
       action: entity.action as AuditAction,
       userId: entity.userId,
@@ -166,7 +166,7 @@ export class AuditLogRepository implements IAuditLogRepository {
   private toEntity(domain: AuditLog): Partial<AuditLogOrmEntity> {
     return {
       id: domain.id,
-      entityType: domain.entityType,
+      entityName: domain.entityName,
       entityId: domain.entityId,
       action: domain.action,
       userId: domain.userId,

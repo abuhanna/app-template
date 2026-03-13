@@ -76,15 +76,16 @@ export class FilesService {
     }
 
     const uniqueName = `${crypto.randomUUID()}_${file.originalname}`;
-    const filePath = path.join(uploadDir, uniqueName);
+    const storagePath = path.join(uploadDir, uniqueName);
 
-    fs.writeFileSync(filePath, file.buffer);
+    fs.writeFileSync(storagePath, file.buffer);
 
     const newFile = this.filesRepository.create({
       fileName: uniqueName,
       originalFileName: file.originalname,
       contentType: file.mimetype,
       fileSize: file.size,
+      storagePath,
       description: description || null,
       category: category || null,
       isPublic: isPublic || false,
@@ -113,12 +114,11 @@ export class FilesService {
       throw new ForbiddenException('Private file, not authorized');
     }
 
-    const filePath = path.join('./uploads', fileRecord.fileName);
-    if (!fs.existsSync(filePath)) {
+    if (!fs.existsSync(fileRecord.storagePath)) {
       throw new NotFoundException('File not found on disk');
     }
 
-    const file = fs.createReadStream(filePath);
+    const file = fs.createReadStream(fileRecord.storagePath);
     return {
       file: new StreamableFile(file),
       contentType: fileRecord.contentType,
@@ -132,9 +132,8 @@ export class FilesService {
       throw new NotFoundException('File not found');
     }
 
-    const filePath = path.join('./uploads', fileRecord.fileName);
-    if (fs.existsSync(filePath)) {
-      fs.unlinkSync(filePath);
+    if (fs.existsSync(fileRecord.storagePath)) {
+      fs.unlinkSync(fileRecord.storagePath);
     }
 
     await this.filesRepository.remove(fileRecord);
@@ -147,12 +146,14 @@ export class FilesService {
       originalFileName: file.originalFileName,
       contentType: file.contentType,
       fileSize: Number(file.fileSize),
+      storagePath: file.storagePath,
       description: file.description || null,
       category: file.category || null,
       isPublic: file.isPublic,
       createdAt: file.createdAt.toISOString(),
       updatedAt: file.updatedAt ? file.updatedAt.toISOString() : null,
       createdBy: file.createdBy || null,
+      updatedBy: file.updatedBy || null,
       downloadUrl: file.downloadUrl,
     };
   }

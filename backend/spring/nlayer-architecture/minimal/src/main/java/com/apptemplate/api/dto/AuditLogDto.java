@@ -17,7 +17,7 @@ public class AuditLogDto {
     private String action;
     private String entityType;
     private String entityId;
-    private Long userId;
+    private String userId;
     private String userName;
     private String details;
     private String ipAddress;

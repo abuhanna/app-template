@@ -94,15 +94,15 @@ export class ExportService {
 
   async exportAuditLogs(
     format: string,
-    entityType?: string,
+    entityName?: string,
     action?: string,
     fromDate?: string,
     toDate?: string,
   ): Promise<{ buffer: Buffer; contentType: string; fileName: string }> {
     const qb = this.auditLogRepository.createQueryBuilder('audit');
 
-    if (entityType) {
-      qb.andWhere('audit.entityType = :entityType', { entityType });
+    if (entityName) {
+      qb.andWhere('audit.entityName = :entityName', { entityName });
     }
 
     if (action) {
@@ -122,7 +122,7 @@ export class ExportService {
     const data = logs.map(l => ({
       ID: l.id,
       Action: l.action,
-      'Entity Type': l.entityType,
+      'Entity Name': l.entityName,
       'Entity ID': l.entityId || '',
       'User ID': l.userId || '',
       'User Name': l.userName || '',

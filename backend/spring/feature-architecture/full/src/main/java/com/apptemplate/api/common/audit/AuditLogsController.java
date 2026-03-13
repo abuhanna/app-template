@@ -32,9 +32,9 @@ public class AuditLogsController {
             @Parameter(description = "Search") @RequestParam(required = false) String search,
             @Parameter(description = "Column to sort by") @RequestParam(required = false) String sortBy,
             @Parameter(description = "Sort order: asc or desc") @RequestParam(defaultValue = "desc") String sortOrder,
-            @Parameter(description = "Filter by entity type") @RequestParam(required = false) String entityType,
+            @Parameter(description = "Filter by entity name") @RequestParam(required = false) String entityName,
             @Parameter(description = "Filter by entity ID") @RequestParam(required = false) String entityId,
-            @Parameter(description = "Filter by user ID") @RequestParam(required = false) Long userId,
+            @Parameter(description = "Filter by user ID") @RequestParam(required = false) String userId,
             @Parameter(description = "Filter by action") @RequestParam(required = false) String action,
             @Parameter(description = "Filter from date (ISO format)") @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE_TIME) LocalDateTime fromDate,
             @Parameter(description = "Filter to date (ISO format)") @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE_TIME) LocalDateTime toDate
@@ -47,7 +47,7 @@ public class AuditLogsController {
         PageRequest pageRequest = PageRequest.of(page - 1, pageSize, sort);
 
         Page<AuditLogDto> auditLogs = auditLogRepository.findWithFilters(
-                search, entityType, entityId, userId, action, fromDate, toDate, pageRequest
+                search, entityName, entityId, userId, action, fromDate, toDate, pageRequest
         ).map(AuditLogDto::fromEntity);
 
         return ResponseEntity.ok(ApiResponse.success(PagedResult.fromPage(auditLogs), "Audit logs retrieved successfully"));

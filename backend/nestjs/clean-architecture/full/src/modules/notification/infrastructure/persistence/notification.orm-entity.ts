@@ -13,19 +13,19 @@ export class NotificationOrmEntity {
   @JoinColumn({ name: 'user_id' })
   user?: UserOrmEntity;
 
-  @Column()
+  @Column({ length: 200 })
   title: string;
 
   @Column({ type: 'text' })
   message: string;
 
-  @Column()
+  @Column({ length: 50, default: "'info'" })
   type: string;
 
-  @Column({ name: 'reference_id', type: 'varchar', nullable: true })
+  @Column({ name: 'reference_id', type: 'varchar', length: 50, nullable: true })
   referenceId: string | null;
 
-  @Column({ name: 'reference_type', type: 'varchar', nullable: true })
+  @Column({ name: 'reference_type', type: 'varchar', length: 50, nullable: true })
   referenceType: string | null;
 
   @Column({ name: 'is_read', default: false })

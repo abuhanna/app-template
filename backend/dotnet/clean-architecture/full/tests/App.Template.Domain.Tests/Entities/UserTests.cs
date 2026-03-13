@@ -12,7 +12,8 @@ public class UserTests
             username: "testuser",
             email: "test@example.com",
             passwordHash: "hashedPassword",
-            name: "Test User",
+            firstName: "Test",
+            lastName: "User",
             role: "User",
             departmentId: 1);
 
@@ -20,7 +21,8 @@ public class UserTests
         Assert.Equal("testuser", user.Username);
         Assert.Equal("test@example.com", user.Email);
         Assert.Equal("hashedPassword", user.PasswordHash);
-        Assert.Equal("Test User", user.Name);
+        Assert.Equal("Test", user.FirstName);
+        Assert.Equal("User", user.LastName);
         Assert.Equal("User", user.Role);
         Assert.Equal(1, user.DepartmentId);
         Assert.True(user.IsActive);
@@ -38,7 +40,8 @@ public class UserTests
 
         // Assert
         Assert.Equal("User", user.Role);
-        Assert.Null(user.Name);
+        Assert.Null(user.FirstName);
+        Assert.Null(user.LastName);
         Assert.Null(user.DepartmentId);
     }
 
@@ -46,13 +49,14 @@ public class UserTests
     public void Update_ShouldUpdateProperties()
     {
         // Arrange
-        var user = new User("testuser", "test@example.com", "hash", "Old Name", "User", 1);
+        var user = new User("testuser", "test@example.com", "hash", "Old", "Name", "User", 1);
 
         // Act
-        user.Update("New Name", "new@example.com", "Admin", 2);
+        user.Update("New", "Name", "new@example.com", "Admin", 2);
 
         // Assert
-        Assert.Equal("New Name", user.Name);
+        Assert.Equal("New", user.FirstName);
+        Assert.Equal("Name", user.LastName);
         Assert.Equal("new@example.com", user.Email);
         Assert.Equal("Admin", user.Role);
         Assert.Equal(2, user.DepartmentId);
@@ -63,13 +67,14 @@ public class UserTests
     public void Update_ShouldAllowNullValues()
     {
         // Arrange
-        var user = new User("testuser", "test@example.com", "hash", "Name", "User", 1);
+        var user = new User("testuser", "test@example.com", "hash", "First", "Last", "User", 1);
 
-        // Act - Update with nulls (should keep existing values for email/name/role)
-        user.Update(null, null, null, null);
+        // Act - Update with nulls (should keep existing values for email/firstName/lastName/role)
+        user.Update(null, null, null, null, null);
 
-        // Assert - email, name, role should remain unchanged, departmentId becomes null
-        Assert.Equal("Name", user.Name);
+        // Assert - email, firstName, lastName, role should remain unchanged, departmentId becomes null
+        Assert.Equal("First", user.FirstName);
+        Assert.Equal("Last", user.LastName);
         Assert.Equal("test@example.com", user.Email);
         Assert.Equal("User", user.Role);
         Assert.Null(user.DepartmentId);
@@ -147,7 +152,7 @@ public class UserTests
 
         // Assert
         Assert.Equal(token, user.PasswordResetToken);
-        Assert.Equal(expiry, user.PasswordResetTokenExpiry);
+        Assert.Equal(expiry, user.PasswordResetTokenExpiresAt);
     }
 
     [Fact]
@@ -162,7 +167,7 @@ public class UserTests
 
         // Assert
         Assert.Null(user.PasswordResetToken);
-        Assert.Null(user.PasswordResetTokenExpiry);
+        Assert.Null(user.PasswordResetTokenExpiresAt);
     }
 
     [Fact]

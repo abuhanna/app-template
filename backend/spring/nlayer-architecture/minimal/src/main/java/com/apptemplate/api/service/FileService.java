@@ -49,7 +49,7 @@ public class FileService {
             uploadedFile.setDescription(description);
             uploadedFile.setCategory(category);
             uploadedFile.setPublic(isPublic);
-            uploadedFile.setCreatedBy(getCurrentUserId());
+            uploadedFile.setCreatedBy(getCurrentUserName());
 
             UploadedFile saved = fileRepository.save(uploadedFile);
             return mapToDto(saved);
@@ -131,13 +131,9 @@ public class FileService {
                 .build();
     }
 
-    private Long getCurrentUserId() {
+    private String getCurrentUserName() {
         try {
-            // In the minimal variant, authentication stores UserDetails as principal
-            // We need to look up the user ID from the email
-            String email = SecurityContextHolder.getContext().getAuthentication().getName();
-            // For simplicity, we don't look up the user here - createdBy may be null
-            return null;
+            return SecurityContextHolder.getContext().getAuthentication().getName();
         } catch (Exception ignored) {
         }
         return null;

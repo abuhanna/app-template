@@ -31,9 +31,10 @@ public class GetAuditLogByIdQueryHandler : IRequestHandler<GetAuditLogByIdQuery,
             EntityId = auditLog.EntityId,
             Action = auditLog.Action.ToString(),
             UserId = auditLog.UserId,
-            UserName = auditLog.UserId,
-            Details = auditLog.NewValues,
-            CreatedAt = auditLog.Timestamp
+            UserName = auditLog.UserName,
+            Details = auditLog.Details,
+            IpAddress = auditLog.IpAddress,
+            CreatedAt = auditLog.CreatedAt
         };
     }
 }

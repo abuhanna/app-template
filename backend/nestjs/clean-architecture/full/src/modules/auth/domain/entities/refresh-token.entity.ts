@@ -4,8 +4,7 @@ export interface CreateRefreshTokenProps {
   userId: number;
   token: string;
   expiresAt: Date;
-  deviceInfo?: string | null;
-  ipAddress?: string | null;
+  createdByIp?: string | null;
 }
 
 export class RefreshToken {
@@ -14,8 +13,8 @@ export class RefreshToken {
     public readonly userId: number,
     public readonly token: string,
     public readonly expiresAt: Date,
-    public deviceInfo: string | null,
-    public ipAddress: string | null,
+    public createdByIp: string | null,
+    public revokedByIp: string | null,
     public isRevoked: boolean,
     public revokedAt: Date | null,
     public replacedByToken: string | null,
@@ -28,8 +27,8 @@ export class RefreshToken {
       props.userId,
       props.token,
       props.expiresAt,
-      props.deviceInfo ?? null,
-      props.ipAddress ?? null,
+      props.createdByIp ?? null,
+      null,
       false,
       null,
       null,
@@ -42,8 +41,8 @@ export class RefreshToken {
     userId: number,
     token: string,
     expiresAt: Date,
-    deviceInfo: string | null,
-    ipAddress: string | null,
+    createdByIp: string | null,
+    revokedByIp: string | null,
     isRevoked: boolean,
     revokedAt: Date | null,
     replacedByToken: string | null,
@@ -54,8 +53,8 @@ export class RefreshToken {
       userId,
       token,
       expiresAt,
-      deviceInfo,
-      ipAddress,
+      createdByIp,
+      revokedByIp,
       isRevoked,
       revokedAt,
       replacedByToken,
@@ -63,11 +62,14 @@ export class RefreshToken {
     );
   }
 
-  revoke(replacedByToken?: string): void {
+  revoke(replacedByToken?: string, revokedByIp?: string): void {
     this.isRevoked = true;
     this.revokedAt = new Date();
     if (replacedByToken) {
       this.replacedByToken = replacedByToken;
+    }
+    if (revokedByIp) {
+      this.revokedByIp = revokedByIp;
     }
   }
 

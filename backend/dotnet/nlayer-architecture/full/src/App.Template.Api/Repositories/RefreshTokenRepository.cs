@@ -29,5 +29,5 @@ public class RefreshTokenRepository : IRefreshTokenRepository
     }
 
     public async Task<IEnumerable<RefreshToken>> GetActiveByUserIdAsync(long userId)
-        => await _context.RefreshTokens.Where(rt => rt.UserId == userId && rt.RevokedAt == null && rt.ExpiresAt > DateTime.UtcNow).ToListAsync();
+        => await _context.RefreshTokens.Where(rt => rt.UserId == userId && !rt.IsRevoked && rt.ExpiresAt > DateTime.UtcNow).ToListAsync();
 }

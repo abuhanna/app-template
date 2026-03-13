@@ -8,11 +8,9 @@ import { FilesModule } from './modules/files/files.module';
 import { HealthModule } from './modules/health/health.module';
 import { NotificationsModule } from './modules/notifications/notifications.module';
 import { AuditLogsModule } from './modules/audit-logs/audit-logs.module';
-import { User } from './entities/user.entity';
 import { UploadedFile } from './entities/uploaded-file.entity';
 import { AuditLog } from './entities/audit-log.entity';
 import { Notification } from './entities/notification.entity';
-import { RefreshToken } from './entities/refresh-token.entity';
 import { AuditSubscriber } from './subscribers/audit.subscriber';
 import { SeedService } from './services/seed.service';
 
@@ -37,12 +35,11 @@ import { SeedService } from './services/seed.service';
       username: process.env.DB_USERNAME || 'postgres',
       password: process.env.DB_PASSWORD || 'postgres',
       database: process.env.DB_NAME || 'apptemplate',
-      entities: [User, UploadedFile, AuditLog, Notification, RefreshToken],
+      entities: [UploadedFile, AuditLog, Notification],
       migrations: [__dirname + '/migrations/*{.ts,.js}'],
       synchronize: false,
       migrationsRun: true,
     }),
-    TypeOrmModule.forFeature([User]),
     AuthModule,
     FilesModule,
     HealthModule,

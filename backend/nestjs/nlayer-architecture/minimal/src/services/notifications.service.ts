@@ -12,7 +12,7 @@ export class NotificationsService {
   ) {}
 
   async findAllByUser(
-    userId: number,
+    userId: string,
     page: number,
     pageSize: number,
     sortBy?: string,
@@ -50,13 +50,13 @@ export class NotificationsService {
     };
   }
 
-  async getUnreadCount(userId: number): Promise<number> {
+  async getUnreadCount(userId: string): Promise<number> {
     return this.notificationsRepository.count({
       where: { userId, isRead: false },
     });
   }
 
-  async findOne(id: number, userId: number): Promise<any> {
+  async findOne(id: number, userId: string): Promise<any> {
     const notification = await this.notificationsRepository.findOneBy({ id });
     if (!notification) {
       throw new NotFoundException('Notification not found');
@@ -67,7 +67,7 @@ export class NotificationsService {
     return this.mapToResponse(notification);
   }
 
-  async markAsRead(id: number, userId: number): Promise<void> {
+  async markAsRead(id: number, userId: string): Promise<void> {
     const notification = await this.notificationsRepository.findOneBy({ id });
     if (!notification) {
       throw new NotFoundException('Notification not found');
@@ -76,17 +76,18 @@ export class NotificationsService {
       throw new ForbiddenException('You can only access your own notifications');
     }
     notification.isRead = true;
+    notification.readAt = new Date();
     await this.notificationsRepository.save(notification);
   }
 
-  async markAllAsRead(userId: number): Promise<void> {
+  async markAllAsRead(userId: string): Promise<void> {
     await this.notificationsRepository.update(
       { userId, isRead: false },
-      { isRead: true },
+      { isRead: true, readAt: new Date() },
     );
   }
 
-  async delete(id: number, userId: number): Promise<void> {
+  async delete(id: number, userId: string): Promise<void> {
     const notification = await this.notificationsRepository.findOneBy({ id });
     if (!notification) {
       throw new NotFoundException('Notification not found');
@@ -106,6 +107,7 @@ export class NotificationsService {
       referenceId: n.referenceId || null,
       referenceType: n.referenceType || null,
       isRead: n.isRead,
+      readAt: n.readAt ? n.readAt.toISOString() : null,
       createdAt: n.createdAt?.toISOString(),
     };
   }

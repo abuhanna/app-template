@@ -11,6 +11,7 @@ import java.time.LocalDateTime;
 
 /**
  * Notification entity for real-time notifications.
+ * In minimal variant, userId is a String from JWT claims (no users table).
  */
 @Getter
 @Setter
@@ -20,20 +21,20 @@ import java.time.LocalDateTime;
 public class Notification {
 
     private Long id;
-    private Long userId;
+    private String userId;
     private String title;
     private String message;
     private NotificationType type;
-    private String link;
     private String referenceId;
     private String referenceType;
     private boolean read;
+    private LocalDateTime readAt;
     private LocalDateTime createdAt;
 
     /**
      * Creates a new notification.
      */
-    public Notification(Long userId, String title, String message, NotificationType type,
+    public Notification(String userId, String title, String message, NotificationType type,
                         String referenceId, String referenceType) {
         this.userId = userId;
         this.title = title;
@@ -50,5 +51,6 @@ public class Notification {
      */
     public void markAsRead() {
         this.read = true;
+        this.readAt = LocalDateTime.now();
     }
 }

@@ -4,13 +4,14 @@ import java.util.Optional;
 
 /**
  * Port interface for accessing current user information.
+ * In minimal variant, user ID is a String from JWT claims (no users table).
  */
 public interface CurrentUserService {
 
     /**
-     * Gets the current user's ID from the security context.
+     * Gets the current user's ID from the security context (String from JWT claims).
      */
-    Optional<Long> getCurrentUserId();
+    Optional<String> getCurrentUserId();
 
     /**
      * Gets the current user's username from the security context.
