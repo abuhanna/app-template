@@ -21,6 +21,9 @@ public static class ServiceCollectionExtensions
         // Notifications Feature
         services.AddScoped<INotificationService, NotificationService>();
 
+        // Export Feature
+        services.AddScoped<IExportService, ExportService>();
+
         return services;
     }
 }

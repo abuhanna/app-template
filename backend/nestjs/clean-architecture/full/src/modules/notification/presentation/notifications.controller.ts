@@ -17,7 +17,7 @@ import {
   MarkNotificationReadCommand,
   MarkAllNotificationsReadCommand,
 } from '../application/commands';
-import { GetNotificationsQuery } from '../application/queries';
+import { GetNotificationsQuery, GetUnreadCountQuery } from '../application/queries';
 
 @ApiTags('Notifications')
 @Controller('notifications')
@@ -34,6 +34,13 @@ export class NotificationsController {
   @ApiResponse({ status: 200, type: [NotificationDto] })
   async findAll(@CurrentUser() user: CurrentUserPayload): Promise<NotificationDto[]> {
     return this.queryBus.execute(new GetNotificationsQuery(user.sub));
+  }
+
+  @Get('unread-count')
+  @ApiOperation({ summary: 'Get unread notifications count' })
+  @ApiResponse({ status: 200, description: 'Unread count' })
+  async getUnreadCount(@CurrentUser() user: CurrentUserPayload): Promise<{ count: number }> {
+    return this.queryBus.execute(new GetUnreadCountQuery(user.sub));
   }
 
   @Post(':id/read')

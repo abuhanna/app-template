@@ -1,4 +1,6 @@
 import { Module } from '@nestjs/common';
+import { APP_GUARD } from '@nestjs/core';
+import { ThrottlerModule, ThrottlerGuard } from '@nestjs/throttler';
 import { ConfigModule } from '@nestjs/config';
 import { TypeOrmModule } from '@nestjs/typeorm';
 import { LoggerModule } from 'nestjs-pino';
@@ -8,6 +10,7 @@ import { FilesModule } from './features/files/files.module';
 import { HealthModule } from './features/health/health.module';
 import { NotificationsModule } from './features/notifications/notifications.module';
 import { AuditLogsModule } from './features/audit-logs/audit-logs.module';
+import { ExportModule } from './features/export/export.module';
 import { UploadedFile } from './features/files/uploaded-file.entity';
 import { AuditLog } from './common/audit/audit-log.entity';
 import { Notification } from './features/notifications/notification.entity';
@@ -16,6 +19,10 @@ import { AuditSubscriber } from './common/audit/audit.subscriber';
 @Module({
   imports: [
     ConfigModule.forRoot({ isGlobal: true }),
+    ThrottlerModule.forRoot([
+      { name: 'short', ttl: 1000, limit: 10 },
+      { name: 'medium', ttl: 60000, limit: 100 },
+    ]),
     LoggerModule.forRoot({
       pinoHttp: {
         genReqId: (req, res) => {
@@ -44,7 +51,14 @@ import { AuditSubscriber } from './common/audit/audit.subscriber';
     HealthModule,
     NotificationsModule,
     AuditLogsModule,
+    ExportModule,
   ],
-  providers: [AuditSubscriber],
+  providers: [
+    {
+      provide: APP_GUARD,
+      useClass: ThrottlerGuard,
+    },
+    AuditSubscriber,
+  ],
 })
 export class AppModule {}

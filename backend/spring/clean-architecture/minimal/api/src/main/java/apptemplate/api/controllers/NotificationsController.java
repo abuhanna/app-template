@@ -13,6 +13,8 @@ import org.springframework.data.web.PageableDefault;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
+import java.util.Map;
+
 
 
 @RestController
@@ -22,8 +24,10 @@ import org.springframework.web.bind.annotation.*;
 public class NotificationsController {
 
     private final GetUserNotificationsUseCase getUserNotificationsUseCase;
+    private final GetUnreadNotificationCountUseCase getUnreadNotificationCountUseCase;
     private final MarkNotificationAsReadUseCase markNotificationAsReadUseCase;
     private final MarkAllNotificationsAsReadUseCase markAllNotificationsAsReadUseCase;
+    private final DeleteNotificationUseCase deleteNotificationUseCase;
 
     @GetMapping
     @Operation(summary = "Get my notifications", description = "Get paginated list of notifications for authenticated user")
@@ -35,17 +39,31 @@ public class NotificationsController {
         return ResponseEntity.ok(PagedResponse.from(notifications));
     }
 
+    @GetMapping("/unread-count")
+    @Operation(summary = "Get unread notification count", description = "Get count of unread notifications for authenticated user")
+    public ResponseEntity<ApiResponse<Map<String, Long>>> getUnreadCount() {
+        long count = getUnreadNotificationCountUseCase.execute();
+        return ResponseEntity.ok(ApiResponse.success(Map.of("count", count), "Unread count retrieved successfully"));
+    }
+
     @PutMapping("/{id}/read")
     @Operation(summary = "Mark notification as read", description = "Mark a specific notification as read")
     public ResponseEntity<Void> markAsRead(@PathVariable Long id) {
         markNotificationAsReadUseCase.execute(id);
-        return ResponseEntity.ok().build();
+        return ResponseEntity.noContent().build();
     }
 
     @PutMapping("/read-all")
     @Operation(summary = "Mark all as read", description = "Mark all notifications as read")
     public ResponseEntity<Void> markAllAsRead() {
         markAllNotificationsAsReadUseCase.execute();
-        return ResponseEntity.ok().build();
+        return ResponseEntity.noContent().build();
+    }
+
+    @DeleteMapping("/{id}")
+    @Operation(summary = "Delete notification", description = "Delete a specific notification")
+    public ResponseEntity<Void> deleteNotification(@PathVariable Long id) {
+        deleteNotificationUseCase.execute(id);
+        return ResponseEntity.noContent().build();
     }
 }

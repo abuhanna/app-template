@@ -1,5 +1,7 @@
 using System.Text;
 
+using AspNetCoreRateLimit;
+
 using Serilog;
 
 using App.Template.Api.Common.Configuration;
@@ -42,6 +44,11 @@ builder.Services.AddControllers()
 // Add HttpContextAccessor for ICurrentUserService
 builder.Services.AddHttpContextAccessor();
 builder.Services.AddMemoryCache();
+
+// Configure Rate Limiting
+builder.Services.Configure<IpRateLimitOptions>(builder.Configuration.GetSection("IpRateLimiting"));
+builder.Services.AddSingleton<IRateLimitConfiguration, RateLimitConfiguration>();
+builder.Services.AddInMemoryRateLimiting();
 
 // Add DbContext (EF Core + PostgreSQL)
 var connectionString = builder.Configuration.GetConnectionString("DefaultConnection")
@@ -234,6 +241,9 @@ if (app.Environment.IsDevelopment() || app.Environment.IsStaging())
 // Middleware pipeline (order matters)
 app.UseCorrelationId();
 app.UseMiddleware<ExceptionHandlerMiddleware>();
+
+// Add Rate Limiting middleware
+app.UseIpRateLimiting();
 
 // HTTPS redirection in production only
 if (app.Environment.IsProduction())

@@ -1,5 +1,7 @@
 using System.Text;
 
+using AspNetCoreRateLimit;
+
 using Serilog;
 
 using FluentValidation;
@@ -47,6 +49,11 @@ builder.Services.AddControllers()
 // Add HttpContextAccessor for ICurrentUserService
 builder.Services.AddHttpContextAccessor();
 builder.Services.AddMemoryCache();
+
+// Configure Rate Limiting
+builder.Services.Configure<IpRateLimitOptions>(builder.Configuration.GetSection("IpRateLimiting"));
+builder.Services.AddSingleton<IRateLimitConfiguration, RateLimitConfiguration>();
+builder.Services.AddInMemoryRateLimiting();
 
 // Add DbContext (EF Core)
 // The connection string can be configured via appsettings.json or environment variables
@@ -133,6 +140,7 @@ builder.Services.AddHttpClient();
 builder.Services.AddScoped<ISsoAuthService, SsoAuthService>();
 builder.Services.AddScoped<INotificationService, NotificationService>();
 builder.Services.AddScoped<IFileStorageService, FileStorageService>();
+builder.Services.AddScoped<IExportService, ExportService>();
 
 // Register Correlation ID accessor for request tracing
 builder.Services.AddScoped<ICorrelationIdAccessor, CorrelationIdAccessor>();
@@ -263,6 +271,9 @@ app.UseCorrelationId();
 
 // Add middleware for Exception Handling (recommended for production)
 app.UseMiddleware<ExceptionHandlerMiddleware>();
+
+// Add Rate Limiting middleware
+app.UseIpRateLimiting();
 
 // Configure HTTPS Redirection
 // Active only in Production or if ASPNETCORE_URLS contains https

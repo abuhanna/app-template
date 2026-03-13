@@ -1,5 +1,6 @@
 import { Module } from '@nestjs/common';
-import { APP_INTERCEPTOR } from '@nestjs/core';
+import { APP_GUARD, APP_INTERCEPTOR } from '@nestjs/core';
+import { ThrottlerModule, ThrottlerGuard } from '@nestjs/throttler';
 import { UserContextInterceptor } from './core/interceptors/user-context.interceptor';
 import { LoggerModule } from 'nestjs-pino';
 import * as crypto from 'crypto';
@@ -10,6 +11,7 @@ import { AuthModule } from './modules/auth/auth.module';
 import { NotificationModule } from './modules/notification/notification.module';
 import { FileManagementModule } from './modules/file-management/file-management.module';
 import { AuditLogModule } from './modules/audit-log/audit-log.module';
+import { ExportModule } from './modules/export/export.module';
 import { HealthModule } from './modules/health/health.module';
 import { SeederModule } from './core/database/seed.module';
 
@@ -30,6 +32,10 @@ import { SeederModule } from './core/database/seed.module';
         autoLogging: true,
       },
     }),
+    ThrottlerModule.forRoot([
+      { name: 'short', ttl: 1000, limit: 10 },
+      { name: 'medium', ttl: 60000, limit: 100 },
+    ]),
     ClsModule.forRoot({
       global: true,
       middleware: { mount: true },
@@ -41,8 +47,13 @@ import { SeederModule } from './core/database/seed.module';
     NotificationModule,
     FileManagementModule,
     AuditLogModule,
+    ExportModule,
   ],
   providers: [
+    {
+      provide: APP_GUARD,
+      useClass: ThrottlerGuard,
+    },
     {
       provide: APP_INTERCEPTOR,
       useClass: UserContextInterceptor,

@@ -22,11 +22,11 @@ import {
   MarkNotificationReadHandler,
   MarkAllNotificationsReadHandler,
 } from './application/commands';
-import { GetNotificationsHandler } from './application/queries';
+import { GetNotificationsHandler, GetUnreadCountHandler } from './application/queries';
 
 const CommandHandlers = [MarkNotificationReadHandler, MarkAllNotificationsReadHandler];
 
-const QueryHandlers = [GetNotificationsHandler];
+const QueryHandlers = [GetNotificationsHandler, GetUnreadCountHandler];
 
 @Module({
   imports: [

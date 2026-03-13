@@ -52,6 +52,17 @@ jwt:
 app:
   frontend-url: ${FRONTEND_URL:http://localhost:3000}
 
+rate-limit:
+  enabled: ${RATE_LIMIT_ENABLED:true}
+  general:
+    capacity: ${RATE_LIMIT_GENERAL_CAPACITY:100}
+    refill-tokens: ${RATE_LIMIT_GENERAL_REFILL:100}
+    refill-duration-seconds: ${RATE_LIMIT_GENERAL_DURATION:60}
+  auth:
+    capacity: ${RATE_LIMIT_AUTH_CAPACITY:10}
+    refill-tokens: ${RATE_LIMIT_AUTH_REFILL:10}
+    refill-duration-seconds: ${RATE_LIMIT_AUTH_DURATION:60}
+
 springdoc:
   api-docs:
     path: /v3/api-docs
