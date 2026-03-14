@@ -40,6 +40,15 @@ export async function generateProject(config: ProjectConfig): Promise<void> {
         }
         const destPath = destFolder ? path.join(absolutePath, destFolder) : absolutePath;
         await downloadBackendTemplate(REPO, config.backend, config.architecture, config.variant, destPath);
+
+        // Ensure mvnw has execute permission (degit doesn't preserve Unix file modes)
+        if (config.backend === 'spring' && process.platform !== 'win32') {
+          const mvnwPath = path.join(destPath, 'mvnw');
+          if (fs.existsSync(mvnwPath)) {
+            fs.chmodSync(mvnwPath, 0o755);
+          }
+        }
+
         spinner.stop(`Backend template downloaded (${formatElapsed(stepStart)})`);
       } catch (error) {
         spinner.stop('Backend download failed');

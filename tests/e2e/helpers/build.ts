@@ -36,7 +36,7 @@ export function runCommand(
 
     const proc = spawn(resolvedCommand, args, {
       cwd,
-      shell: IS_WIN,
+      shell: true,
       env: { ...process.env, CI: 'true' },
       stdio: ['ignore', 'pipe', 'pipe'],
     });

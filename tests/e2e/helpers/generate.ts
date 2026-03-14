@@ -59,6 +59,14 @@ export async function generateLocalProject(opts: GenerateOptions): Promise<void>
     }
 
     fs.cpSync(srcPath, backendDest, { recursive: true, filter: cpFilter });
+
+    // Ensure mvnw has execute permission (git on Windows doesn't preserve Unix file modes)
+    if (config.backend === 'spring' && process.platform !== 'win32') {
+      const mvnwPath = path.join(backendDest, 'mvnw');
+      if (fs.existsSync(mvnwPath)) {
+        fs.chmodSync(mvnwPath, 0o755);
+      }
+    }
   }
 
   // Step 1b: Copy frontend template
