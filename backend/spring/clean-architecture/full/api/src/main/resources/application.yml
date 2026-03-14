@@ -1,0 +1,109 @@
+server:
+  port: ${SERVER_PORT:5100}
+
+spring:
+  application:
+    name: AppTemplate
+
+  jackson:
+    mapper:
+      accept-case-insensitive-enums: true
+
+  datasource:
+    url: jdbc:postgresql://${DB_HOST:localhost}:${DB_PORT:5432}/${DB_NAME:apptemplate}
+    username: ${DB_USER:apptemplate}
+    password: ${DB_PASSWORD:apptemplate123}
+    driver-class-name: org.postgresql.Driver
+    hikari:
+      maximum-pool-size: 10
+      minimum-idle: 2
+      idle-timeout: 30000
+      connection-timeout: 30000
+
+  jpa:
+    hibernate:
+      ddl-auto: validate
+    show-sql: false
+    properties:
+      hibernate:
+        dialect: org.hibernate.dialect.PostgreSQLDialect
+        format_sql: true
+
+  flyway:
+    enabled: true
+    locations: classpath:db/migration
+    baseline-on-migrate: true
+
+  mail:
+    host: ${MAIL_HOST:localhost}
+    port: ${MAIL_PORT:1025}
+    username: ${MAIL_USERNAME:}
+    password: ${MAIL_PASSWORD:}
+    from: ${MAIL_FROM:noreply@apptemplate.local}
+    properties:
+      mail:
+        smtp:
+          auth: ${MAIL_SMTP_AUTH:false}
+          starttls:
+            enable: ${MAIL_SMTP_STARTTLS:false}
+
+jwt:
+  secret: ${JWT_SECRET:your-256-bit-secret-key-minimum-32-characters-long-for-hs256}
+  expiration-ms: ${JWT_EXPIRATION_MS:900000}
+  issuer: ${JWT_ISSUER:AppTemplate}
+  audience: ${JWT_AUDIENCE:AppTemplate}
+
+app:
+  frontend-url: ${FRONTEND_URL:http://localhost:3000}
+
+rate-limit:
+  enabled: ${RATE_LIMIT_ENABLED:true}
+  general:
+    capacity: ${RATE_LIMIT_GENERAL_CAPACITY:100}
+    refill-tokens: ${RATE_LIMIT_GENERAL_REFILL:100}
+    refill-duration-seconds: ${RATE_LIMIT_GENERAL_DURATION:60}
+  auth:
+    capacity: ${RATE_LIMIT_AUTH_CAPACITY:10}
+    refill-tokens: ${RATE_LIMIT_AUTH_REFILL:10}
+    refill-duration-seconds: ${RATE_LIMIT_AUTH_DURATION:60}
+
+springdoc:
+  api-docs:
+    path: /v3/api-docs
+  swagger-ui:
+    path: /swagger-ui.html
+    operations-sorter: method
+
+logging:
+  level:
+    root: INFO
+    apptemplate: DEBUG
+    org.springframework.security: INFO
+    org.hibernate.SQL: WARN
+
+---
+spring:
+  config:
+    activate:
+      on-profile: development
+
+  jpa:
+    show-sql: true
+
+logging:
+  level:
+    org.hibernate.SQL: DEBUG
+
+---
+spring:
+  config:
+    activate:
+      on-profile: production
+
+  jpa:
+    show-sql: false
+
+logging:
+  level:
+    root: WARN
+    apptemplate: INFO

@@ -1,0 +1,101 @@
+server:
+  port: ${SERVER_PORT:5100}
+
+spring:
+  application:
+    name: AppTemplate
+
+  jackson:
+    mapper:
+      accept-case-insensitive-enums: true
+
+  datasource:
+    url: jdbc:postgresql://${DB_HOST:localhost}:${DB_PORT:5432}/${DB_NAME:apptemplate}
+    username: ${DB_USER:apptemplate}
+    password: ${DB_PASSWORD:apptemplate123}
+    driver-class-name: org.postgresql.Driver
+    hikari:
+      maximum-pool-size: 10
+      minimum-idle: 2
+      idle-timeout: 30000
+      connection-timeout: 30000
+
+  jpa:
+    hibernate:
+      ddl-auto: validate
+    show-sql: false
+    properties:
+      hibernate:
+        dialect: org.hibernate.dialect.PostgreSQLDialect
+        format_sql: true
+
+  flyway:
+    enabled: true
+    locations: classpath:db/migration
+    baseline-on-migrate: true
+
+jwt:
+  secret: ${JWT_SECRET:404E635266556A586E3272357538782F413F4428472B4B6250645367566B5970}
+  expiration: ${JWT_EXPIRATION:900}
+  refresh-expiration-days: ${JWT_REFRESH_EXPIRATION_DAYS:7}
+
+rate-limit:
+  enabled: ${RATE_LIMIT_ENABLED:true}
+  general:
+    capacity: ${RATE_LIMIT_GENERAL_CAPACITY:100}
+    refill-tokens: ${RATE_LIMIT_GENERAL_REFILL:100}
+    refill-duration-seconds: ${RATE_LIMIT_GENERAL_DURATION:60}
+  auth:
+    capacity: ${RATE_LIMIT_AUTH_CAPACITY:10}
+    refill-tokens: ${RATE_LIMIT_AUTH_REFILL:10}
+    refill-duration-seconds: ${RATE_LIMIT_AUTH_DURATION:60}
+
+springdoc:
+  api-docs:
+    path: /v3/api-docs
+  swagger-ui:
+    path: /swagger-ui.html
+    operations-sorter: method
+
+management:
+  endpoints:
+    web:
+      exposure:
+        include: "*"
+  endpoint:
+    health:
+      show-details: always
+
+logging:
+  level:
+    root: INFO
+    com.apptemplate: DEBUG
+    org.springframework.security: INFO
+    org.hibernate.SQL: WARN
+
+---
+spring:
+  config:
+    activate:
+      on-profile: development
+
+  jpa:
+    show-sql: true
+
+logging:
+  level:
+    org.hibernate.SQL: DEBUG
+
+---
+spring:
+  config:
+    activate:
+      on-profile: production
+
+  jpa:
+    show-sql: false
+
+logging:
+  level:
+    root: WARN
+    com.apptemplate: INFO
