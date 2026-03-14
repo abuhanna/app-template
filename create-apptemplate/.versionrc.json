@@ -1,0 +1,23 @@
+{
+  "types": [
+    { "type": "feat", "section": "Features" },
+    { "type": "fix", "section": "Bug Fixes" },
+    { "type": "perf", "section": "Performance" },
+    { "type": "refactor", "section": "Refactoring" },
+    { "type": "docs", "section": "Documentation" },
+    { "type": "test", "section": "Tests" },
+    { "type": "build", "section": "Build System" },
+    { "type": "ci", "section": "CI/CD" },
+    { "type": "chore", "hidden": true },
+    { "type": "style", "hidden": true }
+  ],
+  "commitUrlFormat": "https://github.com/abuhanna/app-template/commit/{{hash}}",
+  "compareUrlFormat": "https://github.com/abuhanna/app-template/compare/{{previousTag}}...{{currentTag}}",
+  "header": "# Changelog\n\nAll notable changes to @abuhannaa/create-apptemplate.\n",
+  "skip": {
+    "bump": false,
+    "changelog": false,
+    "commit": false,
+    "tag": false
+  }
+}

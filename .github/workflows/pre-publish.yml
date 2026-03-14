@@ -13,8 +13,29 @@ on:
         default: false
 
 jobs:
+  version-check:
+    name: Version Guard
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Check version is not already published
+        run: |
+          CURRENT_VERSION=$(node -p "require('./create-apptemplate/package.json').version")
+          echo "Current version: $CURRENT_VERSION"
+
+          # Check if this version already exists on npm
+          if npm view @abuhannaa/create-apptemplate@$CURRENT_VERSION version 2>/dev/null; then
+            echo "❌ ERROR: Version $CURRENT_VERSION already published to npm!"
+            echo "Run 'cd create-apptemplate && npm run release' to bump version first."
+            exit 1
+          else
+            echo "✅ Version $CURRENT_VERSION is new — safe to publish"
+          fi
+
   layer1:
     name: Layer 1 - Quick Tests
+    needs: version-check
     runs-on: ubuntu-latest
     timeout-minutes: 10
     steps:
@@ -133,7 +154,7 @@ jobs:
 
   publish:
     name: Publish to npm
-    needs: [layer1, layer2, layer3]
+    needs: [version-check, layer1, layer2, layer3]
     runs-on: ubuntu-latest
     if: success()
     permissions:
