@@ -1,6 +1,5 @@
 import { describe, it, expect, beforeEach, afterEach, vi } from 'vitest';
 import fs from 'fs';
-import path from 'path';
 import { detectPackageManager, commandExists } from '../package-manager.js';
 
 describe('detectPackageManager', () => {

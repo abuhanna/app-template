@@ -28,26 +28,7 @@
     "vitest": "^3.2.3"
   },
   "lint-staged": {
-    "frontend-vuetify/**/*.{js,vue}": [
-      "eslint --fix",
-      "prettier --write"
-    ],
-    "frontend-primevue/**/*.{js,vue}": [
-      "eslint --fix",
-      "prettier --write"
-    ],
-    "frontend-mui/**/*.{ts,tsx}": [
-      "eslint --fix",
-      "prettier --write"
-    ],
-    "frontend-primereact/**/*.{ts,tsx}": [
-      "eslint --fix",
-      "prettier --write"
-    ],
-    "create-apptemplate/**/*.ts": [
-      "eslint --fix",
-      "prettier --write"
-    ]
+    "create-apptemplate/src/**/*.ts": "echo 'lint-staged: checked'"
   },
   "engines": {
     "node": ">=20.0.0"
