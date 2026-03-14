@@ -2,8 +2,7 @@ import { describe, it, expect, beforeAll, afterAll } from 'vitest';
 import fs from 'fs';
 import path from 'path';
 import {
-  getFullMatrix,
-  getCriticalSubset,
+  getFilteredEntries,
   type MatrixEntry,
 } from '../config/matrix.js';
 import { generateLocalProject, entryToConfig } from '../helpers/generate.js';
@@ -33,9 +32,8 @@ function findFilesByExt(dir: string, ext: string): string[] {
 }
 
 // Use critical subset by default, E2E_ALL=1 for full matrix
-const entries = process.env.E2E_ALL
-  ? getFullMatrix()
-  : getCriticalSubset();
+// Supports BACKEND_FILTER and FRONTEND_FILTER for CI matrix splitting
+const entries = getFilteredEntries();
 
 beforeAll(() => {
   ensureTestOutputBase();

@@ -1,0 +1,177 @@
+name: Pre-Publish Full Validation
+
+on:
+  workflow_dispatch:
+    inputs:
+      version:
+        description: 'Version to publish (e.g., 1.2.0)'
+        required: true
+        type: string
+      dry_run:
+        description: 'Dry run (skip actual npm publish and tagging)'
+        type: boolean
+        default: false
+
+jobs:
+  layer1:
+    name: Layer 1 - Quick Tests
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: 'npm'
+          cache-dependency-path: |
+            package-lock.json
+            create-apptemplate/package-lock.json
+
+      - name: Install dependencies
+        run: npm ci && cd create-apptemplate && npm ci
+
+      - name: Run quick tests
+        run: npm run test:quick
+
+  layer2:
+    name: Layer 2 - Full Matrix (${{ matrix.segment }})
+    needs: layer1
+    runs-on: ubuntu-latest
+    timeout-minutes: 90
+    strategy:
+      fail-fast: false
+      matrix:
+        segment: [dotnet, spring, nestjs, frontend]
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: 'npm'
+          cache-dependency-path: |
+            package-lock.json
+            create-apptemplate/package-lock.json
+
+      - name: Setup .NET
+        if: matrix.segment == 'dotnet'
+        uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: '8.0.x'
+
+      - name: Setup Java
+        if: matrix.segment == 'spring'
+        uses: actions/setup-java@v4
+        with:
+          distribution: 'temurin'
+          java-version: '21'
+          cache: 'maven'
+
+      - name: Install dependencies
+        run: npm ci && cd create-apptemplate && npm ci
+
+      - name: Run matrix tests (${{ matrix.segment }})
+        run: npm run test:matrix
+        env:
+          E2E_ALL: '1'
+          BACKEND_FILTER: ${{ matrix.segment != 'frontend' && matrix.segment || '' }}
+          FRONTEND_FILTER: ${{ matrix.segment == 'frontend' && 'true' || '' }}
+
+  layer3:
+    name: Layer 3 - API Contract Tests
+    needs: layer2
+    runs-on: ubuntu-latest
+    timeout-minutes: 60
+    services:
+      postgres:
+        image: postgres:16-alpine
+        env:
+          POSTGRES_USER: apptemplate
+          POSTGRES_PASSWORD: apptemplate123
+          POSTGRES_DB: apptemplate_test
+        ports:
+          - '5433:5432'
+        options: >-
+          --health-cmd "pg_isready -U apptemplate -d apptemplate_test"
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: 'npm'
+          cache-dependency-path: |
+            package-lock.json
+            create-apptemplate/package-lock.json
+
+      - uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: '8.0.x'
+
+      - uses: actions/setup-java@v4
+        with:
+          distribution: 'temurin'
+          java-version: '21'
+          cache: 'maven'
+
+      - name: Install postgresql-client
+        run: sudo apt-get update && sudo apt-get install -y postgresql-client
+
+      - name: Install dependencies
+        run: npm ci && cd create-apptemplate && npm ci
+
+      - name: Run contract tests
+        run: npm run test:contract
+        env:
+          CI: 'true'
+          TEST_DB_HOST: localhost
+          TEST_DB_PORT: '5433'
+
+  publish:
+    name: Publish to npm
+    needs: [layer1, layer2, layer3]
+    runs-on: ubuntu-latest
+    if: success()
+    permissions:
+      contents: write
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          registry-url: 'https://registry.npmjs.org'
+
+      - name: Install and build CLI
+        working-directory: create-apptemplate
+        run: npm ci && npm run build && npm run typecheck
+
+      - name: Set version
+        working-directory: create-apptemplate
+        run: npm version ${{ inputs.version }} --no-git-tag-version
+
+      - name: Publish to npm
+        if: ${{ !inputs.dry_run }}
+        working-directory: create-apptemplate
+        run: npm publish --access public
+        env:
+          NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
+
+      - name: Publish dry run
+        if: ${{ inputs.dry_run }}
+        working-directory: create-apptemplate
+        run: npm publish --access public --dry-run
+        env:
+          NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
+
+      - name: Tag release
+        if: ${{ !inputs.dry_run }}
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          git tag v${{ inputs.version }}
+          git push origin v${{ inputs.version }}

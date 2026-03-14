@@ -135,10 +135,13 @@ export function getStartCommand(target: BackendTarget): StartCommand {
 }
 
 /**
- * Get environment variable overrides to point a backend at the test DB (port 5433)
- * and run on port 5100.
+ * Get environment variable overrides to point a backend at the test DB and run on port 5100.
+ * Respects TEST_DB_HOST and TEST_DB_PORT env vars for CI compatibility.
  */
 export function getEnvOverrides(stack: Stack): Record<string, string> {
+  const dbHost = process.env.TEST_DB_HOST || 'localhost';
+  const dbPort = process.env.TEST_DB_PORT || '5433';
+
   const common = {
     PORT: String(BASE_PORT),
   };
@@ -148,15 +151,15 @@ export function getEnvOverrides(stack: Stack): Record<string, string> {
       return {
         ...common,
         ConnectionStrings__DefaultConnection:
-          'Host=localhost;Port=5433;Database=apptemplate_test;Username=apptemplate;Password=apptemplate123',
+          `Host=${dbHost};Port=${dbPort};Database=apptemplate_test;Username=apptemplate;Password=apptemplate123`,
         ASPNETCORE_ENVIRONMENT: 'Development',
         ASPNETCORE_URLS: `http://+:${BASE_PORT}`,
       };
     case 'spring':
       return {
         ...common,
-        DB_HOST: 'localhost',
-        DB_PORT: '5433',
+        DB_HOST: dbHost,
+        DB_PORT: dbPort,
         DB_NAME: 'apptemplate_test',
         DB_USER: 'apptemplate',
         DB_PASSWORD: 'apptemplate123',
@@ -167,8 +170,8 @@ export function getEnvOverrides(stack: Stack): Record<string, string> {
     case 'nestjs':
       return {
         ...common,
-        DB_HOST: 'localhost',
-        DB_PORT: '5433',
+        DB_HOST: dbHost,
+        DB_PORT: dbPort,
         DB_NAME: 'apptemplate_test',
         DB_USERNAME: 'apptemplate',
         DB_PASSWORD: 'apptemplate123',

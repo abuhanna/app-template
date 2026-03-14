@@ -13,7 +13,10 @@
     "test:e2e:quick": "vitest run --config tests/vitest.config.quick.ts",
     "test:e2e:full": "vitest run --config tests/vitest.config.full.ts",
     "test:e2e:contract": "vitest run --config tests/vitest.config.contract.ts",
-    "test:e2e:watch": "vitest --config tests/vitest.config.quick.ts"
+    "test:e2e:watch": "vitest --config tests/vitest.config.quick.ts",
+    "test:quick": "vitest run --config tests/vitest.config.quick.ts",
+    "test:matrix": "vitest run --config tests/vitest.config.full.ts",
+    "test:contract": "vitest run --config tests/vitest.config.contract.ts"
   },
   "devDependencies": {
     "@commitlint/cli": "^19.6.1",

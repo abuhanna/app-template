@@ -203,25 +203,28 @@ export async function stopServer(handle: ServerHandle): Promise<void> {
 }
 
 /**
- * Kill any process listening on a given port (Windows only).
+ * Kill any process listening on a given port.
  */
 export function killPort(port: number): void {
-  if (!IS_WIN) return;
   try {
-    const out = execSync(
-      `netstat -ano | findstr ":${port}" | findstr "LISTENING"`,
-      { encoding: 'utf-8', stdio: ['pipe', 'pipe', 'pipe'] },
-    ).trim();
-    const lines = out.split('\n').filter(Boolean);
-    const pids = new Set(
-      lines.map((l) => l.trim().split(/\s+/).pop()).filter(Boolean),
-    );
-    for (const pid of pids) {
-      try {
-        execSync(`taskkill /F /PID ${pid}`, { stdio: 'pipe' });
-      } catch {
-        // Process might already be gone
+    if (IS_WIN) {
+      const out = execSync(
+        `netstat -ano | findstr ":${port}" | findstr "LISTENING"`,
+        { encoding: 'utf-8', stdio: ['pipe', 'pipe', 'pipe'] },
+      ).trim();
+      const lines = out.split('\n').filter(Boolean);
+      const pids = new Set(
+        lines.map((l) => l.trim().split(/\s+/).pop()).filter(Boolean),
+      );
+      for (const pid of pids) {
+        try {
+          execSync(`taskkill /F /PID ${pid}`, { stdio: 'pipe' });
+        } catch {
+          // Process might already be gone
+        }
       }
+    } else {
+      execSync(`fuser -k ${port}/tcp 2>/dev/null || true`, { stdio: 'pipe' });
     }
   } catch {
     // No process found on port

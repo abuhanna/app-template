@@ -290,6 +290,39 @@ export function getFrontendEntries(): MatrixEntry[] {
   );
 }
 
+/**
+ * Get matrix entries filtered by environment variables.
+ * Used by Layer 2 tests to split work across CI matrix jobs.
+ *
+ * E2E_ALL=1               → full matrix; otherwise critical subset
+ * BACKEND_FILTER=dotnet   → entries with that backend (backend-only + fullstack)
+ * FRONTEND_FILTER=true    → frontend-only entries (no fullstack)
+ *
+ * When no filter is set, returns the E2E_ALL-determined set as-is.
+ */
+export function getFilteredEntries(): MatrixEntry[] {
+  let entries = process.env.E2E_ALL
+    ? getFullMatrix()
+    : getCriticalSubset();
+
+  const backendFilter = process.env.BACKEND_FILTER;
+  const frontendFilter = process.env.FRONTEND_FILTER;
+
+  if (!backendFilter && !frontendFilter) {
+    return entries;
+  }
+
+  if (frontendFilter) {
+    return entries.filter((e) => e.projectType === 'frontend');
+  }
+
+  if (backendFilter) {
+    return entries.filter((e) => e.backend === backendFilter);
+  }
+
+  return entries;
+}
+
 // ---------- Backend/Frontend template path combos (for structure tests) ----------
 
 export interface BackendCombo {

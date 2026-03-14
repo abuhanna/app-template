@@ -1,8 +1,7 @@
 import { describe, it, expect, beforeAll, afterAll } from 'vitest';
 import path from 'path';
 import {
-  getFullMatrix,
-  getCriticalSubset,
+  getFilteredEntries,
   type MatrixEntry,
 } from '../config/matrix.js';
 import { generateLocalProject, entryToConfig } from '../helpers/generate.js';
@@ -21,9 +20,8 @@ import {
 } from '../helpers/cleanup.js';
 
 // Default: critical only. E2E_ALL=1 for full matrix.
-const entries = process.env.E2E_ALL
-  ? getFullMatrix()
-  : getCriticalSubset();
+// Supports BACKEND_FILTER and FRONTEND_FILTER for CI matrix splitting.
+const entries = getFilteredEntries();
 
 beforeAll(() => {
   ensureTestOutputBase();
