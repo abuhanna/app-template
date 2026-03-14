@@ -13,7 +13,7 @@ namespace AppTemplate.WebAPI.Controllers;
 /// </summary>
 [Authorize(Roles = "Admin")]
 [ApiController]
-[Route("api/[controller]")]
+[Route("api/audit-logs")]
 public class AuditLogsController : ControllerBase
 {
     private readonly ISender _mediator;

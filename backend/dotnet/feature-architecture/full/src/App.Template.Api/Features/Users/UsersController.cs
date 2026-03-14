@@ -1,4 +1,5 @@
 using App.Template.Api.Common.Models;
+using App.Template.Api.Features.Auth.Dtos;
 using App.Template.Api.Features.Users.Dtos;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
@@ -53,5 +54,12 @@ public class UsersController : ControllerBase
         var result = await _userService.DeleteUserAsync(id);
         if (!result) return NotFound(ApiResponse.Fail("User not found"));
         return NoContent();
+    }
+
+    [HttpPost("{id:long}/change-password")]
+    public async Task<ActionResult<ApiResponse>> ChangePassword(long id, [FromBody] ChangePasswordRequest request)
+    {
+        await _userService.ChangePasswordAsync(id, request);
+        return Ok(ApiResponse.Ok("Password changed successfully"));
     }
 }

@@ -1,6 +1,7 @@
 using AppTemplate.Application.DTOs;
 using AppTemplate.Application.Features.AuditLogManagement.Queries.GetAuditLogs;
 using AppTemplate.Application.Features.DepartmentManagement.Queries.GetDepartments;
+using AppTemplate.Application.Features.NotificationManagement.Queries.GetNotifications;
 using AppTemplate.Application.Features.UserManagement.Queries.GetUsers;
 using AppTemplate.Application.Interfaces;
 using MediatR;
@@ -170,6 +171,45 @@ public class ExportController : ControllerBase
                 GeneratedBy = _currentUserService.UserId ?? "System"
             }, cancellationToken),
             _ => await _exportService.ExportToExcelAsync(exportData, "audit_logs", "Audit Logs", cancellationToken)
+        };
+
+        return File(exportResult.FileStream, exportResult.ContentType, exportResult.FileName);
+    }
+
+    /// <summary>
+    /// Export notifications to specified format
+    /// </summary>
+    [HttpGet("notifications")]
+    [ProducesResponseType(typeof(FileResult), StatusCodes.Status200OK)]
+    public async Task<IActionResult> ExportNotifications(
+        [FromQuery] string format = "xlsx",
+        CancellationToken cancellationToken = default)
+    {
+        var query = new GetNotificationsQuery
+        {
+            Page = 1,
+            PageSize = 10000
+        };
+        var notificationResult = await _mediator.Send(query, cancellationToken);
+
+        var exportData = notificationResult.Items.Select(n => new
+        {
+            n.Id,
+            n.Title,
+            n.Message,
+            n.Type,
+            IsRead = n.IsRead ? "Yes" : "No",
+            CreatedAt = n.CreatedAt.ToString("yyyy-MM-dd HH:mm:ss")
+        }).ToList();
+
+        var exportResult = format.ToLower() switch
+        {
+            "csv" => await _exportService.ExportToCsvAsync(exportData, "notifications", cancellationToken),
+            "pdf" => await _exportService.ExportToPdfAsync(exportData, "notifications", "Notifications Report", new PdfReportOptions
+            {
+                GeneratedBy = _currentUserService.UserId ?? "System"
+            }, cancellationToken),
+            _ => await _exportService.ExportToExcelAsync(exportData, "notifications", "Notifications", cancellationToken)
         };
 
         return File(exportResult.FileStream, exportResult.ContentType, exportResult.FileName);

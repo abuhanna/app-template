@@ -4,6 +4,7 @@ using AppTemplate.Application.DTOs.Auth;
 using AppTemplate.Application.Features.Authentication.Commands.Login;
 using AppTemplate.Application.Features.Authentication.Commands.Logout;
 using AppTemplate.Application.Features.Authentication.Commands.RefreshToken;
+using AppTemplate.Application.Features.Authentication.Commands.Register;
 using AppTemplate.Application.Features.Authentication.Commands.RequestPasswordReset;
 using AppTemplate.Application.Features.Authentication.Commands.ResetPassword;
 using AppTemplate.Application.Features.Authentication.Commands.UpdateMyProfile;
@@ -57,6 +58,18 @@ public class AuthController : ControllerBase
             return StatusCode(StatusCodes.Status503ServiceUnavailable,
                 ApiResponse.Fail(ex.Message));
         }
+    }
+
+    /// <summary>
+    /// Register a new user
+    /// </summary>
+    [HttpPost("register")]
+    [ProducesResponseType(typeof(ApiResponse<UserDto>), StatusCodes.Status201Created)]
+    [ProducesResponseType(StatusCodes.Status400BadRequest)]
+    public async Task<IActionResult> Register([FromBody] RegisterCommand command)
+    {
+        var result = await _mediator.Send(command);
+        return StatusCode(StatusCodes.Status201Created, ApiResponse.Ok(result, "Registration successful"));
     }
 
     /// <summary>

@@ -25,7 +25,7 @@ public class AuditLogsController : ControllerBase
         return Ok(PaginatedResponse<AuditLogDto>.From(result, "Audit logs retrieved successfully"));
     }
 
-    [HttpGet("{id}")]
+    [HttpGet("{id:long}")]
     public async Task<ActionResult<ApiResponse<AuditLogDto>>> GetById(long id)
     {
         var log = await _auditLogService.GetByIdAsync(id);

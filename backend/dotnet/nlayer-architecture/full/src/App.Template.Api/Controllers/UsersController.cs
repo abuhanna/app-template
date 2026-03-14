@@ -55,4 +55,11 @@ public class UsersController : ControllerBase
         if (!result) return NotFound(ApiResponse.Fail("User not found"));
         return NoContent();
     }
+
+    [HttpPost("{id}/change-password")]
+    public async Task<ActionResult<ApiResponse>> ChangePassword(long id, [FromBody] ChangePasswordRequest request)
+    {
+        await _userService.ChangePasswordAsync(id, request);
+        return Ok(ApiResponse.Ok("Password changed successfully"));
+    }
 }

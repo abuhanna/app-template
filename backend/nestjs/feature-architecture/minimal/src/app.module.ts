@@ -10,7 +10,6 @@ import { FilesModule } from './features/files/files.module';
 import { HealthModule } from './features/health/health.module';
 import { NotificationsModule } from './features/notifications/notifications.module';
 import { AuditLogsModule } from './features/audit-logs/audit-logs.module';
-import { ExportModule } from './features/export/export.module';
 import { UploadedFile } from './features/files/uploaded-file.entity';
 import { AuditLog } from './common/audit/audit-log.entity';
 import { Notification } from './features/notifications/notification.entity';
@@ -51,7 +50,6 @@ import { AuditSubscriber } from './common/audit/audit.subscriber';
     HealthModule,
     NotificationsModule,
     AuditLogsModule,
-    ExportModule,
   ],
   providers: [
     {

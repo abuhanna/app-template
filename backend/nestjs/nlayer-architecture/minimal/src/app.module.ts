@@ -10,7 +10,6 @@ import { FilesModule } from './modules/files/files.module';
 import { HealthModule } from './modules/health/health.module';
 import { NotificationsModule } from './modules/notifications/notifications.module';
 import { AuditLogsModule } from './modules/audit-logs/audit-logs.module';
-import { ExportModule } from './modules/export/export.module';
 import { UploadedFile } from './entities/uploaded-file.entity';
 import { AuditLog } from './entities/audit-log.entity';
 import { Notification } from './entities/notification.entity';
@@ -52,7 +51,6 @@ import { SeedService } from './services/seed.service';
     HealthModule,
     NotificationsModule,
     AuditLogsModule,
-    ExportModule,
   ],
   providers: [
     {

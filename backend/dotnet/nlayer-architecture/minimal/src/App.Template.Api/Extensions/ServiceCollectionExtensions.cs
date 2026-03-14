@@ -21,7 +21,6 @@ public static class ServiceCollectionExtensions
         // Application services
         services.AddScoped<IFileService, FileService>();
         services.AddScoped<INotificationService, NotificationService>();
-        services.AddScoped<IExportService, ExportService>();
 
         return services;
     }
