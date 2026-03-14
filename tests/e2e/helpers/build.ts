@@ -90,7 +90,7 @@ function resolveCommand(command: string): string {
   // On Windows, resolve npm/npx/mvnw to .cmd variants
   if (command === 'npm') return 'npm.cmd';
   if (command === 'npx') return 'npx.cmd';
-  if (command === './mvnw' || command === 'mvnw') return 'mvnw.cmd';
+  if (command === './mvnw' || command === 'mvnw') return '.\\mvnw.cmd';
   return command;
 }
 
@@ -111,7 +111,7 @@ export function getBackendBuildCommands(
     case 'spring':
       return [
         {
-          command: IS_WIN ? 'mvnw.cmd' : './mvnw',
+          command: './mvnw',
           args: ['clean', 'compile', '-q'],
           cwd: backendDir,
         },
@@ -126,6 +126,48 @@ export function getBackendBuildCommands(
     default:
       throw new Error(`Unknown backend stack: ${stack}`);
   }
+}
+
+/**
+ * Get the test commands for a backend stack.
+ * Assumes the project has already been built.
+ */
+export function getBackendTestCommands(
+  stack: string,
+  backendDir: string,
+): BuildCommand[] {
+  switch (stack) {
+    case 'dotnet':
+      return [
+        { command: 'dotnet', args: ['test', '--no-build'], cwd: backendDir },
+      ];
+
+    case 'spring':
+      return [
+        {
+          command: './mvnw',
+          args: ['test', '-q'],
+          cwd: backendDir,
+        },
+      ];
+
+    case 'nestjs':
+      return [
+        { command: 'npm', args: ['run', 'test'], cwd: backendDir },
+      ];
+
+    default:
+      throw new Error(`Unknown backend stack: ${stack}`);
+  }
+}
+
+/**
+ * Get the type-check commands for a frontend (React/TypeScript only).
+ */
+export function getFrontendTypeCheckCommands(frontendDir: string): BuildCommand[] {
+  return [
+    { command: 'npx', args: ['tsc', '--noEmit'], cwd: frontendDir },
+  ];
 }
 
 /**

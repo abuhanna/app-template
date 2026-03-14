@@ -39,7 +39,7 @@ public class UserTests
             passwordHash: "hashedPassword");
 
         // Assert
-        Assert.Equal("User", user.Role);
+        Assert.Equal("user", user.Role);
         Assert.Null(user.FirstName);
         Assert.Null(user.LastName);
         Assert.Null(user.DepartmentId);

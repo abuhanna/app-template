@@ -19,7 +19,6 @@ const EXCLUDE_DIRS = new Set([
   'obj',
   'bin',
   '.gradle',
-  '.mvn',
 ]);
 
 function cpFilter(src: string): boolean {

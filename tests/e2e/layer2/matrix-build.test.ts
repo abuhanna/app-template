@@ -1,5 +1,4 @@
 import { describe, it, expect, beforeAll, afterAll } from 'vitest';
-import fs from 'fs';
 import path from 'path';
 import {
   getFullMatrix,
@@ -9,7 +8,9 @@ import {
 import { generateLocalProject, entryToConfig } from '../helpers/generate.js';
 import {
   getBackendBuildCommands,
+  getBackendTestCommands,
   getFrontendBuildCommands,
+  getFrontendTypeCheckCommands,
   runBuildSequence,
 } from '../helpers/build.js';
 import {
@@ -50,14 +51,14 @@ describe.each(entries)('build $id', (entry: MatrixEntry) => {
   });
 
   if (entry.backend) {
+    const backendDir = (() => {
+      const dir = getTestOutputDir(`build-${entry.id}`);
+      return path.join(dir, 'backend');
+    })();
+
     it(
       'backend builds successfully',
       async () => {
-        const backendDir =
-          entry.projectType === 'fullstack'
-            ? path.join(testDir, 'backend')
-            : path.join(testDir, 'backend');
-
         const commands = getBackendBuildCommands(entry.backend!, backendDir);
         const result = await runBuildSequence(commands);
 
@@ -68,17 +69,31 @@ describe.each(entries)('build $id', (entry: MatrixEntry) => {
       },
       300_000,
     );
+
+    it(
+      'backend tests pass',
+      async () => {
+        const commands = getBackendTestCommands(entry.backend!, backendDir);
+        const result = await runBuildSequence(commands);
+
+        expect(
+          result.success,
+          `Backend tests failed (exit ${result.exitCode}):\n${result.stderr.slice(-2000)}`,
+        ).toBe(true);
+      },
+      300_000,
+    );
   }
 
   if (entry.frontendFramework) {
+    const frontendDir = (() => {
+      const dir = getTestOutputDir(`build-${entry.id}`);
+      return path.join(dir, 'frontend');
+    })();
+
     it(
       'frontend builds successfully',
       async () => {
-        const frontendDir =
-          entry.projectType === 'fullstack'
-            ? path.join(testDir, 'frontend')
-            : path.join(testDir, 'frontend');
-
         const commands = getFrontendBuildCommands(frontendDir);
         const result = await runBuildSequence(commands);
 
@@ -89,5 +104,22 @@ describe.each(entries)('build $id', (entry: MatrixEntry) => {
       },
       300_000,
     );
+
+    // TypeScript type checking — React uses TypeScript, Vue uses jsconfig
+    if (entry.frontendFramework === 'react') {
+      it(
+        'frontend has zero type errors',
+        async () => {
+          const commands = getFrontendTypeCheckCommands(frontendDir);
+          const result = await runBuildSequence(commands, 60_000);
+
+          expect(
+            result.success,
+            `Frontend type check failed (exit ${result.exitCode}):\n${result.stderr.slice(-2000)}`,
+          ).toBe(true);
+        },
+        120_000,
+      );
+    }
   }
 });

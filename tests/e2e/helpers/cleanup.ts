@@ -14,14 +14,29 @@ export function getTestOutputDir(testId: string): string {
 
 export function cleanupTestOutput(testId: string): void {
   const dir = getTestOutputDir(testId);
-  if (fs.existsSync(dir)) {
-    fs.rmSync(dir, { recursive: true, force: true });
-  }
+  safeRm(dir);
 }
 
 export function cleanupAllTestOutputs(): void {
-  if (fs.existsSync(TEST_OUTPUT_BASE)) {
-    fs.rmSync(TEST_OUTPUT_BASE, { recursive: true, force: true });
+  safeRm(TEST_OUTPUT_BASE);
+}
+
+/** Remove a directory with retry for Windows EBUSY/EPERM file locking. */
+function safeRm(dir: string, retries = 3): void {
+  if (!fs.existsSync(dir)) return;
+  for (let i = 0; i < retries; i++) {
+    try {
+      fs.rmSync(dir, { recursive: true, force: true });
+      return;
+    } catch (err: any) {
+      if (i === retries - 1 || (err.code !== 'EBUSY' && err.code !== 'EPERM')) {
+        // Last retry or non-retryable error — swallow to avoid masking test results
+        return;
+      }
+      // Brief sync delay before retry (only used during test teardown)
+      const start = Date.now();
+      while (Date.now() - start < 500) { /* spin */ }
+    }
   }
 }
 
