@@ -178,7 +178,7 @@ via degit, mutates namespace/paths, and produces ready-to-run projects.
 | Dashboard page | Yes | No | No |
 | User management CRUD | Yes | No | No |
 | Department management CRUD | Yes | No | No |
-| Export (XLSX/CSV/PDF) | Yes | No | No |
+| Export (XLSX/CSV/PDF) | Yes | Yes (audit-logs + notifications only) | No |
 | File management | Yes | Yes | Yes |
 | Audit logs | Yes | Yes | Yes |
 | Notifications + real-time | Yes | Yes | Yes |

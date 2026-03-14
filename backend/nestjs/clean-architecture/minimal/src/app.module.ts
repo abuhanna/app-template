@@ -11,6 +11,7 @@ import { AuthModule } from './modules/auth/auth.module';
 import { NotificationModule } from './modules/notification/notification.module';
 import { FileManagementModule } from './modules/file-management/file-management.module';
 import { AuditLogModule } from './modules/audit-log/audit-log.module';
+import { ExportModule } from './modules/export/export.module';
 import { HealthModule } from './modules/health/health.module';
 import { SeederModule } from './core/database/seed.module';
 
@@ -46,6 +47,7 @@ import { SeederModule } from './core/database/seed.module';
     NotificationModule,
     FileManagementModule,
     AuditLogModule,
+    ExportModule,
   ],
   providers: [
     {

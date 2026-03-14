@@ -140,6 +140,7 @@ builder.Services.AddHttpClient();
 builder.Services.AddScoped<ISsoAuthService, SsoAuthService>();
 builder.Services.AddScoped<INotificationService, NotificationService>();
 builder.Services.AddScoped<IFileStorageService, FileStorageService>();
+builder.Services.AddScoped<IExportService, ExportService>();
 
 // Register Correlation ID accessor for request tracing
 builder.Services.AddScoped<ICorrelationIdAccessor, CorrelationIdAccessor>();
