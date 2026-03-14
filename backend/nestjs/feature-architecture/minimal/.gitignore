@@ -1,18 +1,55 @@
-# compiled output
-/dist
-/node_modules
-
-# logs
+# ══════════════════════════════════════════════
+# Node.js / NestJS
+# ══════════════════════════════════════════════
+node_modules/
+dist/
+coverage/
+.nyc_output/
 npm-debug.log*
+pnpm-debug.log*
 yarn-debug.log*
 yarn-error.log*
 lerna-debug.log*
+*.tsbuildinfo
 
-# os
+# ══════════════════════════════════════════════
+# Logs & Runtime Data
+# ══════════════════════════════════════════════
+logs/
+*.log
+uploads/
+
+# ══════════════════════════════════════════════
+# Environment & Secrets
+# ══════════════════════════════════════════════
+.env
+.env.local
+.env.*.local
+!.env.example
+*.pem
+*.key
+*.p12
+*.pfx
+
+# ══════════════════════════════════════════════
+# OS & Editor
+# ══════════════════════════════════════════════
 .DS_Store
 Thumbs.db
+Desktop.ini
+._*
+*.swp
+*~
+.idea/
+.vscode/settings.json
+.vscode/launch.json
 
-# env
-.env
-.env.production
-.env.development
+# ══════════════════════════════════════════════
+# Docker
+# ══════════════════════════════════════════════
+docker-compose.override.yml
+
+# ══════════════════════════════════════════════
+# Testing
+# ══════════════════════════════════════════════
+test-results/

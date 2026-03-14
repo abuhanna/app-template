@@ -1,50 +1,65 @@
-# Compiled class files
+# ══════════════════════════════════════════════
+# Java / Maven
+# ══════════════════════════════════════════════
+target/
+!.mvn/wrapper/maven-wrapper.jar
+!**/src/main/**/target/
+!**/src/test/**/target/
 *.class
-
-# Log files
-*.log
-
-# Package Files
 *.jar
 *.war
-*.nar
 *.ear
-*.zip
-*.tar.gz
-*.rar
+hs_err_pid*
+replay_pid*
+build/
+!**/src/main/**/build/
+!**/src/test/**/build/
+application-local.yml
+application-local.properties
 
-# Maven
-target/
-pom.xml.tag
-pom.xml.releaseBackup
-pom.xml.versionsBackup
-pom.xml.next
-release.properties
-dependency-reduced-pom.xml
-buildNumber.properties
-.mvn/timing.properties
-.mvn/wrapper/maven-wrapper.jar
+# ══════════════════════════════════════════════
+# Logs & Runtime Data
+# ══════════════════════════════════════════════
+logs/
+*.log
+uploads/
 
-# IDE
-.idea/
-*.iml
-*.ipr
-*.iws
-.project
-.classpath
-.settings/
-.vscode/
-*.swp
-*.swo
-*~
+# ══════════════════════════════════════════════
+# Environment & Secrets
+# ══════════════════════════════════════════════
+.env
+.env.local
+.env.*.local
+!.env.example
+*.pem
+*.key
+*.p12
+*.pfx
+*.jks
+*.keystore
 
-# OS
+# ══════════════════════════════════════════════
+# OS & Editor
+# ══════════════════════════════════════════════
 .DS_Store
 Thumbs.db
+Desktop.ini
+._*
+*.swp
+*~
+.idea/
+*.iml
+.vscode/settings.json
+.vscode/launch.json
 
-# Environment
-.env
-*.local
+# ══════════════════════════════════════════════
+# Docker
+# ══════════════════════════════════════════════
+docker-compose.override.yml
 
-# Test coverage
+# ══════════════════════════════════════════════
+# Testing
+# ══════════════════════════════════════════════
+coverage/
+test-results/
 jacoco.exec

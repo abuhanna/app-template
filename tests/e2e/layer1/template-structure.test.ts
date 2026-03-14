@@ -325,3 +325,139 @@ describe('Frontend variant-specific structure', () => {
     });
   }
 });
+
+// ---------- .gitignore completeness ----------
+
+describe('.gitignore completeness', () => {
+  describe.each(getAllBackendCombos())(
+    'backend/$stack/$arch-architecture/$variant',
+    ({ stack, arch, variant }) => {
+      const templateDir = path.join(
+        REPO_ROOT,
+        'backend',
+        stack,
+        `${arch}-architecture`,
+        variant,
+      );
+
+      it('has .gitignore', () => {
+        expect(
+          fs.existsSync(path.join(templateDir, '.gitignore')),
+          `Missing .gitignore in backend/${stack}/${arch}-architecture/${variant}`,
+        ).toBe(true);
+      });
+
+      it('covers critical patterns', () => {
+        const gitignore = fs.readFileSync(
+          path.join(templateDir, '.gitignore'),
+          'utf-8',
+        );
+
+        // Environment protection
+        expect(gitignore).toMatch(/^\.env$/m);
+        expect(gitignore).toMatch(/!\.env\.example/);
+
+        // OS files
+        expect(gitignore).toMatch(/\.DS_Store/);
+        expect(gitignore).toMatch(/Thumbs\.db/);
+
+        // Logs
+        expect(gitignore).toMatch(/\*\.log/);
+
+        // Secret key patterns
+        expect(gitignore).toMatch(/\*\.pem/);
+        expect(gitignore).toMatch(/\*\.key/);
+
+        // Stack-specific
+        if (stack === 'dotnet') {
+          expect(gitignore).toMatch(/^bin\/$/m);
+          expect(gitignore).toMatch(/^obj\/$/m);
+          expect(gitignore).toMatch(/appsettings\.Development\.json/);
+        }
+        if (stack === 'spring') {
+          expect(gitignore).toMatch(/^target\/$/m);
+          expect(gitignore).toMatch(/application-local/);
+        }
+        if (stack === 'nestjs') {
+          expect(gitignore).toMatch(/^node_modules\/$/m);
+          expect(gitignore).toMatch(/^dist\/$/m);
+        }
+      });
+    },
+  );
+
+  describe.each(getAllFrontendCombos())(
+    'frontend/$framework/$ui/$variant',
+    ({ framework, ui, variant }) => {
+      const templateDir = path.join(
+        REPO_ROOT,
+        'frontend',
+        framework,
+        ui,
+        variant,
+      );
+
+      it('has .gitignore', () => {
+        expect(
+          fs.existsSync(path.join(templateDir, '.gitignore')),
+          `Missing .gitignore in frontend/${framework}/${ui}/${variant}`,
+        ).toBe(true);
+      });
+
+      it('covers critical patterns', () => {
+        const gitignore = fs.readFileSync(
+          path.join(templateDir, '.gitignore'),
+          'utf-8',
+        );
+
+        // Environment protection
+        expect(gitignore).toMatch(/^\.env$/m);
+        expect(gitignore).toMatch(/!\.env\.example/);
+
+        // OS files
+        expect(gitignore).toMatch(/\.DS_Store/);
+        expect(gitignore).toMatch(/Thumbs\.db/);
+
+        // Frontend-specific
+        expect(gitignore).toMatch(/^node_modules\/$/m);
+        expect(gitignore).toMatch(/^dist\/$/m);
+
+        // Secret key patterns
+        expect(gitignore).toMatch(/\*\.pem/);
+        expect(gitignore).toMatch(/\*\.key/);
+      });
+    },
+  );
+
+  it('shared/common/.gitignore covers all stacks', () => {
+    const gitignore = fs.readFileSync(
+      path.join(REPO_ROOT, 'shared', 'common', '.gitignore'),
+      'utf-8',
+    );
+
+    // Environment
+    expect(gitignore).toMatch(/^\.env$/m);
+    expect(gitignore).toMatch(/!\.env\.example/);
+    expect(gitignore).toMatch(/\*\.pem/);
+    expect(gitignore).toMatch(/\*\.key/);
+
+    // OS
+    expect(gitignore).toMatch(/\.DS_Store/);
+    expect(gitignore).toMatch(/Thumbs\.db/);
+
+    // .NET
+    expect(gitignore).toMatch(/\[Bb\]in\//);
+    expect(gitignore).toMatch(/\[Oo\]bj\//);
+
+    // Spring
+    expect(gitignore).toMatch(/^target\/$/m);
+    expect(gitignore).toMatch(/!\.mvn\/wrapper\/maven-wrapper\.jar/);
+
+    // Node.js
+    expect(gitignore).toMatch(/^node_modules\/$/m);
+    expect(gitignore).toMatch(/^dist\/$/m);
+
+    // Logs
+    expect(gitignore).toMatch(/\*\.log/);
+  });
+});

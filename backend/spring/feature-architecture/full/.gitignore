@@ -1,33 +1,65 @@
-HELP.md
+# ══════════════════════════════════════════════
+# Java / Maven
+# ══════════════════════════════════════════════
 target/
 !.mvn/wrapper/maven-wrapper.jar
 !**/src/main/**/target/
 !**/src/test/**/target/
-
-### STS ###
-.apt_generated
-.classpath
-.factorypath
-.project
-.settings
-.springBeans
-.sts4-cache
-
-### IntelliJ IDEA ###
-.idea
-*.iws
-*.iml
-*.ipr
-
-### NetBeans ###
-/nbproject/private/
-/nbbuild/
-/dist/
-/nbdist/
-/.nb-gradle/
+*.class
+*.jar
+*.war
+*.ear
+hs_err_pid*
+replay_pid*
 build/
 !**/src/main/**/build/
 !**/src/test/**/build/
+application-local.yml
+application-local.properties
 
-### VS Code ###
-.vscode/
+# ══════════════════════════════════════════════
+# Logs & Runtime Data
+# ══════════════════════════════════════════════
+logs/
+*.log
+uploads/
+
+# ══════════════════════════════════════════════
+# Environment & Secrets
+# ══════════════════════════════════════════════
+.env
+.env.local
+.env.*.local
+!.env.example
+*.pem
+*.key
+*.p12
+*.pfx
+*.jks
+*.keystore
+
+# ══════════════════════════════════════════════
+# OS & Editor
+# ══════════════════════════════════════════════
+.DS_Store
+Thumbs.db
+Desktop.ini
+._*
+*.swp
+*~
+.idea/
+*.iml
+.vscode/settings.json
+.vscode/launch.json
+
+# ══════════════════════════════════════════════
+# Docker
+# ══════════════════════════════════════════════
+docker-compose.override.yml
+
+# ══════════════════════════════════════════════
+# Testing
+# ══════════════════════════════════════════════
+coverage/
+test-results/
+jacoco.exec

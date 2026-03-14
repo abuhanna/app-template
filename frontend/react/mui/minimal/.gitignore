@@ -1,29 +1,42 @@
-# Logs
-logs
-*.log
+# ══════════════════════════════════════════════
+# Node.js / Frontend
+# ══════════════════════════════════════════════
+node_modules/
+dist/
+dist-ssr/
+coverage/
+.nyc_output/
 npm-debug.log*
+pnpm-debug.log*
 yarn-debug.log*
 yarn-error.log*
-pnpm-debug.log*
 lerna-debug.log*
+*.tsbuildinfo
 
-node_modules
-dist
-dist-ssr
-*.local
-
-# Editor directories and files
-.vscode/*
-!.vscode/extensions.json
-.idea
-.DS_Store
-*.suo
-*.ntvs*
-*.njsproj
-*.sln
-*.sw?
-
-# Environment
+# ══════════════════════════════════════════════
+# Environment & Secrets
+# ══════════════════════════════════════════════
 .env
 .env.local
 .env.*.local
+!.env.example
+*.pem
+*.key
+
+# ══════════════════════════════════════════════
+# OS & Editor
+# ══════════════════════════════════════════════
+.DS_Store
+Thumbs.db
+Desktop.ini
+._*
+*.swp
+*~
+.idea/
+.vscode/settings.json
+.vscode/launch.json
+
+# ══════════════════════════════════════════════
+# Testing
+# ══════════════════════════════════════════════
+test-results/

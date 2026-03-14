@@ -1,64 +1,42 @@
-# Logs
-logs
-*.log
+# ══════════════════════════════════════════════
+# Node.js / Frontend
+# ══════════════════════════════════════════════
+node_modules/
+dist/
+dist-ssr/
+coverage/
+.nyc_output/
 npm-debug.log*
+pnpm-debug.log*
 yarn-debug.log*
 yarn-error.log*
-pnpm-debug.log*
 lerna-debug.log*
+*.tsbuildinfo
 
-# Dependency directories
-node_modules
-
-# Build outputs
-dist
-dist-ssr
-*.local
-
-# Environment variables - SECURITY CRITICAL!
-# Ignore all .env files except .env.example
+# ══════════════════════════════════════════════
+# Environment & Secrets
+# ══════════════════════════════════════════════
 .env
-.env.*
+.env.local
+.env.*.local
 !.env.example
+*.pem
+*.key
 
-# Editor directories and files
-.vscode/*
-!.vscode/extensions.json
-.idea
+# ══════════════════════════════════════════════
+# OS & Editor
+# ══════════════════════════════════════════════
 .DS_Store
-*.suo
-*.ntvs*
-*.njsproj
-*.sln
-*.sw?
-
-# OS specific files
 Thumbs.db
+Desktop.ini
+._*
+*.swp
 *~
+.idea/
+.vscode/settings.json
+.vscode/launch.json
 
-# Test coverage
-coverage
-*.lcov
-.nyc_output
-
-# Cache directories
-.cache
-.eslintcache
-.stylelintcache
-.parcel-cache
-
-# Optional npm cache directory
-.npm
-
-# Optional eslint cache
-.eslintcache
-
-# Temporary folders
-tmp/
-temp/
-
-# Auto-generated type definition files
-# (Keep these commented out as they're useful for IDE intellisense)
-# auto-imports.d.ts
-# components.d.ts
-# typed-router.d.ts
+# ══════════════════════════════════════════════
+# Testing
+# ══════════════════════════════════════════════
+test-results/
