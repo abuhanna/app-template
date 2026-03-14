@@ -16,7 +16,8 @@
     "test:e2e:watch": "vitest --config tests/vitest.config.quick.ts",
     "test:quick": "vitest run --config tests/vitest.config.quick.ts",
     "test:matrix": "vitest run --config tests/vitest.config.full.ts",
-    "test:contract": "vitest run --config tests/vitest.config.contract.ts"
+    "test:contract": "vitest run --config tests/vitest.config.contract.ts",
+    "prepublish-check": "bash scripts/pre-publish.sh"
   },
   "devDependencies": {
     "@commitlint/cli": "^19.6.1",
