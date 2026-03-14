@@ -507,6 +507,8 @@ $RECYCLE.BIN/
 # Documentation folder (work history and guides)
 docs/
 !docs/test-database.md
+!docs/api-contract.md
+!docs/api-contract-schema.json
 
 # Ignore application settings files with secrets.
 # Use appsettings.example.json as a template.

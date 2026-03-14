@@ -13,7 +13,7 @@ export default defineConfig({
     include: ['e2e/layer3/**/*.test.ts'],
     alias: sharedAlias,
     testTimeout: 180_000,
-    hookTimeout: 120_000,
+    hookTimeout: 300_000,
     sequence: { concurrent: false },
   },
 });

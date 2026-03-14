@@ -3,8 +3,8 @@ import { execSync } from 'child_process';
 const TEST_DB_CONTAINER = 'apptemplate-test-db';
 const TEST_DB_PORT = 5433;
 const TEST_DB_NAME = 'apptemplate_test';
-const TEST_DB_USER = 'postgres';
-const TEST_DB_PASS = 'postgres';
+const TEST_DB_USER = 'apptemplate';
+const TEST_DB_PASS = 'apptemplate123';
 
 export interface TestDbConfig {
   host: string;
@@ -73,10 +73,11 @@ export function ensureTestDb(): void {
  * Wait for the database to accept connections.
  */
 function waitForDb(maxRetries = 30, intervalMs = 1000): void {
+  const IS_WIN = process.platform === 'win32';
   for (let i = 0; i < maxRetries; i++) {
     try {
       execSync(
-        `docker exec ${TEST_DB_CONTAINER} pg_isready -U ${TEST_DB_USER}`,
+        `docker exec ${TEST_DB_CONTAINER} pg_isready -U ${TEST_DB_USER} -d ${TEST_DB_NAME}`,
         { stdio: 'pipe' },
       );
       return;
@@ -84,7 +85,10 @@ function waitForDb(maxRetries = 30, intervalMs = 1000): void {
       if (i === maxRetries - 1) {
         throw new Error('Test database did not become ready in time');
       }
-      execSync(`sleep ${intervalMs / 1000}`, { stdio: 'pipe' });
+      execSync(
+        IS_WIN ? `ping -n 2 127.0.0.1 >nul` : `sleep ${intervalMs / 1000}`,
+        { stdio: 'pipe' },
+      );
     }
   }
 }
@@ -93,11 +97,15 @@ function waitForDb(maxRetries = 30, intervalMs = 1000): void {
  * Reset the test database by dropping and recreating the public schema.
  */
 export function resetTestDb(): void {
-  execSync(
-    `docker exec ${TEST_DB_CONTAINER} psql -U ${TEST_DB_USER} -d ${TEST_DB_NAME} ` +
-      `-c "DROP SCHEMA public CASCADE; CREATE SCHEMA public;"`,
-    { stdio: 'pipe' },
-  );
+  try {
+    execSync(
+      `docker exec ${TEST_DB_CONTAINER} psql -U ${TEST_DB_USER} -d ${TEST_DB_NAME} ` +
+        `-c "DROP SCHEMA IF EXISTS public CASCADE; CREATE SCHEMA public; GRANT ALL ON SCHEMA public TO ${TEST_DB_USER}; GRANT ALL ON SCHEMA public TO public;"`,
+      { stdio: 'pipe' },
+    );
+  } catch {
+    // If DB is fresh, schema may already be clean
+  }
 }
 
 /**

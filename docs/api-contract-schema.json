@@ -1,0 +1,429 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "api-contract-schema.json",
+  "title": "AppTemplate API Contract Schema",
+  "description": "JSON Schema definitions for all AppTemplate API responses. Derived from docs/api-contract.md.",
+
+  "$defs": {
+
+    "SuccessResponse": {
+      "type": "object",
+      "required": ["success", "message"],
+      "properties": {
+        "success": { "const": true },
+        "message": { "type": "string" },
+        "data": {}
+      }
+    },
+
+    "SuccessResponseWithData": {
+      "type": "object",
+      "required": ["success", "message", "data"],
+      "properties": {
+        "success": { "const": true },
+        "message": { "type": "string" },
+        "data": {}
+      }
+    },
+
+    "ErrorResponse": {
+      "type": "object",
+      "required": ["success", "message"],
+      "properties": {
+        "success": { "const": false },
+        "message": { "type": "string" },
+        "errors": {
+          "type": "array",
+          "items": { "type": "string" }
+        }
+      }
+    },
+
+    "Pagination": {
+      "type": "object",
+      "required": ["page", "pageSize", "totalItems", "totalPages", "hasNext", "hasPrevious"],
+      "properties": {
+        "page": { "type": "integer", "minimum": 1 },
+        "pageSize": { "type": "integer", "minimum": 1, "maximum": 100 },
+        "totalItems": { "type": "integer", "minimum": 0 },
+        "totalPages": { "type": "integer", "minimum": 0 },
+        "hasNext": { "type": "boolean" },
+        "hasPrevious": { "type": "boolean" }
+      },
+      "additionalProperties": false
+    },
+
+    "PaginatedResponse": {
+      "type": "object",
+      "required": ["success", "message", "data", "pagination"],
+      "properties": {
+        "success": { "const": true },
+        "message": { "type": "string" },
+        "data": { "type": "array" },
+        "pagination": { "$ref": "#/$defs/Pagination" }
+      }
+    },
+
+    "User": {
+      "type": "object",
+      "required": ["id", "username", "email", "role", "isActive", "createdAt"],
+      "properties": {
+        "id": { "type": "integer" },
+        "username": { "type": "string" },
+        "email": { "type": "string", "format": "email" },
+        "firstName": { "type": ["string", "null"] },
+        "lastName": { "type": ["string", "null"] },
+        "fullName": { "type": ["string", "null"] },
+        "role": { "type": "string", "enum": ["admin", "user"] },
+        "departmentId": { "type": ["integer", "null"] },
+        "departmentName": { "type": ["string", "null"] },
+        "isActive": { "type": "boolean" },
+        "lastLoginAt": { "type": ["string", "null"], "format": "date-time" },
+        "createdAt": { "type": "string", "format": "date-time" },
+        "updatedAt": { "type": ["string", "null"], "format": "date-time" }
+      }
+    },
+
+    "Department": {
+      "type": "object",
+      "required": ["id", "code", "name", "isActive", "createdAt"],
+      "properties": {
+        "id": { "type": "integer" },
+        "code": { "type": "string" },
+        "name": { "type": "string" },
+        "description": { "type": ["string", "null"] },
+        "isActive": { "type": "boolean" },
+        "userCount": { "type": "integer", "minimum": 0 },
+        "createdAt": { "type": "string", "format": "date-time" },
+        "updatedAt": { "type": ["string", "null"], "format": "date-time" }
+      }
+    },
+
+    "Notification": {
+      "type": "object",
+      "required": ["id", "title", "message", "type", "isRead", "createdAt"],
+      "properties": {
+        "id": { "type": "integer" },
+        "title": { "type": "string" },
+        "message": { "type": "string" },
+        "type": { "type": "string", "enum": ["info", "warning", "error", "success"] },
+        "referenceId": { "type": ["string", "null"] },
+        "referenceType": { "type": ["string", "null"] },
+        "isRead": { "type": "boolean" },
+        "createdAt": { "type": "string", "format": "date-time" }
+      }
+    },
+
+    "File": {
+      "type": "object",
+      "required": ["id", "originalFileName", "contentType", "fileSize", "isPublic", "createdAt"],
+      "properties": {
+        "id": { "type": "integer" },
+        "fileName": { "type": "string" },
+        "originalFileName": { "type": "string" },
+        "contentType": { "type": "string" },
+        "fileSize": { "type": "integer", "minimum": 0 },
+        "description": { "type": ["string", "null"] },
+        "category": { "type": ["string", "null"] },
+        "isPublic": { "type": "boolean" },
+        "createdAt": { "type": "string", "format": "date-time" },
+        "updatedAt": { "type": ["string", "null"], "format": "date-time" },
+        "createdBy": { "type": ["string", "null"] },
+        "downloadUrl": { "type": "string" }
+      }
+    },
+
+    "AuditLog": {
+      "type": "object",
+      "required": ["id", "action", "entityType", "createdAt"],
+      "properties": {
+        "id": { "type": "integer" },
+        "action": { "type": "string", "enum": ["create", "update", "delete", "login", "logout"] },
+        "entityType": { "type": "string" },
+        "entityId": { "type": ["string", "null"] },
+        "userId": { "type": ["string", "null"] },
+        "userName": { "type": ["string", "null"] },
+        "details": { "type": ["string", "null"] },
+        "ipAddress": { "type": ["string", "null"] },
+        "createdAt": { "type": "string", "format": "date-time" }
+      }
+    },
+
+    "LoginResponse": {
+      "allOf": [
+        { "$ref": "#/$defs/SuccessResponseWithData" },
+        {
+          "type": "object",
+          "properties": {
+            "data": {
+              "type": "object",
+              "required": ["accessToken", "refreshToken", "expiresIn", "user"],
+              "properties": {
+                "accessToken": { "type": "string" },
+                "refreshToken": { "type": "string" },
+                "expiresIn": { "type": "integer" },
+                "user": { "$ref": "#/$defs/User" }
+              }
+            }
+          }
+        }
+      ]
+    },
+
+    "RegisterResponse": {
+      "allOf": [
+        { "$ref": "#/$defs/SuccessResponseWithData" },
+        {
+          "type": "object",
+          "properties": {
+            "data": {
+              "type": "object",
+              "required": ["accessToken", "refreshToken", "expiresIn", "user"],
+              "properties": {
+                "accessToken": { "type": "string" },
+                "refreshToken": { "type": "string" },
+                "expiresIn": { "type": "integer" },
+                "user": { "$ref": "#/$defs/User" }
+              }
+            }
+          }
+        }
+      ]
+    },
+
+    "RefreshResponse": {
+      "allOf": [
+        { "$ref": "#/$defs/SuccessResponseWithData" },
+        {
+          "type": "object",
+          "properties": {
+            "data": {
+              "type": "object",
+              "required": ["accessToken", "refreshToken", "expiresIn"],
+              "properties": {
+                "accessToken": { "type": "string" },
+                "refreshToken": { "type": "string" },
+                "expiresIn": { "type": "integer" }
+              }
+            }
+          }
+        }
+      ]
+    },
+
+    "MeResponse": {
+      "allOf": [
+        { "$ref": "#/$defs/SuccessResponseWithData" },
+        {
+          "type": "object",
+          "properties": {
+            "data": { "$ref": "#/$defs/User" }
+          }
+        }
+      ]
+    },
+
+    "ProfileResponse": {
+      "allOf": [
+        { "$ref": "#/$defs/SuccessResponseWithData" },
+        {
+          "type": "object",
+          "properties": {
+            "data": { "$ref": "#/$defs/User" }
+          }
+        }
+      ]
+    },
+
+    "UnreadCountResponse": {
+      "allOf": [
+        { "$ref": "#/$defs/SuccessResponseWithData" },
+        {
+          "type": "object",
+          "properties": {
+            "data": {
+              "type": "object",
+              "required": ["count"],
+              "properties": {
+                "count": { "type": "integer", "minimum": 0 }
+              }
+            }
+          }
+        }
+      ]
+    },
+
+    "UserListResponse": {
+      "allOf": [
+        { "$ref": "#/$defs/PaginatedResponse" },
+        {
+          "type": "object",
+          "properties": {
+            "data": {
+              "type": "array",
+              "items": { "$ref": "#/$defs/User" }
+            }
+          }
+        }
+      ]
+    },
+
+    "DepartmentListResponse": {
+      "allOf": [
+        { "$ref": "#/$defs/PaginatedResponse" },
+        {
+          "type": "object",
+          "properties": {
+            "data": {
+              "type": "array",
+              "items": { "$ref": "#/$defs/Department" }
+            }
+          }
+        }
+      ]
+    },
+
+    "NotificationListResponse": {
+      "allOf": [
+        { "$ref": "#/$defs/PaginatedResponse" },
+        {
+          "type": "object",
+          "properties": {
+            "data": {
+              "type": "array",
+              "items": { "$ref": "#/$defs/Notification" }
+            }
+          }
+        }
+      ]
+    },
+
+    "FileListResponse": {
+      "allOf": [
+        { "$ref": "#/$defs/PaginatedResponse" },
+        {
+          "type": "object",
+          "properties": {
+            "data": {
+              "type": "array",
+              "items": { "$ref": "#/$defs/File" }
+            }
+          }
+        }
+      ]
+    },
+
+    "AuditLogListResponse": {
+      "allOf": [
+        { "$ref": "#/$defs/PaginatedResponse" },
+        {
+          "type": "object",
+          "properties": {
+            "data": {
+              "type": "array",
+              "items": { "$ref": "#/$defs/AuditLog" }
+            }
+          }
+        }
+      ]
+    },
+
+    "SingleUserResponse": {
+      "allOf": [
+        { "$ref": "#/$defs/SuccessResponseWithData" },
+        {
+          "type": "object",
+          "properties": {
+            "data": { "$ref": "#/$defs/User" }
+          }
+        }
+      ]
+    },
+
+    "SingleDepartmentResponse": {
+      "allOf": [
+        { "$ref": "#/$defs/SuccessResponseWithData" },
+        {
+          "type": "object",
+          "properties": {
+            "data": { "$ref": "#/$defs/Department" }
+          }
+        }
+      ]
+    },
+
+    "SingleFileResponse": {
+      "allOf": [
+        { "$ref": "#/$defs/SuccessResponseWithData" },
+        {
+          "type": "object",
+          "properties": {
+            "data": { "$ref": "#/$defs/File" }
+          }
+        }
+      ]
+    },
+
+    "SingleAuditLogResponse": {
+      "allOf": [
+        { "$ref": "#/$defs/SuccessResponseWithData" },
+        {
+          "type": "object",
+          "properties": {
+            "data": { "$ref": "#/$defs/AuditLog" }
+          }
+        }
+      ]
+    },
+
+    "HealthResponse": {
+      "type": "object",
+      "required": ["status", "timestamp"],
+      "properties": {
+        "status": { "type": "string", "enum": ["healthy", "ok"] },
+        "timestamp": { "type": "string", "format": "date-time" },
+        "application": { "type": "string" },
+        "version": { "type": "string" }
+      }
+    },
+
+    "HealthReadyResponse": {
+      "type": "object",
+      "required": ["status", "timestamp", "database"],
+      "properties": {
+        "status": { "type": "string", "enum": ["ready"] },
+        "timestamp": { "type": "string", "format": "date-time" },
+        "database": { "type": "string", "enum": ["connected"] }
+      }
+    },
+
+    "HealthLiveResponse": {
+      "type": "object",
+      "required": ["status", "timestamp"],
+      "properties": {
+        "status": { "type": "string", "enum": ["alive"] },
+        "timestamp": { "type": "string", "format": "date-time" }
+      }
+    },
+
+    "ValidateTokenResponse": {
+      "allOf": [
+        { "$ref": "#/$defs/SuccessResponseWithData" },
+        {
+          "type": "object",
+          "properties": {
+            "data": {
+              "type": "object",
+              "required": ["accessToken", "expiresIn", "user"],
+              "properties": {
+                "accessToken": { "type": "string" },
+                "expiresIn": { "type": "integer" },
+                "user": { "$ref": "#/$defs/User" }
+              }
+            }
+          }
+        }
+      ]
+    }
+  }
+}
