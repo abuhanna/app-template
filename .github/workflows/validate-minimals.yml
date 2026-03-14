@@ -75,6 +75,10 @@ jobs:
           java-version: '21'
           cache: 'maven'
 
+      - name: Make Maven wrapper executable
+        working-directory: backend/spring/${{ matrix.arch }}-architecture/minimal
+        run: chmod +x ./mvnw
+
       - name: Build
         working-directory: backend/spring/${{ matrix.arch }}-architecture/minimal
         run: ./mvnw -B compile
