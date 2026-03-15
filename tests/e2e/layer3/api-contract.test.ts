@@ -29,6 +29,7 @@ import {
   loginAsAdmin,
   stopServer,
   killPort,
+  waitForPortFree,
   setupProcessCleanup,
   unwrapHealth,
   type ServerHandle,
@@ -76,8 +77,9 @@ describe('API Contract Tests', () => {
       const isFull = target.variant === 'full';
 
       beforeAll(async () => {
-        // Kill anything on port from previous run
+        // Kill anything on port from previous run and wait for release
         killPort(5100);
+        await waitForPortFree(5100);
 
         // Reset DB so migrations run fresh
         resetTestDb();

@@ -26,6 +26,7 @@ import {
   loginAsAdmin,
   stopServer,
   killPort,
+  waitForPortFree,
   setupProcessCleanup,
   unwrapHealth,
 } from '../helpers/server.js';
@@ -111,6 +112,7 @@ describe('Cross-stack response parity', () => {
       };
 
       killPort(5100);
+      await waitForPortFree(5100);
       resetTestDb();
 
       let server;

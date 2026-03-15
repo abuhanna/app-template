@@ -298,6 +298,7 @@ export async function stopServer(handle: ServerHandle): Promise<void> {
 
 /**
  * Kill any process listening on a given port.
+ * Uses multiple strategies to ensure the port is freed.
  */
 export function killPort(port: number): void {
   try {
@@ -318,10 +319,58 @@ export function killPort(port: number): void {
         }
       }
     } else {
-      execSync(`fuser -k ${port}/tcp 2>/dev/null || true`, { stdio: 'pipe' });
+      // Try fuser first, then lsof as fallback (fuser may not be installed)
+      try {
+        execSync(`fuser -k ${port}/tcp 2>/dev/null || true`, { stdio: 'pipe' });
+      } catch { /* ignore */ }
+      try {
+        const pids = execSync(
+          `lsof -ti tcp:${port} 2>/dev/null || true`,
+          { encoding: 'utf-8', stdio: ['pipe', 'pipe', 'pipe'] },
+        ).trim();
+        if (pids) {
+          for (const pid of pids.split('\n').filter(Boolean)) {
+            try { execSync(`kill -9 ${pid} 2>/dev/null || true`, { stdio: 'pipe' }); } catch { /* ignore */ }
+          }
+        }
+      } catch { /* ignore */ }
     }
   } catch {
     // No process found on port
+  }
+}
+
+/**
+ * Wait until a port is free (no process listening).
+ * Retries killPort if the port is still occupied.
+ */
+export async function waitForPortFree(port: number, timeoutMs = 15000): Promise<void> {
+  const start = Date.now();
+  while (Date.now() - start < timeoutMs) {
+    const inUse = isPortInUse(port);
+    if (!inUse) return;
+    killPort(port);
+    await sleep(1000);
+  }
+}
+
+function isPortInUse(port: number): boolean {
+  try {
+    if (IS_WIN) {
+      const out = execSync(
+        `netstat -ano | findstr ":${port}" | findstr "LISTENING"`,
+        { encoding: 'utf-8', stdio: ['pipe', 'pipe', 'pipe'] },
+      ).trim();
+      return out.length > 0;
+    } else {
+      const out = execSync(
+        `lsof -ti tcp:${port} 2>/dev/null || true`,
+        { encoding: 'utf-8', stdio: ['pipe', 'pipe', 'pipe'] },
+      ).trim();
+      return out.length > 0;
+    }
+  } catch {
+    return false;
   }
 }
 

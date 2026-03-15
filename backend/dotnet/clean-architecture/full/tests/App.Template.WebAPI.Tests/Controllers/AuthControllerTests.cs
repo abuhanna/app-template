@@ -183,11 +183,14 @@ public class AuthControllerTests
         var identity = new ClaimsIdentity(claims, "TestAuth");
         _controller.ControllerContext.HttpContext.User = new ClaimsPrincipal(identity);
 
-        var expectedResponse = new UserInfoResponseDto
+        var expectedResponse = new UserInfoDto
         {
-            UserId = "1",
+            Id = 1,
             Username = "admin",
-            Role = "Admin"
+            Email = "admin@test.com",
+            Role = "Admin",
+            IsActive = true,
+            CreatedAt = DateTime.UtcNow
         };
 
         _mockMediator
@@ -199,9 +202,9 @@ public class AuthControllerTests
 
         // Assert
         var okResult = Assert.IsType<OkObjectResult>(result);
-        var response = Assert.IsType<ApiResponse<UserInfoResponseDto>>(okResult.Value);
+        var response = Assert.IsType<ApiResponse<UserInfoDto>>(okResult.Value);
         Assert.True(response.Success);
-        Assert.Equal("1", response.Data!.UserId);
+        Assert.Equal(1, response.Data!.Id);
         Assert.Equal("Admin", response.Data.Role);
     }
 
