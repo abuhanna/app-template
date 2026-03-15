@@ -37,9 +37,10 @@ class AuthControllerTest {
         request.setToken("external-token");
 
         AuthResponse.UserDto userDto = AuthResponse.UserDto.builder()
-                .id(1L)
+                .userId("1")
                 .username("testuser")
                 .email("test@test.com")
+                .role("user")
                 .build();
 
         AuthResponse response = AuthResponse.builder()
@@ -66,9 +67,10 @@ class AuthControllerTest {
         request.setRefreshToken("valid-refresh-token");
 
         AuthResponse.UserDto userDto = AuthResponse.UserDto.builder()
-                .id(1L)
+                .userId("1")
                 .username("testuser")
                 .email("test@test.com")
+                .role("user")
                 .build();
 
         AuthResponse response = AuthResponse.builder()
@@ -91,9 +93,10 @@ class AuthControllerTest {
     @Test
     void me_returnsOk() throws Exception {
         AuthResponse.UserDto userDto = AuthResponse.UserDto.builder()
-                .id(1L)
+                .userId("1")
                 .username("testuser")
                 .email("test@test.com")
+                .role("user")
                 .build();
 
         when(authService.getCurrentUser()).thenReturn(userDto);

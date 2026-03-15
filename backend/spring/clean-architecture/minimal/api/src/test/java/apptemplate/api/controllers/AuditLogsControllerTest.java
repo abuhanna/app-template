@@ -37,7 +37,7 @@ class AuditLogsControllerTest {
     void getAuditLogs_returnsPagedResponse() throws Exception {
         AuditLogDto log = new AuditLogDto();
         log.setId(1L);
-        log.setEntityType("User");
+        log.setEntityName("User");
         log.setAction("CREATED");
         log.setEntityId("1");
 
@@ -52,7 +52,7 @@ class AuditLogsControllerTest {
                         .param("pageSize", "20"))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.data").isArray())
-                .andExpect(jsonPath("$.data[0].entityType").value("User"))
+                .andExpect(jsonPath("$.data[0].entityName").value("User"))
                 .andExpect(jsonPath("$.data[0].action").value("CREATED"));
     }
 

@@ -1,4 +1,5 @@
 import { spawn } from 'child_process';
+import fs from 'fs';
 import path from 'path';
 
 const IS_WIN = process.platform === 'win32';
@@ -30,6 +31,28 @@ export function runCommand(
     const startTime = Date.now();
     let stdout = '';
     let stderr = '';
+
+    // Fail fast if cwd does not exist — avoids confusing "spawn /bin/sh ENOENT"
+    if (!fs.existsSync(cwd)) {
+      let diagnostic = `Working directory does not exist: ${cwd}`;
+      const parent = path.dirname(cwd);
+      if (fs.existsSync(parent)) {
+        try {
+          const contents = fs.readdirSync(parent);
+          diagnostic += `\nParent dir (${parent}) contains: ${contents.join(', ') || '(empty)'}`;
+        } catch { /* ignore */ }
+      } else {
+        diagnostic += `\nParent dir also missing: ${parent}`;
+      }
+      resolve({
+        success: false,
+        exitCode: -1,
+        stdout: '',
+        stderr: diagnostic,
+        duration: 0,
+      });
+      return;
+    }
 
     // Resolve platform-specific command names
     const resolvedCommand = resolveCommand(command);
@@ -146,7 +169,7 @@ export function getBackendTestCommands(
       return [
         {
           command: './mvnw',
-          args: ['test', '-q'],
+          args: ['test'],
           cwd: backendDir,
         },
       ];
@@ -181,7 +204,21 @@ export function getFrontendBuildCommands(frontendDir: string): BuildCommand[] {
 }
 
 /**
+ * Check if a failed npm install should be retried (tar corruption, ENOENT on node_modules).
+ */
+function isRetryableNpmError(stderr: string): boolean {
+  return (
+    stderr.includes('TAR_ENTRY_ERROR') ||
+    stderr.includes('tarball data for') ||
+    stderr.includes('seems to be corrupted') ||
+    // ENOENT inside node_modules (not missing package.json — that's a real error)
+    (stderr.includes('ENOENT') && stderr.includes('node_modules'))
+  );
+}
+
+/**
  * Run a sequence of build commands, stopping on first failure.
+ * npm install commands are retried once on transient tar/cache errors.
  */
 export async function runBuildSequence(
   commands: BuildCommand[],
@@ -192,7 +229,23 @@ export async function runBuildSequence(
   let allStderr = '';
 
   for (const cmd of commands) {
-    const result = await runCommand(cmd.command, cmd.args, cmd.cwd, timeoutPerStep);
+    let result = await runCommand(cmd.command, cmd.args, cmd.cwd, timeoutPerStep);
+
+    // Retry npm install once on transient cache/tar errors
+    if (
+      !result.success &&
+      cmd.command === 'npm' &&
+      cmd.args[0] === 'install' &&
+      isRetryableNpmError(result.stderr)
+    ) {
+      // Clean node_modules before retry
+      const nmDir = path.join(cmd.cwd, 'node_modules');
+      try {
+        fs.rmSync(nmDir, { recursive: true, force: true });
+      } catch { /* ignore */ }
+      result = await runCommand(cmd.command, cmd.args, cmd.cwd, timeoutPerStep);
+    }
+
     totalDuration += result.duration;
     allStdout += result.stdout;
     allStderr += result.stderr;

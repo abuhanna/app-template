@@ -48,7 +48,7 @@ class AuthControllerTest {
 
     @Test
     void login_returnsOk() throws Exception {
-        LoginRequest request = new LoginRequest("admin", null, "Admin@123");
+        LoginRequest request = new LoginRequest("external-sso-token");
         LoginResponse response = LoginResponse.builder()
                 .accessToken("jwt-token")
                 .expiresIn(3600)
@@ -102,7 +102,7 @@ class AuthControllerTest {
     @Test
     void getCurrentUser_returnsOk() throws Exception {
         UserInfoResponse response = UserInfoResponse.builder()
-                .id(1L)
+                .userId("1")
                 .username("admin")
                 .email("admin@test.com")
                 .role("ADMIN")

@@ -30,17 +30,25 @@ class NotificationsControllerTest {
     private GetUserNotificationsUseCase getUserNotificationsUseCase;
 
     @Mock
+    private GetUnreadNotificationCountUseCase getUnreadNotificationCountUseCase;
+
+    @Mock
     private MarkNotificationAsReadUseCase markNotificationAsReadUseCase;
 
     @Mock
     private MarkAllNotificationsAsReadUseCase markAllNotificationsAsReadUseCase;
 
+    @Mock
+    private DeleteNotificationUseCase deleteNotificationUseCase;
+
     @BeforeEach
     void setup() {
         NotificationsController controller = new NotificationsController(
                 getUserNotificationsUseCase,
+                getUnreadNotificationCountUseCase,
                 markNotificationAsReadUseCase,
-                markAllNotificationsAsReadUseCase
+                markAllNotificationsAsReadUseCase,
+                deleteNotificationUseCase
         );
         mockMvc = MockMvcBuilders.standaloneSetup(controller)
                 .setCustomArgumentResolvers(new PageableHandlerMethodArgumentResolver())
@@ -64,17 +72,17 @@ class NotificationsControllerTest {
     }
 
     @Test
-    void markAsRead_returnsOk() throws Exception {
+    void markAsRead_returnsNoContent() throws Exception {
         mockMvc.perform(put("/api/notifications/1/read"))
-                .andExpect(status().isOk());
+                .andExpect(status().isNoContent());
 
         verify(markNotificationAsReadUseCase).execute(1L);
     }
 
     @Test
-    void markAllAsRead_returnsOk() throws Exception {
+    void markAllAsRead_returnsNoContent() throws Exception {
         mockMvc.perform(put("/api/notifications/read-all"))
-                .andExpect(status().isOk());
+                .andExpect(status().isNoContent());
 
         verify(markAllNotificationsAsReadUseCase).execute();
     }

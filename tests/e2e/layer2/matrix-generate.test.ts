@@ -9,7 +9,7 @@ import { generateLocalProject, entryToConfig } from '../helpers/generate.js';
 import {
   getTestOutputDir,
   cleanupTestOutput,
-  ensureTestOutputBase,
+  globalSetup,
   cleanupAllTestOutputs,
 } from '../helpers/cleanup.js';
 const SKIP_DIRS = new Set(['node_modules', '.git', 'bin', 'obj', 'dist', 'build', 'target', '.gradle', '.mvn', '.idea']);
@@ -36,7 +36,7 @@ function findFilesByExt(dir: string, ext: string): string[] {
 const entries = getFilteredEntries();
 
 beforeAll(() => {
-  ensureTestOutputBase();
+  globalSetup();
 });
 
 afterAll(() => {

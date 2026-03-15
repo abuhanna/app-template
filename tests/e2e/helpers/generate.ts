@@ -9,7 +9,7 @@ import type { MatrixEntry } from '../config/matrix.js';
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const REPO_ROOT = path.resolve(__dirname, '../../..');
 
-// Directories and files to exclude when copying templates
+// Directories to exclude when copying templates
 const EXCLUDE_DIRS = new Set([
   'node_modules',
   '.git',
@@ -24,6 +24,35 @@ const EXCLUDE_DIRS = new Set([
 function cpFilter(src: string): boolean {
   const basename = path.basename(src);
   return !EXCLUDE_DIRS.has(basename);
+}
+
+/**
+ * Copy a directory tree with verification.
+ * Falls back to manual recursive copy if cpSync fails to produce output.
+ */
+function robustCopy(src: string, dest: string): void {
+  fs.cpSync(src, dest, { recursive: true, filter: cpFilter });
+
+  // Verify the copy produced at least some files
+  if (!fs.existsSync(dest) || fs.readdirSync(dest).length === 0) {
+    // cpSync silently failed — fall back to manual recursive copy
+    manualCopyDir(src, dest);
+  }
+}
+
+function manualCopyDir(src: string, dest: string): void {
+  fs.mkdirSync(dest, { recursive: true });
+  const entries = fs.readdirSync(src, { withFileTypes: true });
+  for (const entry of entries) {
+    if (EXCLUDE_DIRS.has(entry.name)) continue;
+    const srcPath = path.join(src, entry.name);
+    const destPath = path.join(dest, entry.name);
+    if (entry.isDirectory()) {
+      manualCopyDir(srcPath, destPath);
+    } else if (entry.isFile()) {
+      fs.copyFileSync(srcPath, destPath);
+    }
+  }
 }
 
 export interface GenerateOptions {
@@ -58,7 +87,7 @@ export async function generateLocalProject(opts: GenerateOptions): Promise<void>
       backendDest = config.placeInRoot ? destDir : path.join(destDir, 'backend');
     }
 
-    fs.cpSync(srcPath, backendDest, { recursive: true, filter: cpFilter });
+    robustCopy(srcPath, backendDest);
 
     // Ensure mvnw has execute permission (git on Windows doesn't preserve Unix file modes)
     if (config.backend === 'spring' && process.platform !== 'win32') {
@@ -86,7 +115,7 @@ export async function generateLocalProject(opts: GenerateOptions): Promise<void>
       frontendDest = config.placeInRoot ? destDir : path.join(destDir, 'frontend');
     }
 
-    fs.cpSync(srcPath, frontendDest, { recursive: true, filter: cpFilter });
+    robustCopy(srcPath, frontendDest);
   }
 
   // Step 1c: Copy shared/root files (replicates copyRootFiles from download.ts)
@@ -129,8 +158,8 @@ export async function generateLocalProject(opts: GenerateOptions): Promise<void>
 async function copySharedFiles(destDir: string, config: ProjectConfig): Promise<void> {
   const sharedCommon = path.join(REPO_ROOT, 'shared', 'common');
 
-  // Common files (all project types)
-  fs.cpSync(sharedCommon, destDir, { recursive: true });
+  // Common files (all project types) — use robustCopy for reliability
+  robustCopy(sharedCommon, destDir);
 
   if (config.projectType === 'fullstack') {
     // Docker infrastructure
@@ -141,8 +170,8 @@ async function copySharedFiles(destDir: string, config: ProjectConfig): Promise<
 
     fs.mkdirSync(nginxDest, { recursive: true });
     fs.mkdirSync(supervisorDest, { recursive: true });
-    fs.cpSync(nginxSrc, nginxDest, { recursive: true });
-    fs.cpSync(supervisorSrc, supervisorDest, { recursive: true });
+    robustCopy(nginxSrc, nginxDest);
+    robustCopy(supervisorSrc, supervisorDest);
 
     // Backend-specific templates
     const templateSrc = path.join(REPO_ROOT, 'shared', 'templates', config.backend);
