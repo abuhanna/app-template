@@ -14,6 +14,7 @@ export default defineConfig({
     alias: sharedAlias,
     testTimeout: 180_000,
     hookTimeout: 300_000,
+    fileParallelism: false,
     sequence: { concurrent: false },
   },
 });
