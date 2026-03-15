@@ -3,6 +3,7 @@ import {
   Get,
   Post,
   Param,
+  Query,
   ParseIntPipe,
   HttpCode,
   HttpStatus,
@@ -12,6 +13,8 @@ import { CommandBus, QueryBus } from '@nestjs/cqrs';
 import { ApiTags, ApiOperation, ApiResponse, ApiBearerAuth } from '@nestjs/swagger';
 import { JwtAuthGuard } from '@/common/guards/jwt-auth.guard';
 import { CurrentUser, CurrentUserPayload } from '@/common/decorators/current-user.decorator';
+import { ResponseMessage } from '@/common/decorators/response-message.decorator';
+import { PagedResult } from '@/common/types/paginated';
 import { NotificationDto } from '../application/dto/notification.dto';
 import {
   MarkNotificationReadCommand,
@@ -30,10 +33,25 @@ export class NotificationsController {
   ) {}
 
   @Get()
+  @ResponseMessage('Notifications retrieved successfully')
   @ApiOperation({ summary: 'Get all notifications for current user' })
   @ApiResponse({ status: 200, type: [NotificationDto] })
-  async findAll(@CurrentUser() user: CurrentUserPayload): Promise<NotificationDto[]> {
-    return this.queryBus.execute(new GetNotificationsQuery(user.sub));
+  async findAll(
+    @CurrentUser() user: CurrentUserPayload,
+    @Query('page') page?: string,
+    @Query('pageSize') pageSize?: string,
+    @Query('sortBy') sortBy?: string,
+    @Query('sortOrder') sortOrder?: string,
+  ): Promise<PagedResult<NotificationDto>> {
+    return this.queryBus.execute(
+      new GetNotificationsQuery(
+        user.sub,
+        page ? parseInt(page, 10) : 1,
+        pageSize ? parseInt(pageSize, 10) : 10,
+        sortBy,
+        sortOrder as 'asc' | 'desc' | undefined,
+      ),
+    );
   }
 
   @Get('unread-count')

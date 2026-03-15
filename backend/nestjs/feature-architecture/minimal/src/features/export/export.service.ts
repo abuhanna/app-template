@@ -45,7 +45,7 @@ export class ExportService {
     const data = logs.map(l => ({
       ID: l.id,
       Action: l.action,
-      'Entity Name': l.entityName,
+      'Entity Type': l.entityName,
       'Entity ID': l.entityId || '',
       'User ID': l.userId || '',
       'User Name': l.userName || '',

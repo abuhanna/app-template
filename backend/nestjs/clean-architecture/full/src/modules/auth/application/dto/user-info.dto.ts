@@ -1,4 +1,4 @@
-import { ApiProperty } from '@nestjs/swagger';
+import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
 
 export class UserInfoDto {
   @ApiProperty({ description: 'User ID' })
@@ -25,8 +25,20 @@ export class UserInfoDto {
   @ApiProperty({ description: 'Department ID', nullable: true })
   departmentId: number | null;
 
-  @ApiProperty({ description: 'Department name', nullable: true })
+  @ApiPropertyOptional({ description: 'Department name', nullable: true })
   departmentName?: string | null;
+
+  @ApiProperty({ description: 'Whether the user is active' })
+  isActive: boolean;
+
+  @ApiPropertyOptional({ description: 'Last login timestamp', nullable: true })
+  lastLoginAt: Date | null;
+
+  @ApiProperty({ description: 'Account creation timestamp' })
+  createdAt: Date;
+
+  @ApiProperty({ description: 'Last update timestamp' })
+  updatedAt: Date;
 
   constructor(partial: Partial<UserInfoDto>) {
     Object.assign(this, partial);

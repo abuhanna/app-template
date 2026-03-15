@@ -61,7 +61,7 @@ export class AuditLogsController {
     return {
       id: log.id,
       action: log.action,
-      entityName: log.entityName,
+      entityType: log.entityName,
       entityId: log.entityId,
       userId: log.userId,
       userName: log.userName,

@@ -103,20 +103,46 @@ export class AuthService {
     );
   }
 
-  getMe(jwtPayload: any) {
+  async getMe(jwtPayload: any) {
+    const user = await this.userRepository.findOne({
+      where: { id: parseInt(jwtPayload.sub) },
+      relations: ['department'],
+    });
+
+    if (!user) {
+      return {
+        id: parseInt(jwtPayload.sub),
+        username: jwtPayload.username,
+        email: jwtPayload.email,
+        firstName: jwtPayload.firstName || null,
+        lastName: jwtPayload.lastName || null,
+        fullName: jwtPayload.firstName && jwtPayload.lastName
+          ? `${jwtPayload.firstName} ${jwtPayload.lastName}`
+          : jwtPayload.firstName || jwtPayload.lastName || null,
+        role: jwtPayload.role,
+        departmentId: jwtPayload.departmentId ? parseInt(jwtPayload.departmentId) : null,
+        departmentName: jwtPayload.departmentName || null,
+        isActive: true,
+        lastLoginAt: null,
+        createdAt: null,
+        updatedAt: null,
+      };
+    }
+
     return {
-      id: parseInt(jwtPayload.sub),
-      username: jwtPayload.username,
-      email: jwtPayload.email,
-      firstName: jwtPayload.firstName || null,
-      lastName: jwtPayload.lastName || null,
-      fullName: jwtPayload.firstName && jwtPayload.lastName
-        ? `${jwtPayload.firstName} ${jwtPayload.lastName}`
-        : jwtPayload.firstName || jwtPayload.lastName || null,
-      role: jwtPayload.role,
-      departmentId: jwtPayload.departmentId ? parseInt(jwtPayload.departmentId) : null,
-      departmentName: jwtPayload.departmentName || null,
-      isActive: true,
+      id: user.id,
+      username: user.username,
+      email: user.email,
+      firstName: user.firstName || null,
+      lastName: user.lastName || null,
+      fullName: user.fullName,
+      role: user.role,
+      departmentId: user.departmentId || null,
+      departmentName: user.departmentName,
+      isActive: user.isActive,
+      lastLoginAt: user.lastLoginAt ? user.lastLoginAt.toISOString() : null,
+      createdAt: user.createdAt.toISOString(),
+      updatedAt: user.updatedAt ? user.updatedAt.toISOString() : null,
     };
   }
 

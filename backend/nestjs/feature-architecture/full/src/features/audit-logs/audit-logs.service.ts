@@ -93,7 +93,7 @@ export class AuditLogsService {
     return {
       id: log.id,
       action: log.action,
-      entityName: log.entityName,
+      entityType: log.entityName,
       entityId: log.entityId || null,
       oldValues: log.oldValues || null,
       newValues: log.newValues || null,

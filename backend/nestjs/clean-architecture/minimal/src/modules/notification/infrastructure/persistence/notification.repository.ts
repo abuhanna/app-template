@@ -26,6 +26,38 @@ export class NotificationRepository implements INotificationRepository {
     return entities.map((entity) => this.toDomain(entity));
   }
 
+  async findByUserIdPaginated(
+    userId: string,
+    page: number,
+    pageSize: number,
+    sortBy?: string,
+    sortOrder?: 'asc' | 'desc',
+  ): Promise<{ data: Notification[]; total: number }> {
+    const validSortFields: Record<string, string> = {
+      id: 'notification.id',
+      title: 'notification.title',
+      type: 'notification.type',
+      isRead: 'notification.is_read',
+      createdAt: 'notification.created_at',
+    };
+
+    const queryBuilder = this.repository.createQueryBuilder('notification');
+    queryBuilder.where('notification.user_id = :userId', { userId });
+
+    const orderField = sortBy && validSortFields[sortBy] ? validSortFields[sortBy] : 'notification.created_at';
+    const orderDir = (sortOrder?.toUpperCase() === 'ASC' ? 'ASC' : 'DESC') as 'ASC' | 'DESC';
+    queryBuilder.orderBy(orderField, orderDir);
+
+    queryBuilder.skip((page - 1) * pageSize).take(pageSize);
+
+    const [entities, total] = await queryBuilder.getManyAndCount();
+
+    return {
+      data: entities.map((entity) => this.toDomain(entity)),
+      total,
+    };
+  }
+
   async findUnreadByUserId(userId: string): Promise<Notification[]> {
     const entities = await this.repository.find({
       where: { userId, isRead: false },

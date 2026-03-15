@@ -38,6 +38,10 @@ export class GetMyProfileHandler implements IQueryHandler<GetMyProfileQuery> {
       role: user.role,
       departmentId: user.departmentId,
       departmentName,
+      isActive: user.isActive,
+      lastLoginAt: user.lastLoginAt,
+      createdAt: user.createdAt,
+      updatedAt: user.updatedAt,
     });
   }
 }

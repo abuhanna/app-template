@@ -262,6 +262,9 @@ export class AuthService {
       departmentId: user.departmentId || null,
       departmentName: user.department?.name || null,
       isActive: user.isActive,
+      lastLoginAt: user.lastLoginAt ? user.lastLoginAt.toISOString() : null,
+      createdAt: user.createdAt?.toISOString(),
+      updatedAt: user.updatedAt ? user.updatedAt.toISOString() : null,
     };
   }
 }

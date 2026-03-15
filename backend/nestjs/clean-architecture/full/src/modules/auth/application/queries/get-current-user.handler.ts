@@ -38,6 +38,10 @@ export class GetCurrentUserHandler implements IQueryHandler<GetCurrentUserQuery>
       role: user.role,
       departmentId: user.departmentId,
       departmentName,
+      isActive: user.isActive,
+      lastLoginAt: user.lastLoginAt,
+      createdAt: user.createdAt,
+      updatedAt: user.updatedAt,
     });
   }
 }

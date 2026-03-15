@@ -17,10 +17,11 @@ import { FileInterceptor } from '@nestjs/platform-express';
 import { ApiTags, ApiOperation, ApiResponse, ApiBearerAuth, ApiConsumes, ApiBody } from '@nestjs/swagger';
 import { Response } from 'express';
 import { JwtAuthGuard } from '@/common/guards/jwt-auth.guard';
+import { ResponseMessage } from '@/common/decorators/response-message.decorator';
+import { PagedResult } from '@/common/types/paginated';
 import { UploadedFileDto } from '../application/dto';
 import { UploadFileCommand, DeleteFileCommand } from '../application/commands';
 import { GetFilesQuery, GetFileByIdQuery, DownloadFileQuery } from '../application/queries';
-import { PaginatedResult } from '../application/queries/get-files.handler';
 import { FileDownloadResult } from '../application/queries/download-file.handler';
 
 @ApiTags('Files')
@@ -36,6 +37,7 @@ export class FilesController {
   ) {}
 
   @Get()
+  @ResponseMessage('Files retrieved successfully')
   @ApiOperation({ summary: 'Get all files' })
   @ApiResponse({ status: 200, description: 'List of files' })
   async findAll(
@@ -43,7 +45,7 @@ export class FilesController {
     @Query('isPublic') isPublic?: string,
     @Query('page') page?: string,
     @Query('pageSize') pageSize?: string,
-  ): Promise<PaginatedResult<UploadedFileDto>> {
+  ): Promise<PagedResult<UploadedFileDto>> {
     return this.queryBus.execute(
       new GetFilesQuery(
         category,

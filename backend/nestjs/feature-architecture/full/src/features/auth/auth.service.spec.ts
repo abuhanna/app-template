@@ -123,7 +123,7 @@ describe('AuthService', () => {
   });
 
   describe('getMe', () => {
-    it('should return user info from JWT payload', () => {
+    it('should return user info from database', async () => {
       const payload = {
         sub: '1',
         email: 'john@example.com',
@@ -135,11 +135,40 @@ describe('AuthService', () => {
         departmentName: null,
       };
 
-      const result = service.getMe(payload);
+      mockUserRepository.findOne.mockResolvedValue(mockUser);
+
+      const result = await service.getMe(payload);
 
       expect(result.id).toBe(1);
       expect(result.email).toBe('john@example.com');
       expect(result.fullName).toBe('John Doe');
+      expect(result.isActive).toBe(true);
+      expect(result.createdAt).toBeDefined();
+      expect(result.updatedAt).toBeDefined();
+    });
+
+    it('should return fallback info when user not found in database', async () => {
+      const payload = {
+        sub: '1',
+        email: 'john@example.com',
+        username: 'johndoe',
+        firstName: 'John',
+        lastName: 'Doe',
+        role: 'user',
+        departmentId: null,
+        departmentName: null,
+      };
+
+      mockUserRepository.findOne.mockResolvedValue(null);
+
+      const result = await service.getMe(payload);
+
+      expect(result.id).toBe(1);
+      expect(result.email).toBe('john@example.com');
+      expect(result.isActive).toBe(true);
+      expect(result.lastLoginAt).toBeNull();
+      expect(result.createdAt).toBeNull();
+      expect(result.updatedAt).toBeNull();
     });
   });
 });

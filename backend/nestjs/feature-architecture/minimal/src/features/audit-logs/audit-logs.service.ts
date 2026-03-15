@@ -92,7 +92,7 @@ export class AuditLogsService {
   private mapToResponse(log: AuditLog): any {
     return {
       id: log.id,
-      entityName: log.entityName,
+      entityType: log.entityName,
       entityId: log.entityId || null,
       action: log.action,
       oldValues: log.oldValues || null,

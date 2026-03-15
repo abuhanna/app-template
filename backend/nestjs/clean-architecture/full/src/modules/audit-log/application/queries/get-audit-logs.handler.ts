@@ -26,7 +26,7 @@ export class GetAuditLogsHandler implements IQueryHandler<GetAuditLogsQuery> {
     const auditLogDtos: AuditLogDto[] = result.items.map((log) => ({
       id: log.id,
       action: log.action,
-      entityName: log.entityName,
+      entityType: log.entityName,
       entityId: log.entityId,
       userId: log.userId !== null ? String(log.userId) : null,
       userName: log.userName,

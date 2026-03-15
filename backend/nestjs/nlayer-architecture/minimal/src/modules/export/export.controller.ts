@@ -25,14 +25,14 @@ export class ExportController {
   async exportAuditLogs(
     @Res() res: Response,
     @Query('format') format: string = 'xlsx',
-    @Query('entityName') entityName?: string,
+    @Query('entityType') entityType?: string,
     @Query('action') action?: string,
     @Query('fromDate') fromDate?: string,
     @Query('toDate') toDate?: string,
   ) {
     const result = await this.auditLogsService.findAll(
       1, 10000, undefined, undefined, undefined,
-      entityName, undefined, undefined, action, fromDate, toDate,
+      entityType, undefined, undefined, action, fromDate, toDate,
     );
     const data = result.data;
 

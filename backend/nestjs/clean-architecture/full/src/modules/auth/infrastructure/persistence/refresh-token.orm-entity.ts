@@ -13,7 +13,7 @@ export class RefreshTokenOrmEntity {
   @JoinColumn({ name: 'user_id' })
   user?: UserOrmEntity;
 
-  @Column({ length: 255, unique: true })
+  @Column({ type: 'text', unique: true })
   token: string;
 
   @Column({ name: 'expires_at', type: 'timestamptz' })
@@ -31,7 +31,7 @@ export class RefreshTokenOrmEntity {
   @Column({ name: 'revoked_at', type: 'timestamptz', nullable: true })
   revokedAt: Date | null;
 
-  @Column({ name: 'replaced_by_token', type: 'varchar', length: 255, nullable: true })
+  @Column({ name: 'replaced_by_token', type: 'text', nullable: true })
   replacedByToken: string | null;
 
   @CreateDateColumn({ name: 'created_at', type: 'timestamptz' })

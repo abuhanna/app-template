@@ -13,7 +13,7 @@ export class RefreshToken {
   @JoinColumn({ name: 'user_id' })
   user: User;
 
-  @Column({ type: 'varchar', length: 255, unique: true })
+  @Column({ type: 'text', unique: true })
   token: string;
 
   @Column({ name: 'expires_at', type: 'timestamptz' })
@@ -22,7 +22,7 @@ export class RefreshToken {
   @Column({ name: 'revoked_at', type: 'timestamptz', nullable: true })
   revokedAt: Date;
 
-  @Column({ name: 'replaced_by_token', type: 'varchar', length: 255, nullable: true })
+  @Column({ name: 'replaced_by_token', type: 'text', nullable: true })
   replacedByToken: string;
 
   @Column({ name: 'created_by_ip', type: 'varchar', length: 45, nullable: true })

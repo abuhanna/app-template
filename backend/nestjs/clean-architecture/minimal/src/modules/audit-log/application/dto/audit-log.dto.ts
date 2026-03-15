@@ -10,7 +10,7 @@ export class AuditLogDto {
   action: string;
 
   @ApiProperty()
-  entityName: string;
+  entityType: string;
 
   @ApiPropertyOptional()
   entityId: string | null;
