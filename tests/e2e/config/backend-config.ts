@@ -96,7 +96,7 @@ export function getStartCommand(target: BackendTarget): StartCommand {
           : 'src/App.Template.Api';
       return {
         command: 'dotnet',
-        args: ['run', '--project', project],
+        args: ['run', '--no-build', '--project', project],
         cwd: baseDir,
       };
     }

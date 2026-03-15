@@ -16,6 +16,7 @@ import {
 import { httpPost, authHeader } from './http-client.js';
 
 const IS_WIN = process.platform === 'win32';
+const IS_CI = process.env.CI === 'true';
 
 // ─── Types ──────────────────────────────────────────────────────────────────
 
@@ -26,6 +27,8 @@ export interface ServerHandle {
   baseUrl: string;
   accessToken?: string;
   refreshToken?: string;
+  /** Captured server output for diagnostics on failure */
+  serverOutput: string[];
 }
 
 interface StartOptions {
@@ -39,8 +42,83 @@ let activeHandle: ServerHandle | null = null;
 // ─── Server Lifecycle ───────────────────────────────────────────────────────
 
 /**
+ * Pre-build a backend project so that `startServer` only needs to boot (no compile wait).
+ * Separates compile time from health-check timeout.
+ */
+function preBuild(target: BackendTarget, baseDir: string, env: NodeJS.ProcessEnv, verbose: boolean): void {
+  const label = `${target.stack}/${target.arch}/${target.variant}`;
+
+  if (target.stack === 'nestjs') {
+    const nestBin = resolve(baseDir, 'node_modules', '.bin', IS_WIN ? 'nest.cmd' : 'nest');
+    if (!existsSync(nestBin)) {
+      console.log(`  [pre-build] ${label}: npm install`);
+      execSync(IS_WIN ? 'npm.cmd install' : 'npm install', {
+        cwd: baseDir,
+        stdio: verbose ? 'inherit' : 'pipe',
+      });
+    }
+    console.log(`  [pre-build] ${label}: nest build`);
+    execSync(IS_WIN ? 'npm.cmd run build' : 'npm run build', {
+      cwd: baseDir,
+      env,
+      stdio: verbose ? 'inherit' : 'pipe',
+    });
+  }
+
+  if (target.stack === 'dotnet') {
+    // Pre-build with dotnet build so that `dotnet run` only needs to start
+    const project =
+      target.arch === 'clean'
+        ? 'src/Presentation/App.Template.WebAPI'
+        : 'src/App.Template.Api';
+    console.log(`  [pre-build] ${label}: dotnet build`);
+    execSync(`dotnet build ${project}`, {
+      cwd: baseDir,
+      env,
+      stdio: verbose ? 'inherit' : 'pipe',
+      timeout: 300_000, // 5 min for restore + compile
+    });
+  }
+
+  if (target.stack === 'spring') {
+    // Ensure mvnw is executable on Linux/macOS
+    if (!IS_WIN) {
+      const mvnwPath = resolve(baseDir, 'mvnw');
+      if (existsSync(mvnwPath)) {
+        try { chmodSync(mvnwPath, 0o755); } catch { /* ignore */ }
+      }
+    }
+
+    const mvnw = IS_WIN ? resolve(baseDir, 'mvnw.cmd') : resolve(baseDir, 'mvnw');
+    const mvnCmd = existsSync(mvnw) ? mvnw : (IS_WIN ? 'mvn.cmd' : 'mvn');
+
+    if (target.arch === 'clean') {
+      // Multi-module: install all modules to local repo so api/ can resolve them
+      console.log(`  [pre-build] ${label}: mvn install (multi-module)`);
+      execSync(`"${mvnCmd}" install -DskipTests -q`, {
+        cwd: baseDir,
+        env,
+        shell: IS_WIN ? 'cmd.exe' : '/bin/sh',
+        stdio: verbose ? 'inherit' : 'pipe',
+        timeout: 300_000, // 5 min for Maven compile
+      });
+    } else {
+      // Single-module (feature/nlayer): compile is sufficient
+      console.log(`  [pre-build] ${label}: mvn compile`);
+      execSync(`"${mvnCmd}" compile -DskipTests -q`, {
+        cwd: baseDir,
+        env,
+        shell: IS_WIN ? 'cmd.exe' : '/bin/sh',
+        stdio: verbose ? 'inherit' : 'pipe',
+        timeout: 300_000, // 5 min for Maven compile
+      });
+    }
+  }
+}
+
+/**
  * Start a backend server for contract testing.
- * For NestJS: runs npm install + npm run build first.
+ * Pre-builds the project first, then spawns the server process.
  */
 export function startServer(
   target: BackendTarget,
@@ -50,36 +128,11 @@ export function startServer(
   const { command, args, cwd } = getStartCommand(target);
   const envOverrides = getEnvOverrides(target.stack);
   const baseDir = getBackendDir(target);
-
-  // NestJS: pre-install and pre-build
-  if (target.stack === 'nestjs') {
-    const nestBin = resolve(baseDir, 'node_modules', '.bin', IS_WIN ? 'nest.cmd' : 'nest');
-    if (!existsSync(nestBin)) {
-      execSync(IS_WIN ? 'npm.cmd install' : 'npm install', {
-        cwd: baseDir,
-        stdio: verbose ? 'inherit' : 'pipe',
-      });
-    }
-    execSync(IS_WIN ? 'npm.cmd run build' : 'npm run build', {
-      cwd: baseDir,
-      env: { ...process.env, ...envOverrides },
-      stdio: verbose ? 'inherit' : 'pipe',
-    });
-  }
-
-  // Spring: ensure mvnw is executable on Linux/macOS
-  if (target.stack === 'spring' && !IS_WIN) {
-    const mvnwPath = command;
-    if (existsSync(mvnwPath)) {
-      try {
-        chmodSync(mvnwPath, 0o755);
-      } catch {
-        // Ignore permission errors (e.g., read-only filesystem)
-      }
-    }
-  }
-
   const env = { ...process.env, ...envOverrides };
+
+  // Pre-build to separate compile time from health-check timeout
+  preBuild(target, baseDir, env, verbose);
+
   const proc = spawn(command, args, {
     cwd,
     env,
@@ -87,12 +140,22 @@ export function startServer(
     stdio: ['ignore', 'pipe', 'pipe'],
   });
 
+  // Capture server output for diagnostics (always capture, show on CI or verbose)
+  const serverOutput: string[] = [];
+
   proc.stdout?.on('data', (data: Buffer) => {
-    if (verbose) process.stdout.write(`  [out] ${data.toString()}`);
+    const line = data.toString();
+    serverOutput.push(line);
+    // Keep buffer bounded
+    if (serverOutput.length > 200) serverOutput.shift();
+    if (verbose || IS_CI) process.stdout.write(`  [${target.stack}:out] ${line}`);
   });
 
   proc.stderr?.on('data', (data: Buffer) => {
-    if (verbose) process.stderr.write(`  [err] ${data.toString()}`);
+    const line = data.toString();
+    serverOutput.push(`[ERR] ${line}`);
+    if (serverOutput.length > 200) serverOutput.shift();
+    if (verbose || IS_CI) process.stderr.write(`  [${target.stack}:err] ${line}`);
   });
 
   const port = getBasePort();
@@ -101,6 +164,7 @@ export function startServer(
     stack: target.stack,
     port,
     baseUrl: `http://localhost:${port}`,
+    serverOutput,
   };
 
   activeHandle = handle;
@@ -113,7 +177,7 @@ export function startServer(
  */
 export async function waitForHealth(
   baseUrl: string,
-  timeoutSec = 120,
+  timeoutSec = 180,
 ): Promise<boolean> {
   const deadline = Date.now() + timeoutSec * 1000;
   const pollInterval = 2000;
@@ -153,26 +217,43 @@ export async function waitForPostStartup(stack: string): Promise<void> {
 
 /**
  * Login as admin and return tokens.
+ * Retries once after a short delay to handle post-startup race conditions.
  */
 export async function loginAsAdmin(
   baseUrl: string,
+  serverHandle?: ServerHandle,
 ): Promise<{ accessToken: string; refreshToken: string }> {
-  const res = await httpPost(`${baseUrl}/api/auth/login`, {
-    username: 'admin',
-    email: 'admin@apptemplate.com',
-    password: 'Admin@123',
-  });
+  // Try login with one retry after delay (handles seed race conditions)
+  for (let attempt = 0; attempt < 2; attempt++) {
+    const res = await httpPost(`${baseUrl}/api/auth/login`, {
+      username: 'admin',
+      email: 'admin@apptemplate.com',
+      password: 'Admin@123',
+    });
 
-  if (!res.ok || !res.body?.data?.accessToken) {
+    if (res.ok && res.body?.data?.accessToken) {
+      return {
+        accessToken: res.body.data.accessToken,
+        refreshToken: res.body.data.refreshToken,
+      };
+    }
+
+    // On first failure, wait and retry
+    if (attempt === 0) {
+      console.log(`  [login] Attempt 1 failed (status=${res.status}), retrying after 5s...`);
+      await sleep(5000);
+      continue;
+    }
+
+    // Final failure — include server output for diagnostics
+    const serverLogs = serverHandle?.serverOutput?.slice(-30).join('') || '(no server output captured)';
     throw new Error(
-      `Login failed: status=${res.status} body=${JSON.stringify(res.body)}`,
+      `Login failed: status=${res.status} body=${JSON.stringify(res.body)}\n--- Last server output ---\n${serverLogs}`,
     );
   }
 
-  return {
-    accessToken: res.body.data.accessToken,
-    refreshToken: res.body.data.refreshToken,
-  };
+  // Unreachable, but TypeScript needs it
+  throw new Error('Login failed after retries');
 }
 
 /**

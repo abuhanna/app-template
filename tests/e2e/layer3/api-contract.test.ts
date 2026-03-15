@@ -91,10 +91,11 @@ describe('API Contract Tests', () => {
           throw new Error(`Backend exited immediately with code ${server.process.exitCode}`);
         }
 
-        // Wait for health
-        const healthy = await waitForHealth(BASE_URL, 120);
+        // Wait for health (180s default, pre-build already compiled)
+        const healthy = await waitForHealth(BASE_URL);
         if (!healthy) {
-          throw new Error(`Health check timed out for ${label}`);
+          const logs = server.serverOutput?.slice(-20).join('') || '';
+          throw new Error(`Health check timed out for ${label}\n--- Server output ---\n${logs}`);
         }
 
         // Wait for post-startup tasks (seeding)
@@ -102,11 +103,11 @@ describe('API Contract Tests', () => {
 
         // Login (full variant has internal auth)
         if (isFull) {
-          const tokens = await loginAsAdmin(BASE_URL);
+          const tokens = await loginAsAdmin(BASE_URL, server);
           accessToken = tokens.accessToken;
           refreshToken = tokens.refreshToken;
         }
-      }, 300_000);
+      }, 600_000); // 10 min: pre-build + startup + health check
 
       afterAll(async () => {
         if (server) {

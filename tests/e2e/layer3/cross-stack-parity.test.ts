@@ -124,9 +124,10 @@ describe('Cross-stack response parity', () => {
           continue;
         }
 
-        const healthy = await waitForHealth(BASE_URL, 120);
+        const healthy = await waitForHealth(BASE_URL);
         if (!healthy) {
-          captureError = `${stack} health check timed out`;
+          const logs = server.serverOutput?.slice(-20).join('') || '';
+          captureError = `${stack} health check timed out\n--- Server output ---\n${logs}`;
           await stopServer(server);
           continue;
         }
@@ -134,7 +135,7 @@ describe('Cross-stack response parity', () => {
         await waitForPostStartup(stack);
 
         // Login
-        const { accessToken } = await loginAsAdmin(BASE_URL);
+        const { accessToken } = await loginAsAdmin(BASE_URL, server);
         const headers = authHeader(accessToken);
 
         // Capture responses
