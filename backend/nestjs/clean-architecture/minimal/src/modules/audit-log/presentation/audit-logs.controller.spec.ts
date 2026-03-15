@@ -164,7 +164,7 @@ describe('AuditLogsController', () => {
       expect(result).toEqual({
         id: 1,
         action: 'CREATE',
-        entityName: 'User',
+        entityType: 'User',
         entityId: '1',
         userId: '1',
         userName: 'admin',
