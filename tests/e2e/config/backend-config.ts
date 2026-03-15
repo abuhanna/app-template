@@ -105,7 +105,7 @@ export function getStartCommand(target: BackendTarget): StartCommand {
         return {
           command: IS_WIN
             ? resolve(baseDir, 'mvnw.cmd')
-            : resolve(baseDir, '..', 'mvnw'),
+            : resolve(baseDir, 'mvnw'),
           args: ['spring-boot:run'],
           cwd: resolve(baseDir, 'api'),
         };

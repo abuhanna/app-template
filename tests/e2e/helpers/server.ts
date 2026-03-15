@@ -4,7 +4,7 @@
  */
 
 import { spawn, execSync, type ChildProcess } from 'child_process';
-import { existsSync } from 'fs';
+import { existsSync, chmodSync } from 'fs';
 import { resolve } from 'path';
 import type { BackendTarget } from '../config/backend-config.js';
 import {
@@ -53,7 +53,8 @@ export function startServer(
 
   // NestJS: pre-install and pre-build
   if (target.stack === 'nestjs') {
-    if (!existsSync(resolve(baseDir, 'node_modules'))) {
+    const nestBin = resolve(baseDir, 'node_modules', '.bin', IS_WIN ? 'nest.cmd' : 'nest');
+    if (!existsSync(nestBin)) {
       execSync(IS_WIN ? 'npm.cmd install' : 'npm install', {
         cwd: baseDir,
         stdio: verbose ? 'inherit' : 'pipe',
@@ -64,6 +65,18 @@ export function startServer(
       env: { ...process.env, ...envOverrides },
       stdio: verbose ? 'inherit' : 'pipe',
     });
+  }
+
+  // Spring: ensure mvnw is executable on Linux/macOS
+  if (target.stack === 'spring' && !IS_WIN) {
+    const mvnwPath = command;
+    if (existsSync(mvnwPath)) {
+      try {
+        chmodSync(mvnwPath, 0o755);
+      } catch {
+        // Ignore permission errors (e.g., read-only filesystem)
+      }
+    }
   }
 
   const env = { ...process.env, ...envOverrides };
