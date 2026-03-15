@@ -5,6 +5,12 @@ spring:
   application:
     name: AppTemplate
 
+  data:
+    web:
+      pageable:
+        size-parameter: pageSize
+        one-indexed-parameters: true
+
   datasource:
     url: jdbc:postgresql://${DB_HOST:localhost}:${DB_PORT:5432}/${DB_NAME:apptemplate}
     username: ${DB_USER:apptemplate}
