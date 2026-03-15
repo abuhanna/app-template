@@ -18,5 +18,6 @@ export default defineConfig({
     poolOptions: {
       forks: { maxForks: 2 },
     },
+    globalSetup: [path.join(__dirname, 'e2e/helpers/vitest-global-setup.ts')],
   },
 });

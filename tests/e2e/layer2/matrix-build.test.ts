@@ -16,23 +16,14 @@ import {
 import {
   getTestOutputDir,
   cleanupTestOutput,
-  globalSetup,
-  cleanupAllTestOutputs,
 } from '../helpers/cleanup.js';
 
 // Default: critical only. E2E_ALL=1 for full matrix.
 // Supports BACKEND_FILTER and FRONTEND_FILTER for CI matrix splitting.
 const entries = getFilteredEntries();
 
-beforeAll(() => {
-  globalSetup();
-});
-
-afterAll(() => {
-  if (!process.env.KEEP_TEST_OUTPUT) {
-    cleanupAllTestOutputs();
-  }
-});
+// Global setup/teardown is handled by vitest globalSetup (vitest-global-setup.ts)
+// to avoid race conditions when test files run in parallel forks.
 
 describe.each(entries)('build $id', (entry: MatrixEntry) => {
   const testDir = getTestOutputDir(`build-${entry.id}`);

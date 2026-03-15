@@ -9,8 +9,6 @@ import { generateLocalProject, entryToConfig } from '../helpers/generate.js';
 import {
   getTestOutputDir,
   cleanupTestOutput,
-  globalSetup,
-  cleanupAllTestOutputs,
 } from '../helpers/cleanup.js';
 const SKIP_DIRS = new Set(['node_modules', '.git', 'bin', 'obj', 'dist', 'build', 'target', '.gradle', '.mvn', '.idea']);
 
@@ -35,15 +33,8 @@ function findFilesByExt(dir: string, ext: string): string[] {
 // Supports BACKEND_FILTER and FRONTEND_FILTER for CI matrix splitting
 const entries = getFilteredEntries();
 
-beforeAll(() => {
-  globalSetup();
-});
-
-afterAll(() => {
-  if (!process.env.KEEP_TEST_OUTPUT) {
-    cleanupAllTestOutputs();
-  }
-});
+// Global setup/teardown is handled by vitest globalSetup (vitest-global-setup.ts)
+// to avoid race conditions when test files run in parallel forks.
 
 describe.each(entries)('generate $id', (entry: MatrixEntry) => {
   const testDir = getTestOutputDir(entry.id);
