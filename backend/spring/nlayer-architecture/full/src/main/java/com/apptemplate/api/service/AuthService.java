@@ -211,6 +211,9 @@ public class AuthService {
                 .role(user.getRole())
                 .departmentId(user.getDepartmentId())
                 .isActive(user.isActive())
+                .createdAt(user.getCreatedAt())
+                .updatedAt(user.getUpdatedAt())
+                .lastLoginAt(user.getLastLoginAt())
                 .build();
     }
 

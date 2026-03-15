@@ -7,6 +7,8 @@ import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
+import java.time.LocalDateTime;
+
 @Data
 @Builder
 @AllArgsConstructor
@@ -33,6 +35,9 @@ public class AuthResponse {
         private String departmentName;
         @JsonProperty("isActive")
         private boolean isActive;
+        private LocalDateTime createdAt;
+        private LocalDateTime updatedAt;
+        private LocalDateTime lastLoginAt;
 
         public static UserDto fromEntity(User user) {
             return UserDto.builder()
@@ -46,6 +51,9 @@ public class AuthResponse {
                     .departmentId(user.getDepartmentId())
                     .departmentName(user.getDepartmentName())
                     .isActive(user.isActive())
+                    .createdAt(user.getCreatedAt())
+                    .updatedAt(user.getUpdatedAt())
+                    .lastLoginAt(user.getLastLoginAt())
                     .build();
         }
     }

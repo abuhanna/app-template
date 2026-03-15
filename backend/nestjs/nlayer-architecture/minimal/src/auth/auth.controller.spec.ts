@@ -34,7 +34,17 @@ describe('AuthController', () => {
       const tokenResponse = {
         accessToken: 'jwt-token',
         expiresIn: 900,
-        user: { id: 'user-1', username: 'johndoe', email: 'john@example.com', role: 'user' },
+        user: {
+          id: 'user-1',
+          username: 'johndoe',
+          email: 'john@example.com',
+          firstName: 'John',
+          lastName: 'Doe',
+          fullName: 'John Doe',
+          role: 'user',
+          departmentId: null,
+          departmentName: null,
+        },
       };
       mockAuthService.validateToken.mockResolvedValue(tokenResponse);
 
@@ -51,11 +61,28 @@ describe('AuthController', () => {
         id: 'user-1',
         username: 'johndoe',
         email: 'john@example.com',
+        firstName: 'John',
+        lastName: 'Doe',
+        fullName: 'John Doe',
         role: 'user',
+        departmentId: null,
+        departmentName: null,
       };
       mockAuthService.getMe.mockReturnValue(userInfo);
 
-      const req = { user: { userId: 'user-1', username: 'johndoe', email: 'john@example.com', role: 'user' } };
+      const req = {
+        user: {
+          userId: 'user-1',
+          sub: 'user-1',
+          username: 'johndoe',
+          email: 'john@example.com',
+          firstName: 'John',
+          lastName: 'Doe',
+          role: 'user',
+          departmentId: null,
+          departmentName: null,
+        },
+      };
       const result = await controller.me(req);
 
       expect(authService.getMe).toHaveBeenCalledWith(req.user);

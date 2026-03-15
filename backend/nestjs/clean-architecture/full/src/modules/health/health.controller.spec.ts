@@ -33,8 +33,6 @@ describe('HealthController', () => {
       const result = controller.health();
 
       expect(result).toHaveProperty('status', 'healthy');
-      expect(result).toHaveProperty('application', 'AppTemplate API');
-      expect(result).toHaveProperty('version', '1.0.0');
       expect(result).toHaveProperty('timestamp');
     });
 

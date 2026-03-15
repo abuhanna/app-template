@@ -22,8 +22,6 @@ export class HealthController {
     return {
       status: 'healthy',
       timestamp: new Date().toISOString(),
-      application: 'AppTemplate API',
-      version: '1.0.0',
     };
   }
 

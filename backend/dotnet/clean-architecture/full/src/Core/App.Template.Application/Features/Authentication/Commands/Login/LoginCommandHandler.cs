@@ -117,7 +117,10 @@ public class LoginCommandHandler : IRequestHandler<LoginCommand, LoginResponseDt
                 IsActive = user.IsActive,
                 Role = user.Role,
                 DepartmentId = user.DepartmentId,
-                DepartmentName = user.Department?.Name
+                DepartmentName = user.Department?.Name,
+                CreatedAt = user.CreatedAt,
+                UpdatedAt = user.UpdatedAt,
+                LastLoginAt = user.LastLoginAt
             }
         };
     }

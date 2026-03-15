@@ -15,4 +15,7 @@ public record UserInfoDto
     public string? Role { get; init; }
     public long? DepartmentId { get; init; }
     public string? DepartmentName { get; init; }
+    public DateTime CreatedAt { get; init; }
+    public DateTime? UpdatedAt { get; init; }
+    public DateTime? LastLoginAt { get; init; }
 }

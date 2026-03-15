@@ -15,6 +15,7 @@ public interface IAuthService
     Task<UserDto> RegisterAsync(RegisterRequest request);
     Task<RefreshResponse> RefreshTokenAsync(RefreshTokenRequest request);
     Task LogoutAsync();
+    Task<UserInfoDto> GetCurrentUserAsync(string userId);
     Task<UserDto> GetProfileAsync(string userId);
     Task<UserDto> UpdateProfileAsync(string userId, UpdateProfileRequest request);
     Task ChangePasswordAsync(string userId, ChangePasswordRequest request);
@@ -186,6 +187,19 @@ public class AuthService : IAuthService
         return Task.CompletedTask;
     }
 
+    public async Task<UserInfoDto> GetCurrentUserAsync(string userId)
+    {
+        if (!long.TryParse(userId, out var id))
+            throw new UnauthorizedAccessException("Invalid user ID");
+
+        var user = await _context.Users
+            .Include(u => u.Department)
+            .FirstOrDefaultAsync(u => u.Id == id)
+            ?? throw new InvalidOperationException("User not found");
+
+        return MapToUserInfo(user);
+    }
+
     public async Task<UserDto> GetProfileAsync(string userId)
     {
         if (!long.TryParse(userId, out var id))
@@ -302,7 +316,10 @@ public class AuthService : IAuthService
             Role = user.Role,
             DepartmentId = user.DepartmentId,
             DepartmentName = user.Department?.Name,
-            IsActive = user.IsActive
+            IsActive = user.IsActive,
+            CreatedAt = user.CreatedAt,
+            UpdatedAt = user.UpdatedAt,
+            LastLoginAt = user.LastLoginAt
         };
     }
 

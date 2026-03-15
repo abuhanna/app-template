@@ -49,31 +49,10 @@ public class AuthController : ControllerBase
 
     [Authorize]
     [HttpGet("me")]
-    public IActionResult GetCurrentUser()
+    public async Task<IActionResult> GetCurrentUser()
     {
-        var userId = User.FindFirstValue(ClaimTypes.NameIdentifier);
-        var username = User.FindFirstValue(ClaimTypes.Name);
-        var email = User.FindFirstValue(ClaimTypes.Email);
-        var role = User.FindFirstValue(ClaimTypes.Role);
-        var firstName = User.FindFirstValue("firstName");
-        var lastName = User.FindFirstValue("lastName");
-        var deptId = User.FindFirstValue("departmentId");
-        var deptName = User.FindFirstValue("departmentName");
-
-        var userInfo = new UserInfoDto
-        {
-            Id = long.TryParse(userId, out var id) ? id : 0,
-            Username = username ?? "",
-            Email = email ?? "",
-            FirstName = firstName,
-            LastName = lastName,
-            FullName = $"{firstName} {lastName}".Trim(),
-            Role = role,
-            DepartmentId = long.TryParse(deptId, out var did) ? did : null,
-            DepartmentName = deptName,
-            IsActive = true
-        };
-
+        var userId = User.FindFirstValue(ClaimTypes.NameIdentifier) ?? "";
+        var userInfo = await _authService.GetCurrentUserAsync(userId);
         return Ok(ApiResponse.Ok(userInfo, "User info retrieved"));
     }
 

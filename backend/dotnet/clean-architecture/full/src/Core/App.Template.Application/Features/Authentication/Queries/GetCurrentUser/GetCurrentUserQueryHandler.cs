@@ -1,41 +1,54 @@
 using AppTemplate.Application.DTOs.Auth;
+using AppTemplate.Application.Interfaces;
 
 using MediatR;
+
+using Microsoft.EntityFrameworkCore;
 
 namespace AppTemplate.Application.Features.Authentication.Queries.GetCurrentUser;
 
 /// <summary>
 /// Handler for GetCurrentUserQuery
 /// </summary>
-public class GetCurrentUserQueryHandler : IRequestHandler<GetCurrentUserQuery, UserInfoResponseDto>
+public class GetCurrentUserQueryHandler : IRequestHandler<GetCurrentUserQuery, UserInfoDto>
 {
-    public Task<UserInfoResponseDto> Handle(GetCurrentUserQuery request, CancellationToken cancellationToken)
+    private readonly IApplicationDbContext _context;
+    private readonly ICurrentUserService _currentUserService;
+
+    public GetCurrentUserQueryHandler(IApplicationDbContext context, ICurrentUserService currentUserService)
     {
-        var userId = request.User.FindFirst("sub")?.Value
-            ?? request.User.FindFirst("userId")?.Value
-            ?? request.User.FindFirst("id")?.Value;
+        _context = context;
+        _currentUserService = currentUserService;
+    }
 
-        var username = request.User.FindFirst("username")?.Value
-            ?? request.User.FindFirst("name")?.Value;
+    public async Task<UserInfoDto> Handle(GetCurrentUserQuery request, CancellationToken cancellationToken)
+    {
+        var userIdString = _currentUserService.UserId
+            ?? throw new UnauthorizedAccessException("User not authenticated");
 
-        var email = request.User.FindFirst("email")?.Value;
+        if (!long.TryParse(userIdString, out var userId))
+            throw new UnauthorizedAccessException("Invalid user ID");
 
-        var role = request.User.FindFirst("role")?.Value
-            ?? request.User.FindFirst("group")?.Value;
+        var user = await _context.Users
+            .Include(u => u.Department)
+            .FirstOrDefaultAsync(u => u.Id == userId, cancellationToken)
+            ?? throw new InvalidOperationException("User not found");
 
-        var userInfo = new UserInfoResponseDto
+        return new UserInfoDto
         {
-            UserId = userId,
-            Username = username,
-            Email = email,
-            Role = role,
-            Claims = request.User.Claims.Select(c => new ClaimInfoDto
-            {
-                Type = c.Type,
-                Value = c.Value
-            }).ToList()
+            Id = user.Id,
+            Username = user.Username,
+            Email = user.Email,
+            FirstName = user.FirstName,
+            LastName = user.LastName,
+            FullName = $"{user.FirstName} {user.LastName}".Trim(),
+            IsActive = user.IsActive,
+            Role = user.Role,
+            DepartmentId = user.DepartmentId,
+            DepartmentName = user.Department?.Name,
+            CreatedAt = user.CreatedAt,
+            UpdatedAt = user.UpdatedAt,
+            LastLoginAt = user.LastLoginAt
         };
-
-        return Task.FromResult(userInfo);
     }
 }

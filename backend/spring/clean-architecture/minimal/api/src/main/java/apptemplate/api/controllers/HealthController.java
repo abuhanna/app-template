@@ -30,8 +30,6 @@ public class HealthController {
         Map<String, Object> response = new HashMap<>();
         response.put("status", "healthy");
         response.put("timestamp", Instant.now().toString());
-        response.put("application", "AppTemplate API");
-        response.put("version", "1.0.0");
         return ResponseEntity.ok(response);
     }
 

@@ -43,7 +43,11 @@ describe('AuthService', () => {
         sub: 'user-1',
         email: 'john@example.com',
         username: 'johndoe',
+        firstName: 'John',
+        lastName: 'Doe',
         role: 'user',
+        departmentId: null,
+        departmentName: null,
       });
 
       const result = await service.validateToken('external-token');
@@ -52,6 +56,11 @@ describe('AuthService', () => {
       expect(result).toHaveProperty('accessToken', 'jwt-token');
       expect(result).toHaveProperty('expiresIn', 900);
       expect(result.user).toHaveProperty('username', 'johndoe');
+      expect(result.user).toHaveProperty('firstName', 'John');
+      expect(result.user).toHaveProperty('lastName', 'Doe');
+      expect(result.user).toHaveProperty('fullName', 'John Doe');
+      expect(result.user).toHaveProperty('departmentId', null);
+      expect(result.user).toHaveProperty('departmentName', null);
     });
 
     it('should throw UnauthorizedException for invalid token', async () => {
@@ -65,15 +74,29 @@ describe('AuthService', () => {
 
   describe('getMe', () => {
     it('should return user info from JWT claims', () => {
-      const user = { userId: 'user-1', username: 'johndoe', email: 'john@example.com', role: 'user' };
+      const jwtPayload = {
+        sub: 'user-1',
+        username: 'johndoe',
+        email: 'john@example.com',
+        firstName: 'John',
+        lastName: 'Doe',
+        role: 'user',
+        departmentId: null,
+        departmentName: null,
+      };
 
-      const result = service.getMe(user);
+      const result = service.getMe(jwtPayload);
 
       expect(result).toEqual({
         id: 'user-1',
         username: 'johndoe',
         email: 'john@example.com',
+        firstName: 'John',
+        lastName: 'Doe',
+        fullName: 'John Doe',
         role: 'user',
+        departmentId: null,
+        departmentName: null,
       });
     });
   });

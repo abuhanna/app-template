@@ -152,6 +152,10 @@ export function getEnvOverrides(stack: Stack): Record<string, string> {
         ...common,
         ConnectionStrings__DefaultConnection:
           `Host=${dbHost};Port=${dbPort};Database=apptemplate_test;Username=apptemplate;Password=apptemplate123`,
+        Jwt__Secret:
+          'test-secret-key-minimum-32-characters-long-for-hs256-algorithm',
+        Jwt__Issuer: 'AppTemplate',
+        Jwt__Audience: 'AppTemplate',
         ASPNETCORE_ENVIRONMENT: 'Development',
         ASPNETCORE_URLS: `http://+:${BASE_PORT}`,
       };
@@ -165,6 +169,7 @@ export function getEnvOverrides(stack: Stack): Record<string, string> {
         DB_PASSWORD: 'apptemplate123',
         JWT_SECRET:
           'test-secret-key-minimum-32-characters-long-for-hs256-algorithm',
+        RATE_LIMIT_ENABLED: 'false',
         SERVER_PORT: String(BASE_PORT),
       };
     case 'nestjs':

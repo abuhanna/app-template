@@ -31,7 +31,6 @@ describe('HealthController', () => {
       const result = controller.health();
 
       expect(result.status).toBe('healthy');
-      expect(result.application).toBe('AppTemplate API');
     });
   });
 

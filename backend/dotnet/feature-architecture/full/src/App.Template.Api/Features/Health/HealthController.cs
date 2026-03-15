@@ -19,9 +19,8 @@ public class HealthController : ControllerBase
     {
         return Ok(new
         {
-            Status = "Healthy",
-            Timestamp = DateTime.UtcNow,
-            Version = "1.0.0"
+            status = "healthy",
+            timestamp = DateTime.UtcNow
         });
     }
 

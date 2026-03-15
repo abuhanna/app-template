@@ -109,12 +109,11 @@ public class AuthController : ControllerBase
     /// </summary>
     [Authorize]
     [HttpGet("me")]
-    [ProducesResponseType(typeof(ApiResponse<UserInfoResponseDto>), StatusCodes.Status200OK)]
+    [ProducesResponseType(typeof(ApiResponse<UserInfoDto>), StatusCodes.Status200OK)]
     [ProducesResponseType(StatusCodes.Status401Unauthorized)]
     public async Task<IActionResult> GetCurrentUser()
     {
-        var query = new GetCurrentUserQuery { User = User };
-        var result = await _mediator.Send(query);
+        var result = await _mediator.Send(new GetCurrentUserQuery());
         return Ok(ApiResponse.Ok(result));
     }
 

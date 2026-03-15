@@ -27,9 +27,7 @@ public class HealthController : ControllerBase
         return Ok(new
         {
             status = "healthy",
-            timestamp = DateTime.UtcNow,
-            application = "AppTemplate API",
-            version = "1.0.0"
+            timestamp = DateTime.UtcNow
         });
     }
 
