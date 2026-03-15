@@ -82,21 +82,28 @@ describe('JwtTokenService', () => {
       expect(mockJwtService.sign).toHaveBeenCalledTimes(2);
     });
 
-    it('should sign access token with payload and expiresIn', async () => {
+    it('should sign access token with payload (including jti) and expiresIn', async () => {
       await service.generateTokens(payload);
 
-      expect(mockJwtService.sign).toHaveBeenCalledWith(payload, {
-        expiresIn: '15m',
-      });
+      expect(mockJwtService.sign).toHaveBeenCalledWith(
+        expect.objectContaining(payload),
+        { expiresIn: '15m' },
+      );
+      // Verify jti is included for uniqueness
+      const accessCall = mockJwtService.sign.mock.calls[0];
+      expect(accessCall[0]).toHaveProperty('jti');
     });
 
-    it('should sign refresh token with payload, refresh secret, and expiresIn', async () => {
+    it('should sign refresh token with payload (including jti), refresh secret, and expiresIn', async () => {
       await service.generateTokens(payload);
 
-      expect(mockJwtService.sign).toHaveBeenCalledWith(payload, {
-        secret: 'refresh-secret',
-        expiresIn: '7d',
-      });
+      expect(mockJwtService.sign).toHaveBeenCalledWith(
+        expect.objectContaining(payload),
+        { secret: 'refresh-secret', expiresIn: '7d' },
+      );
+      // Verify jti is included for uniqueness
+      const refreshCall = mockJwtService.sign.mock.calls[1];
+      expect(refreshCall[0]).toHaveProperty('jti');
     });
 
     it('should return expiry dates in the future', async () => {

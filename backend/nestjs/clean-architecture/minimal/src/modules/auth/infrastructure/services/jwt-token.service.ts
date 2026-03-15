@@ -19,15 +19,16 @@ export class JwtTokenService implements IJwtTokenService {
     const accessTokenExpiresIn = this.configService.get<string>('JWT_EXPIRES_IN', '15m');
     const refreshTokenExpiresIn = this.configService.get<string>('JWT_REFRESH_EXPIRES_IN', '7d');
 
-    const accessToken = this.jwtService.sign(payload, {
-      expiresIn: accessTokenExpiresIn,
-    });
+    const accessToken = this.jwtService.sign(
+      { ...payload, jti: uuidv4() },
+      { expiresIn: accessTokenExpiresIn },
+    );
 
     const refreshSecret = this.configService.get<string>('JWT_REFRESH_SECRET');
-    const refreshToken = this.jwtService.sign(payload, {
-      secret: refreshSecret,
-      expiresIn: refreshTokenExpiresIn,
-    });
+    const refreshToken = this.jwtService.sign(
+      { ...payload, jti: uuidv4() },
+      { secret: refreshSecret, expiresIn: refreshTokenExpiresIn },
+    );
 
     // Calculate expiry dates
     const accessTokenExpiresAt = this.calculateExpiryDate(accessTokenExpiresIn);

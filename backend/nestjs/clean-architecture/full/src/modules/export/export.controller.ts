@@ -158,13 +158,14 @@ export class ExportController {
     @Query('action') action?: string,
     @Query('fromDate') fromDate?: string,
     @Query('toDate') toDate?: string,
-    @Query('limit') limit: number = 1000,
+    @Query('limit') limit: string = '1000',
     @CurrentUser() currentUser?: any,
   ) {
+    const numericLimit = parseInt(limit, 10) || 1000;
     const query = this.auditLogRepository
       .createQueryBuilder('auditLog')
       .orderBy('auditLog.createdAt', 'DESC')
-      .take(limit);
+      .take(numericLimit);
 
     if (entityName) {
       query.andWhere('auditLog.entityName = :entityName', { entityName });
