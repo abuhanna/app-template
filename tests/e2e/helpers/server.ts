@@ -51,10 +51,15 @@ function preBuild(target: BackendTarget, baseDir: string, env: NodeJS.ProcessEnv
   if (target.stack === 'nestjs') {
     const nestBin = resolve(baseDir, 'node_modules', '.bin', IS_WIN ? 'nest.cmd' : 'nest');
     if (!existsSync(nestBin)) {
-      console.log(`  [pre-build] ${label}: npm install`);
-      execSync(IS_WIN ? 'npm.cmd install' : 'npm install', {
+      // Use npm ci in CI for deterministic installs; npm install locally
+      const installCmd = IS_CI
+        ? (IS_WIN ? 'npm.cmd ci' : 'npm ci')
+        : (IS_WIN ? 'npm.cmd install' : 'npm install');
+      console.log(`  [pre-build] ${label}: ${IS_CI ? 'npm ci' : 'npm install'}`);
+      execSync(installCmd, {
         cwd: baseDir,
         stdio: verbose ? 'inherit' : 'pipe',
+        timeout: 300_000, // 5 min for npm install
       });
     }
     console.log(`  [pre-build] ${label}: nest build`);
@@ -62,6 +67,7 @@ function preBuild(target: BackendTarget, baseDir: string, env: NodeJS.ProcessEnv
       cwd: baseDir,
       env,
       stdio: verbose ? 'inherit' : 'pipe',
+      timeout: 120_000, // 2 min for nest build
     });
   }
 

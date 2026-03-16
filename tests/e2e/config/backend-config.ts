@@ -127,8 +127,8 @@ export function getStartCommand(target: BackendTarget): StartCommand {
     }
     case 'nestjs':
       return {
-        command: IS_WIN ? 'npm.cmd' : 'npm',
-        args: ['run', 'start'],
+        command: 'node',
+        args: ['dist/main'],
         cwd: baseDir,
       };
   }
