@@ -268,6 +268,11 @@ export async function loginAsAdmin(
 export async function stopServer(handle: ServerHandle): Promise<void> {
   if (!handle?.process?.pid) return;
 
+  // Remove stdout/stderr listeners before killing to prevent writes
+  // to a closing IPC channel (causes ERR_IPC_CHANNEL_CLOSED in forks pool)
+  handle.process.stdout?.removeAllListeners('data');
+  handle.process.stderr?.removeAllListeners('data');
+
   return new Promise((resolve) => {
     handle.process.on('close', () => resolve());
 
@@ -325,13 +330,12 @@ export function killPort(port: number): void {
         }
       }
     } else {
-      // Try fuser first, then lsof as fallback (fuser may not be installed)
-      try {
-        execSync(`fuser -k ${port}/tcp 2>/dev/null || true`, { stdio: 'pipe' });
-      } catch { /* ignore */ }
+      // Only kill processes LISTENING on the port, not connected clients.
+      // fuser -k kills ALL processes with connections (including the vitest
+      // worker's keep-alive HTTP sockets), which crashes the test runner.
       try {
         const pids = execSync(
-          `lsof -ti tcp:${port} 2>/dev/null || true`,
+          `lsof -ti tcp:${port} -sTCP:LISTEN 2>/dev/null || true`,
           { encoding: 'utf-8', stdio: ['pipe', 'pipe', 'pipe'] },
         ).trim();
         if (pids) {
@@ -370,7 +374,7 @@ function isPortInUse(port: number): boolean {
       return out.length > 0;
     } else {
       const out = execSync(
-        `lsof -ti tcp:${port} 2>/dev/null || true`,
+        `lsof -ti tcp:${port} -sTCP:LISTEN 2>/dev/null || true`,
         { encoding: 'utf-8', stdio: ['pipe', 'pipe', 'pipe'] },
       ).trim();
       return out.length > 0;
@@ -382,8 +386,13 @@ function isPortInUse(port: number): boolean {
 
 /**
  * Register process cleanup handlers to ensure server is killed on exit.
+ * In Vitest workers (forks pool), we must NOT call process.exit() — Vitest
+ * manages the worker lifecycle and calling exit() kills the fork before it
+ * can report results, causing ERR_IPC_CHANNEL_CLOSED in tinypool.
  */
 export function setupProcessCleanup(): void {
+  const isVitestWorker = !!process.env.VITEST_WORKER_ID;
+
   const cleanup = () => {
     if (activeHandle?.process?.pid) {
       try {
@@ -402,14 +411,19 @@ export function setupProcessCleanup(): void {
   };
 
   process.on('exit', cleanup);
-  process.on('SIGINT', () => {
-    cleanup();
-    process.exit(130);
-  });
-  process.on('SIGTERM', () => {
-    cleanup();
-    process.exit(143);
-  });
+
+  if (!isVitestWorker) {
+    // Only register signal handlers that call process.exit() outside of Vitest.
+    // Inside Vitest, the test runner handles shutdown — we just need the 'exit' hook.
+    process.on('SIGINT', () => {
+      cleanup();
+      process.exit(130);
+    });
+    process.on('SIGTERM', () => {
+      cleanup();
+      process.exit(143);
+    });
+  }
 }
 
 /**
