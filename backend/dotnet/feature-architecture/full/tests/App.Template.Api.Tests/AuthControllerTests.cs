@@ -101,11 +101,11 @@ public class AuthControllerTests
     }
 
     [Fact]
-    public void GetCurrentUser_ReturnsOk_WithUserInfo()
+    public async Task GetCurrentUser_ReturnsOk_WithUserInfo()
     {
         SetUserClaims();
 
-        var result = _controller.GetCurrentUser();
+        var result = await _controller.GetCurrentUser();
 
         var okResult = Assert.IsType<OkObjectResult>(result);
         var value = Assert.IsType<ApiResponse<UserInfoDto>>(okResult.Value);
